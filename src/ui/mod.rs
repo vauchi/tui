@@ -8,6 +8,7 @@ mod help;
 mod home;
 mod recovery;
 mod settings;
+mod setup;
 mod sync;
 mod visibility;
 mod widgets;
@@ -33,6 +34,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
     // Content
     match app.screen {
+        Screen::Setup => setup::draw(f, chunks[1], app),
         Screen::Home => home::draw(f, chunks[1], app),
         Screen::Contacts => contacts::draw(f, chunks[1], app),
         Screen::ContactDetail => contacts::draw_detail(f, chunks[1], app),
@@ -56,6 +58,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     let title = match app.screen {
+        Screen::Setup => "Vauchi - Setup",
         Screen::Home => "Vauchi",
         Screen::Contacts => "Contacts",
         Screen::ContactDetail => "Contact Details",
@@ -86,6 +89,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
 
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     let help_text = match app.screen {
+        Screen::Setup => "[c]reate new identity  [i]mport backup  [q]uit",
         Screen::Home => "[c]ontacts  [s]ettings  [d]evices  [r]ecovery  sy[n]c  [b]ackup  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
         Screen::Contacts => "[j/k] navigate  [enter] view  [d]elete  [v]erify  [esc] back  [?]help",
         Screen::ContactDetail => "[v]isibility  [x]delete  [esc] back  [?]help",

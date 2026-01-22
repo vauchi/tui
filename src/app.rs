@@ -5,6 +5,8 @@ use crate::backend::{Backend, QRData};
 /// Current screen in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
+    /// Setup screen (shown when no identity exists)
+    Setup,
     /// Home screen with contact card
     Home,
     /// Contact list
@@ -179,11 +181,16 @@ pub enum BackupFocus {
 impl App {
     /// Create a new application.
     pub fn new(backend: Backend) -> Self {
-        let _has_identity = backend.has_identity();
+        // Start on Setup screen if no identity exists
+        let initial_screen = if backend.has_identity() {
+            Screen::Home
+        } else {
+            Screen::Setup
+        };
 
         App {
             backend,
-            screen: Screen::Home,
+            screen: initial_screen,
             input_mode: InputMode::Normal,
             should_quit: false,
             status_message: None,
@@ -225,15 +232,26 @@ impl App {
     /// Go back to the previous screen.
     pub fn go_back(&mut self) {
         match self.screen {
+            // Can't go back from Setup until identity is configured
+            Screen::Setup => {
+                // Stay on setup screen
+            }
             Screen::Contacts
             | Screen::Exchange
             | Screen::Settings
             | Screen::Help
             | Screen::Devices
             | Screen::Recovery
-            | Screen::Sync
-            | Screen::Backup => {
+            | Screen::Sync => {
                 self.screen = Screen::Home;
+            }
+            // From Backup, go back to Setup if no identity, otherwise Home
+            Screen::Backup => {
+                if self.backend.has_identity() {
+                    self.screen = Screen::Home;
+                } else {
+                    self.screen = Screen::Setup;
+                }
             }
             Screen::ContactDetail => {
                 self.screen = Screen::Contacts;
