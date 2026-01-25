@@ -12,12 +12,12 @@ pub fn draw(f: &mut Frame, area: Rect, _app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(2),  // Spacer
-            Constraint::Length(7),  // Welcome box
-            Constraint::Length(2),  // Spacer
-            Constraint::Length(5),  // Create option
-            Constraint::Length(5),  // Import option
-            Constraint::Min(0),     // Spacer
+            Constraint::Length(2), // Spacer
+            Constraint::Length(7), // Welcome box
+            Constraint::Length(2), // Spacer
+            Constraint::Length(5), // Create option
+            Constraint::Length(5), // Import option
+            Constraint::Min(0),    // Spacer
         ])
         .split(area);
 
