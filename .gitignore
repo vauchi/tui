@@ -14,3 +14,4 @@ Thumbs.db
 
 # TUI data
 .vauchi/
+.cargo/
