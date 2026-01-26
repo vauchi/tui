@@ -10,10 +10,8 @@ default = []
 secure-storage = ["vauchi-core/secure-storage"]
 
 [dependencies]
-# Core library - path dependency for local development
-# Switch to git dependency after repos are created on GitLab:
-# vauchi-core = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.1.0" }
-vauchi-core = { path = "../core/vauchi-core" }
+# Core library - use git dependency for CI, patched to local path via .cargo/config.toml
+vauchi-core = { git = "https://gitlab.com/vauchi/core.git", branch = "main" }
 
 # Terminal UI
 ratatui = "0.28"

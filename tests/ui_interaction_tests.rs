@@ -170,12 +170,13 @@ fn test_sync_state_default() {
 /// Test: SyncState can be modified
 #[test]
 fn test_sync_state_modification() {
-    let mut state = SyncState::default();
-
-    state.connected = true;
-    state.is_syncing = true;
-    state.pending_updates = 5;
-    state.sync_log.push("Test log entry".to_string());
+    let state = SyncState {
+        connected: true,
+        is_syncing: true,
+        pending_updates: 5,
+        sync_log: vec!["Test log entry".to_string()],
+        ..Default::default()
+    };
 
     assert!(state.connected);
     assert!(state.is_syncing);
@@ -190,12 +191,12 @@ fn test_sync_state_modification() {
 /// Test: AddFieldState fields are accessible and modifiable
 #[test]
 fn test_add_field_state_fields() {
-    let mut state = AddFieldState::default();
-
-    state.field_type_index = 2;
-    state.label = "Work Email".to_string();
-    state.value = "alice@work.com".to_string();
-    state.focus = AddFieldFocus::Value;
+    let state = AddFieldState {
+        field_type_index: 2,
+        label: "Work Email".to_string(),
+        value: "alice@work.com".to_string(),
+        focus: AddFieldFocus::Value,
+    };
 
     assert_eq!(state.field_type_index, 2);
     assert_eq!(state.label, "Work Email");
@@ -206,13 +207,13 @@ fn test_add_field_state_fields() {
 /// Test: BackupState fields are accessible and modifiable
 #[test]
 fn test_backup_state_fields() {
-    let mut state = BackupState::default();
-
-    state.mode = BackupMode::Export;
-    state.password = "secret123".to_string();
-    state.confirm_password = "secret123".to_string();
-    state.backup_data = "abcdef1234567890".to_string();
-    state.focus = BackupFocus::Data;
+    let state = BackupState {
+        mode: BackupMode::Export,
+        password: "secret123".to_string(),
+        confirm_password: "secret123".to_string(),
+        backup_data: "abcdef1234567890".to_string(),
+        focus: BackupFocus::Data,
+    };
 
     assert_eq!(state.mode, BackupMode::Export);
     assert_eq!(state.password, "secret123");

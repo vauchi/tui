@@ -1190,7 +1190,9 @@ impl Backend {
             } => {
                 if let Ok(Some(mut card)) = self.storage.load_own_card() {
                     if card.update_field_value(field_label, new_value).is_ok() {
-                        self.storage.save_own_card(&card).map_err(|e| e.to_string())?;
+                        self.storage
+                            .save_own_card(&card)
+                            .map_err(|e| e.to_string())?;
                     }
                 }
             }
@@ -1258,11 +1260,11 @@ impl Backend {
                 Err(_) => continue,
             };
 
-            let encrypted = match orchestrator.encrypt_for_device(&device.exchange_public_key, &payload)
-            {
-                Ok(ct) => ct,
-                Err(_) => continue,
-            };
+            let encrypted =
+                match orchestrator.encrypt_for_device(&device.exchange_public_key, &payload) {
+                    Ok(ct) => ct,
+                    Err(_) => continue,
+                };
 
             // Create and send device sync message
             let target_device_id = hex::encode(device.device_id);
