@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! Internationalization wrapper for TUI
 //!
 //! Provides convenient string lookup using vauchi-core i18n.
