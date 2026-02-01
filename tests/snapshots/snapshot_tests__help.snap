@@ -1,0 +1,27 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+Help
+
+────────────────────────────────────────────────────────────────────────────────
+┌Help──────────────────────────────────────────────────────────────────────────┐
+│Vauchi TUI Help                                                               │
+│================                                                              │
+│                                                                              │
+│KEYBOARD SHORTCUTS                                                            │
+│------------------                                                            │
+│Navigation                                                                    │
+│j/↓     Move down                                                             │
+│k/↑     Move up                                                               │
+│h/←     Move left (in dialogs)                                                │
+│l/→     Move right (in dialogs)                                               │
+│Enter   Select/confirm                                                        │
+│Esc     Go back/cancel                                                        │
+│Tab     Next field (in forms)                                                 │
+│                                                                              │
+│Home Screen                                                                   │
+│e       Open exchange (QR code)                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+────────────────────────────────────────────────────────────────────────────────
+[esc/q] close

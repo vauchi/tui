@@ -1,0 +1,27 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+Vauchi
+
+────────────────────────────────────────────────────────────────────────────────
+Hello, Alice Smith!
+
+
+
+Public ID: [PUBLIC_ID]...
+
+
+┌Your Card─────────────────────────────────────────────────────────────────────┐
+│📧  Work (Email)  alice@company.com                                            │
+│📱  Mobile (Phone)  +41 79 123 45 67                                           │
+│🌐  Blog (Website)  https://alice.example.com                                  │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+Contacts: 0
+
+────────────────────────────────────────────────────────────────────────────────
+[c]ontacts  [s]ettings  [d]evices  [r]ecovery  sy[n]c  [b]ackup  [a]dd  [e]dit
