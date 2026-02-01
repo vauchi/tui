@@ -1173,6 +1173,7 @@ impl Backend {
     }
 
     /// Apply a single sync item to local storage.
+    #[allow(unreachable_patterns)]
     fn apply_sync_item(&self, item: &SyncItem) -> Result<(), String> {
         match item {
             SyncItem::ContactAdded { contact_data, .. } => {
@@ -1220,6 +1221,9 @@ impl Backend {
                         .save_contact(&contact)
                         .map_err(|e| e.to_string())?;
                 }
+            }
+            _ => {
+                // Unhandled sync items (e.g. LabelChange, ContactTrustChanged)
             }
         }
         Ok(())
