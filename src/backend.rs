@@ -1352,8 +1352,8 @@ impl Backend {
     /// Exports all user data for GDPR compliance.
     pub fn export_gdpr_data(&self) -> Result<String> {
         let export = vauchi_core::api::export_all_data(&self.storage)?;
-        let json = serde_json::to_string_pretty(&export)
-            .context("Failed to serialize GDPR export")?;
+        let json =
+            serde_json::to_string_pretty(&export).context("Failed to serialize GDPR export")?;
         Ok(json)
     }
 
@@ -1363,9 +1363,7 @@ impl Backend {
         let state = manager.deletion_state()?;
         match state {
             vauchi_core::storage::DeletionState::None => Ok("No deletion scheduled".to_string()),
-            vauchi_core::storage::DeletionState::Scheduled {
-                execute_at, ..
-            } => {
+            vauchi_core::storage::DeletionState::Scheduled { execute_at, .. } => {
                 let now = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map(|d| d.as_secs())

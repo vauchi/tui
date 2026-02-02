@@ -413,12 +413,10 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('x') => {
             // Toggle account deletion
             match app.backend.get_deletion_status() {
-                Ok(status) if status.contains("scheduled") => {
-                    match app.backend.cancel_deletion() {
-                        Ok(_) => app.set_status("Account deletion cancelled"),
-                        Err(e) => app.set_status(format!("Cancel failed: {}", e)),
-                    }
-                }
+                Ok(status) if status.contains("scheduled") => match app.backend.cancel_deletion() {
+                    Ok(_) => app.set_status("Account deletion cancelled"),
+                    Err(e) => app.set_status(format!("Cancel failed: {}", e)),
+                },
                 _ => match app.backend.schedule_deletion() {
                     Ok(_) => app.set_status("Account deletion scheduled (7 day grace period)"),
                     Err(e) => app.set_status(format!("Schedule failed: {}", e)),
