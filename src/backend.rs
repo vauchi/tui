@@ -262,6 +262,11 @@ impl Backend {
         &self.relay_url
     }
 
+    /// Returns the data directory path.
+    pub fn data_dir(&self) -> &std::path::Path {
+        &self.data_dir
+    }
+
     /// Set the relay URL.
     pub fn set_relay_url(&mut self, url: &str) -> Result<()> {
         let url = url.trim();
@@ -1340,6 +1345,73 @@ impl Backend {
         // Close the connection gracefully
         let _ = socket.close(None);
         Ok(true)
+    }
+
+    // === GDPR Operations ===
+
+    /// Exports all user data for GDPR compliance.
+    pub fn export_gdpr_data(&self) -> Result<String> {
+        let export = vauchi_core::api::export_all_data(&self.storage)?;
+        let json = serde_json::to_string_pretty(&export)
+            .context("Failed to serialize GDPR export")?;
+        Ok(json)
+    }
+
+    /// Gets the current deletion state as a display string.
+    pub fn get_deletion_status(&self) -> Result<String> {
+        let manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        let state = manager.deletion_state()?;
+        match state {
+            vauchi_core::storage::DeletionState::None => Ok("No deletion scheduled".to_string()),
+            vauchi_core::storage::DeletionState::Scheduled {
+                execute_at, ..
+            } => {
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                let remaining = execute_at.saturating_sub(now);
+                let days = remaining / 86400;
+                Ok(format!("Deletion scheduled — {} days remaining", days))
+            }
+            vauchi_core::storage::DeletionState::Executed { .. } => {
+                Ok("Account deleted".to_string())
+            }
+        }
+    }
+
+    /// Schedules account deletion with grace period.
+    pub fn schedule_deletion(&self) -> Result<()> {
+        let mut manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        manager.schedule_deletion()?;
+        Ok(())
+    }
+
+    /// Cancels a scheduled deletion.
+    pub fn cancel_deletion(&self) -> Result<()> {
+        let mut manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        manager.cancel_deletion()?;
+        Ok(())
+    }
+
+    /// Gets consent status as a display string.
+    pub fn get_consent_status(&self) -> Result<String> {
+        let manager = vauchi_core::api::ConsentManager::new(&self.storage);
+        let records = manager.export_consent_log()?;
+        if records.is_empty() {
+            return Ok("No consent records".to_string());
+        }
+        let lines: Vec<String> = records
+            .iter()
+            .map(|r| {
+                format!(
+                    "{:?}: {}",
+                    r.consent_type,
+                    if r.granted { "Granted" } else { "Revoked" }
+                )
+            })
+            .collect();
+        Ok(lines.join("\n"))
     }
 }
 

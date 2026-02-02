@@ -52,6 +52,11 @@ Options:
   [d] Device management
   [r] Recovery settings
 
+Privacy & Data:
+  [g] Export GDPR data
+  [x] Account deletion
+  [c] Consent management
+
 Help & Support:
   User Guide:     https://vauchi.app/user-guide
   FAQ:            https://vauchi.app/faq

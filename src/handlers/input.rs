@@ -397,6 +397,41 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('b') => app.goto(Screen::Backup),
         KeyCode::Char('d') => app.goto(Screen::Devices),
         KeyCode::Char('r') => app.goto(Screen::Recovery),
+        KeyCode::Char('g') => {
+            // Export GDPR data
+            match app.backend.export_gdpr_data() {
+                Ok(json) => {
+                    let path = app.backend.data_dir().join("gdpr_export.json");
+                    match std::fs::write(&path, &json) {
+                        Ok(_) => app.set_status(format!("GDPR data exported to {:?}", path)),
+                        Err(e) => app.set_status(format!("Export failed: {}", e)),
+                    }
+                }
+                Err(e) => app.set_status(format!("Export failed: {}", e)),
+            }
+        }
+        KeyCode::Char('x') => {
+            // Toggle account deletion
+            match app.backend.get_deletion_status() {
+                Ok(status) if status.contains("scheduled") => {
+                    match app.backend.cancel_deletion() {
+                        Ok(_) => app.set_status("Account deletion cancelled"),
+                        Err(e) => app.set_status(format!("Cancel failed: {}", e)),
+                    }
+                }
+                _ => match app.backend.schedule_deletion() {
+                    Ok(_) => app.set_status("Account deletion scheduled (7 day grace period)"),
+                    Err(e) => app.set_status(format!("Schedule failed: {}", e)),
+                },
+            }
+        }
+        KeyCode::Char('c') => {
+            // Show consent status
+            match app.backend.get_consent_status() {
+                Ok(status) => app.set_status(status),
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
         _ => {}
     }
 }
