@@ -8,6 +8,7 @@ mod backup;
 mod contacts;
 mod devices;
 pub mod exchange;
+mod gdpr;
 mod help;
 mod home;
 mod recovery;
@@ -56,6 +57,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Sync => sync::draw(f, chunks[1], app),
         Screen::Backup => backup::draw(f, chunks[1], app),
         Screen::TorSettings => tor::draw(f, chunks[1], app),
+        Screen::Privacy => gdpr::draw(f, chunks[1], app),
     }
 
     // Footer
@@ -81,6 +83,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Sync => "Sync",
         Screen::Backup => "Backup & Restore",
         Screen::TorSettings => "Tor Privacy",
+        Screen::Privacy => "Privacy & Data",
     };
 
     let header = Paragraph::new(title)
@@ -102,7 +105,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::ContactDetail => "[v]isibility  [x]delete  [esc] back  [?]help",
         Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
         Screen::Exchange => "[r]efresh  [esc] back  [?]help",
-        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [esc] back  [?]help",
+        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [esc] back  [?]help",
         Screen::Help => "[esc/q] close",
         Screen::AddField => "[tab] next  [enter] submit  [esc] cancel",
         Screen::EditField => "[enter] save  [esc] cancel",
@@ -113,6 +116,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::Sync => "[s]ync now  [esc] back  [?]help",
         Screen::Backup => "[e]xport  [i]mport  [esc] back  [?]help",
         Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
+        Screen::Privacy => "[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back",
     };
 
     let status = if let Some(msg) = &app.status_message {

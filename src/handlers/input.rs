@@ -8,7 +8,7 @@ use crossterm::event::KeyCode;
 
 use crate::app::{
     AddFieldFocus, App, BackupFocus, BackupMode, EditFieldState, EditNameState, EditRelayUrlState,
-    InputMode, Screen,
+    InputMode, PrivacyState, Screen,
 };
 use crate::backend::{Backend, FIELD_TYPES};
 use vauchi_core::identity::password::validate_password;
@@ -67,6 +67,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Sync => handle_sync_keys(app, key),
         Screen::Backup => handle_backup_keys(app, key),
         Screen::TorSettings => handle_tor_settings_keys(app, key),
+        Screen::Privacy => handle_privacy_keys(app, key),
     }
 
     Action::Continue
@@ -403,38 +404,10 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
             refresh_tor_state(app);
             app.goto(Screen::TorSettings);
         }
-        KeyCode::Char('g') => {
-            // Export GDPR data
-            match app.backend.export_gdpr_data() {
-                Ok(json) => {
-                    let path = app.backend.data_dir().join("gdpr_export.json");
-                    match std::fs::write(&path, &json) {
-                        Ok(_) => app.set_status(format!("GDPR data exported to {:?}", path)),
-                        Err(e) => app.set_status(format!("Export failed: {}", e)),
-                    }
-                }
-                Err(e) => app.set_status(format!("Export failed: {}", e)),
-            }
-        }
-        KeyCode::Char('x') => {
-            // Toggle account deletion
-            match app.backend.get_deletion_status() {
-                Ok(status) if status.contains("scheduled") => match app.backend.cancel_deletion() {
-                    Ok(_) => app.set_status("Account deletion cancelled"),
-                    Err(e) => app.set_status(format!("Cancel failed: {}", e)),
-                },
-                _ => match app.backend.schedule_deletion() {
-                    Ok(_) => app.set_status("Account deletion scheduled (7 day grace period)"),
-                    Err(e) => app.set_status(format!("Schedule failed: {}", e)),
-                },
-            }
-        }
-        KeyCode::Char('c') => {
-            // Show consent status
-            match app.backend.get_consent_status() {
-                Ok(status) => app.set_status(status),
-                Err(e) => app.set_status(format!("Error: {}", e)),
-            }
+        KeyCode::Char('p') | KeyCode::Char('g') => {
+            // Open Privacy & Data screen
+            app.privacy_state = PrivacyState::default();
+            app.goto(Screen::Privacy);
         }
         _ => {}
     }
@@ -774,6 +747,90 @@ fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
                     refresh_tor_state(app);
                 }
                 Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
+        _ => {}
+    }
+}
+
+fn handle_privacy_keys(app: &mut App, key: KeyCode) {
+    // Total items: 0=Export, 1=Deletion, 2..5=Consent types
+    let total_items = 6;
+
+    match key {
+        KeyCode::Char('j') | KeyCode::Down => {
+            if app.privacy_state.selected_item < total_items - 1 {
+                app.privacy_state.selected_item += 1;
+            }
+        }
+        KeyCode::Char('k') | KeyCode::Up => {
+            if app.privacy_state.selected_item > 0 {
+                app.privacy_state.selected_item -= 1;
+            }
+        }
+        KeyCode::Char('e') => {
+            // Export GDPR data
+            match app.backend.export_gdpr_data() {
+                Ok(json) => {
+                    let path = app.backend.data_dir().join("gdpr_export.json");
+                    match std::fs::write(&path, &json) {
+                        Ok(_) => app.set_status(format!("Data exported to {:?}", path)),
+                        Err(e) => app.set_status(format!("Export failed: {}", e)),
+                    }
+                }
+                Err(e) => app.set_status(format!("Export failed: {}", e)),
+            }
+        }
+        KeyCode::Char('d') => {
+            // Schedule account deletion
+            match app.backend.schedule_deletion() {
+                Ok(_) => app.set_status("Account deletion scheduled (7 day grace period)"),
+                Err(e) => app.set_status(format!("Schedule failed: {}", e)),
+            }
+        }
+        KeyCode::Char('c') => {
+            // Cancel scheduled deletion
+            match app.backend.cancel_deletion() {
+                Ok(_) => app.set_status("Account deletion cancelled"),
+                Err(e) => app.set_status(format!("Cancel failed: {}", e)),
+            }
+        }
+        KeyCode::Char(' ') | KeyCode::Enter => {
+            // Toggle consent for selected item (items 2..5 are consent types)
+            let consent_index = app.privacy_state.selected_item;
+            if consent_index >= 2 {
+                let consent_type = match consent_index - 2 {
+                    0 => vauchi_core::api::ConsentType::DataProcessing,
+                    1 => vauchi_core::api::ConsentType::ContactSharing,
+                    2 => vauchi_core::api::ConsentType::Analytics,
+                    _ => vauchi_core::api::ConsentType::RecoveryVouching,
+                };
+
+                // Check current state and toggle
+                let records = app.backend.consent_records().unwrap_or_default();
+                let currently_granted = records
+                    .iter()
+                    .rfind(|r| r.consent_type == consent_type)
+                    .map(|r| r.granted)
+                    .unwrap_or(false);
+
+                let result = if currently_granted {
+                    app.backend.revoke_consent(consent_type)
+                } else {
+                    app.backend.grant_consent(consent_type)
+                };
+
+                match result {
+                    Ok(_) => {
+                        let action = if currently_granted {
+                            "Revoked"
+                        } else {
+                            "Granted"
+                        };
+                        app.set_status(format!("Consent {}", action));
+                    }
+                    Err(e) => app.set_status(format!("Error: {}", e)),
+                }
             }
         }
         _ => {}

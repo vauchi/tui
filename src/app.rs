@@ -43,6 +43,8 @@ pub enum Screen {
     Backup,
     /// Tor privacy settings screen
     TorSettings,
+    /// Privacy & GDPR screen
+    Privacy,
 }
 
 /// Input mode for text entry.
@@ -127,6 +129,8 @@ pub struct App {
     pub sync_state: SyncState,
     /// Tor privacy mode state
     pub tor_state: TorState,
+    /// Privacy/GDPR screen state
+    pub privacy_state: PrivacyState,
 }
 
 /// State for the add field dialog.
@@ -199,6 +203,13 @@ pub enum BackupFocus {
     Data,
 }
 
+/// State for the privacy/GDPR screen.
+#[derive(Debug, Default)]
+pub struct PrivacyState {
+    /// Currently selected section index (0=Export, 1=Deletion, 2..=Consent items).
+    pub selected_item: usize,
+}
+
 impl App {
     /// Create a new application.
     pub fn new(backend: Backend) -> Self {
@@ -231,6 +242,7 @@ impl App {
             current_qr: None,
             sync_state: SyncState::default(),
             tor_state: TorState::default(),
+            privacy_state: PrivacyState::default(),
         }
     }
 
@@ -267,6 +279,10 @@ impl App {
             | Screen::Sync
             | Screen::TorSettings => {
                 self.screen = Screen::Home;
+            }
+            Screen::Privacy => {
+                self.screen = Screen::Settings;
+                self.privacy_state = PrivacyState::default();
             }
             // From Backup, go back to Setup if no identity, otherwise Home
             Screen::Backup => {

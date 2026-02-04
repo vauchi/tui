@@ -52,11 +52,7 @@ Options:
   [d] Device management
   [r] Recovery settings
   [t] Tor privacy settings
-
-Privacy & Data:
-  [g] Export GDPR data
-  [x] Account deletion
-  [c] Consent management
+  [p] Privacy & data
 
 Help & Support:
   User Guide:     https://vauchi.app/user-guide
