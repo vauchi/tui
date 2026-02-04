@@ -1477,6 +1477,34 @@ impl Backend {
             .collect();
         Ok(lines.join("\n"))
     }
+
+    /// Gets the structured deletion state.
+    pub fn deletion_state(&self) -> Result<vauchi_core::storage::DeletionState> {
+        let manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        let state = manager.deletion_state()?;
+        Ok(state)
+    }
+
+    /// Gets all consent records.
+    pub fn consent_records(&self) -> Result<Vec<vauchi_core::api::ConsentRecord>> {
+        let manager = vauchi_core::api::ConsentManager::new(&self.storage);
+        let records = manager.export_consent_log()?;
+        Ok(records)
+    }
+
+    /// Grants consent for a specific type.
+    pub fn grant_consent(&self, consent_type: vauchi_core::api::ConsentType) -> Result<()> {
+        let manager = vauchi_core::api::ConsentManager::new(&self.storage);
+        manager.grant(consent_type)?;
+        Ok(())
+    }
+
+    /// Revokes consent for a specific type.
+    pub fn revoke_consent(&self, consent_type: vauchi_core::api::ConsentType) -> Result<()> {
+        let manager = vauchi_core::api::ConsentManager::new(&self.storage);
+        manager.revoke(consent_type)?;
+        Ok(())
+    }
 }
 
 /// Field visibility information for display.
@@ -2213,5 +2241,131 @@ mod tests {
         assert!(!result.success);
         assert_eq!(result.contacts_added, 0);
         assert_eq!(result.error, Some("Connection failed".to_string()));
+    }
+
+    // === GDPR Backend Tests ===
+    // Trace: privacy_compliance.feature
+
+    /// Trace: privacy_compliance.feature - Export GDPR data
+    #[test]
+    fn test_export_gdpr_data() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        let json = backend
+            .export_gdpr_data()
+            .expect("Failed to export GDPR data");
+        assert!(!json.is_empty());
+        assert!(json.contains("version"));
+    }
+
+    /// Trace: privacy_compliance.feature - Schedule deletion
+    #[test]
+    fn test_schedule_and_cancel_deletion() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        // Schedule deletion
+        backend
+            .schedule_deletion()
+            .expect("Failed to schedule deletion");
+
+        let status = backend
+            .get_deletion_status()
+            .expect("Failed to get deletion status");
+        assert!(status.contains("scheduled") || status.contains("Deletion"));
+
+        // Cancel deletion
+        backend
+            .cancel_deletion()
+            .expect("Failed to cancel deletion");
+
+        let status = backend
+            .get_deletion_status()
+            .expect("Failed to get deletion status");
+        assert!(status.contains("No deletion"));
+    }
+
+    /// Trace: privacy_compliance.feature - Deletion state structured
+    #[test]
+    fn test_deletion_state_structured() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        let state = backend.deletion_state().expect("Failed to get state");
+        assert!(matches!(state, vauchi_core::storage::DeletionState::None));
+    }
+
+    /// Trace: privacy_compliance.feature - Consent records empty initially
+    #[test]
+    fn test_consent_records_empty() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        let records = backend
+            .consent_records()
+            .expect("Failed to get consent records");
+        assert!(records.is_empty());
+    }
+
+    /// Trace: privacy_compliance.feature - Grant and revoke consent
+    #[test]
+    fn test_grant_and_revoke_consent() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        // Grant consent
+        backend
+            .grant_consent(vauchi_core::api::ConsentType::Analytics)
+            .expect("Failed to grant consent");
+
+        let records = backend.consent_records().expect("Failed to get records");
+        assert!(!records.is_empty());
+        // Find the analytics record (should be granted)
+        let analytics: Vec<_> = records
+            .iter()
+            .filter(|r| matches!(r.consent_type, vauchi_core::api::ConsentType::Analytics))
+            .collect();
+        assert!(!analytics.is_empty());
+
+        // Revoke consent
+        backend
+            .revoke_consent(vauchi_core::api::ConsentType::Analytics)
+            .expect("Failed to revoke consent");
+
+        // Verify consent status shows revoked
+        let status = backend.get_consent_status().expect("Failed to get status");
+        assert!(status.contains("Revoked"));
+    }
+
+    /// Trace: privacy_compliance.feature - Consent status display
+    #[test]
+    fn test_consent_status_display() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        // Initially empty
+        let status = backend.get_consent_status().expect("Failed to get status");
+        assert_eq!(status, "No consent records");
+
+        // Grant a consent
+        backend
+            .grant_consent(vauchi_core::api::ConsentType::DataProcessing)
+            .expect("Failed to grant consent");
+
+        let status = backend.get_consent_status().expect("Failed to get status");
+        assert!(status.contains("Granted"));
     }
 }
