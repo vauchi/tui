@@ -1380,14 +1380,14 @@ impl Backend {
 
     /// Schedules account deletion with grace period.
     pub fn schedule_deletion(&self) -> Result<()> {
-        let mut manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        let manager = vauchi_core::api::DeletionManager::new(&self.storage);
         manager.schedule_deletion()?;
         Ok(())
     }
 
     /// Cancels a scheduled deletion.
     pub fn cancel_deletion(&self) -> Result<()> {
-        let mut manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        let manager = vauchi_core::api::DeletionManager::new(&self.storage);
         manager.cancel_deletion()?;
         Ok(())
     }
