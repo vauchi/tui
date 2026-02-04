@@ -11,6 +11,7 @@ use crate::app::{
     InputMode, PrivacyState, Screen,
 };
 use crate::backend::{Backend, FIELD_TYPES};
+use vauchi_core::aha_moments::AhaMomentType;
 use vauchi_core::identity::password::validate_password;
 
 /// Action to take after handling input.
@@ -145,7 +146,14 @@ fn handle_setup_keys(app: &mut App, key: KeyCode) {
             if let Err(e) = app.backend.create_identity("New User") {
                 app.set_status(format!("Failed to create identity: {}", e));
             } else {
-                app.set_status("Identity created! You can edit your name in Settings.");
+                if let Some(moment) = app
+                    .backend
+                    .check_aha_moment(AhaMomentType::CardCreationComplete)
+                {
+                    app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                } else {
+                    app.set_status("Identity created! You can edit your name in Settings.");
+                }
                 app.goto(Screen::Home);
             }
         }
@@ -489,7 +497,12 @@ fn handle_edit_field_keys(app: &mut App, key: KeyCode) {
             } else {
                 match app.backend.update_field(&label, &new_value) {
                     Ok(()) => {
-                        app.set_status("Field updated");
+                        if let Some(moment) = app.backend.check_aha_moment(AhaMomentType::FirstEdit)
+                        {
+                            app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                        } else {
+                            app.set_status("Field updated");
+                        }
                         app.go_back();
                     }
                     Err(e) => app.set_status(format!("Error: {}", e)),
@@ -628,6 +641,32 @@ fn handle_sync_keys(app: &mut App, key: KeyCode) {
 
                 // Update pending count
                 app.sync_state.pending_updates = app.backend.pending_update_count().unwrap_or(0);
+
+                // Check for aha moments based on sync results
+                if result.contacts_added > 0 {
+                    if let Some(moment) = app
+                        .backend
+                        .check_aha_moment(AhaMomentType::FirstContactAdded)
+                    {
+                        app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                    }
+                }
+                if result.cards_updated > 0 {
+                    if let Some(moment) = app
+                        .backend
+                        .check_aha_moment(AhaMomentType::FirstUpdateReceived)
+                    {
+                        app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                    }
+                }
+                if result.updates_sent > 0 {
+                    if let Some(moment) = app
+                        .backend
+                        .check_aha_moment(AhaMomentType::FirstOutboundDelivered)
+                    {
+                        app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                    }
+                }
             } else {
                 app.sync_state.connected = false;
                 let error_msg = result.error.unwrap_or_else(|| "Unknown error".to_string());

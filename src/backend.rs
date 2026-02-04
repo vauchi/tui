@@ -12,6 +12,7 @@ use anyhow::{Context, Result};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{Message, WebSocket};
 
+use vauchi_core::aha_moments::{AhaMoment, AhaMomentTracker, AhaMomentType};
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
 use vauchi_core::{
@@ -1505,6 +1506,54 @@ impl Backend {
         manager.revoke(consent_type)?;
         Ok(())
     }
+
+    // ================================================================
+    // Aha Moments
+    // ================================================================
+
+    /// Load the aha moment tracker from disk.
+    fn load_aha_tracker(&self) -> AhaMomentTracker {
+        let path = self.data_dir.join("aha_tracker.json");
+        match std::fs::read_to_string(&path) {
+            Ok(json) => AhaMomentTracker::from_json(&json).unwrap_or_default(),
+            Err(_) => AhaMomentTracker::new(),
+        }
+    }
+
+    /// Save the aha moment tracker to disk.
+    fn save_aha_tracker(&self, tracker: &AhaMomentTracker) -> Result<()> {
+        let path = self.data_dir.join("aha_tracker.json");
+        let json = tracker
+            .to_json()
+            .context("Failed to serialize aha tracker")?;
+        std::fs::write(&path, json).context("Failed to write aha tracker")?;
+        Ok(())
+    }
+
+    /// Check if an aha moment should fire, returning it if not yet seen.
+    /// Automatically persists the tracker after triggering.
+    pub fn check_aha_moment(&self, moment_type: AhaMomentType) -> Option<AhaMoment> {
+        let mut tracker = self.load_aha_tracker();
+        let moment = tracker.try_trigger(moment_type);
+        if moment.is_some() {
+            let _ = self.save_aha_tracker(&tracker);
+        }
+        moment
+    }
+
+    /// Check if an aha moment should fire with context.
+    pub fn check_aha_moment_with_context(
+        &self,
+        moment_type: AhaMomentType,
+        context: String,
+    ) -> Option<AhaMoment> {
+        let mut tracker = self.load_aha_tracker();
+        let moment = tracker.try_trigger_with_context(moment_type, context);
+        if moment.is_some() {
+            let _ = self.save_aha_tracker(&tracker);
+        }
+        moment
+    }
 }
 
 /// Field visibility information for display.
@@ -2367,5 +2416,79 @@ mod tests {
 
         let status = backend.get_consent_status().expect("Failed to get status");
         assert!(status.contains("Granted"));
+    }
+
+    // === Aha Moment Tests ===
+    // Trace: aha_moments.feature
+
+    #[test]
+    fn test_aha_moment_triggers_on_first_call() {
+        let (backend, _temp) = create_test_backend();
+
+        // First call should trigger
+        let moment = backend.check_aha_moment(AhaMomentType::CardCreationComplete);
+        assert!(moment.is_some());
+        assert_eq!(
+            moment.unwrap().moment_type,
+            AhaMomentType::CardCreationComplete
+        );
+
+        // Second call should not trigger (already seen)
+        let moment = backend.check_aha_moment(AhaMomentType::CardCreationComplete);
+        assert!(moment.is_none());
+    }
+
+    #[test]
+    fn test_aha_moment_persists_across_loads() {
+        let (backend, temp) = create_test_backend();
+
+        // Trigger a moment
+        let moment = backend.check_aha_moment(AhaMomentType::FirstEdit);
+        assert!(moment.is_some());
+
+        // Create a new backend from the same directory
+        let backend2 = Backend::new(temp.path()).expect("Failed to create second backend");
+
+        // Should not trigger again (persisted)
+        let moment = backend2.check_aha_moment(AhaMomentType::FirstEdit);
+        assert!(moment.is_none());
+
+        // Different moment type should still trigger
+        let moment = backend2.check_aha_moment(AhaMomentType::FirstContactAdded);
+        assert!(moment.is_some());
+    }
+
+    #[test]
+    fn test_aha_moment_with_context() {
+        let (backend, _temp) = create_test_backend();
+
+        let moment = backend
+            .check_aha_moment_with_context(AhaMomentType::FirstContactAdded, "Bob".to_string());
+        assert!(moment.is_some());
+        let m = moment.unwrap();
+        assert!(m.message().contains("Bob"));
+    }
+
+    #[test]
+    fn test_aha_moment_independent_types() {
+        let (backend, _temp) = create_test_backend();
+
+        // Trigger one type
+        let moment = backend.check_aha_moment(AhaMomentType::CardCreationComplete);
+        assert!(moment.is_some());
+
+        // Other types should still be available
+        let moment = backend.check_aha_moment(AhaMomentType::FirstEdit);
+        assert!(moment.is_some());
+        let moment = backend.check_aha_moment(AhaMomentType::FirstContactAdded);
+        assert!(moment.is_some());
+        let moment = backend.check_aha_moment(AhaMomentType::FirstUpdateReceived);
+        assert!(moment.is_some());
+        let moment = backend.check_aha_moment(AhaMomentType::FirstOutboundDelivered);
+        assert!(moment.is_some());
+
+        // None should trigger again
+        let moment = backend.check_aha_moment(AhaMomentType::CardCreationComplete);
+        assert!(moment.is_none());
     }
 }
