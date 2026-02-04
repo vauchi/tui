@@ -51,6 +51,7 @@ Options:
   [b] Backup & restore
   [d] Device management
   [r] Recovery settings
+  [t] Tor privacy settings
 
 Privacy & Data:
   [g] Export GDPR data

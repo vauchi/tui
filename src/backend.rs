@@ -1178,7 +1178,6 @@ impl Backend {
     }
 
     /// Apply a single sync item to local storage.
-    #[allow(unreachable_patterns)]
     fn apply_sync_item(&self, item: &SyncItem) -> Result<(), String> {
         match item {
             SyncItem::ContactAdded { contact_data, .. } => {
@@ -1227,8 +1226,11 @@ impl Backend {
                         .map_err(|e| e.to_string())?;
                 }
             }
-            _ => {
-                // Unhandled sync items (e.g. LabelChange, ContactTrustChanged)
+            SyncItem::LabelChange { .. }
+            | SyncItem::ContactTrustChanged { .. }
+            | SyncItem::DeletionScheduled { .. }
+            | SyncItem::DeletionCancelled { .. } => {
+                // Informational sync items — no local storage action needed
             }
         }
         Ok(())
@@ -1335,6 +1337,70 @@ impl Backend {
         }
 
         Ok(sent)
+    }
+
+    // ========== Tor Privacy Mode ==========
+
+    /// Load Tor configuration from storage.
+    pub fn load_tor_config(&self) -> Result<vauchi_core::TorConfig> {
+        let config = self
+            .storage
+            .load_or_create_tor_config()
+            .context("Failed to load Tor config")?;
+        Ok(config)
+    }
+
+    /// Enable Tor mode.
+    pub fn enable_tor(&self) -> Result<()> {
+        let mut config = self.load_tor_config()?;
+        config.enabled = true;
+        self.storage
+            .save_tor_config(&config)
+            .context("Failed to save Tor config")?;
+        Ok(())
+    }
+
+    /// Disable Tor mode.
+    pub fn disable_tor(&self) -> Result<()> {
+        let mut config = self.load_tor_config()?;
+        config.enabled = false;
+        self.storage
+            .save_tor_config(&config)
+            .context("Failed to save Tor config")?;
+        Ok(())
+    }
+
+    /// Toggle .onion address preference.
+    pub fn toggle_prefer_onion(&self) -> Result<bool> {
+        let mut config = self.load_tor_config()?;
+        config.prefer_onion = !config.prefer_onion;
+        self.storage
+            .save_tor_config(&config)
+            .context("Failed to save Tor config")?;
+        Ok(config.prefer_onion)
+    }
+
+    /// Add a bridge address.
+    pub fn add_tor_bridge(&self, addr: &str) -> Result<()> {
+        let mut config = self.load_tor_config()?;
+        if !config.bridges.contains(&addr.to_string()) {
+            config.bridges.push(addr.to_string());
+            self.storage
+                .save_tor_config(&config)
+                .context("Failed to save Tor config")?;
+        }
+        Ok(())
+    }
+
+    /// Clear all bridge addresses.
+    pub fn clear_tor_bridges(&self) -> Result<usize> {
+        let mut config = self.load_tor_config()?;
+        let count = config.bridges.len();
+        config.bridges.clear();
+        self.storage
+            .save_tor_config(&config)
+            .context("Failed to save Tor config")?;
+        Ok(count)
     }
 
     /// Test connection to the relay server.

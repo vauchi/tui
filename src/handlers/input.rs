@@ -66,6 +66,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Recovery => handle_recovery_keys(app, key),
         Screen::Sync => handle_sync_keys(app, key),
         Screen::Backup => handle_backup_keys(app, key),
+        Screen::TorSettings => handle_tor_settings_keys(app, key),
     }
 
     Action::Continue
@@ -397,6 +398,11 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('b') => app.goto(Screen::Backup),
         KeyCode::Char('d') => app.goto(Screen::Devices),
         KeyCode::Char('r') => app.goto(Screen::Recovery),
+        KeyCode::Char('t') => {
+            // Load current Tor config and navigate to Tor settings
+            refresh_tor_state(app);
+            app.goto(Screen::TorSettings);
+        }
         KeyCode::Char('g') => {
             // Export GDPR data
             match app.backend.export_gdpr_data() {
@@ -686,6 +692,89 @@ fn handle_sync_keys(app: &mut App, key: KeyCode) {
                 "{} pending updates",
                 app.sync_state.pending_updates
             ));
+        }
+        _ => {}
+    }
+}
+
+/// Refresh the Tor state from backend storage.
+fn refresh_tor_state(app: &mut App) {
+    match app.backend.load_tor_config() {
+        Ok(config) => {
+            app.tor_state.enabled = config.enabled;
+            app.tor_state.prefer_onion = config.prefer_onion;
+            app.tor_state.circuit_rotation_secs = config.circuit_rotation_secs;
+            app.tor_state.bridge_count = config.bridges.len();
+        }
+        Err(_) => {
+            // Leave defaults (all disabled)
+        }
+    }
+}
+
+fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Char('e') => {
+            // Enable Tor
+            if app.tor_state.enabled {
+                app.set_status("Tor mode is already enabled");
+                return;
+            }
+            match app.backend.enable_tor() {
+                Ok(()) => {
+                    app.set_status("Tor mode enabled");
+                    refresh_tor_state(app);
+                }
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
+        KeyCode::Char('d') => {
+            // Disable Tor
+            if !app.tor_state.enabled {
+                app.set_status("Tor mode is already disabled");
+                return;
+            }
+            match app.backend.disable_tor() {
+                Ok(()) => {
+                    app.set_status("Tor mode disabled");
+                    refresh_tor_state(app);
+                }
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
+        KeyCode::Char('o') => {
+            // Toggle .onion preference
+            match app.backend.toggle_prefer_onion() {
+                Ok(prefer_onion) => {
+                    let msg = if prefer_onion {
+                        ".onion addresses will be preferred"
+                    } else {
+                        ".onion preference disabled"
+                    };
+                    app.set_status(msg);
+                    refresh_tor_state(app);
+                }
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
+        KeyCode::Char('n') => {
+            // Request new circuit
+            if !app.tor_state.enabled {
+                app.set_status("Enable Tor mode first");
+                return;
+            }
+            app.set_status("Circuit rotation requested");
+        }
+        KeyCode::Char('x') => {
+            // Clear bridges
+            match app.backend.clear_tor_bridges() {
+                Ok(0) => app.set_status("No bridges to clear"),
+                Ok(count) => {
+                    app.set_status(format!("Cleared {} bridge(s)", count));
+                    refresh_tor_state(app);
+                }
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
         }
         _ => {}
     }

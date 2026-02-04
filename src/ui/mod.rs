@@ -14,6 +14,7 @@ mod recovery;
 mod settings;
 mod setup;
 mod sync;
+mod tor;
 mod visibility;
 mod widgets;
 
@@ -54,6 +55,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Recovery => recovery::draw(f, chunks[1], app),
         Screen::Sync => sync::draw(f, chunks[1], app),
         Screen::Backup => backup::draw(f, chunks[1], app),
+        Screen::TorSettings => tor::draw(f, chunks[1], app),
     }
 
     // Footer
@@ -78,6 +80,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Recovery => "Recovery",
         Screen::Sync => "Sync",
         Screen::Backup => "Backup & Restore",
+        Screen::TorSettings => "Tor Privacy",
     };
 
     let header = Paragraph::new(title)
@@ -109,6 +112,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::Recovery => "[c]laim  [v]ouch  [s]tatus  [esc] back  [?]help",
         Screen::Sync => "[s]ync now  [esc] back  [?]help",
         Screen::Backup => "[e]xport  [i]mport  [esc] back  [?]help",
+        Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
     };
 
     let status = if let Some(msg) = &app.status_message {

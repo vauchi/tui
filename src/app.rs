@@ -41,6 +41,8 @@ pub enum Screen {
     Sync,
     /// Backup/restore screen
     Backup,
+    /// Tor privacy settings screen
+    TorSettings,
 }
 
 /// Input mode for text entry.
@@ -65,6 +67,19 @@ pub struct SyncState {
     pub last_result: Option<String>,
     /// Log of sync operations.
     pub sync_log: Vec<String>,
+}
+
+/// Tor privacy mode state for the UI.
+#[derive(Debug, Clone, Default)]
+pub struct TorState {
+    /// Whether Tor mode is enabled.
+    pub enabled: bool,
+    /// Whether .onion addresses are preferred.
+    pub prefer_onion: bool,
+    /// Circuit rotation interval in seconds.
+    pub circuit_rotation_secs: u64,
+    /// Number of configured bridges.
+    pub bridge_count: usize,
 }
 
 /// Application state.
@@ -110,6 +125,8 @@ pub struct App {
     pub current_qr: Option<QRData>,
     /// Sync state
     pub sync_state: SyncState,
+    /// Tor privacy mode state
+    pub tor_state: TorState,
 }
 
 /// State for the add field dialog.
@@ -213,6 +230,7 @@ impl App {
             contact_search_mode: false,
             current_qr: None,
             sync_state: SyncState::default(),
+            tor_state: TorState::default(),
         }
     }
 
@@ -246,7 +264,8 @@ impl App {
             | Screen::Help
             | Screen::Devices
             | Screen::Recovery
-            | Screen::Sync => {
+            | Screen::Sync
+            | Screen::TorSettings => {
                 self.screen = Screen::Home;
             }
             // From Backup, go back to Setup if no identity, otherwise Home

@@ -14,7 +14,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(6), // Connection status
+            Constraint::Length(8), // Connection status + Tor indicator
             Constraint::Length(5), // Sync progress
             Constraint::Min(0),    // Sync log
         ])
@@ -40,6 +40,14 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         "Disconnected"
     };
 
+    // Tor status indicator
+    let tor_state = &app.tor_state;
+    let tor_indicator = if tor_state.enabled {
+        Span::styled("Tor: ON", Style::default().fg(Color::Green))
+    } else {
+        Span::styled("Tor: OFF", Style::default().fg(Color::DarkGray))
+    };
+
     let status_lines = vec![
         Line::from(""),
         Line::from(vec![
@@ -49,6 +57,15 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Line::from(vec![
             Span::raw("  Status: "),
             Span::styled(status_text, status_style),
+        ]),
+        Line::from(vec![
+            Span::raw("  Privacy: "),
+            tor_indicator,
+            Span::raw(if tor_state.enabled && tor_state.prefer_onion {
+                "  (.onion preferred)"
+            } else {
+                ""
+            }),
         ]),
         Line::from(""),
     ];
