@@ -5,6 +5,7 @@
 //! Application State
 
 use crate::backend::{Backend, QRData};
+use crate::i18n::I18n;
 
 /// Current screen in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -131,6 +132,8 @@ pub struct App {
     pub tor_state: TorState,
     /// Privacy/GDPR screen state
     pub privacy_state: PrivacyState,
+    /// Internationalization
+    pub i18n: I18n,
 }
 
 /// State for the add field dialog.
@@ -210,6 +213,21 @@ pub struct PrivacyState {
     pub selected_item: usize,
 }
 
+/// Detect locale from environment variables (LANG, LC_ALL, LC_MESSAGES).
+fn detect_locale() -> I18n {
+    for var in ["LC_ALL", "LC_MESSAGES", "LANG"] {
+        if let Ok(val) = std::env::var(var) {
+            // Extract language code from e.g. "de_CH.UTF-8" → "de"
+            let code = val.split('_').next().unwrap_or(&val);
+            let code = code.split('.').next().unwrap_or(code);
+            if !code.is_empty() && code != "C" && code != "POSIX" {
+                return I18n::from_code(code);
+            }
+        }
+    }
+    I18n::default()
+}
+
 impl App {
     /// Create a new application.
     pub fn new(backend: Backend) -> Self {
@@ -243,6 +261,7 @@ impl App {
             sync_state: SyncState::default(),
             tor_state: TorState::default(),
             privacy_state: PrivacyState::default(),
+            i18n: detect_locale(),
         }
     }
 
@@ -318,5 +337,62 @@ impl App {
             _ => {}
         }
         self.input_mode = InputMode::Normal;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Mutex;
+    use vauchi_core::i18n::Locale;
+
+    /// Env-var tests must be serialised — set_var/remove_var is process-global.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    fn clear_locale_env() {
+        std::env::remove_var("LC_ALL");
+        std::env::remove_var("LC_MESSAGES");
+        std::env::remove_var("LANG");
+    }
+
+    #[test]
+    fn test_detect_locale_german() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_locale_env();
+        std::env::set_var("LANG", "de_CH.UTF-8");
+        let i18n = detect_locale();
+        assert_eq!(i18n.locale(), Locale::German);
+        clear_locale_env();
+    }
+
+    #[test]
+    fn test_detect_locale_french() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_locale_env();
+        std::env::set_var("LANG", "fr_FR.UTF-8");
+        let i18n = detect_locale();
+        assert_eq!(i18n.locale(), Locale::French);
+        clear_locale_env();
+    }
+
+    #[test]
+    fn test_detect_locale_lc_all_overrides() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_locale_env();
+        std::env::set_var("LANG", "en_US.UTF-8");
+        std::env::set_var("LC_ALL", "es_ES.UTF-8");
+        let i18n = detect_locale();
+        assert_eq!(i18n.locale(), Locale::Spanish);
+        clear_locale_env();
+    }
+
+    #[test]
+    fn test_detect_locale_fallback_english() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_locale_env();
+        std::env::set_var("LANG", "C");
+        let i18n = detect_locale();
+        assert_eq!(i18n.locale(), Locale::English);
+        clear_locale_env();
     }
 }
