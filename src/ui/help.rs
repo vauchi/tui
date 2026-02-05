@@ -8,49 +8,71 @@
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
-use vauchi_core::help::{get_faqs, HelpCategory};
+use vauchi_core::help::{get_faqs_localized, search_faqs_localized, HelpCategory};
+use vauchi_core::i18n::Locale;
 
 use crate::app::App;
 
-pub fn draw(f: &mut Frame, area: Rect, _app: &App) {
+pub fn draw(f: &mut Frame, area: Rect, app: &App) {
+    let locale = app.i18n.locale();
+
     // Build help text with keyboard shortcuts and FAQ summary
-    let mut help_text = String::from(
-        r#"Vauchi TUI Help
-================
-
-KEYBOARD SHORTCUTS
-------------------
-Navigation
-  j/↓     Move down
-  k/↑     Move up
-  h/←     Move left (in dialogs)
-  l/→     Move right (in dialogs)
-  Enter   Select/confirm
-  Esc     Go back/cancel
-  Tab     Next field (in forms)
-
-Home Screen
-  e       Open exchange (QR code)
-  c       View contacts
-  s       Open settings
-  a       Add new field
-  d       Delete selected field
-
-Contacts Screen
-  Enter   View contact details
-
-General
-  ?       Show this help
-  q       Quit
-
-
-FAQ HIGHLIGHTS
---------------
-"#,
+    let mut help_text = format!(
+        "{}\n{}\n\n{}\n{}\n",
+        app.i18n.t("help.title"),
+        "=".repeat(16),
+        app.i18n.t("help.keyboard_shortcuts"),
+        "-".repeat(18),
     );
 
-    // Add top FAQ items from each category
-    let faqs = get_faqs();
+    // Keyboard shortcuts (labels only — keys are universal)
+    help_text.push_str(&format!(
+        "{nav}\n\
+         \x20 j/↓     {down}\n\
+         \x20 k/↑     {up}\n\
+         \x20 h/←     {left}\n\
+         \x20 l/→     {right}\n\
+         \x20 Enter   {select}\n\
+         \x20 Esc     {back}\n\
+         \x20 Tab     {next_field}\n\n\
+         {home}\n\
+         \x20 e       {exchange}\n\
+         \x20 c       {contacts}\n\
+         \x20 s       {settings}\n\
+         \x20 a       {add_field}\n\
+         \x20 d       {del_field}\n\n\
+         {contacts_screen}\n\
+         \x20 Enter   {view_detail}\n\n\
+         {general}\n\
+         \x20 ?       {show_help}\n\
+         \x20 q       {quit}\n\n\n\
+         {faq_title}\n\
+         {faq_sep}\n",
+        nav = app.i18n.t("help.navigation"),
+        down = app.i18n.t("help.move_down"),
+        up = app.i18n.t("help.move_up"),
+        left = app.i18n.t("help.move_left"),
+        right = app.i18n.t("help.move_right"),
+        select = app.i18n.t("help.select"),
+        back = app.i18n.t("help.go_back"),
+        next_field = app.i18n.t("help.next_field"),
+        home = app.i18n.t("nav.home"),
+        exchange = app.i18n.t("help.open_exchange"),
+        contacts = app.i18n.t("help.view_contacts"),
+        settings = app.i18n.t("help.open_settings"),
+        add_field = app.i18n.t("help.add_field"),
+        del_field = app.i18n.t("help.delete_field"),
+        contacts_screen = app.i18n.t("contacts.title"),
+        view_detail = app.i18n.t("help.view_details"),
+        general = app.i18n.t("help.general"),
+        show_help = app.i18n.t("help.show_help"),
+        quit = app.i18n.t("help.quit"),
+        faq_title = app.i18n.t("help.faq_highlights"),
+        faq_sep = "-".repeat(14),
+    ));
+
+    // Add top FAQ items from each category (now localized)
+    let faqs = get_faqs_localized(locale);
     let categories = [
         HelpCategory::GettingStarted,
         HelpCategory::Privacy,
@@ -70,29 +92,33 @@ FAQ HIGHLIGHTS
         }
     }
 
-    help_text.push_str("\nPress Esc or q to close this help screen.\n");
+    help_text.push_str(&format!("\n{}\n", app.i18n.t("help.close_hint")));
 
     let help = Paragraph::new(help_text)
         .style(Style::default().fg(Color::White))
         .wrap(Wrap { trim: true })
-        .block(Block::default().title("Help").borders(Borders::ALL));
+        .block(
+            Block::default()
+                .title(app.i18n.t("help.title"))
+                .borders(Borders::ALL),
+        );
 
     f.render_widget(help, area);
 }
 
-/// Get all FAQ items for display.
+/// Get all FAQ items for display in the given locale.
 #[allow(dead_code)]
-pub fn get_all_faqs() -> Vec<(String, String, String)> {
-    get_faqs()
+pub fn get_all_faqs(locale: Locale) -> Vec<(String, String, String)> {
+    get_faqs_localized(locale)
         .into_iter()
         .map(|faq| (faq.id, faq.question, faq.answer))
         .collect()
 }
 
-/// Search FAQs by query.
+/// Search FAQs by query in the given locale.
 #[allow(dead_code)]
-pub fn search_help(query: &str) -> Vec<(String, String, String)> {
-    vauchi_core::help::search_faqs(query)
+pub fn search_help(query: &str, locale: Locale) -> Vec<(String, String, String)> {
+    search_faqs_localized(query, locale)
         .into_iter()
         .map(|faq| (faq.id, faq.question, faq.answer))
         .collect()
