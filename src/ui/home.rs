@@ -24,9 +24,9 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     // Welcome message
     let name = app.backend.display_name().unwrap_or("Guest");
     let welcome = if app.backend.has_identity() {
-        format!("Hello, {}!", name)
+        app.i18n.t_args("home.greeting", &[("name", name)])
     } else {
-        "Welcome to Vauchi!".to_string()
+        app.i18n.t("welcome.title")
     };
 
     let welcome_para = Paragraph::new(welcome)
@@ -40,7 +40,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Public ID
     if let Some(id) = app.backend.public_id() {
-        let id_para = Paragraph::new(format!("Public ID: {}", id))
+        let id_para = Paragraph::new(format!("{}: {}", app.i18n.t("home.public_id"), id))
             .style(Style::default().fg(Color::DarkGray));
         f.render_widget(id_para, chunks[1]);
     }
@@ -49,7 +49,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let fields = app.backend.get_card_fields().unwrap_or_default();
 
     if fields.is_empty() {
-        let empty = Paragraph::new("No fields yet. Press 'a' to add contact info!")
+        let empty = Paragraph::new(app.i18n.t("home.no_fields"))
             .style(Style::default().fg(Color::DarkGray));
         f.render_widget(empty, chunks[2]);
     } else {
@@ -81,8 +81,11 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             })
             .collect();
 
-        let list =
-            List::new(items).block(Block::default().title("Your Card").borders(Borders::ALL));
+        let list = List::new(items).block(
+            Block::default()
+                .title(app.i18n.t("card.title"))
+                .borders(Borders::ALL),
+        );
 
         let mut state = ListState::default();
         state.select(Some(app.selected_field));
@@ -91,8 +94,10 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Contact count
     let count = app.backend.contact_count().unwrap_or(0);
-    let count_para =
-        Paragraph::new(format!("Contacts: {}", count)).style(Style::default().fg(Color::DarkGray));
+    let count_text = app
+        .i18n
+        .t_args("contacts.count", &[("count", &count.to_string())]);
+    let count_para = Paragraph::new(count_text).style(Style::default().fg(Color::DarkGray));
     f.render_widget(count_para, chunks[3]);
 }
 
@@ -119,9 +124,11 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
     } else {
         Style::default()
     };
-    let type_para = Paragraph::new(type_text)
-        .style(type_style)
-        .block(Block::default().title("Type").borders(Borders::ALL));
+    let type_para = Paragraph::new(type_text).style(type_style).block(
+        Block::default()
+            .title(app.i18n.t("card.field_type"))
+            .borders(Borders::ALL),
+    );
     f.render_widget(type_para, chunks[0]);
 
     // Label input
@@ -131,15 +138,17 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
         Style::default()
     };
     let label_text = if state.label.is_empty() && state.focus != AddFieldFocus::Label {
-        "Enter label...".to_string()
+        app.i18n.t("card.enter_label")
     } else if state.focus == AddFieldFocus::Label && app.input_mode == InputMode::Editing {
         format!("{}|", state.label)
     } else {
         state.label.clone()
     };
-    let label_para = Paragraph::new(label_text)
-        .style(label_style)
-        .block(Block::default().title("Label").borders(Borders::ALL));
+    let label_para = Paragraph::new(label_text).style(label_style).block(
+        Block::default()
+            .title(app.i18n.t("card.label"))
+            .borders(Borders::ALL),
+    );
     f.render_widget(label_para, chunks[1]);
 
     // Value input
@@ -149,15 +158,17 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
         Style::default()
     };
     let value_text = if state.value.is_empty() && state.focus != AddFieldFocus::Value {
-        "Enter value...".to_string()
+        app.i18n.t("card.enter_value")
     } else if state.focus == AddFieldFocus::Value && app.input_mode == InputMode::Editing {
         format!("{}|", state.value)
     } else {
         state.value.clone()
     };
-    let value_para = Paragraph::new(value_text)
-        .style(value_style)
-        .block(Block::default().title("Value").borders(Borders::ALL));
+    let value_para = Paragraph::new(value_text).style(value_style).block(
+        Block::default()
+            .title(app.i18n.t("card.value"))
+            .borders(Borders::ALL),
+    );
     f.render_widget(value_para, chunks[2]);
 }
 
@@ -178,7 +189,11 @@ pub fn draw_edit_field(f: &mut Frame, area: Rect, app: &App) {
     let info_text = format!("{} ({})", state.field_label, state.field_type);
     let info_para = Paragraph::new(info_text)
         .style(Style::default().fg(Color::DarkGray))
-        .block(Block::default().title("Field").borders(Borders::ALL));
+        .block(
+            Block::default()
+                .title(app.i18n.t("card.field"))
+                .borders(Borders::ALL),
+        );
     f.render_widget(info_para, chunks[0]);
 
     // Value input
@@ -189,6 +204,10 @@ pub fn draw_edit_field(f: &mut Frame, area: Rect, app: &App) {
     };
     let value_para = Paragraph::new(value_text)
         .style(Style::default().fg(Color::Yellow))
-        .block(Block::default().title("New Value").borders(Borders::ALL));
+        .block(
+            Block::default()
+                .title(app.i18n.t("card.new_value"))
+                .borders(Borders::ALL),
+        );
     f.render_widget(value_para, chunks[1]);
 }
