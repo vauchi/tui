@@ -23,14 +23,22 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Display name (editable)
     let name = app.backend.display_name().unwrap_or("Not set");
-    let name_para = Paragraph::new(format!("Display Name: {}  [press n to edit]", name))
-        .style(Style::default().fg(Color::Yellow))
-        .block(Block::default().title("Identity").borders(Borders::ALL));
+    let name_para = Paragraph::new(format!(
+        "{}: {}  [press n to edit]",
+        app.i18n.t("settings.display_name"),
+        name
+    ))
+    .style(Style::default().fg(Color::Yellow))
+    .block(
+        Block::default()
+            .title(app.i18n.t("settings.identity"))
+            .borders(Borders::ALL),
+    );
     f.render_widget(name_para, chunks[0]);
 
     // Public ID
     if let Some(id) = app.backend.public_id() {
-        let id_para = Paragraph::new(format!("Public ID: {}", id))
+        let id_para = Paragraph::new(format!("{}: {}", app.i18n.t("home.public_id"), id))
             .style(Style::default().fg(Color::DarkGray))
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(id_para, chunks[1]);
@@ -38,33 +46,49 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Relay URL
     let relay_url = app.backend.relay_url();
-    let relay_para = Paragraph::new(format!("Relay: {}  [press u to edit]", relay_url))
-        .style(Style::default().fg(Color::Cyan))
-        .block(Block::default().title("Sync Server").borders(Borders::ALL));
+    let relay_para = Paragraph::new(format!(
+        "{}: {}  [press u to edit]",
+        app.i18n.t("settings.relay"),
+        relay_url
+    ))
+    .style(Style::default().fg(Color::Cyan))
+    .block(
+        Block::default()
+            .title(app.i18n.t("settings.sync_server"))
+            .borders(Borders::ALL),
+    );
     f.render_widget(relay_para, chunks[2]);
 
     // Options and Help Links
-    let options = "\
-Options:
-  [n] Edit display name
-  [u] Edit relay URL
-  [b] Backup & restore
-  [d] Device management
-  [r] Recovery settings
-  [t] Tor privacy settings
-  [p] Privacy & data
-
-Help & Support:
-  User Guide:     https://vauchi.app/user-guide
-  FAQ:            https://vauchi.app/faq
-  Report Issue:   https://github.com/vauchi/issues
-  Privacy Policy: https://vauchi.app/privacy
-
-Settings are automatically saved.
-Your identity is stored locally and encrypted.
-
-Version 1.0.0
-";
+    let options = format!(
+        "{options}:\n\
+         \x20 [n] {edit_name}\n\
+         \x20 [u] {edit_relay}\n\
+         \x20 [b] {backup}\n\
+         \x20 [d] {devices}\n\
+         \x20 [r] {recovery}\n\
+         \x20 [t] {tor}\n\
+         \x20 [p] {privacy}\n\n\
+         {help_support}:\n\
+         \x20 User Guide:     https://vauchi.app/user-guide\n\
+         \x20 FAQ:            https://vauchi.app/faq\n\
+         \x20 Report Issue:   https://github.com/vauchi/issues\n\
+         \x20 Privacy Policy: https://vauchi.app/privacy\n\n\
+         {auto_save}\n\
+         {local_encrypted}\n\n\
+         Version 1.0.0\n",
+        options = app.i18n.t("settings.options"),
+        edit_name = app.i18n.t("settings.edit_name"),
+        edit_relay = app.i18n.t("settings.edit_relay"),
+        backup = app.i18n.t("backup.title"),
+        devices = app.i18n.t("devices.title"),
+        recovery = app.i18n.t("recovery.title"),
+        tor = app.i18n.t("privacy.title"),
+        privacy = app.i18n.t("privacy.title"),
+        help_support = app.i18n.t("settings.help_support"),
+        auto_save = app.i18n.t("settings.auto_save"),
+        local_encrypted = app.i18n.t("settings.local_encrypted"),
+    );
 
     let help_para = Paragraph::new(options)
         .style(Style::default().fg(Color::DarkGray))
@@ -87,9 +111,13 @@ pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
 
     // Current name info
     let current_name = app.backend.display_name().unwrap_or("Not set");
-    let info_para = Paragraph::new(format!("Current: {}", current_name))
-        .style(Style::default().fg(Color::DarkGray))
-        .block(Block::default().borders(Borders::ALL));
+    let info_para = Paragraph::new(format!(
+        "{}: {}",
+        app.i18n.t("settings.current"),
+        current_name
+    ))
+    .style(Style::default().fg(Color::DarkGray))
+    .block(Block::default().borders(Borders::ALL));
     f.render_widget(info_para, chunks[0]);
 
     // Name input
@@ -102,7 +130,7 @@ pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
         .style(Style::default().fg(Color::Yellow))
         .block(
             Block::default()
-                .title("New Display Name")
+                .title(app.i18n.t("settings.new_name"))
                 .borders(Borders::ALL),
         );
     f.render_widget(name_para, chunks[1]);
@@ -124,9 +152,13 @@ pub fn draw_edit_relay_url(f: &mut Frame, area: Rect, app: &App) {
 
     // Current URL info
     let current_url = app.backend.relay_url();
-    let info_para = Paragraph::new(format!("Current: {}", current_url))
-        .style(Style::default().fg(Color::DarkGray))
-        .block(Block::default().borders(Borders::ALL));
+    let info_para = Paragraph::new(format!(
+        "{}: {}",
+        app.i18n.t("settings.current"),
+        current_url
+    ))
+    .style(Style::default().fg(Color::DarkGray))
+    .block(Block::default().borders(Borders::ALL));
     f.render_widget(info_para, chunks[0]);
 
     // URL input
@@ -139,13 +171,13 @@ pub fn draw_edit_relay_url(f: &mut Frame, area: Rect, app: &App) {
         .style(Style::default().fg(Color::Cyan))
         .block(
             Block::default()
-                .title("New Relay URL")
+                .title(app.i18n.t("settings.new_relay"))
                 .borders(Borders::ALL),
         );
     f.render_widget(url_para, chunks[1]);
 
     // Help text
-    let help_para = Paragraph::new("URL must start with wss:// (or ws:// for local dev)")
+    let help_para = Paragraph::new(app.i18n.t("settings.relay_help"))
         .style(Style::default().fg(Color::DarkGray))
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(help_para, chunks[2]);
