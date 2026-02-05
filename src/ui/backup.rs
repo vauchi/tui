@@ -13,13 +13,13 @@ use vauchi_core::identity::password::{password_feedback, validate_password, Pass
 /// Draw the backup/restore screen.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     match app.backup_state.mode {
-        BackupMode::Menu => draw_menu(f, area),
+        BackupMode::Menu => draw_menu(f, area, app),
         BackupMode::Export => draw_export(f, area, app),
         BackupMode::Import => draw_import(f, area, app),
     }
 }
 
-fn draw_menu(f: &mut Frame, area: Rect) {
+fn draw_menu(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -30,24 +30,21 @@ fn draw_menu(f: &mut Frame, area: Rect) {
         ])
         .split(area);
 
-    let info = Paragraph::new(
-        "Back up your identity to transfer to another device or restore after reinstalling.\n\
-         Your backup is encrypted with a password you choose.",
-    )
-    .style(Style::default().fg(Color::Cyan))
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title("Backup & Restore"),
-    );
+    let info = Paragraph::new(app.i18n.t("backup.description"))
+        .style(Style::default().fg(Color::Cyan))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(app.i18n.t("backup.title")),
+        );
     f.render_widget(info, chunks[0]);
 
-    let export = Paragraph::new("[e] Export Backup - Create an encrypted backup")
+    let export = Paragraph::new(format!("[e] {}", app.i18n.t("backup.export")))
         .style(Style::default().fg(Color::Green))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(export, chunks[1]);
 
-    let import = Paragraph::new("[i] Import Backup - Restore from a backup")
+    let import = Paragraph::new(format!("[i] {}", app.i18n.t("backup.import")))
         .style(Style::default().fg(Color::Yellow))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(import, chunks[2]);
@@ -66,7 +63,7 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
         ])
         .split(area);
 
-    let info = Paragraph::new("Enter a password to encrypt your backup (min 8 characters):")
+    let info = Paragraph::new(app.i18n.t("backup.password_prompt"))
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::BOTTOM));
     f.render_widget(info, chunks[0]);
@@ -79,7 +76,8 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
         Style::default()
     };
     let password = Paragraph::new(format!(
-        "Password: {}",
+        "{}: {}",
+        app.i18n.t("backup.password"),
         "*".repeat(app.backup_state.password.len())
     ))
     .style(pw_style)
@@ -110,7 +108,11 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
     };
 
     let strength_gauge = Gauge::default()
-        .block(Block::default().borders(Borders::ALL).title("Strength"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(app.i18n.t("backup.strength")),
+        )
         .gauge_style(Style::default().fg(strength_color))
         .label(strength_label)
         .ratio(strength_ratio);
@@ -160,7 +162,7 @@ fn draw_import(f: &mut Frame, area: Rect, app: &App) {
         ])
         .split(area);
 
-    let info = Paragraph::new("Paste your backup data and enter the password used to create it:")
+    let info = Paragraph::new(app.i18n.t("backup.import_prompt"))
         .style(Style::default().fg(Color::Cyan))
         .block(Block::default().borders(Borders::BOTTOM));
     f.render_widget(info, chunks[0]);
@@ -177,7 +179,7 @@ fn draw_import(f: &mut Frame, area: Rect, app: &App) {
     } else {
         app.backup_state.backup_data.clone()
     };
-    let data = Paragraph::new(format!("Backup data: {}", data_display))
+    let data = Paragraph::new(format!("{}: {}", app.i18n.t("backup.data"), data_display))
         .style(data_style)
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(data, chunks[1]);
@@ -190,7 +192,8 @@ fn draw_import(f: &mut Frame, area: Rect, app: &App) {
         Style::default()
     };
     let password = Paragraph::new(format!(
-        "Password: {}",
+        "{}: {}",
+        app.i18n.t("backup.password"),
         "*".repeat(app.backup_state.password.len())
     ))
     .style(pw_style)

@@ -28,7 +28,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     draw_actions_section(f, chunks[1], app);
 
     // Recovery info
-    draw_info_section(f, chunks[2]);
+    draw_info_section(f, chunks[2], app);
 
     // Key hints
     draw_key_hints(f, chunks[3]);
@@ -57,19 +57,19 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                 let expiry_text = status
                     .claim_expires
                     .clone()
-                    .unwrap_or_else(|| "No expiration".to_string());
+                    .unwrap_or_else(|| app.i18n.t("recovery.no_expiration"));
 
                 vec![
                     Line::from(""),
                     Line::from(Span::styled(
-                        "Recovery Claim Active",
+                        app.i18n.t("recovery.claim_active"),
                         Style::default()
                             .fg(Color::Yellow)
                             .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
                     Line::from(vec![
-                        Span::raw("  Vouchers: "),
+                        Span::raw(format!("  {}: ", app.i18n.t("recovery.vouchers"))),
                         Span::styled(
                             format!("{}/{}", status.voucher_count, status.required_vouchers),
                             Style::default().fg(progress_color),
@@ -85,19 +85,19 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                 vec![
                     Line::from(""),
                     Line::from(Span::styled(
-                        "Recovery Status",
+                        app.i18n.t("recovery.title"),
                         Style::default()
                             .fg(Color::Cyan)
                             .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
                     Line::from(Span::styled(
-                        "  No active recovery claim",
+                        format!("  {}", app.i18n.t("recovery.no_active_claim")),
                         Style::default().fg(Color::DarkGray),
                     )),
                     Line::from(""),
                     Line::from(Span::styled(
-                        "  Press [c] to create a recovery claim if needed",
+                        format!("  {}", app.i18n.t("recovery.create_hint")),
                         Style::default().fg(Color::DarkGray),
                     )),
                     Line::from(""),
@@ -108,14 +108,14 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
             vec![
                 Line::from(""),
                 Line::from(Span::styled(
-                    "Recovery Status",
+                    app.i18n.t("recovery.title"),
                     Style::default()
                         .fg(Color::Cyan)
                         .add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
                 Line::from(Span::styled(
-                    "  Unable to load recovery status",
+                    format!("  {}", app.i18n.t("recovery.load_error")),
                     Style::default().fg(Color::Red),
                 )),
                 Line::from(""),
@@ -123,8 +123,11 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
         }
     };
 
-    let status =
-        Paragraph::new(status_text).block(Block::default().borders(Borders::ALL).title("Status"));
+    let status = Paragraph::new(status_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("sync.status")),
+    );
     f.render_widget(status, area);
 }
 
@@ -136,15 +139,15 @@ fn draw_actions_section(f: &mut Frame, area: Rect, app: &App) {
             Line::from(""),
             Line::from(vec![
                 Span::styled("  [c]", Style::default().fg(Color::Yellow)),
-                Span::raw(" Create recovery claim"),
+                Span::raw(format!(" {}", app.i18n.t("recovery.create_claim"))),
             ]),
             Line::from(vec![
                 Span::styled("  [v]", Style::default().fg(Color::Yellow)),
-                Span::raw(" Vouch for a contact's recovery"),
+                Span::raw(format!(" {}", app.i18n.t("recovery.vouch"))),
             ]),
             Line::from(vec![
                 Span::styled("  [s]", Style::default().fg(Color::Yellow)),
-                Span::raw(" Check recovery status"),
+                Span::raw(format!(" {}", app.i18n.t("recovery.check_status"))),
             ]),
             Line::from(""),
         ]
@@ -152,39 +155,42 @@ fn draw_actions_section(f: &mut Frame, area: Rect, app: &App) {
         vec![
             Line::from(""),
             Line::from(Span::styled(
-                "  No identity configured",
+                format!("  {}", app.i18n.t("devices.no_identity")),
                 Style::default().fg(Color::Yellow),
             )),
             Line::from(""),
             Line::from(Span::styled(
-                "  Create an identity first",
+                format!("  {}", app.i18n.t("devices.create_first")),
                 Style::default().fg(Color::DarkGray),
             )),
             Line::from(""),
         ]
     };
 
-    let actions =
-        Paragraph::new(actions_text).block(Block::default().borders(Borders::ALL).title("Actions"));
+    let actions = Paragraph::new(actions_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("devices.actions")),
+    );
     f.render_widget(actions, area);
 }
 
-fn draw_info_section(f: &mut Frame, area: Rect) {
+fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
     let info_text = vec![
         Line::from(""),
         Line::from(Span::styled(
-            "How Recovery Works",
+            app.i18n.t("recovery.how_it_works"),
             Style::default().fg(Color::Cyan),
         )),
         Line::from(""),
-        Line::from("  1. Lost your device? Create a new identity on a new device"),
-        Line::from("  2. Generate a recovery claim with your OLD public key"),
-        Line::from("  3. Ask 3+ contacts to vouch for you in person"),
-        Line::from("  4. Collect vouchers to prove you're the same person"),
-        Line::from("  5. Share your recovery proof with all contacts"),
+        Line::from(format!("  1. {}", app.i18n.t("recovery.step1"))),
+        Line::from(format!("  2. {}", app.i18n.t("recovery.step2"))),
+        Line::from(format!("  3. {}", app.i18n.t("recovery.step3"))),
+        Line::from(format!("  4. {}", app.i18n.t("recovery.step4"))),
+        Line::from(format!("  5. {}", app.i18n.t("recovery.step5"))),
         Line::from(""),
         Line::from(Span::styled(
-            "Note: Recovery requires mutual verification in person.",
+            app.i18n.t("recovery.note"),
             Style::default().fg(Color::Yellow),
         )),
         Line::from(Span::styled(
@@ -194,8 +200,11 @@ fn draw_info_section(f: &mut Frame, area: Rect) {
         Line::from(""),
     ];
 
-    let info = Paragraph::new(info_text)
-        .block(Block::default().borders(Borders::ALL).title("Information"));
+    let info = Paragraph::new(info_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("recovery.information")),
+    );
     f.render_widget(info, area);
 }
 

@@ -12,7 +12,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::app::App;
 
 /// Draw the setup screen.
-pub fn draw(f: &mut Frame, area: Rect, _app: &App) {
+pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -28,16 +28,16 @@ pub fn draw(f: &mut Frame, area: Rect, _app: &App) {
     // Welcome message
     let welcome_text = vec![
         Line::from(Span::styled(
-            "Welcome to Vauchi!",
+            app.i18n.t("welcome.title"),
             Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
-        Line::from("Privacy-focused updatable contact cards."),
+        Line::from(app.i18n.t("welcome.subtitle")),
         Line::from(""),
         Line::from(Span::styled(
-            "You need to set up an identity to continue.",
+            app.i18n.t("setup.identity_required"),
             Style::default().fg(Color::Yellow),
         )),
     ];
@@ -48,21 +48,21 @@ pub fn draw(f: &mut Frame, area: Rect, _app: &App) {
             Block::default()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Cyan))
-                .title(" Setup Required "),
+                .title(format!(" {} ", app.i18n.t("setup.title"))),
         );
     f.render_widget(welcome, chunks[1]);
 
     // Create new identity option
     let create_text = vec![
         Line::from(Span::styled(
-            "[c] Create New Identity",
+            format!("[c] {}", app.i18n.t("setup.create")),
             Style::default()
                 .fg(Color::Green)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(Span::styled(
-            "Start fresh with a new Vauchi identity",
+            app.i18n.t("setup.create_description"),
             Style::default().fg(Color::DarkGray),
         )),
     ];
@@ -75,14 +75,14 @@ pub fn draw(f: &mut Frame, area: Rect, _app: &App) {
     // Import backup option
     let import_text = vec![
         Line::from(Span::styled(
-            "[i] Import Backup",
+            format!("[i] {}", app.i18n.t("setup.import")),
             Style::default()
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(Span::styled(
-            "Restore from an existing backup",
+            app.i18n.t("setup.import_description"),
             Style::default().fg(Color::DarkGray),
         )),
     ];

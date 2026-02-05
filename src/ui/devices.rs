@@ -53,12 +53,15 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
         vec![
             Line::from(""),
             Line::from(vec![
-                Span::styled("Devices: ", Style::default().fg(Color::Cyan)),
+                Span::styled(
+                    format!("{}: ", app.i18n.t("devices.count")),
+                    Style::default().fg(Color::Cyan),
+                ),
                 Span::raw(format!("{}", device_count)),
             ]),
             Line::from(""),
             Line::from(Span::styled(
-                "Manage linked devices for this identity",
+                app.i18n.t("devices.manage_description"),
                 Style::default().fg(Color::DarkGray),
             )),
         ]
@@ -66,19 +69,22 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
         vec![
             Line::from(""),
             Line::from(Span::styled(
-                "No identity configured",
+                app.i18n.t("devices.no_identity"),
                 Style::default().fg(Color::Yellow),
             )),
             Line::from(""),
             Line::from(Span::styled(
-                "Create an identity first to manage devices",
+                app.i18n.t("devices.create_first"),
                 Style::default().fg(Color::DarkGray),
             )),
         ]
     };
 
-    let info = Paragraph::new(info_text)
-        .block(Block::default().borders(Borders::ALL).title("Device Info"));
+    let info = Paragraph::new(info_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("devices.info")),
+    );
     f.render_widget(info, chunks[0]);
 
     // Instructions
@@ -86,14 +92,18 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
         Line::from(vec![
             Span::styled("[l]", Style::default().fg(Color::Yellow)),
-            Span::raw(" Generate link code"),
+            Span::raw(format!(" {}", app.i18n.t("devices.generate_link"))),
         ]),
         Line::from(vec![
             Span::styled("[r]", Style::default().fg(Color::Yellow)),
-            Span::raw(" Revoke selected device"),
+            Span::raw(format!(" {}", app.i18n.t("devices.revoke"))),
         ]),
     ])
-    .block(Block::default().borders(Borders::ALL).title("Actions"));
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("devices.actions")),
+    );
     f.render_widget(instructions, chunks[1]);
 }
 
@@ -104,17 +114,17 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
         let empty = Paragraph::new(vec![
             Line::from(""),
             Line::from(Span::styled(
-                "No devices linked to this identity",
+                app.i18n.t("devices.empty"),
                 Style::default().fg(Color::DarkGray),
             )),
             Line::from(""),
-            Line::from(Span::raw("Press [l] to generate a device link code")),
+            Line::from(Span::raw(app.i18n.t("devices.link_hint"))),
         ])
         .alignment(Alignment::Center)
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Linked Devices"),
+                .title(app.i18n.t("devices.linked")),
         );
         f.render_widget(empty, area);
         return;
@@ -166,7 +176,7 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Linked Devices"),
+                .title(app.i18n.t("devices.linked")),
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 

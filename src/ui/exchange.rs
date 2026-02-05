@@ -19,11 +19,9 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
         ])
         .split(area);
 
-    let instructions = Paragraph::new(
-        "Share this QR code with others to exchange contact cards. Press 'r' to refresh.",
-    )
-    .style(Style::default().fg(Color::DarkGray))
-    .block(Block::default().borders(Borders::NONE));
+    let instructions = Paragraph::new(app.i18n.t("exchange.instruction"))
+        .style(Style::default().fg(Color::DarkGray))
+        .block(Block::default().borders(Borders::NONE));
     f.render_widget(instructions, chunks[0]);
 
     // Ensure we have a QR code generated
@@ -38,7 +36,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
         let remaining = qr_data.remaining_secs();
         let (timer_text, timer_style) = if remaining == 0 {
             (
-                "QR expired! Press 'r' to generate a new one".to_string(),
+                app.i18n.t("exchange.expired"),
                 Style::default().fg(Color::Red),
             )
         } else {
@@ -49,7 +47,13 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
             } else {
                 Style::default().fg(Color::Green)
             };
-            (format!("Expires in {}:{:02}", mins, secs), style)
+            (
+                app.i18n.t_args(
+                    "exchange.expires_in",
+                    &[("time", &format!("{}:{:02}", mins, secs))],
+                ),
+                style,
+            )
         };
         let timer = Paragraph::new(timer_text)
             .style(timer_style)
@@ -62,18 +66,26 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
             let qr_display = render_qr_ascii(&qr_data.data);
             let qr = Paragraph::new(qr_display)
                 .style(Style::default().fg(Color::White))
-                .block(Block::default().title("Your QR Code").borders(Borders::ALL));
+                .block(
+                    Block::default()
+                        .title(app.i18n.t("exchange.your_qr"))
+                        .borders(Borders::ALL),
+                );
             f.render_widget(qr, chunks[2]);
         } else {
-            let expired = Paragraph::new("QR code has expired\n\nPress 'r' to generate a new one")
+            let expired = Paragraph::new(app.i18n.t("exchange.expired_hint"))
                 .style(Style::default().fg(Color::DarkGray))
                 .alignment(Alignment::Center)
-                .block(Block::default().title("QR Code").borders(Borders::ALL));
+                .block(
+                    Block::default()
+                        .title(app.i18n.t("exchange.qr_code"))
+                        .borders(Borders::ALL),
+                );
             f.render_widget(expired, chunks[2]);
         }
     } else {
         // Error generating QR
-        let error = Paragraph::new("Failed to generate QR code")
+        let error = Paragraph::new(app.i18n.t("exchange.qr_error"))
             .style(Style::default().fg(Color::Red))
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(error, chunks[2]);
@@ -84,7 +96,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
 pub fn regenerate_qr(app: &mut App) {
     if let Ok(qr_data) = app.backend.generate_exchange_qr() {
         app.current_qr = Some(qr_data);
-        app.set_status("QR code refreshed");
+        app.set_status(app.i18n.t("exchange.refreshed"));
     }
 }
 

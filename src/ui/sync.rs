@@ -33,11 +33,11 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     };
 
     let status_text = if sync_state.is_syncing {
-        "Syncing..."
+        app.i18n.t("sync.syncing")
     } else if sync_state.connected {
-        "Connected"
+        app.i18n.t("sync.connected")
     } else {
-        "Disconnected"
+        app.i18n.t("sync.disconnected")
     };
 
     // Tor status indicator
@@ -51,11 +51,11 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let status_lines = vec![
         Line::from(""),
         Line::from(vec![
-            Span::raw("  Relay: "),
+            Span::raw(format!("  {}: ", app.i18n.t("sync.relay"))),
             Span::styled(relay_url, Style::default().fg(Color::Cyan)),
         ]),
         Line::from(vec![
-            Span::raw("  Status: "),
+            Span::raw(format!("  {}: ", app.i18n.t("sync.status"))),
             Span::styled(status_text, status_style),
         ]),
         Line::from(vec![
@@ -70,8 +70,11 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
     ];
 
-    let status = Paragraph::new(status_lines)
-        .block(Block::default().borders(Borders::ALL).title("Connection"));
+    let status = Paragraph::new(status_lines).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("sync.connection")),
+    );
     f.render_widget(status, chunks[0]);
 
     // Sync progress
@@ -79,12 +82,16 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let pending_updates = sync_state.pending_updates;
 
     let progress_label = if pending_updates > 0 {
-        format!(
-            "{} contacts | {} pending updates",
-            contact_count, pending_updates
+        app.i18n.t_args(
+            "sync.pending",
+            &[
+                ("contacts", &contact_count.to_string()),
+                ("pending", &pending_updates.to_string()),
+            ],
         )
     } else {
-        format!("{} contacts synced", contact_count)
+        app.i18n
+            .t_args("sync.synced", &[("contacts", &contact_count.to_string())])
     };
 
     // Calculate progress ratio
@@ -100,7 +107,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Sync Progress"),
+                .title(app.i18n.t("sync.progress")),
         )
         .gauge_style(Style::default().fg(Color::Cyan))
         .ratio(progress_ratio)
@@ -114,7 +121,10 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     // Add last result if available
     if let Some(ref result) = sync_state.last_result {
         log_items.push(ListItem::new(Line::from(vec![
-            Span::styled("  Last sync: ", Style::default().fg(Color::Cyan)),
+            Span::styled(
+                format!("  {}: ", app.i18n.t("sync.last_sync")),
+                Style::default().fg(Color::Cyan),
+            ),
             Span::raw(result.as_str()),
         ])));
         log_items.push(ListItem::new(""));
@@ -131,26 +141,38 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     if log_items.is_empty() || sync_state.last_result.is_none() {
         log_items.push(ListItem::new(""));
         log_items.push(ListItem::new(Span::styled(
-            "  Press [s] to start sync",
+            format!("  {}", app.i18n.t("sync.start_hint")),
             Style::default().fg(Color::Yellow),
         )));
         log_items.push(ListItem::new(""));
         log_items.push(ListItem::new(Span::styled(
-            "  Sync Operations:",
+            format!("  {}:", app.i18n.t("sync.operations")),
             Style::default().fg(Color::Cyan),
         )));
-        log_items.push(ListItem::new("  - Connect to relay server"));
-        log_items.push(ListItem::new("  - Receive pending exchange messages"));
-        log_items.push(ListItem::new("  - Process contact card updates"));
-        log_items.push(ListItem::new("  - Send outbound updates to contacts"));
+        log_items.push(ListItem::new(format!(
+            "  - {}",
+            app.i18n.t("sync.op_connect")
+        )));
+        log_items.push(ListItem::new(format!(
+            "  - {}",
+            app.i18n.t("sync.op_receive")
+        )));
+        log_items.push(ListItem::new(format!(
+            "  - {}",
+            app.i18n.t("sync.op_process")
+        )));
+        log_items.push(ListItem::new(format!("  - {}", app.i18n.t("sync.op_send"))));
         log_items.push(ListItem::new(""));
         log_items.push(ListItem::new(Span::styled(
-            "  Press [t] to test relay connection",
+            format!("  {}", app.i18n.t("sync.test_hint")),
             Style::default().fg(Color::DarkGray),
         )));
     }
 
-    let log_list =
-        List::new(log_items).block(Block::default().borders(Borders::ALL).title("Sync Info"));
+    let log_list = List::new(log_items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(app.i18n.t("sync.info")),
+    );
     f.render_widget(log_list, chunks[2]);
 }
