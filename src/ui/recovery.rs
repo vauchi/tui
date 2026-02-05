@@ -39,6 +39,15 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
 
     let status_text = match status_result {
         Ok(status) => {
+            // Trusted contact count
+            let trusted_count = app.backend.trusted_contact_count().unwrap_or(0);
+            let threshold = status.required_vouchers;
+            let trusted_color = if trusted_count >= threshold as usize {
+                Color::Green
+            } else {
+                Color::Yellow
+            };
+
             if status.has_active_claim {
                 let progress = if status.required_vouchers > 0 {
                     (status.voucher_count as f64 / status.required_vouchers as f64).min(1.0)
@@ -76,6 +85,13 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                         ),
                     ]),
                     Line::from(vec![
+                        Span::raw("  Trusted contacts: "),
+                        Span::styled(
+                            format!("{}/{}", trusted_count, threshold),
+                            Style::default().fg(trusted_color),
+                        ),
+                    ]),
+                    Line::from(vec![
                         Span::raw("  Expires: "),
                         Span::styled(expiry_text, Style::default().fg(Color::DarkGray)),
                     ]),
@@ -91,11 +107,18 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                             .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
+                    Line::from(vec![
+                        Span::raw("  Trusted contacts: "),
+                        Span::styled(
+                            format!("{}/{}", trusted_count, threshold),
+                            Style::default().fg(trusted_color),
+                        ),
+                    ]),
+                    Line::from(""),
                     Line::from(Span::styled(
                         format!("  {}", app.i18n.t("recovery.no_active_claim")),
                         Style::default().fg(Color::DarkGray),
                     )),
-                    Line::from(""),
                     Line::from(Span::styled(
                         format!("  {}", app.i18n.t("recovery.create_hint")),
                         Style::default().fg(Color::DarkGray),

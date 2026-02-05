@@ -81,10 +81,12 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .enumerate()
         .map(|(display_idx, (_, contact))| {
             let verified = if contact.verified { "✓" } else { " " };
+            let trust_marker = if contact.recovery_trusted { " ★" } else { "" };
             let content = format!(
-                "[{}] {}  ({}...)",
+                "[{}] {}{}  ({}...)",
                 verified,
                 contact.display_name,
+                trust_marker,
                 &contact.id[..8]
             );
             let style = if display_idx == app.selected_contact {
@@ -140,17 +142,26 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                 );
             f.render_widget(name, chunks[0]);
 
-            let verified_text = if c.verified {
-                app.i18n.t("contacts.verified")
+            let mut status_lines = Vec::new();
+            if c.verified {
+                status_lines.push(Span::styled(
+                    app.i18n.t("contacts.verified"),
+                    Style::default().fg(Color::Green),
+                ));
             } else {
-                app.i18n.t("contacts.not_verified")
-            };
-            let verified_style = if c.verified {
-                Style::default().fg(Color::Green)
-            } else {
-                Style::default().fg(Color::Yellow)
-            };
-            let verified = Paragraph::new(verified_text).style(verified_style).block(
+                status_lines.push(Span::styled(
+                    app.i18n.t("contacts.not_verified"),
+                    Style::default().fg(Color::Yellow),
+                ));
+            }
+            if c.recovery_trusted {
+                status_lines.push(Span::raw("  "));
+                status_lines.push(Span::styled(
+                    "★ Recovery Trusted",
+                    Style::default().fg(Color::Green),
+                ));
+            }
+            let verified = Paragraph::new(Line::from(status_lines)).block(
                 Block::default()
                     .title(app.i18n.t("contacts.status"))
                     .borders(Borders::ALL),
@@ -206,7 +217,7 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
             }
 
             // Help line
-            let help = Paragraph::new("v=visibility  x=delete  o/Enter=open  Esc=back")
+            let help = Paragraph::new("t=trust  v=visibility  x=delete  o/Enter=open  Esc=back")
                 .style(Style::default().fg(Color::DarkGray));
             f.render_widget(help, chunks[3]);
         }

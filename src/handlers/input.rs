@@ -319,6 +319,18 @@ fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 app.goto(Screen::ContactVisibility);
             }
         }
+        KeyCode::Char('t') => {
+            // Toggle recovery trust
+            if let Ok(contacts) = app.backend.list_contacts() {
+                if let Some(contact) = contacts.get(app.selected_contact) {
+                    match app.backend.toggle_recovery_trust(&contact.id) {
+                        Ok(true) => app.set_status("Marked as recovery-trusted"),
+                        Ok(false) => app.set_status("Removed recovery trust"),
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+            }
+        }
         KeyCode::Char('x') | KeyCode::Delete => {
             // Delete contact
             if let Ok(contacts) = app.backend.list_contacts() {

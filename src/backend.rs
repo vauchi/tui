@@ -64,6 +64,7 @@ pub struct ContactInfo {
     pub id: String,
     pub display_name: String,
     pub verified: bool,
+    pub recovery_trusted: bool,
 }
 
 /// QR code data with expiration info.
@@ -409,6 +410,7 @@ impl Backend {
                 id: c.id().to_string(),
                 display_name: c.display_name().to_string(),
                 verified: c.is_fingerprint_verified(),
+                recovery_trusted: c.is_recovery_trusted(),
             })
             .collect())
     }
@@ -515,6 +517,41 @@ impl Backend {
             .delete_contact(contact_id)
             .context("Failed to delete contact")?;
         Ok(())
+    }
+
+    /// Toggle recovery trust for a contact. Returns new trust state.
+    pub fn toggle_recovery_trust(&self, contact_id: &str) -> Result<bool> {
+        let mut contact = self
+            .storage
+            .load_contact(contact_id)
+            .context("Failed to get contact")?
+            .context("Contact not found")?;
+
+        if contact.is_blocked() {
+            anyhow::bail!("Blocked contacts cannot be trusted for recovery");
+        }
+
+        let new_state = !contact.is_recovery_trusted();
+        if new_state {
+            contact.trust_for_recovery();
+        } else {
+            contact.untrust_for_recovery();
+        }
+
+        self.storage
+            .save_contact(&contact)
+            .context("Failed to save contact")?;
+
+        Ok(new_state)
+    }
+
+    /// Count contacts that are trusted for recovery.
+    pub fn trusted_contact_count(&self) -> Result<usize> {
+        let contacts = self
+            .storage
+            .list_contacts()
+            .context("Failed to list contacts")?;
+        Ok(contacts.iter().filter(|c| c.is_recovery_trusted()).count())
     }
 
     /// Get fields for a contact by index.
@@ -2490,5 +2527,113 @@ mod tests {
         // None should trigger again
         let moment = backend.check_aha_moment(AhaMomentType::CardCreationComplete);
         assert!(moment.is_none());
+    }
+
+    // === Recovery Trust Tests ===
+    // Trace: features/contact_recovery.feature
+
+    /// Helper: create a test contact and save it to storage.
+    fn create_and_save_test_contact(backend: &Backend, name: &str) -> String {
+        let pk: [u8; 32] = {
+            let mut arr = [0u8; 32];
+            // Derive unique key from name bytes
+            for (i, b) in name.bytes().enumerate() {
+                arr[i % 32] ^= b;
+            }
+            arr
+        };
+        let card = ContactCard::new(name);
+        let shared_key = SymmetricKey::generate();
+        let contact = Contact::from_exchange(pk, card, shared_key);
+        let id = contact.id().to_string();
+        backend
+            .storage
+            .save_contact(&contact)
+            .expect("Failed to save contact");
+        id
+    }
+
+    /// Trace: contact_recovery.feature line 57 - "Mark contact as trusted"
+    #[test]
+    fn test_toggle_recovery_trust_on() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let id = create_and_save_test_contact(&backend, "Bob");
+
+        let new_state = backend.toggle_recovery_trust(&id).unwrap();
+        assert!(new_state, "Should be trusted after toggling on");
+
+        let contacts = backend.list_contacts().unwrap();
+        assert!(contacts[0].recovery_trusted);
+    }
+
+    /// Trace: contact_recovery.feature line 64 - "Remove recovery trust"
+    #[test]
+    fn test_toggle_recovery_trust_off() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let id = create_and_save_test_contact(&backend, "Bob");
+
+        // Trust then untrust
+        backend.toggle_recovery_trust(&id).unwrap();
+        let new_state = backend.toggle_recovery_trust(&id).unwrap();
+        assert!(!new_state, "Should be untrusted after toggling off");
+
+        let contacts = backend.list_contacts().unwrap();
+        assert!(!contacts[0].recovery_trusted);
+    }
+
+    /// Trace: contact_recovery.feature line 148 - "Removing trust doesn't affect other properties"
+    #[test]
+    fn test_recovery_trust_preserves_other_properties() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let id = create_and_save_test_contact(&backend, "Bob");
+
+        // Trust, then untrust
+        backend.toggle_recovery_trust(&id).unwrap();
+        backend.toggle_recovery_trust(&id).unwrap();
+
+        // Verify other properties are preserved
+        let contacts = backend.list_contacts().unwrap();
+        assert_eq!(contacts[0].display_name, "Bob");
+        assert!(!contacts[0].verified); // Default is unverified
+    }
+
+    /// Trace: contact_recovery.feature - Trusted contact count
+    #[test]
+    fn test_trusted_contact_count() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+
+        let id1 = create_and_save_test_contact(&backend, "Bob");
+        let _id2 = create_and_save_test_contact(&backend, "Carol");
+        let id3 = create_and_save_test_contact(&backend, "Dave");
+
+        assert_eq!(backend.trusted_contact_count().unwrap(), 0);
+
+        backend.toggle_recovery_trust(&id1).unwrap();
+        assert_eq!(backend.trusted_contact_count().unwrap(), 1);
+
+        backend.toggle_recovery_trust(&id3).unwrap();
+        assert_eq!(backend.trusted_contact_count().unwrap(), 2);
+
+        backend.toggle_recovery_trust(&id1).unwrap(); // untrust
+        assert_eq!(backend.trusted_contact_count().unwrap(), 1);
+    }
+
+    /// Trace: contact_recovery.feature - ContactInfo includes recovery_trusted
+    #[test]
+    fn test_contact_info_includes_recovery_trusted() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let id = create_and_save_test_contact(&backend, "Bob");
+
+        let contacts = backend.list_contacts().unwrap();
+        assert!(!contacts[0].recovery_trusted);
+
+        backend.toggle_recovery_trust(&id).unwrap();
+        let contacts = backend.list_contacts().unwrap();
+        assert!(contacts[0].recovery_trusted);
     }
 }
