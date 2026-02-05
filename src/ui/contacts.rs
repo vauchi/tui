@@ -37,9 +37,9 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Search bar
     let search_title = if app.contact_search_mode {
-        "Search (type to search, Esc to exit)"
+        app.i18n.t("contacts.search_active")
     } else {
-        "Search (/ to search)"
+        app.i18n.t("contacts.search_hint")
     };
     let search_style = if app.contact_search_mode {
         Style::default().fg(Color::Yellow)
@@ -47,7 +47,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Style::default()
     };
     let search_text = if app.contact_search_query.is_empty() && !app.contact_search_mode {
-        "Press / to search...".to_string()
+        app.i18n.t("contacts.search_placeholder")
     } else {
         app.contact_search_query.clone()
     };
@@ -61,13 +61,17 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     if filtered.is_empty() {
         let msg = if contacts.is_empty() {
-            "No contacts yet. Exchange cards to add contacts!"
+            app.i18n.t("contacts.empty")
         } else {
-            "No contacts match your search."
+            app.i18n.t("contacts.no_match")
         };
         let empty = Paragraph::new(msg)
             .style(Style::default().fg(Color::DarkGray))
-            .block(Block::default().borders(Borders::ALL).title("Contacts"));
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(app.i18n.t("contacts.title")),
+            );
         f.render_widget(empty, chunks[1]);
         return;
     }
@@ -94,12 +98,11 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         })
         .collect();
 
+    let list_title = app
+        .i18n
+        .t_args("contacts.shown", &[("count", &filtered.len().to_string())]);
     let list = List::new(items)
-        .block(
-            Block::default()
-                .title(format!("Contacts ({} shown)", filtered.len()))
-                .borders(Borders::ALL),
-        )
+        .block(Block::default().title(list_title).borders(Borders::ALL))
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
 
     let mut state = ListState::default();
@@ -130,29 +133,39 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
 
             let name = Paragraph::new(c.display_name.clone())
                 .style(Style::default().add_modifier(Modifier::BOLD))
-                .block(Block::default().title("Name").borders(Borders::ALL));
+                .block(
+                    Block::default()
+                        .title(app.i18n.t("contacts.name"))
+                        .borders(Borders::ALL),
+                );
             f.render_widget(name, chunks[0]);
 
             let verified_text = if c.verified {
-                "Verified ✓"
+                app.i18n.t("contacts.verified")
             } else {
-                "Not verified"
+                app.i18n.t("contacts.not_verified")
             };
             let verified_style = if c.verified {
                 Style::default().fg(Color::Green)
             } else {
                 Style::default().fg(Color::Yellow)
             };
-            let verified = Paragraph::new(verified_text)
-                .style(verified_style)
-                .block(Block::default().title("Status").borders(Borders::ALL));
+            let verified = Paragraph::new(verified_text).style(verified_style).block(
+                Block::default()
+                    .title(app.i18n.t("contacts.status"))
+                    .borders(Borders::ALL),
+            );
             f.render_widget(verified, chunks[1]);
 
             // Fields list with selection
             if fields.is_empty() {
-                let empty = Paragraph::new("No contact info shared")
+                let empty = Paragraph::new(app.i18n.t("contacts.no_info"))
                     .style(Style::default().fg(Color::DarkGray))
-                    .block(Block::default().title("Contact Info").borders(Borders::ALL));
+                    .block(
+                        Block::default()
+                            .title(app.i18n.t("contacts.info"))
+                            .borders(Borders::ALL),
+                    );
                 f.render_widget(empty, chunks[2]);
             } else {
                 let items: Vec<ListItem> = fields
@@ -182,7 +195,7 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                 let list = List::new(items)
                     .block(
                         Block::default()
-                            .title("Contact Info (j/k to navigate, Enter to open)")
+                            .title(app.i18n.t("contacts.info"))
                             .borders(Borders::ALL),
                     )
                     .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
@@ -198,7 +211,8 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
             f.render_widget(help, chunks[3]);
         }
         None => {
-            let empty = Paragraph::new("Contact not found").style(Style::default().fg(Color::Red));
+            let empty = Paragraph::new(app.i18n.t("contacts.not_found"))
+                .style(Style::default().fg(Color::Red));
             f.render_widget(empty, area);
         }
     }
