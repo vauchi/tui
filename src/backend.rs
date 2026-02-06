@@ -18,7 +18,10 @@ use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
 use vauchi_core::{
     contact_card::ContactAction,
     crypto::ratchet::DoubleRatchetState,
-    exchange::{EncryptedExchangeMessage, X3DHKeyPair},
+    exchange::{
+        EncryptedExchangeMessage, ExchangeEvent, ExchangeSession, ManualConfirmationVerifier,
+        X3DHKeyPair,
+    },
     network::simple_message::{
         create_device_sync_ack, create_device_sync_message, create_simple_ack,
         create_simple_envelope, decode_simple_message, encode_simple_message,
@@ -26,8 +29,7 @@ use vauchi_core::{
         SimpleHandshake, SimplePayload,
     },
     sync::{DeviceSyncOrchestrator, SyncItem},
-    Contact, ContactCard, ContactField, ExchangeQR, FieldType, Identity, IdentityBackup, Storage,
-    SymmetricKey,
+    Contact, ContactCard, ContactField, FieldType, Identity, IdentityBackup, Storage, SymmetricKey,
 };
 
 #[cfg(not(feature = "secure-storage"))]
@@ -425,11 +427,37 @@ impl Backend {
     }
 
     /// Generate exchange QR data with expiration info.
+    ///
+    /// Uses ExchangeSession state machine with ManualConfirmationVerifier
+    /// since TUI doesn't have audio hardware for proximity verification.
     pub fn generate_exchange_qr(&self) -> Result<QRData> {
         let identity = self.identity.as_ref().context("No identity")?;
 
-        // Generate actual exchange QR with X3DH
-        let qr = ExchangeQR::generate(identity);
+        let our_card = self
+            .storage
+            .load_own_card()
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| ContactCard::new(identity.display_name()));
+
+        // Reconstruct an owned identity for the session
+        let backup = identity
+            .export_backup(LOCAL_STORAGE_PASSWORD)
+            .map_err(|e| anyhow::anyhow!("Failed to export identity: {:?}", e))?;
+        let identity_owned = Identity::import_backup(&backup, LOCAL_STORAGE_PASSWORD)
+            .map_err(|e| anyhow::anyhow!("Failed to import identity: {:?}", e))?;
+
+        // Create exchange session as initiator with manual confirmation
+        let verifier = ManualConfirmationVerifier::new();
+        verifier.confirm(); // Pre-confirm for TUI (no audio hardware)
+        let mut session = ExchangeSession::new_initiator(identity_owned, our_card, verifier);
+
+        // Generate QR via state machine
+        session
+            .apply(ExchangeEvent::GenerateQR)
+            .map_err(|e| anyhow::anyhow!("Failed to generate QR: {:?}", e))?;
+
+        let qr = session.qr().context("QR code not generated")?;
 
         Ok(QRData {
             data: qr.to_data_string(),
