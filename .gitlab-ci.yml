@@ -67,7 +67,8 @@ test:unit:
   stage: test
   needs: []
   script:
-    - cargo test --all-targets
+    - git clone --depth=1 https://gitlab.com/vauchi/locales.git /tmp/locales || true
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets
 
 # ============================================================
 # Security Stage (runs on dependency changes)
@@ -109,4 +110,5 @@ verify:upstream-compat:
   stage: verify
   needs: []
   script:
-    - cargo test --all-targets
+    - git clone --depth=1 https://gitlab.com/vauchi/locales.git /tmp/locales || true
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets

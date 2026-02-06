@@ -8,6 +8,8 @@
 //! in the target screen state, renders to a fixed-size terminal buffer,
 //! and snapshots the text output.
 
+use std::sync::Once;
+
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 use ratatui::Terminal;
@@ -23,8 +25,31 @@ use vauchi_tui::backend::Backend;
 const WIDTH: u16 = 80;
 const HEIGHT: u16 = 24;
 
+/// Ensure locale data is loaded before snapshot tests run.
+/// Searches for locale JSON files in standard locations (workspace locales repo,
+/// core's bundled copy, or VAUCHI_LOCALES_DIR env var).
+static INIT_LOCALES: Once = Once::new();
+
+fn ensure_locales_loaded() {
+    INIT_LOCALES.call_once(|| {
+        let candidates = [
+            std::env::var("VAUCHI_LOCALES_DIR").ok(),
+            Some("../locales".to_string()),
+            Some("../core/vauchi-core/locales".to_string()),
+        ];
+        for candidate in candidates.iter().flatten() {
+            let path = std::path::Path::new(candidate);
+            if path.join("en.json").exists() && vauchi_core::i18n::init(path).is_ok() {
+                return;
+            }
+        }
+        eprintln!("WARNING: Could not find locale files — snapshots may use fallback strings");
+    });
+}
+
 /// Create a test backend with an identity and some card fields.
 fn create_app_with_identity() -> (App, TempDir) {
+    ensure_locales_loaded();
     let temp_dir = TempDir::new().expect("temp dir");
     let mut backend = Backend::new(temp_dir.path()).expect("backend");
     backend
@@ -49,6 +74,7 @@ fn create_app_with_identity() -> (App, TempDir) {
 
 /// Create a test backend without an identity (setup state).
 fn create_app_without_identity() -> (App, TempDir) {
+    ensure_locales_loaded();
     let temp_dir = TempDir::new().expect("temp dir");
     let backend = Backend::new(temp_dir.path()).expect("backend");
     let app = App::new(backend);
