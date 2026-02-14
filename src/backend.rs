@@ -181,6 +181,26 @@ fn load_or_generate_backup_password(data_dir: &Path) -> Result<String> {
     Ok(password)
 }
 
+/// Formats a shred report and verification into a display string.
+fn format_shred_summary(
+    report: &vauchi_core::api::ShredReport,
+    verification: &vauchi_core::api::ShredVerification,
+) -> String {
+    let status = if verification.all_clear {
+        "ALL CLEAR"
+    } else {
+        "WARNING: incomplete"
+    };
+    format!(
+        "Shred complete [{}] — {} contacts notified, purge={}, SMK={}, DB={}",
+        status,
+        report.contacts_notified,
+        report.relay_purge_sent,
+        report.smk_destroyed,
+        report.sqlite_destroyed,
+    )
+}
+
 impl Backend {
     /// Returns the per-installation backup password.
     fn backup_password(&self) -> Result<String> {
@@ -1618,6 +1638,138 @@ impl Backend {
         let manager = vauchi_core::api::DeletionManager::new(&self.storage);
         manager.cancel_deletion()?;
         Ok(())
+    }
+
+    /// Creates a SecureStorage instance for shred operations.
+    #[allow(unused_variables)]
+    fn create_secure_storage(&self) -> Result<Box<dyn SecureStorage>> {
+        #[cfg(feature = "secure-storage")]
+        {
+            Ok(Box::new(PlatformKeyring::new("vauchi-tui")))
+        }
+
+        #[cfg(not(feature = "secure-storage"))]
+        {
+            let fallback_key = load_or_generate_fallback_key(&self.data_dir)?;
+            let key_dir = self.data_dir.join("keys");
+            Ok(Box::new(FileKeyStorage::new(key_dir, fallback_key)))
+        }
+    }
+
+    /// Creates a connected RelayClient for shred operations.
+    fn create_shred_relay_client(
+        &self,
+        identity_id: &str,
+    ) -> Result<vauchi_core::network::RelayClient<vauchi_core::network::WebSocketTransport>> {
+        use vauchi_core::network::{
+            RelayClient, RelayClientConfig, TransportConfig, WebSocketTransport,
+        };
+        let transport_config = TransportConfig {
+            server_url: self.relay_url.clone(),
+            ..TransportConfig::default()
+        };
+        let config = RelayClientConfig {
+            transport: transport_config,
+            ..RelayClientConfig::default()
+        };
+        let transport = WebSocketTransport::new();
+        let mut client = RelayClient::new(transport, config, identity_id.to_string());
+        client
+            .connect()
+            .map_err(|e| anyhow::anyhow!("Failed to connect to relay: {}", e))?;
+        Ok(client)
+    }
+
+    /// Executes a scheduled account deletion after the grace period.
+    pub fn execute_deletion(&self) -> Result<String> {
+        let identity = self
+            .identity
+            .as_ref()
+            .context("No identity loaded")?;
+
+        let manager = vauchi_core::api::DeletionManager::new(&self.storage);
+        let state = manager.deletion_state()?;
+        let token = match state {
+            vauchi_core::storage::DeletionState::Scheduled {
+                scheduled_at,
+                execute_at,
+            } => {
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                if now < execute_at {
+                    let remaining = execute_at.saturating_sub(now);
+                    let days = remaining / 86400;
+                    anyhow::bail!("Grace period not elapsed. {} days remaining.", days);
+                }
+                vauchi_core::api::ShredToken::from_created_at(scheduled_at)
+            }
+            vauchi_core::storage::DeletionState::None => {
+                anyhow::bail!("No deletion scheduled.");
+            }
+            vauchi_core::storage::DeletionState::Executed { .. } => {
+                anyhow::bail!("Account already deleted.");
+            }
+        };
+
+        let secure_storage = self.create_secure_storage()?;
+        let identity_id = hex::encode(identity.signing_public_key());
+        let shred_manager = vauchi_core::api::ShredManager::new(
+            &self.storage,
+            secure_storage.as_ref(),
+            identity,
+            &self.data_dir,
+        );
+
+        let mut purge_client = self.create_shred_relay_client(&identity_id)?;
+        let mut revocation_client = self.create_shred_relay_client(&identity_id)?;
+
+        let report = shred_manager
+            .hard_shred(
+                token,
+                Some(&mut purge_client),
+                Some(&mut revocation_client),
+            )
+            .map_err(|e| anyhow::anyhow!("Shred failed: {}", e))?;
+
+        let verification = shred_manager.verify_shred();
+        Ok(format_shred_summary(&report, &verification))
+    }
+
+    /// Emergency immediate deletion — no grace period.
+    pub fn panic_shred(&self) -> Result<String> {
+        let identity = self
+            .identity
+            .as_ref()
+            .context("No identity loaded")?;
+
+        let secure_storage = self.create_secure_storage()?;
+        let identity_id = hex::encode(identity.signing_public_key());
+        let shred_manager = vauchi_core::api::ShredManager::new(
+            &self.storage,
+            secure_storage.as_ref(),
+            identity,
+            &self.data_dir,
+        );
+
+        // Best-effort relay connections
+        let mut purge_client = self.create_shred_relay_client(&identity_id).ok();
+        let mut revocation_client = self.create_shred_relay_client(&identity_id).ok();
+
+        let report = shred_manager
+            .panic_shred(
+                purge_client
+                    .as_mut()
+                    .map(|c| c as &mut dyn vauchi_core::api::PurgeSender),
+                revocation_client
+                    .as_mut()
+                    .map(|c| c as &mut dyn vauchi_core::api::RevocationSender),
+            )
+            .map_err(|e| anyhow::anyhow!("Panic shred failed: {}", e))?;
+
+        let verification = shred_manager.verify_shred();
+        Ok(format_shred_summary(&report, &verification))
     }
 
     /// Gets consent status as a display string.

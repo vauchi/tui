@@ -44,7 +44,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .unwrap_or_else(|_| "Unknown".to_string());
     let deletion_text = format!(
         "Status: {}\n\
-         Press [d] to schedule deletion, [c] to cancel.",
+         [d] schedule  [c] cancel  [x] execute  [!] panic shred",
         deletion_status
     );
     let deletion_para = Paragraph::new(deletion_text)

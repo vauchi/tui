@@ -846,6 +846,20 @@ fn handle_privacy_keys(app: &mut App, key: KeyCode) {
                 Err(e) => app.set_status(format!("Cancel failed: {}", e)),
             }
         }
+        KeyCode::Char('x') => {
+            // Execute scheduled deletion (after grace period)
+            match app.backend.execute_deletion() {
+                Ok(summary) => app.set_status(format!("DELETED: {}", summary)),
+                Err(e) => app.set_status(format!("Execute failed: {}", e)),
+            }
+        }
+        KeyCode::Char('!') => {
+            // Emergency panic shred
+            match app.backend.panic_shred() {
+                Ok(summary) => app.set_status(format!("PANIC SHRED: {}", summary)),
+                Err(e) => app.set_status(format!("Panic shred failed: {}", e)),
+            }
+        }
         KeyCode::Char(' ') | KeyCode::Enter => {
             // Toggle consent for selected item (items 2..5 are consent types)
             let consent_index = app.privacy_state.selected_item;
