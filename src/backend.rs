@@ -450,11 +450,11 @@ impl Backend {
         }
 
         // Update identity
+        let password = self.backup_password()?;
         if let Some(ref mut identity) = self.identity {
             identity.set_display_name(name);
 
             // Re-export backup with updated identity
-            let password = self.backup_password()?;
             let backup = identity
                 .export_backup(&password)
                 .map_err(|e| anyhow::anyhow!("Failed to create backup: {:?}", e))?;
@@ -854,7 +854,6 @@ impl Backend {
         };
 
         let relay_url = &self.relay_url;
-        let client_id = identity.public_id();
 
         // Get device_id if we have multi-device support
         let device_id_hex = hex::encode(identity.device_id());
