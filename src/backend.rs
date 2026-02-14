@@ -99,6 +99,47 @@ impl QRData {
     }
 }
 
+/// Loads or generates a per-installation random fallback key from `data_dir/.fallback-key`.
+///
+/// Used only when the `secure-storage` feature is disabled. Each installation
+/// gets a unique random key instead of a hardcoded constant.
+#[cfg(not(feature = "secure-storage"))]
+fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
+    let key_path = data_dir.join(".fallback-key");
+
+    if key_path.exists() {
+        let bytes = std::fs::read(&key_path).context("Failed to read fallback key")?;
+        if bytes.len() != 32 {
+            anyhow::bail!(
+                "Invalid fallback key length ({}), expected 32. Delete {} to regenerate.",
+                bytes.len(),
+                key_path.display()
+            );
+        }
+        let mut arr = [0u8; 32];
+        arr.copy_from_slice(&bytes);
+        return Ok(SymmetricKey::from_bytes(arr));
+    }
+
+    // Generate a new random key
+    let key = SymmetricKey::generate();
+
+    // Ensure parent directory exists
+    std::fs::create_dir_all(data_dir).context("Failed to create data directory")?;
+
+    std::fs::write(&key_path, key.as_bytes()).context("Failed to write fallback key")?;
+
+    // Set restrictive permissions on Unix
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&key_path, std::fs::Permissions::from_mode(0o600))
+            .context("Failed to set fallback key permissions")?;
+    }
+
+    Ok(key)
+}
+
 impl Backend {
     /// Loads or creates the storage encryption key using SecureStorage.
     ///
@@ -136,15 +177,7 @@ impl Backend {
 
         #[cfg(not(feature = "secure-storage"))]
         {
-            // Fall back to encrypted file storage
-            // Use a derived key for encrypting the storage key file
-            // Note: This provides defense-in-depth, not strong security
-            let fallback_key = SymmetricKey::from_bytes([
-                0x57, 0x65, 0x62, 0x42, 0x6f, 0x6f, 0x6b, 0x54, // "VauchiT"
-                0x55, 0x49, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, // "UIStorag"
-                0x65, 0x4b, 0x65, 0x79, 0x46, 0x61, 0x6c, 0x6c, // "eKeyFall"
-                0x62, 0x61, 0x63, 0x6b, 0x56, 0x31, 0x00, 0x00, // "backV1\0\0"
-            ]);
+            let fallback_key = load_or_generate_fallback_key(data_dir)?;
 
             let key_dir = data_dir.join("keys");
             let storage = FileKeyStorage::new(key_dir, fallback_key);
@@ -2663,5 +2696,54 @@ mod tests {
         backend.toggle_recovery_trust(&id).unwrap();
         let contacts = backend.list_contacts().unwrap();
         assert!(contacts[0].recovery_trusted);
+    }
+
+    // === Fallback Key Storage Tests ===
+    // Trace: Phase 2 security hardening — hardcoded key removal (Item 28)
+
+    /// Verify fallback key is NOT the old hardcoded value
+    #[cfg(not(feature = "secure-storage"))]
+    #[test]
+    fn test_fallback_key_is_random_not_hardcoded() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+
+        let key1 = load_or_generate_fallback_key(temp_dir.path()).expect("Failed to generate key");
+        let key2 = load_or_generate_fallback_key(temp_dir.path()).expect("Failed to generate key");
+
+        assert_eq!(
+            key1.as_bytes(),
+            key2.as_bytes(),
+            "Same data dir must produce same key"
+        );
+
+        // Verify it's NOT the old hardcoded key
+        let old_hardcoded: [u8; 32] = [
+            0x57, 0x65, 0x62, 0x42, 0x6f, 0x6f, 0x6b, 0x54, // "WebBookT"
+            0x55, 0x49, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, // "UIStorag"
+            0x65, 0x4b, 0x65, 0x79, 0x46, 0x61, 0x6c, 0x6c, // "eKeyFall"
+            0x62, 0x61, 0x63, 0x6b, 0x56, 0x31, 0x00, 0x00, // "backV1\0\0"
+        ];
+        assert_ne!(
+            key1.as_bytes(),
+            &old_hardcoded,
+            "Must not use old hardcoded key"
+        );
+    }
+
+    /// Verify different installations produce different keys
+    #[cfg(not(feature = "secure-storage"))]
+    #[test]
+    fn test_fallback_key_differs_per_install() {
+        let temp1 = TempDir::new().expect("Failed to create temp dir");
+        let temp2 = TempDir::new().expect("Failed to create temp dir");
+
+        let key1 = load_or_generate_fallback_key(temp1.path()).expect("Failed to generate key");
+        let key2 = load_or_generate_fallback_key(temp2.path()).expect("Failed to generate key");
+
+        assert_ne!(
+            key1.as_bytes(),
+            key2.as_bytes(),
+            "Different installs must produce different keys"
+        );
     }
 }
