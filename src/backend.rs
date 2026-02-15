@@ -567,14 +567,13 @@ impl Backend {
         let identity_owned = Identity::import_backup(&backup, &backup_password)
             .map_err(|e| anyhow::anyhow!("Failed to import identity: {:?}", e))?;
 
-        // Create exchange session as initiator with manual confirmation
+        // Create exchange session for mutual QR exchange
         let verifier = ManualConfirmationVerifier::new();
-        verifier.confirm(); // Pre-confirm for TUI (no audio hardware)
-        let mut session = ExchangeSession::new_initiator(identity_owned, our_card, verifier);
+        let mut session = ExchangeSession::new_qr(identity_owned, our_card, verifier);
 
         // Generate QR via state machine
         session
-            .apply(ExchangeEvent::GenerateQR)
+            .apply(ExchangeEvent::StartQR)
             .map_err(|e| anyhow::anyhow!("Failed to generate QR: {:?}", e))?;
 
         let qr = session.qr().context("QR code not generated")?;
