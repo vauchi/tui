@@ -1682,10 +1682,7 @@ impl Backend {
 
     /// Executes a scheduled account deletion after the grace period.
     pub fn execute_deletion(&self) -> Result<String> {
-        let identity = self
-            .identity
-            .as_ref()
-            .context("No identity loaded")?;
+        let identity = self.identity.as_ref().context("No identity loaded")?;
 
         let manager = vauchi_core::api::DeletionManager::new(&self.storage);
         let state = manager.deletion_state()?;
@@ -1726,11 +1723,7 @@ impl Backend {
         let mut revocation_client = self.create_shred_relay_client(&identity_id)?;
 
         let report = shred_manager
-            .hard_shred(
-                token,
-                Some(&mut purge_client),
-                Some(&mut revocation_client),
-            )
+            .hard_shred(token, Some(&mut purge_client), Some(&mut revocation_client))
             .map_err(|e| anyhow::anyhow!("Shred failed: {}", e))?;
 
         let verification = shred_manager.verify_shred();
@@ -1739,10 +1732,7 @@ impl Backend {
 
     /// Emergency immediate deletion — no grace period.
     pub fn panic_shred(&self) -> Result<String> {
-        let identity = self
-            .identity
-            .as_ref()
-            .context("No identity loaded")?;
+        let identity = self.identity.as_ref().context("No identity loaded")?;
 
         let secure_storage = self.create_secure_storage()?;
         let identity_id = hex::encode(identity.signing_public_key());
