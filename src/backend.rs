@@ -28,7 +28,7 @@ use vauchi_core::{
         LegacyExchangeMessage, SimpleAckStatus, SimpleDeviceSyncMessage, SimpleEncryptedUpdate,
         SimplePayload,
     },
-    sync::{DeviceSyncOrchestrator, SyncItem},
+    sync::{process_card_updates, DeviceSyncOrchestrator, SyncItem},
     Contact, ContactCard, ContactField, FieldType, Identity, IdentityBackup, Storage, SymmetricKey,
 };
 
@@ -912,11 +912,12 @@ impl Backend {
 
         let contacts_added = legacy_added + encrypted_added;
 
-        // Process card updates
-        let cards_updated = match self.process_card_updates(received.card_updates) {
-            Ok(count) => count,
-            Err(e) => return SyncResult::error(format!("Card update failed: {}", e)),
-        };
+        // Process card updates (uses core's secure pipeline with full security checks)
+        let cards_updated =
+            match process_card_updates(identity, &self.storage, received.card_updates) {
+                Ok(result) => result.processed,
+                Err(e) => return SyncResult::error(format!("Card update failed: {}", e)),
+            };
 
         // Process device sync messages (inter-device synchronization)
         let device_synced =
@@ -1233,56 +1234,8 @@ impl Backend {
         Ok(())
     }
 
-    /// Process incoming card updates.
-    fn process_card_updates(&self, updates: Vec<(String, Vec<u8>)>) -> Result<u32, String> {
-        let mut processed = 0u32;
-
-        for (sender_id, ciphertext) in updates {
-            let mut contact = match self
-                .storage
-                .load_contact(&sender_id)
-                .map_err(|e| e.to_string())?
-            {
-                Some(c) => c,
-                None => continue,
-            };
-
-            let (mut ratchet, _) = match self
-                .storage
-                .load_ratchet_state(&sender_id)
-                .map_err(|e| e.to_string())?
-            {
-                Some(state) => state,
-                None => continue,
-            };
-
-            let ratchet_msg: vauchi_core::crypto::ratchet::RatchetMessage =
-                match serde_json::from_slice(&ciphertext) {
-                    Ok(msg) => msg,
-                    Err(_) => continue,
-                };
-
-            let plaintext = match ratchet.decrypt(&ratchet_msg) {
-                Ok(pt) => pt,
-                Err(_) => continue,
-            };
-
-            if let Ok(delta) = serde_json::from_slice::<vauchi_core::sync::CardDelta>(&plaintext) {
-                let mut card = contact.card().clone();
-                if delta.apply(&mut card).is_ok() {
-                    contact.update_card(card);
-                    self.storage
-                        .save_contact(&contact)
-                        .map_err(|e| e.to_string())?;
-                    processed += 1;
-                }
-            }
-
-            let _ = self.storage.save_ratchet_state(&sender_id, &ratchet, false);
-        }
-
-        Ok(processed)
-    }
+    // Card update processing now handled by vauchi_core::sync::process_card_updates
+    // which provides the full secure pipeline (revocation, signature, replay detection).
 
     /// Process incoming device sync messages from other devices.
     fn process_device_sync_messages(
