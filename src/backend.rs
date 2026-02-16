@@ -23,10 +23,9 @@ use vauchi_core::{
         X3DHKeyPair,
     },
     network::simple_message::{
-        create_device_sync_ack, create_device_sync_message, create_signed_handshake,
-        create_simple_ack, create_simple_envelope, decode_simple_message, encode_simple_message,
-        LegacyExchangeMessage, SimpleAckStatus, SimpleDeviceSyncMessage, SimpleEncryptedUpdate,
-        SimplePayload,
+        create_device_sync_ack, create_signed_handshake, create_simple_ack, create_simple_envelope,
+        decode_simple_message, encode_simple_message, LegacyExchangeMessage, SimpleAckStatus,
+        SimpleDeviceSyncMessage, SimpleEncryptedUpdate, SimplePayload,
     },
     sync::{process_card_updates, DeviceSyncOrchestrator, SyncItem},
     Contact, ContactCard, ContactField, FieldType, Identity, IdentityBackup, Storage, SymmetricKey,
@@ -1376,64 +1375,15 @@ impl Backend {
         identity: &Identity,
         socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
     ) -> Result<u32, String> {
-        // Try to load device registry - if none exists, skip
-        let registry = match self.storage.load_device_registry() {
-            Ok(Some(r)) if r.device_count() > 1 => r,
-            _ => return Ok(0),
-        };
+        let envelopes = vauchi_core::sync::build_device_sync_envelopes(identity, &self.storage)
+            .map_err(|e| format!("Failed to build sync envelopes: {:?}", e))?;
 
-        let orchestrator = DeviceSyncOrchestrator::new(
-            &self.storage,
-            identity.create_device_info(),
-            registry.clone(),
-        );
-
-        let identity_id = identity.public_id();
-        let sender_device_id = hex::encode(identity.device_id());
         let mut sent = 0u32;
-
-        for device in registry.active_devices() {
-            // Skip self
-            if device.device_id == *identity.device_id() {
-                continue;
-            }
-
-            let pending = orchestrator.pending_for_device(&device.device_id);
-            if pending.is_empty() {
-                continue;
-            }
-
-            // Serialize and encrypt
-            let payload = match serde_json::to_vec(pending) {
-                Ok(p) => p,
-                Err(_) => continue,
-            };
-
-            let encrypted =
-                match orchestrator.encrypt_for_device(&device.exchange_public_key, &payload) {
-                    Ok(ct) => ct,
-                    Err(_) => continue,
-                };
-
-            // Create and send device sync message
-            let target_device_id = hex::encode(device.device_id);
-            let version = orchestrator.version_vector().get(identity.device_id());
-
-            let envelope = create_device_sync_message(
-                &identity_id,
-                &target_device_id,
-                &sender_device_id,
-                encrypted,
-                version,
-            );
-
-            if let Ok(data) = encode_simple_message(&envelope) {
-                if socket.send(Message::Binary(data)).is_ok() {
-                    sent += 1;
-                }
+        for data in envelopes {
+            if socket.send(Message::Binary(data)).is_ok() {
+                sent += 1;
             }
         }
-
         Ok(sent)
     }
 
