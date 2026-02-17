@@ -12,6 +12,14 @@ use anyhow::{Context, Result};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{Message, WebSocket};
 
+struct WsSender<'a>(&'a mut WebSocket<MaybeTlsStream<TcpStream>>);
+
+impl vauchi_core::sync::BinarySender for WsSender<'_> {
+    fn send_binary(&mut self, data: Vec<u8>) -> Result<(), String> {
+        self.0.send(Message::Binary(data)).map_err(|e| e.to_string())
+    }
+}
+
 use vauchi_core::aha_moments::{AhaMoment, AhaMomentTracker, AhaMomentType};
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
@@ -926,7 +934,7 @@ impl Backend {
             };
 
         // Send pending device sync items to other devices
-        let device_sync_sent = match self.send_device_sync(identity, &mut socket) {
+        let device_sync_sent = match vauchi_core::sync::send_device_sync(identity, &self.storage, &mut WsSender(&mut socket)) {
             Ok(count) => count,
             Err(e) => return SyncResult::error(format!("Send device sync failed: {}", e)),
         };
@@ -1367,24 +1375,6 @@ impl Backend {
             }
         }
         Ok(())
-    }
-
-    /// Send pending device sync items to other devices.
-    fn send_device_sync(
-        &self,
-        identity: &Identity,
-        socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
-    ) -> Result<u32, String> {
-        let envelopes = vauchi_core::sync::build_device_sync_envelopes(identity, &self.storage)
-            .map_err(|e| format!("Failed to build sync envelopes: {:?}", e))?;
-
-        let mut sent = 0u32;
-        for data in envelopes {
-            if socket.send(Message::Binary(data)).is_ok() {
-                sent += 1;
-            }
-        }
-        Ok(sent)
     }
 
     /// Send pending outbound updates.
