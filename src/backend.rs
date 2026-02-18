@@ -4,23 +4,17 @@
 
 //! Backend wrapper for vauchi-core
 
-use std::net::TcpStream;
 use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use tungstenite::stream::MaybeTlsStream;
-use tungstenite::{Message, WebSocket};
+use futures_util::{SinkExt, StreamExt};
+use tokio_tungstenite::tungstenite::Message;
 
-struct WsSender<'a>(&'a mut WebSocket<MaybeTlsStream<TcpStream>>);
-
-impl vauchi_core::sync::BinarySender for WsSender<'_> {
-    fn send_binary(&mut self, data: Vec<u8>) -> Result<(), String> {
-        self.0
-            .send(Message::Binary(data))
-            .map_err(|e| e.to_string())
-    }
-}
+/// Type alias for the async WebSocket stream.
+type WsStream = tokio_tungstenite::WebSocketStream<
+    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+>;
 
 use vauchi_core::aha_moments::{AhaMoment, AhaMomentTracker, AhaMomentType};
 #[cfg(feature = "secure-storage")]
@@ -874,85 +868,116 @@ impl Backend {
     /// Perform a full sync with the relay server.
     ///
     /// This connects to the relay, receives pending messages, processes them,
-    /// and sends any pending outbound updates.
+    /// and sends any pending outbound updates. Uses a current-thread tokio
+    /// runtime internally for async WebSocket I/O.
     pub fn sync(&self) -> SyncResult {
+        let rt = match tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+        {
+            Ok(rt) => rt,
+            Err(e) => return SyncResult::error(format!("Runtime error: {}", e)),
+        };
+        rt.block_on(self.sync_async())
+    }
+
+    /// Async implementation of the full sync pipeline.
+    async fn sync_async(&self) -> SyncResult {
         let identity = match &self.identity {
             Some(id) => id,
             None => return SyncResult::error("No identity found. Create an identity first."),
         };
 
         let relay_url = &self.relay_url;
-
-        // Get device_id if we have multi-device support
         let device_id_hex = hex::encode(identity.device_id());
 
-        // Connect to relay
-        let mut socket = match Self::connect_to_relay(relay_url) {
+        // Connect to relay (async with timeout)
+        let mut socket = match Self::connect_to_relay(relay_url).await {
             Ok(s) => s,
             Err(e) => return SyncResult::error(format!("Connection failed: {}", e)),
         };
 
         // Send authenticated handshake with device_id for inter-device sync
-        if let Err(e) = Self::send_handshake(&mut socket, identity, Some(&device_id_hex)) {
+        if let Err(e) = Self::send_handshake(&mut socket, identity, Some(&device_id_hex)).await {
             return SyncResult::error(format!("Handshake failed: {}", e));
         }
 
         // Wait for server to send pending messages
-        std::thread::sleep(Duration::from_millis(500));
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
-        // Receive pending messages
-        let received = match Self::receive_pending(&mut socket) {
+        // Receive pending messages (async with per-message timeout)
+        let received = match Self::receive_pending(&mut socket).await {
             Ok(msgs) => msgs,
             Err(e) => return SyncResult::error(format!("Receive failed: {}", e)),
         };
 
         // Process legacy exchange messages
-        let legacy_added = match self.process_legacy_exchanges(identity, received.legacy_exchange) {
+        let legacy_added = match self
+            .process_legacy_exchanges(identity, received.legacy_exchange)
+            .await
+        {
             Ok(count) => count,
             Err(e) => return SyncResult::error(format!("Legacy exchange failed: {}", e)),
         };
 
         // Process encrypted exchange messages
-        let encrypted_added =
-            match self.process_encrypted_exchanges(identity, received.encrypted_exchange) {
-                Ok(count) => count,
-                Err(e) => return SyncResult::error(format!("Encrypted exchange failed: {}", e)),
-            };
+        let encrypted_added = match self
+            .process_encrypted_exchanges(identity, received.encrypted_exchange)
+            .await
+        {
+            Ok(count) => count,
+            Err(e) => return SyncResult::error(format!("Encrypted exchange failed: {}", e)),
+        };
 
         let contacts_added = legacy_added + encrypted_added;
 
-        // Process card updates (uses core's secure pipeline with full security checks)
+        // Process card updates (sync — core's secure pipeline)
         let cards_updated =
             match process_card_updates(identity, &self.storage, received.card_updates) {
                 Ok(result) => result.processed,
                 Err(e) => return SyncResult::error(format!("Card update failed: {}", e)),
             };
 
-        // Process device sync messages (inter-device synchronization)
+        // Process device sync messages (sync)
         let device_synced =
             match self.process_device_sync_messages(identity, received.device_sync_messages) {
                 Ok(count) => count,
                 Err(e) => return SyncResult::error(format!("Device sync failed: {}", e)),
             };
 
-        // Send pending device sync items to other devices
-        let device_sync_sent = match vauchi_core::sync::send_device_sync(
+        // Build device sync envelopes (sync) then send (async)
+        let device_envelopes = vauchi_core::sync::build_device_sync_envelopes(
             identity,
             &self.storage,
-            &mut WsSender(&mut socket),
-        ) {
-            Ok(count) => count,
-            Err(e) => return SyncResult::error(format!("Send device sync failed: {}", e)),
-        };
+        )
+        .unwrap_or_default();
 
-        // Send pending outbound updates
-        let updates_sent = match self.send_pending_updates(identity, &mut socket) {
-            Ok(count) => count,
-            Err(e) => return SyncResult::error(format!("Send updates failed: {}", e)),
-        };
+        let mut device_sync_sent = 0u32;
+        for data in device_envelopes {
+            if socket.send(Message::Binary(data)).await.is_ok() {
+                device_sync_sent += 1;
+            }
+        }
+
+        // Collect pending updates (sync) then send (async)
+        let pending = self.collect_pending_updates_data(identity);
+
+        let mut updates_sent = 0u32;
+        let mut sent_ids = Vec::new();
+        for (update_id, data) in pending {
+            if socket.send(Message::Binary(data)).await.is_ok() {
+                sent_ids.push(update_id);
+                updates_sent += 1;
+            }
+        }
+
+        // Cleanup sent updates
+        for id in &sent_ids {
+            let _ = self.storage.delete_pending_update(id);
+        }
 
         // Close connection
-        let _ = socket.close(None);
+        let _ = socket.close(None).await;
 
         SyncResult::success(
             contacts_added,
@@ -961,16 +986,22 @@ impl Backend {
         )
     }
 
-    /// Connect to relay server via WebSocket.
-    fn connect_to_relay(relay_url: &str) -> Result<WebSocket<MaybeTlsStream<TcpStream>>, String> {
-        let (socket, _response) =
-            tungstenite::connect(relay_url).map_err(|e| format!("Failed to connect: {}", e))?;
-        Ok(socket)
+    /// Connect to relay server via async WebSocket with timeout.
+    async fn connect_to_relay(relay_url: &str) -> Result<WsStream, String> {
+        let (ws_stream, _) = tokio::time::timeout(
+            Duration::from_secs(5),
+            tokio_tungstenite::connect_async(relay_url),
+        )
+        .await
+        .map_err(|_| "Connection timed out".to_string())?
+        .map_err(|e| format!("WebSocket connection failed: {}", e))?;
+
+        Ok(ws_stream)
     }
 
     /// Send authenticated handshake to relay.
-    fn send_handshake(
-        socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
+    async fn send_handshake(
+        socket: &mut WsStream,
         identity: &Identity,
         device_id: Option<&str>,
     ) -> Result<(), String> {
@@ -979,27 +1010,27 @@ impl Backend {
         let data = encode_simple_message(&envelope).map_err(|e| format!("Encode error: {}", e))?;
         socket
             .send(Message::Binary(data))
+            .await
             .map_err(|e| format!("Send error: {}", e))?;
         Ok(())
     }
 
-    /// Receive pending messages from relay.
-    fn receive_pending(
-        socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
-    ) -> Result<ReceivedMessages, String> {
+    /// Receive pending messages from relay with timeout.
+    async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, String> {
         let mut legacy_exchange = Vec::new();
         let mut encrypted_exchange = Vec::new();
         let mut card_updates = Vec::new();
         let mut device_sync_messages = Vec::new();
 
-        // Set read timeout
-        if let MaybeTlsStream::Plain(ref stream) = socket.get_ref() {
-            let _ = stream.set_read_timeout(Some(Duration::from_millis(1000)));
-        }
-
         loop {
-            match socket.read() {
-                Ok(Message::Binary(data)) => {
+            let msg = match tokio::time::timeout(Duration::from_secs(1), socket.next()).await {
+                Ok(Some(Ok(msg))) => msg,
+                Ok(Some(Err(_))) | Ok(None) => break,
+                Err(_) => break, // Timeout — no more pending messages
+            };
+
+            match msg {
+                Message::Binary(data) => {
                     if let Ok(envelope) = decode_simple_message(&data) {
                         match envelope.payload {
                             SimplePayload::EncryptedUpdate(update) => {
@@ -1024,36 +1055,27 @@ impl Backend {
                                     SimpleAckStatus::ReceivedByRecipient,
                                 );
                                 if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data));
+                                    let _ = socket.send(Message::Binary(ack_data)).await;
                                 }
                             }
                             SimplePayload::DeviceSyncMessage(msg) => {
-                                // Get version before moving msg
                                 let version = msg.version;
                                 device_sync_messages.push(msg);
 
-                                // Send device sync ack
                                 let ack = create_device_sync_ack(&envelope.message_id, version);
                                 if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data));
+                                    let _ = socket.send(Message::Binary(ack_data)).await;
                                 }
                             }
                             _ => {}
                         }
                     }
                 }
-                Ok(Message::Ping(data)) => {
-                    let _ = socket.send(Message::Pong(data));
+                Message::Ping(data) => {
+                    let _ = socket.send(Message::Pong(data)).await;
                 }
-                Ok(Message::Close(_)) => break,
-                Ok(_) => { /* Ignore other message types */ }
-                Err(tungstenite::Error::Io(ref e))
-                    if e.kind() == std::io::ErrorKind::WouldBlock
-                        || e.kind() == std::io::ErrorKind::TimedOut =>
-                {
-                    break;
-                }
-                Err(_) => break,
+                Message::Close(_) => break,
+                _ => { /* Ignore other message types */ }
             }
         }
 
@@ -1077,7 +1099,7 @@ impl Backend {
     }
 
     /// Process legacy plaintext exchange messages.
-    fn process_legacy_exchanges(
+    async fn process_legacy_exchanges(
         &self,
         identity: &Identity,
         messages: Vec<LegacyExchangeMessage>,
@@ -1146,14 +1168,16 @@ impl Backend {
             added += 1;
 
             // Send response
-            let _ = self.send_exchange_response(identity, &public_id, &ephemeral_key);
+            let _ = self
+                .send_exchange_response(identity, &public_id, &ephemeral_key)
+                .await;
         }
 
         Ok(added)
     }
 
     /// Process encrypted exchange messages.
-    fn process_encrypted_exchanges(
+    async fn process_encrypted_exchanges(
         &self,
         identity: &Identity,
         encrypted_data: Vec<Vec<u8>>,
@@ -1202,22 +1226,24 @@ impl Backend {
             added += 1;
 
             // Send response
-            let _ = self.send_exchange_response(identity, &public_id, &payload.exchange_key);
+            let _ = self
+                .send_exchange_response(identity, &public_id, &payload.exchange_key)
+                .await;
         }
 
         Ok(added)
     }
 
     /// Send exchange response.
-    fn send_exchange_response(
+    async fn send_exchange_response(
         &self,
         identity: &Identity,
         recipient_id: &str,
         recipient_exchange_key: &[u8; 32],
     ) -> Result<(), String> {
-        let mut socket = Self::connect_to_relay(&self.relay_url)?;
+        let mut socket = Self::connect_to_relay(&self.relay_url).await?;
 
-        Self::send_handshake(&mut socket, identity, None)?;
+        Self::send_handshake(&mut socket, identity, None).await?;
 
         let our_id = identity.public_id();
         let our_x3dh = identity.x3dh_keypair();
@@ -1239,10 +1265,11 @@ impl Backend {
         let data = encode_simple_message(&envelope).map_err(|e| e.to_string())?;
         socket
             .send(Message::Binary(data))
+            .await
             .map_err(|e| e.to_string())?;
 
-        std::thread::sleep(Duration::from_millis(100));
-        let _ = socket.close(None);
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        let _ = socket.close(None).await;
 
         Ok(())
     }
@@ -1383,21 +1410,23 @@ impl Backend {
         Ok(())
     }
 
-    /// Send pending outbound updates.
-    fn send_pending_updates(
-        &self,
-        identity: &Identity,
-        socket: &mut WebSocket<MaybeTlsStream<TcpStream>>,
-    ) -> Result<u32, String> {
-        let contacts = self.storage.list_contacts().map_err(|e| e.to_string())?;
+    /// Collect pending outbound updates as serialized data for async sending.
+    ///
+    /// Returns `(update_id, serialized_envelope)` pairs. The caller sends
+    /// them over the async WebSocket and then deletes the IDs on success.
+    fn collect_pending_updates_data(&self, identity: &Identity) -> Vec<(String, Vec<u8>)> {
+        let contacts = match self.storage.list_contacts() {
+            Ok(c) => c,
+            Err(_) => return Vec::new(),
+        };
         let our_id = identity.public_id();
-        let mut sent = 0u32;
+        let mut result = Vec::new();
 
         for contact in contacts {
-            let pending = self
-                .storage
-                .get_pending_updates(contact.id())
-                .map_err(|e| e.to_string())?;
+            let pending = match self.storage.get_pending_updates(contact.id()) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
 
             for update in pending {
                 let msg = SimpleEncryptedUpdate {
@@ -1408,15 +1437,12 @@ impl Backend {
 
                 let envelope = create_simple_envelope(SimplePayload::EncryptedUpdate(msg));
                 if let Ok(data) = encode_simple_message(&envelope) {
-                    if socket.send(Message::Binary(data)).is_ok() {
-                        let _ = self.storage.delete_pending_update(&update.id);
-                        sent += 1;
-                    }
+                    result.push((update.id, data));
                 }
             }
         }
 
-        Ok(sent)
+        result
     }
 
     // ========== Tor Privacy Mode ==========
@@ -1485,12 +1511,19 @@ impl Backend {
 
     /// Test connection to the relay server.
     pub fn test_relay_connection(&self) -> Result<bool> {
-        let mut socket = Self::connect_to_relay(&self.relay_url)
-            .map_err(|e| anyhow::anyhow!("Connection failed: {}", e))?;
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| anyhow::anyhow!("Runtime error: {}", e))?;
 
-        // Close the connection gracefully
-        let _ = socket.close(None);
-        Ok(true)
+        rt.block_on(async {
+            let mut socket = Self::connect_to_relay(&self.relay_url)
+                .await
+                .map_err(|e| anyhow::anyhow!("Connection failed: {}", e))?;
+
+            let _ = socket.close(None).await;
+            Ok(true)
+        })
     }
 
     // === GDPR Operations ===
