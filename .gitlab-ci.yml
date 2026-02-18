@@ -62,13 +62,28 @@ lint:clippy:
 # Test Stage (runs on Rust code changes)
 # ============================================================
 
-test:unit:
+test:coverage:
   extends: [.rust-job, .validation-rust, .timeout-standard]
   stage: test
   needs: []
-  script:
+  before_script:
+    - rustup component add llvm-tools-preview
+    - cargo install cargo-llvm-cov --locked || true
     - git clone --depth=1 https://gitlab.com/vauchi/locales.git /tmp/locales || true
-    - VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets
+  script:
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov --all-targets --lcov --output-path lcov.info
+    - cargo llvm-cov report --cobertura --output-path cobertura.xml
+    - cargo llvm-cov report
+  coverage: '/Total:\s+(\d+(?:\.\d+)?%)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: cobertura.xml
+    paths:
+      - lcov.info
+      - cobertura.xml
+    expire_in: 1 week
 
 # ============================================================
 # Security Stage (runs on dependency changes)
