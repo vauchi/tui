@@ -12,9 +12,8 @@ use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::tungstenite::Message;
 
 /// Type alias for the async WebSocket stream.
-type WsStream = tokio_tungstenite::WebSocketStream<
-    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
->;
+type WsStream =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 use vauchi_core::aha_moments::{AhaMoment, AhaMomentTracker, AhaMomentType};
 #[cfg(feature = "secure-storage")]
@@ -946,11 +945,9 @@ impl Backend {
             };
 
         // Build device sync envelopes (sync) then send (async)
-        let device_envelopes = vauchi_core::sync::build_device_sync_envelopes(
-            identity,
-            &self.storage,
-        )
-        .unwrap_or_default();
+        let device_envelopes =
+            vauchi_core::sync::build_device_sync_envelopes(identity, &self.storage)
+                .unwrap_or_default();
 
         let mut device_sync_sent = 0u32;
         for data in device_envelopes {
