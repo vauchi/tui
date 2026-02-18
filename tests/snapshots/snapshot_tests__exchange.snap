@@ -1,0 +1,27 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+Exchange
+
+────────────────────────────────────────────────────────────────────────────────
+Share this QR code with others to exchange contact cards. Press 'r' to refresh.
+
+
+                                 Expires in 5:00
+
+
+┌Your QR Code──────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│    [QR_DATA] │
+│    [QR_DATA] │
+│    [QR_DATA] │
+│    [QR_DATA] │
+│    [QR_DATA] │
+│    [QR_DATA] │
+└──────────────────────────────────────────────────────────────────────────────┘
+────────────────────────────────────────────────────────────────────────────────
+[r]efresh  [esc] back  [?]help

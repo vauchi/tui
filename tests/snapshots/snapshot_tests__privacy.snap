@@ -1,0 +1,27 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+Privacy & Data
+
+────────────────────────────────────────────────────────────────────────────────
+
+ ┌Data Export (GDPR Art. 20)──────────────────────────────────────────────────┐
+ │Export all your personal data as JSON.                                      │
+ │Press [e] to export.                                                        │
+ │                                                                            │
+ └────────────────────────────────────────────────────────────────────────────┘
+ ┌Account Deletion (GDPR Art. 17)─────────────────────────────────────────────┐
+ │Status: No deletion scheduled                                               │
+ │[d] schedule  [c] cancel  [x] execute  [!] panic shred                      │
+ │                                                                            │
+ └────────────────────────────────────────────────────────────────────────────┘
+ ┌Consent Management (GDPR Art. 7)────────────────────────────────────────────┐
+ │  [ ] Data Processing — Required for local operation                        │
+ │  [ ] Contact Sharing — Share info with exchanged contacts                  │
+ │  [ ] Analytics — Anonymous usage analytics                                 │
+ │  [ ] Recovery Vouching — Participate in recovery                           │
+ └────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back

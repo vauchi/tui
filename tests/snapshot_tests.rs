@@ -17,7 +17,7 @@ use tempfile::TempDir;
 
 use vauchi_tui::app::{
     AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState, EditFieldState,
-    EditNameState, EditRelayUrlState, Screen, SyncState,
+    EditNameState, EditRelayUrlState, PrivacyState, Screen, SyncState, TorState,
 };
 use vauchi_tui::backend::Backend;
 
@@ -103,7 +103,10 @@ fn redact_dynamic_values(s: &str) -> String {
     let s = re_device_key.replace_all(&s, "([DEVICE_KEY]...)");
     // Replace standalone 16-char hex sequences
     let re_hex16 = regex::Regex::new(r"\b[0-9a-f]{16}\b").unwrap();
-    re_hex16.replace_all(&s, "[HEX_ID]").to_string()
+    let s = re_hex16.replace_all(&s, "[HEX_ID]").to_string();
+    // Redact QR code data lines (must contain at least one █) — crypto nonces make these non-deterministic
+    let re_qr = regex::Regex::new(r"(?m)^(│\s+)[\s█]*█[\s█]*(\s+│)$").unwrap();
+    re_qr.replace_all(&s, "$1[QR_DATA]$2").to_string()
 }
 
 /// Convert a ratatui buffer to a plain text string.
@@ -318,4 +321,54 @@ fn test_snapshot_edit_relay_url_dialog() {
     };
     let output = render_to_string(&mut app);
     insta::assert_snapshot!("edit_relay_url_dialog", output);
+}
+
+// ============================================================================
+// tui-F-018 through tui-F-021: Missing snapshot tests
+// ============================================================================
+
+#[test]
+fn test_snapshot_tor_settings() {
+    let (mut app, _tmp) = create_app_with_identity();
+    app.screen = Screen::TorSettings;
+    app.tor_state = TorState {
+        enabled: false,
+        prefer_onion: false,
+        circuit_rotation_secs: 600,
+        bridge_count: 0,
+    };
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("tor_settings", output);
+}
+
+#[test]
+fn test_snapshot_privacy() {
+    let (mut app, _tmp) = create_app_with_identity();
+    app.screen = Screen::Privacy;
+    app.privacy_state = PrivacyState::default();
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("privacy", output);
+}
+
+#[test]
+fn test_snapshot_exchange() {
+    let (mut app, _tmp) = create_app_with_identity();
+    app.screen = Screen::Exchange;
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("exchange", output);
+}
+
+#[test]
+fn test_snapshot_backup_import() {
+    let (mut app, _tmp) = create_app_with_identity();
+    app.screen = Screen::Backup;
+    app.backup_state = BackupState {
+        mode: BackupMode::Import,
+        password: String::new(),
+        confirm_password: String::new(),
+        backup_data: String::new(),
+        focus: BackupFocus::Data,
+    };
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("backup_import", output);
 }
