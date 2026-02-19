@@ -71,6 +71,7 @@ fn test_screen_equality() {
 /// Test: InputMode variants exist
 #[test]
 fn test_input_mode_variants() {
+    // allow(zero_assertions): Compile-time shape check — fails to compile if variants removed
     let _ = InputMode::Normal;
     let _ = InputMode::Editing;
 }

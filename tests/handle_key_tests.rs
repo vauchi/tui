@@ -329,10 +329,7 @@ fn test_handle_key_search_mode_esc_exits_search() {
     app.contact_search_mode = true;
 
     handle_key(&mut app, KeyCode::Esc);
-    assert!(
-        !app.contact_search_mode,
-        "Esc should exit search mode"
-    );
+    assert!(!app.contact_search_mode, "Esc should exit search mode");
 }
 
 #[test]
@@ -355,16 +352,20 @@ fn test_handle_key_home_j_increments_selected_field() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Home;
     // Add two fields so navigation works
-    app.backend.add_field(
-        vauchi_core::contact_card::FieldType::Email,
-        "Work",
-        "a@b.com",
-    ).unwrap();
-    app.backend.add_field(
-        vauchi_core::contact_card::FieldType::Phone,
-        "Mobile",
-        "+1234567890",
-    ).unwrap();
+    app.backend
+        .add_field(
+            vauchi_core::contact_card::FieldType::Email,
+            "Work",
+            "a@b.com",
+        )
+        .unwrap();
+    app.backend
+        .add_field(
+            vauchi_core::contact_card::FieldType::Phone,
+            "Mobile",
+            "+1234567890",
+        )
+        .unwrap();
     app.selected_field = 0;
 
     handle_key(&mut app, KeyCode::Char('j'));
@@ -388,10 +389,7 @@ fn test_handle_key_home_k_stays_at_zero() {
     app.selected_field = 0;
 
     handle_key(&mut app, KeyCode::Char('k'));
-    assert_eq!(
-        app.selected_field, 0,
-        "k at index 0 should stay at 0"
-    );
+    assert_eq!(app.selected_field, 0, "k at index 0 should stay at 0");
 }
 
 // ============================================================================
