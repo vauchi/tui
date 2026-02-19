@@ -7,6 +7,7 @@
 # Terminal user interface
 #
 # Performance optimizations:
+#   - Self-hosted runners: sccache, persistent caches, load-balanced
 #   - Change-based rules: Jobs run only when relevant files change
 #   - Timeouts: Prevent runaway jobs from blocking runners
 #   - Read-only cache for lint jobs
@@ -43,21 +44,17 @@ stages:
 # to pass before starting (PI-13 fail-fast DAG).
 
 lint:format:
-  extends: [.rust-job, .validation-rust, .timeout-quick]
+  extends: [.rust-runner-nocache, .validation-rust, .timeout-quick]
   stage: lint
   needs: []
-  cache:
-    policy: pull  # Read-only cache for lint
   script:
     - rustup component add rustfmt
     - cargo fmt --all -- --check
 
 lint:clippy:
-  extends: [.rust-job, .validation-rust, .timeout-quick]
+  extends: [.rust-runner-readonly, .validation-rust, .timeout-quick]
   stage: lint
   needs: []
-  cache:
-    policy: pull  # Read-only cache for lint
   script:
     - rustup component add clippy
     - cargo clippy --all-targets -- -D warnings
@@ -67,7 +64,7 @@ lint:clippy:
 # ============================================================
 
 test:coverage:
-  extends: [.rust-job, .validation-rust, .timeout-standard]
+  extends: [.rust-runner, .validation-rust, .timeout-standard]
   stage: test
   needs:
     - job: lint:format
@@ -75,9 +72,11 @@ test:coverage:
     - job: lint:clippy
       optional: true
   before_script:
+    - !reference [.self-hosted, before_script]
+    - !reference [.git-credentials, before_script]
     - rustup component add llvm-tools-preview
-    - cargo install cargo-llvm-cov --locked || true
-    - git clone --depth=1 https://gitlab.com/vauchi/locales.git /tmp/locales || true
+    - cargo binstall cargo-llvm-cov --no-confirm 2>/dev/null || cargo install cargo-llvm-cov --locked || true
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
   script:
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov --all-targets --lcov --output-path lcov.info
     - cargo llvm-cov report --cobertura --output-path cobertura.xml
@@ -99,7 +98,7 @@ test:coverage:
 
 # Nightly full mutation testing (scheduled pipeline)
 mutation:nightly:
-  extends: [.rust-job, .timeout-extended]
+  extends: [.rust-runner, .timeout-extended]
   stage: mutation
   needs: []
   rules:
@@ -114,7 +113,7 @@ mutation:nightly:
 
 # Per-MR incremental mutation testing (advisory, runs after tests pass)
 mutation:incremental:
-  extends: [.rust-job, .timeout-extended]
+  extends: [.rust-runner, .timeout-extended]
   stage: mutation
   needs:
     - job: test:coverage
@@ -140,30 +139,26 @@ mutation:incremental:
 # ============================================================
 
 security:audit:
-  extends: [.rust-job, .validation-deps, .timeout-quick]
+  extends: [.rust-runner-readonly, .validation-deps, .timeout-quick]
   stage: security
   needs:
     - job: lint:format
       optional: true
     - job: lint:clippy
       optional: true
-  cache:
-    policy: pull  # Read-only cache
   script:
-    - cargo install cargo-audit || true
+    - cargo binstall cargo-audit --no-confirm 2>/dev/null || cargo install cargo-audit || true
     - cargo audit
 
 # Full cargo-deny check: advisories, licenses, bans, sources
 security:deny:
-  extends: [.rust-job, .timeout-quick]
+  extends: [.rust-runner-readonly, .timeout-quick]
   stage: security
   needs:
     - job: lint:format
       optional: true
     - job: lint:clippy
       optional: true
-  cache:
-    policy: pull
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_PIPELINE_SOURCE == "schedule"
@@ -179,9 +174,9 @@ security:deny:
 # pass against the updated vauchi-core.
 
 verify:upstream-compat:
-  extends: [.rust-job, .verify-on-upstream, .timeout-standard]
+  extends: [.rust-runner, .verify-on-upstream, .timeout-standard]
   stage: verify
   needs: []
   script:
-    - git clone --depth=1 https://gitlab.com/vauchi/locales.git /tmp/locales || true
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets
