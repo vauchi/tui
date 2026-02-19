@@ -35,8 +35,10 @@ stages:
   - verify
 
 # ============================================================
-# Lint Stage (runs on Rust code changes)
+# Lint Stage — Preflight Gate (runs on Rust code changes)
 # ============================================================
+# Cheapest checks run first. Test + security jobs wait for these
+# to pass before starting (PI-13 fail-fast DAG).
 
 lint:format:
   extends: [.rust-job, .validation-rust, .timeout-quick]
@@ -59,13 +61,17 @@ lint:clippy:
     - cargo clippy --all-targets -- -D warnings
 
 # ============================================================
-# Test Stage (runs on Rust code changes)
+# Test Stage (runs on Rust code changes, gated by lint)
 # ============================================================
 
 test:coverage:
   extends: [.rust-job, .validation-rust, .timeout-standard]
   stage: test
-  needs: []
+  needs:
+    - job: lint:format
+      optional: true
+    - job: lint:clippy
+      optional: true
   before_script:
     - rustup component add llvm-tools-preview
     - cargo install cargo-llvm-cov --locked || true
@@ -86,13 +92,17 @@ test:coverage:
     expire_in: 1 week
 
 # ============================================================
-# Security Stage (runs on dependency changes)
+# Security Stage (runs on dependency changes, gated by lint, parallel with test)
 # ============================================================
 
 security:audit:
   extends: [.rust-job, .validation-deps, .timeout-quick]
   stage: security
-  needs: []
+  needs:
+    - job: lint:format
+      optional: true
+    - job: lint:clippy
+      optional: true
   cache:
     policy: pull  # Read-only cache
   script:
@@ -103,7 +113,11 @@ security:audit:
 security:deny:
   extends: [.rust-job, .timeout-quick]
   stage: security
-  needs: []
+  needs:
+    - job: lint:format
+      optional: true
+    - job: lint:clippy
+      optional: true
   cache:
     policy: pull
   rules:
