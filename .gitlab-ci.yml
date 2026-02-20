@@ -74,7 +74,7 @@ test:coverage:
     - !reference [.git-credentials, before_script]
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
   script:
-    - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov --all-targets --lcov --output-path lcov.info
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov nextest --all-targets --lcov --output-path lcov.info
     - cargo llvm-cov report --cobertura --output-path cobertura.xml
     - cargo llvm-cov report
   coverage: '/Total:\s+(\d+(?:\.\d+)?%)/'
@@ -171,4 +171,4 @@ verify:upstream-compat:
   needs: []
   script:
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
-    - VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --all-targets
