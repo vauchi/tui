@@ -61,14 +61,33 @@ lint:clippy:
 # Test Stage (runs on Rust code changes, gated by lint)
 # ============================================================
 
-test:coverage:
-  extends: [.rust-runner, .validation-rust, .timeout-standard]
+# MR: fast nextest (no coverage overhead)
+test:
+  extends: [.rust-runner, .validation-rust, .timeout-quick]
   stage: test
   needs:
     - job: lint:format
       optional: true
     - job: lint:clippy
       optional: true
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - !reference [.git-credentials, before_script]
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
+  script:
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --all-targets
+
+# Main: full coverage with llvm-cov
+coverage:
+  extends: [.rust-runner, .timeout-standard]
+  stage: test
+  needs:
+    - job: lint:format
+      optional: true
+    - job: lint:clippy
+      optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
@@ -111,7 +130,7 @@ mutation:incremental:
   extends: [.rust-runner, .timeout-extended]
   stage: mutation
   needs:
-    - job: test:coverage
+    - job: test
       optional: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
