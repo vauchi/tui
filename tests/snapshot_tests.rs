@@ -132,6 +132,7 @@ fn buffer_to_string(buffer: &Buffer) -> String {
 // Setup / No Identity
 // =============================================================
 
+// @scenario: identity_management:Create new identity on first launch
 #[test]
 fn test_snapshot_setup_screen() {
     let (mut app, _tmp) = create_app_without_identity();
@@ -144,6 +145,7 @@ fn test_snapshot_setup_screen() {
 // Home Screen
 // =============================================================
 
+// @scenario: contact_card_management:View contact card fields
 #[test]
 fn test_snapshot_home_with_fields() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -156,6 +158,7 @@ fn test_snapshot_home_with_fields() {
 // Contacts
 // =============================================================
 
+// @scenario: contacts_management:View all contacts
 #[test]
 fn test_snapshot_contacts_empty() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -192,6 +195,7 @@ fn test_snapshot_help() {
 // Devices
 // =============================================================
 
+// @scenario: device_management:View linked devices
 #[test]
 fn test_snapshot_devices() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -204,6 +208,7 @@ fn test_snapshot_devices() {
 // Recovery
 // =============================================================
 
+// @scenario: identity_management:View recovery status
 #[test]
 fn test_snapshot_recovery() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -216,6 +221,7 @@ fn test_snapshot_recovery() {
 // Sync
 // =============================================================
 
+// @scenario: sync_updates:View sync status
 #[test]
 fn test_snapshot_sync_idle() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -224,6 +230,7 @@ fn test_snapshot_sync_idle() {
     insta::assert_snapshot!("sync_idle", output);
 }
 
+// @scenario: sync_updates:Client initiates sync with relay
 #[test]
 fn test_snapshot_sync_connected() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -247,6 +254,7 @@ fn test_snapshot_sync_connected() {
 // Backup
 // =============================================================
 
+// @scenario: identity_management:Create encrypted identity backup
 #[test]
 fn test_snapshot_backup_menu() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -255,6 +263,7 @@ fn test_snapshot_backup_menu() {
     insta::assert_snapshot!("backup_menu", output);
 }
 
+// @scenario: identity_management:Create encrypted identity backup
 #[test]
 fn test_snapshot_backup_export() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -274,6 +283,7 @@ fn test_snapshot_backup_export() {
 // Dialogs
 // =============================================================
 
+// @scenario: contact_card_management:Add a field to contact card
 #[test]
 fn test_snapshot_add_field_dialog() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -288,6 +298,7 @@ fn test_snapshot_add_field_dialog() {
     insta::assert_snapshot!("add_field_dialog", output);
 }
 
+// @scenario: contact_card_management:Edit an existing field value
 #[test]
 fn test_snapshot_edit_field_dialog() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -301,6 +312,7 @@ fn test_snapshot_edit_field_dialog() {
     insta::assert_snapshot!("edit_field_dialog", output);
 }
 
+// @scenario: contact_card_management:Update display name
 #[test]
 fn test_snapshot_edit_name_dialog() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -327,6 +339,7 @@ fn test_snapshot_edit_relay_url_dialog() {
 // tui-F-018 through tui-F-021: Missing snapshot tests
 // ============================================================================
 
+// @scenario: tor_mode:View Tor connection status
 #[test]
 fn test_snapshot_tor_settings() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -341,6 +354,7 @@ fn test_snapshot_tor_settings() {
     insta::assert_snapshot!("tor_settings", output);
 }
 
+// @scenario: visibility_control:Configure default visibility
 #[test]
 fn test_snapshot_privacy() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -350,6 +364,7 @@ fn test_snapshot_privacy() {
     insta::assert_snapshot!("privacy", output);
 }
 
+// @scenario: contact_exchange:Generate exchange QR code
 #[test]
 fn test_snapshot_exchange() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -358,6 +373,7 @@ fn test_snapshot_exchange() {
     insta::assert_snapshot!("exchange", output);
 }
 
+// @scenario: identity_management:Restore identity from backup
 #[test]
 fn test_snapshot_backup_import() {
     let (mut app, _tmp) = create_app_with_identity();
