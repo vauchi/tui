@@ -259,6 +259,7 @@ fn test_handle_key_editing_enter_returns_to_normal() {
 // Setup Screen
 // ============================================================================
 
+// @scenario: identity_management:Create new identity on first launch
 #[test]
 fn test_handle_key_setup_c_creates_identity_and_goes_home() {
     let (mut app, _tmp) = create_test_app_no_identity();
@@ -293,6 +294,7 @@ fn test_handle_key_setup_i_opens_backup_import() {
 // Contact Search Mode
 // ============================================================================
 
+// @scenario: contacts_management:Search contacts by name
 #[test]
 fn test_handle_key_contacts_slash_enters_search_mode() {
     let (mut app, _tmp) = create_test_app();
@@ -310,6 +312,7 @@ fn test_handle_key_contacts_slash_enters_search_mode() {
     );
 }
 
+// @scenario: contacts_management:Search contacts by name
 #[test]
 fn test_handle_key_search_mode_typing_updates_query() {
     let (mut app, _tmp) = create_test_app();

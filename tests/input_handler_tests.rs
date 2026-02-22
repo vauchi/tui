@@ -285,6 +285,7 @@ fn test_handle_key_esc_goes_back() {
     assert_eq!(app.screen, Screen::Home);
 }
 
+// @scenario: contacts_management:View all contacts
 #[test]
 fn test_handle_key_c_on_home_navigates_to_contacts() {
     let (mut app, _dir) = create_app_with_identity();
@@ -305,6 +306,7 @@ fn test_handle_key_s_on_home_navigates_to_settings() {
     assert_eq!(app.screen, Screen::Settings);
 }
 
+// @scenario: sync_updates:Client initiates sync with relay
 #[test]
 fn test_handle_key_n_on_home_navigates_to_sync() {
     let (mut app, _dir) = create_app_with_identity();
@@ -315,6 +317,7 @@ fn test_handle_key_n_on_home_navigates_to_sync() {
     assert_eq!(app.screen, Screen::Sync);
 }
 
+// @scenario: device_management:View linked devices
 #[test]
 fn test_handle_key_d_on_home_navigates_to_devices() {
     let (mut app, _dir) = create_app_with_identity();
@@ -325,6 +328,7 @@ fn test_handle_key_d_on_home_navigates_to_devices() {
     assert_eq!(app.screen, Screen::Devices);
 }
 
+// @scenario: identity_management:View recovery status
 #[test]
 fn test_handle_key_r_on_home_navigates_to_recovery() {
     let (mut app, _dir) = create_app_with_identity();
@@ -335,6 +339,7 @@ fn test_handle_key_r_on_home_navigates_to_recovery() {
     assert_eq!(app.screen, Screen::Recovery);
 }
 
+// @scenario: identity_management:Create encrypted identity backup
 #[test]
 fn test_handle_key_b_on_home_navigates_to_backup() {
     let (mut app, _dir) = create_app_with_identity();
@@ -345,6 +350,7 @@ fn test_handle_key_b_on_home_navigates_to_backup() {
     assert_eq!(app.screen, Screen::Backup);
 }
 
+// @scenario: contact_card_management:Add a field to contact card
 #[test]
 fn test_handle_key_a_on_home_navigates_to_add_field() {
     let (mut app, _dir) = create_app_with_identity();
