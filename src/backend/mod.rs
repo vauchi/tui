@@ -4,34 +4,26 @@
 
 //! Backend wrapper for vauchi-core
 
+mod contacts;
+mod exchange;
+mod identity;
+mod recovery;
+mod sync;
+
+pub use contacts::{ContactFieldInfo, FieldVisibilityInfo};
+pub use exchange::QRData;
+pub use recovery::RecoveryStatus;
+pub use sync::SyncResult;
+
 use std::path::Path;
-use std::time::Duration;
 
 use anyhow::{Context, Result};
-use futures_util::{SinkExt, StreamExt};
-use tokio_tungstenite::tungstenite::Message;
-
-/// Type alias for the async WebSocket stream.
-type WsStream =
-    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 use vauchi_core::aha_moments::{AhaMoment, AhaMomentTracker, AhaMomentType};
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
 use vauchi_core::{
-    contact_card::ContactAction,
-    crypto::ratchet::DoubleRatchetState,
-    exchange::{
-        EncryptedExchangeMessage, ExchangeEvent, ExchangeSession, ManualConfirmationVerifier,
-        X3DHKeyPair,
-    },
-    network::simple_message::{
-        create_device_sync_ack, create_signed_handshake, create_simple_ack, create_simple_envelope,
-        decode_simple_message, encode_simple_message, LegacyExchangeMessage, SimpleAckStatus,
-        SimpleDeviceSyncMessage, SimpleEncryptedUpdate, SimplePayload,
-    },
-    sync::{process_card_updates, DeviceSyncOrchestrator, SyncItem},
-    Contact, ContactCard, ContactField, FieldType, Identity, IdentityBackup, Storage, SymmetricKey,
+    ContactCard, ContactField, FieldType, Identity, IdentityBackup, Storage, SymmetricKey,
 };
 
 #[cfg(not(feature = "secure-storage"))]
@@ -45,12 +37,12 @@ const DEFAULT_RELAY_URL: &str = "wss://relay.vauchi.app";
 
 /// Backend for Vauchi operations.
 pub struct Backend {
-    storage: Storage,
-    identity: Option<Identity>,
-    backup_data: Option<Vec<u8>>,
-    display_name: Option<String>,
-    relay_url: String,
-    data_dir: std::path::PathBuf,
+    pub(crate) storage: Storage,
+    pub(crate) identity: Option<Identity>,
+    pub(crate) backup_data: Option<Vec<u8>>,
+    pub(crate) display_name: Option<String>,
+    pub(crate) relay_url: String,
+    pub(crate) data_dir: std::path::PathBuf,
 }
 
 /// Contact card field information for display.
@@ -68,36 +60,6 @@ pub struct ContactInfo {
     pub display_name: String,
     pub verified: bool,
     pub recovery_trusted: bool,
-}
-
-/// QR code data with expiration info.
-#[derive(Debug, Clone)]
-pub struct QRData {
-    /// The QR code data string.
-    pub data: String,
-    /// Unix timestamp when the QR was generated.
-    pub generated_at: u64,
-    /// QR expiration time in seconds.
-    pub expires_in_secs: u64,
-}
-
-impl QRData {
-    /// Calculate remaining seconds until expiration.
-    pub fn remaining_secs(&self) -> u64 {
-        use std::time::{SystemTime, UNIX_EPOCH};
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs();
-        let expires_at = self.generated_at + self.expires_in_secs;
-        expires_at.saturating_sub(now)
-    }
-
-    /// Check if the QR code has expired.
-    #[allow(dead_code)]
-    pub fn is_expired(&self) -> bool {
-        self.remaining_secs() == 0
-    }
 }
 
 /// Loads or generates a per-installation random fallback key from `data_dir/.fallback-key`.
@@ -205,7 +167,7 @@ fn format_shred_summary(
 
 impl Backend {
     /// Returns the per-installation backup password.
-    fn backup_password(&self) -> Result<String> {
+    pub(crate) fn backup_password(&self) -> Result<String> {
         load_or_generate_backup_password(&self.data_dir)
     }
 
@@ -340,74 +302,7 @@ impl Backend {
         })
     }
 
-    /// Check if identity exists.
-    pub fn has_identity(&self) -> bool {
-        self.identity.is_some() || self.backup_data.is_some()
-    }
-
-    /// Create a new identity.
-    #[allow(dead_code)]
-    pub fn create_identity(&mut self, name: &str) -> Result<()> {
-        let password = self.backup_password()?;
-        let identity = Identity::create(name);
-        let backup = identity
-            .export_backup(&password)
-            .map_err(|e| anyhow::anyhow!("Failed to create backup: {:?}", e))?;
-        let backup_data = backup.as_bytes().to_vec();
-
-        self.storage
-            .save_identity(&backup_data, name)
-            .context("Failed to save identity")?;
-
-        self.identity = Some(identity);
-        self.backup_data = Some(backup_data);
-        self.display_name = Some(name.to_string());
-        Ok(())
-    }
-
-    /// Get the display name.
-    pub fn display_name(&self) -> Option<&str> {
-        self.identity
-            .as_ref()
-            .map(|i| i.display_name())
-            .or(self.display_name.as_deref())
-    }
-
-    /// Get the public ID (truncated).
-    pub fn public_id(&self) -> Option<String> {
-        self.identity.as_ref().map(|i| {
-            let full = i.public_id();
-            format!("{}...", &full[..16.min(full.len())])
-        })
-    }
-
-    /// Get the relay URL.
-    pub fn relay_url(&self) -> &str {
-        &self.relay_url
-    }
-
-    /// Returns the data directory path.
-    pub fn data_dir(&self) -> &std::path::Path {
-        &self.data_dir
-    }
-
-    /// Set the relay URL.
-    pub fn set_relay_url(&mut self, url: &str) -> Result<()> {
-        let url = url.trim();
-        if url.is_empty() {
-            anyhow::bail!("Relay URL cannot be empty");
-        }
-        if !url.starts_with("wss://") && !url.starts_with("ws://") {
-            anyhow::bail!("Relay URL must start with wss:// or ws://");
-        }
-
-        // Save to config file
-        let relay_config_path = self.data_dir.join("relay_url.txt");
-        std::fs::write(&relay_config_path, url).context("Failed to save relay URL")?;
-
-        self.relay_url = url.to_string();
-        Ok(())
-    }
+    // ========== Card Management ==========
 
     /// Get the own contact card.
     pub fn get_card(&self) -> Result<Option<ContactCard>> {
@@ -461,40 +356,6 @@ impl Backend {
         Ok(())
     }
 
-    /// Update the display name.
-    pub fn update_display_name(&mut self, name: &str) -> Result<()> {
-        let name = name.trim();
-        if name.is_empty() {
-            anyhow::bail!("Display name cannot be empty");
-        }
-        if name.len() > 100 {
-            anyhow::bail!("Display name cannot exceed 100 characters");
-        }
-
-        // Update identity
-        let password = self.backup_password()?;
-        if let Some(ref mut identity) = self.identity {
-            identity.set_display_name(name);
-
-            // Re-export backup with updated identity
-            let backup = identity
-                .export_backup(&password)
-                .map_err(|e| anyhow::anyhow!("Failed to create backup: {:?}", e))?;
-            let backup_data = backup.as_bytes().to_vec();
-            self.storage.save_identity(&backup_data, name)?;
-            self.backup_data = Some(backup_data);
-        }
-
-        // Update card display name
-        let mut card = self.get_card()?.unwrap_or_else(|| ContactCard::new(name));
-        card.set_display_name(name)
-            .map_err(|e| anyhow::anyhow!("{}", e))?;
-        self.storage.save_own_card(&card)?;
-
-        self.display_name = Some(name.to_string());
-        Ok(())
-    }
-
     /// Update a field's value.
     pub fn update_field(&self, field_label: &str, new_value: &str) -> Result<()> {
         let mut card = self.get_card()?.context("No card found")?;
@@ -520,73 +381,6 @@ impl Backend {
         }
     }
 
-    /// List all contacts.
-    pub fn list_contacts(&self) -> Result<Vec<ContactInfo>> {
-        let contacts = self
-            .storage
-            .list_contacts()
-            .context("Failed to list contacts")?;
-
-        Ok(contacts
-            .into_iter()
-            .map(|c| ContactInfo {
-                id: c.id().to_string(),
-                display_name: c.display_name().to_string(),
-                verified: c.is_fingerprint_verified(),
-                recovery_trusted: c.is_recovery_trusted(),
-            })
-            .collect())
-    }
-
-    /// Get contact count.
-    pub fn contact_count(&self) -> Result<usize> {
-        let contacts = self
-            .storage
-            .list_contacts()
-            .context("Failed to list contacts")?;
-        Ok(contacts.len())
-    }
-
-    /// Generate exchange QR data with expiration info.
-    ///
-    /// Uses ExchangeSession state machine with ManualConfirmationVerifier
-    /// since TUI doesn't have audio hardware for proximity verification.
-    pub fn generate_exchange_qr(&self) -> Result<QRData> {
-        let identity = self.identity.as_ref().context("No identity")?;
-
-        let our_card = self
-            .storage
-            .load_own_card()
-            .ok()
-            .flatten()
-            .unwrap_or_else(|| ContactCard::new(identity.display_name()));
-
-        // Reconstruct an owned identity for the session
-        let backup_password = self.backup_password()?;
-        let backup = identity
-            .export_backup(&backup_password)
-            .map_err(|e| anyhow::anyhow!("Failed to export identity: {:?}", e))?;
-        let identity_owned = Identity::import_backup(&backup, &backup_password)
-            .map_err(|e| anyhow::anyhow!("Failed to import identity: {:?}", e))?;
-
-        // Create exchange session for mutual QR exchange
-        let verifier = ManualConfirmationVerifier::new();
-        let mut session = ExchangeSession::new_qr(identity_owned, our_card, verifier);
-
-        // Generate QR via state machine
-        session
-            .apply(ExchangeEvent::StartQR)
-            .map_err(|e| anyhow::anyhow!("Failed to generate QR: {:?}", e))?;
-
-        let qr = session.qr().context("QR code not generated")?;
-
-        Ok(QRData {
-            data: qr.to_data_string(),
-            generated_at: qr.timestamp(),
-            expires_in_secs: 300, // 5 minutes, matching QR_EXPIRY_SECONDS in vauchi-core
-        })
-    }
-
     /// Parse a field type string.
     pub fn parse_field_type(s: &str) -> FieldType {
         match s.to_lowercase().as_str() {
@@ -599,155 +393,34 @@ impl Backend {
         }
     }
 
-    // ========== Visibility Controls ==========
+    // ========== Settings ==========
 
-    /// Get a contact by index.
-    pub fn get_contact_by_index(&self, index: usize) -> Result<Option<ContactInfo>> {
-        let contacts = self.list_contacts()?;
-        Ok(contacts.get(index).cloned())
+    /// Get the relay URL.
+    pub fn relay_url(&self) -> &str {
+        &self.relay_url
     }
 
-    /// Get visibility info for a contact (what fields they can see).
-    pub fn get_contact_visibility(&self, contact_id: &str) -> Result<Vec<FieldVisibilityInfo>> {
-        let contact = self
-            .storage
-            .load_contact(contact_id)
-            .context("Failed to get contact")?
-            .context("Contact not found")?;
-
-        let card = self
-            .get_card()?
-            .unwrap_or_else(|| ContactCard::new(self.display_name().unwrap_or("User")));
-
-        let rules = contact.visibility_rules();
-
-        Ok(card
-            .fields()
-            .iter()
-            .map(|field| {
-                let can_see = rules.can_see(field.label(), contact_id);
-                FieldVisibilityInfo {
-                    field_label: field.label().to_string(),
-                    can_see,
-                }
-            })
-            .collect())
+    /// Returns the data directory path.
+    pub fn data_dir(&self) -> &std::path::Path {
+        &self.data_dir
     }
 
-    /// Toggle visibility of a field for a contact.
-    pub fn toggle_field_visibility(&self, contact_id: &str, field_label: &str) -> Result<bool> {
-        let mut contact = self
-            .storage
-            .load_contact(contact_id)
-            .context("Failed to get contact")?
-            .context("Contact not found")?;
-
-        let current_can_see = contact.visibility_rules().can_see(field_label, contact_id);
-
-        // Toggle: if currently visible, set to nobody; if hidden, set to everyone
-        if current_can_see {
-            contact.visibility_rules_mut().set_nobody(field_label);
-        } else {
-            contact.visibility_rules_mut().set_everyone(field_label);
+    /// Set the relay URL.
+    pub fn set_relay_url(&mut self, url: &str) -> Result<()> {
+        let url = url.trim();
+        if url.is_empty() {
+            anyhow::bail!("Relay URL cannot be empty");
+        }
+        if !url.starts_with("wss://") && !url.starts_with("ws://") {
+            anyhow::bail!("Relay URL must start with wss:// or ws://");
         }
 
-        let new_can_see = !current_can_see;
+        // Save to config file
+        let relay_config_path = self.data_dir.join("relay_url.txt");
+        std::fs::write(&relay_config_path, url).context("Failed to save relay URL")?;
 
-        self.storage
-            .save_contact(&contact)
-            .context("Failed to save contact")?;
-
-        Ok(new_can_see)
-    }
-
-    /// Remove a contact by ID.
-    pub fn remove_contact(&self, contact_id: &str) -> Result<()> {
-        self.storage
-            .delete_contact(contact_id)
-            .context("Failed to delete contact")?;
+        self.relay_url = url.to_string();
         Ok(())
-    }
-
-    /// Toggle recovery trust for a contact. Returns new trust state.
-    pub fn toggle_recovery_trust(&self, contact_id: &str) -> Result<bool> {
-        let mut contact = self
-            .storage
-            .load_contact(contact_id)
-            .context("Failed to get contact")?
-            .context("Contact not found")?;
-
-        if contact.is_blocked() {
-            anyhow::bail!("Blocked contacts cannot be trusted for recovery");
-        }
-
-        let new_state = !contact.is_recovery_trusted();
-        if new_state {
-            contact.trust_for_recovery();
-        } else {
-            contact.untrust_for_recovery();
-        }
-
-        self.storage
-            .save_contact(&contact)
-            .context("Failed to save contact")?;
-
-        Ok(new_state)
-    }
-
-    /// Count contacts that are trusted for recovery.
-    pub fn trusted_contact_count(&self) -> Result<usize> {
-        let contacts = self
-            .storage
-            .list_contacts()
-            .context("Failed to list contacts")?;
-        Ok(contacts.iter().filter(|c| c.is_recovery_trusted()).count())
-    }
-
-    /// Get fields for a contact by index.
-    pub fn get_contact_fields(&self, contact_index: usize) -> Result<Vec<ContactFieldInfo>> {
-        let contacts = self
-            .storage
-            .list_contacts()
-            .context("Failed to list contacts")?;
-
-        let contact = contacts.get(contact_index).context("Contact not found")?;
-
-        Ok(contact
-            .card()
-            .fields()
-            .iter()
-            .map(|f| {
-                let action = f.to_action();
-                let action_type = match &action {
-                    ContactAction::Call(_) => "call",
-                    ContactAction::SendSms(_) => "sms",
-                    ContactAction::SendEmail(_) => "email",
-                    ContactAction::OpenUrl(_) => "web",
-                    ContactAction::OpenMap(_) => "map",
-                    ContactAction::CopyToClipboard => "copy",
-                };
-                ContactFieldInfo {
-                    label: f.label().to_string(),
-                    value: f.value().to_string(),
-                    field_type: format!("{:?}", f.field_type()),
-                    action_type: action_type.to_string(),
-                    uri: f.to_uri(),
-                }
-            })
-            .collect())
-    }
-
-    /// Open a contact field in the system default app.
-    pub fn open_contact_field(&self, contact_index: usize, field_index: usize) -> Result<String> {
-        let fields = self.get_contact_fields(contact_index)?;
-        let field = fields.get(field_index).context("Field not found")?;
-
-        if let Some(ref uri) = field.uri {
-            open::that(uri).context("Failed to open URI")?;
-            Ok(format!("Opened {} in {}", field.label, field.action_type))
-        } else {
-            Ok(format!("No action available for {}", field.label))
-        }
     }
 
     // ========== Device Management ==========
@@ -792,654 +465,6 @@ impl Backend {
             "wb://link/{}",
             &public_id[..32.min(public_id.len())]
         ))
-    }
-
-    // ========== Recovery ==========
-
-    /// Get recovery status.
-    pub fn get_recovery_status(&self) -> Result<RecoveryStatus> {
-        // For now, return a stub status
-        Ok(RecoveryStatus {
-            has_active_claim: false,
-            voucher_count: 0,
-            required_vouchers: 3,
-            claim_expires: None,
-        })
-    }
-
-    // ========== Backup/Restore ==========
-
-    /// Export identity backup with password.
-    pub fn export_backup(&self, password: &str) -> Result<String> {
-        let identity = self.identity.as_ref().context("No identity")?;
-        let backup = identity
-            .export_backup(password)
-            .map_err(|e| anyhow::anyhow!("Export failed: {:?}", e))?;
-        Ok(hex::encode(backup.as_bytes()))
-    }
-
-    /// Import identity from backup with password.
-    pub fn import_backup(&mut self, backup_data: &str, password: &str) -> Result<()> {
-        let bytes = hex::decode(backup_data.trim()).context("Invalid hex data")?;
-        let backup = IdentityBackup::new(bytes.clone());
-        let identity = Identity::import_backup(&backup, password)
-            .map_err(|e| anyhow::anyhow!("Import failed: {:?}", e))?;
-
-        let name = identity.display_name().to_string();
-        self.storage
-            .save_identity(&bytes, &name)
-            .context("Failed to save identity")?;
-
-        self.identity = Some(identity);
-        self.backup_data = Some(bytes);
-        self.display_name = Some(name);
-        Ok(())
-    }
-
-    /// Get sync status string for display.
-    #[allow(dead_code)]
-    pub fn sync_status(&self) -> &'static str {
-        if self.identity.is_some() {
-            "Ready to sync"
-        } else {
-            "No identity"
-        }
-    }
-
-    /// Get count of pending outbound updates.
-    pub fn pending_update_count(&self) -> Result<u32> {
-        let contacts = self
-            .storage
-            .list_contacts()
-            .context("Failed to list contacts")?;
-
-        let mut total = 0u32;
-        for contact in &contacts {
-            let pending = self
-                .storage
-                .get_pending_updates(contact.id())
-                .unwrap_or_default();
-            total += pending.len() as u32;
-        }
-        Ok(total)
-    }
-
-    /// Perform a full sync with the relay server.
-    ///
-    /// This connects to the relay, receives pending messages, processes them,
-    /// and sends any pending outbound updates. Uses a current-thread tokio
-    /// runtime internally for async WebSocket I/O.
-    pub fn sync(&self) -> SyncResult {
-        let rt = match tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-        {
-            Ok(rt) => rt,
-            Err(e) => return SyncResult::error(format!("Runtime error: {}", e)),
-        };
-        rt.block_on(self.sync_async())
-    }
-
-    /// Async implementation of the full sync pipeline.
-    async fn sync_async(&self) -> SyncResult {
-        let identity = match &self.identity {
-            Some(id) => id,
-            None => return SyncResult::error("No identity found. Create an identity first."),
-        };
-
-        let relay_url = &self.relay_url;
-        let device_id_hex = hex::encode(identity.device_id());
-
-        // Connect to relay (async with timeout)
-        let mut socket = match Self::connect_to_relay(relay_url).await {
-            Ok(s) => s,
-            Err(e) => return SyncResult::error(format!("Connection failed: {}", e)),
-        };
-
-        // Send authenticated handshake with device_id for inter-device sync
-        if let Err(e) = Self::send_handshake(&mut socket, identity, Some(&device_id_hex)).await {
-            return SyncResult::error(format!("Handshake failed: {}", e));
-        }
-
-        // Wait for server to send pending messages
-        tokio::time::sleep(Duration::from_millis(500)).await;
-
-        // Receive pending messages (async with per-message timeout)
-        let received = match Self::receive_pending(&mut socket).await {
-            Ok(msgs) => msgs,
-            Err(e) => return SyncResult::error(format!("Receive failed: {}", e)),
-        };
-
-        // Process legacy exchange messages
-        let legacy_added = match self
-            .process_legacy_exchanges(identity, received.legacy_exchange)
-            .await
-        {
-            Ok(count) => count,
-            Err(e) => return SyncResult::error(format!("Legacy exchange failed: {}", e)),
-        };
-
-        // Process encrypted exchange messages
-        let encrypted_added = match self
-            .process_encrypted_exchanges(identity, received.encrypted_exchange)
-            .await
-        {
-            Ok(count) => count,
-            Err(e) => return SyncResult::error(format!("Encrypted exchange failed: {}", e)),
-        };
-
-        let contacts_added = legacy_added + encrypted_added;
-
-        // Process card updates (sync — core's secure pipeline)
-        let cards_updated =
-            match process_card_updates(identity, &self.storage, received.card_updates) {
-                Ok(result) => result.processed,
-                Err(e) => return SyncResult::error(format!("Card update failed: {}", e)),
-            };
-
-        // Process device sync messages (sync)
-        let device_synced =
-            match self.process_device_sync_messages(identity, received.device_sync_messages) {
-                Ok(count) => count,
-                Err(e) => return SyncResult::error(format!("Device sync failed: {}", e)),
-            };
-
-        // Build device sync envelopes (sync) then send (async)
-        let device_envelopes =
-            vauchi_core::sync::build_device_sync_envelopes(identity, &self.storage)
-                .unwrap_or_default();
-
-        let mut device_sync_sent = 0u32;
-        for data in device_envelopes {
-            if socket.send(Message::Binary(data)).await.is_ok() {
-                device_sync_sent += 1;
-            }
-        }
-
-        // Collect pending updates (sync) then send (async)
-        let pending = self.collect_pending_updates_data(identity);
-
-        let mut updates_sent = 0u32;
-        let mut sent_ids = Vec::new();
-        for (update_id, data) in pending {
-            if socket.send(Message::Binary(data)).await.is_ok() {
-                sent_ids.push(update_id);
-                updates_sent += 1;
-            }
-        }
-
-        // Cleanup sent updates
-        for id in &sent_ids {
-            let _ = self.storage.delete_pending_update(id);
-        }
-
-        // Close connection
-        let _ = socket.close(None).await;
-
-        SyncResult::success(
-            contacts_added,
-            cards_updated + device_synced,
-            updates_sent + device_sync_sent,
-        )
-    }
-
-    /// Connect to relay server via async WebSocket with timeout.
-    async fn connect_to_relay(relay_url: &str) -> Result<WsStream, String> {
-        let (ws_stream, _) = tokio::time::timeout(
-            Duration::from_secs(5),
-            tokio_tungstenite::connect_async(relay_url),
-        )
-        .await
-        .map_err(|_| "Connection timed out".to_string())?
-        .map_err(|e| format!("WebSocket connection failed: {}", e))?;
-
-        Ok(ws_stream)
-    }
-
-    /// Send authenticated handshake to relay.
-    async fn send_handshake(
-        socket: &mut WsStream,
-        identity: &Identity,
-        device_id: Option<&str>,
-    ) -> Result<(), String> {
-        let handshake = create_signed_handshake(identity, device_id.map(|s| s.to_string()));
-        let envelope = create_simple_envelope(SimplePayload::Handshake(handshake));
-        let data = encode_simple_message(&envelope).map_err(|e| format!("Encode error: {}", e))?;
-        socket
-            .send(Message::Binary(data))
-            .await
-            .map_err(|e| format!("Send error: {}", e))?;
-        Ok(())
-    }
-
-    /// Receive pending messages from relay with timeout.
-    async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, String> {
-        let mut legacy_exchange = Vec::new();
-        let mut encrypted_exchange = Vec::new();
-        let mut card_updates = Vec::new();
-        let mut device_sync_messages = Vec::new();
-
-        loop {
-            let msg = match tokio::time::timeout(Duration::from_secs(1), socket.next()).await {
-                Ok(Some(Ok(msg))) => msg,
-                Ok(Some(Err(_))) | Ok(None) => break,
-                Err(_) => break, // Timeout — no more pending messages
-            };
-
-            match msg {
-                Message::Binary(data) => {
-                    if let Ok(envelope) = decode_simple_message(&data) {
-                        match envelope.payload {
-                            SimplePayload::EncryptedUpdate(update) => {
-                                // Classify the message
-                                if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
-                                    if let Some(exchange) =
-                                        LegacyExchangeMessage::from_bytes(&update.ciphertext)
-                                    {
-                                        legacy_exchange.push(exchange);
-                                    }
-                                } else if EncryptedExchangeMessage::from_bytes(&update.ciphertext)
-                                    .is_ok()
-                                {
-                                    encrypted_exchange.push(update.ciphertext);
-                                } else {
-                                    card_updates.push((update.sender_id, update.ciphertext));
-                                }
-
-                                // Send acknowledgment
-                                let ack = create_simple_ack(
-                                    &envelope.message_id,
-                                    SimpleAckStatus::ReceivedByRecipient,
-                                );
-                                if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data)).await;
-                                }
-                            }
-                            SimplePayload::DeviceSyncMessage(msg) => {
-                                let version = msg.version;
-                                device_sync_messages.push(msg);
-
-                                let ack = create_device_sync_ack(&envelope.message_id, version);
-                                if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data)).await;
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-                Message::Ping(data) => {
-                    let _ = socket.send(Message::Pong(data)).await;
-                }
-                Message::Close(_) => break,
-                _ => { /* Ignore other message types */ }
-            }
-        }
-
-        Ok(ReceivedMessages {
-            legacy_exchange,
-            encrypted_exchange,
-            card_updates,
-            device_sync_messages,
-        })
-    }
-
-    /// Parse a hex-encoded 32-byte key.
-    fn parse_hex_key(hex_str: &str) -> Option<[u8; 32]> {
-        let bytes = hex::decode(hex_str).ok()?;
-        if bytes.len() != 32 {
-            return None;
-        }
-        let mut arr = [0u8; 32];
-        arr.copy_from_slice(&bytes);
-        Some(arr)
-    }
-
-    /// Process legacy plaintext exchange messages.
-    async fn process_legacy_exchanges(
-        &self,
-        identity: &Identity,
-        messages: Vec<LegacyExchangeMessage>,
-    ) -> Result<u32, String> {
-        let mut added = 0u32;
-        let our_x3dh = identity.x3dh_keypair();
-
-        for exchange in messages {
-            let identity_key = match Self::parse_hex_key(&exchange.identity_public_key) {
-                Some(key) => key,
-                None => continue,
-            };
-
-            let public_id = hex::encode(identity_key);
-
-            // Handle response (update contact name)
-            if exchange.is_response {
-                if let Ok(Some(mut contact)) = self.storage.load_contact(&public_id) {
-                    if contact.display_name() != exchange.display_name
-                        && contact.set_display_name(&exchange.display_name).is_ok()
-                    {
-                        let _ = self.storage.save_contact(&contact);
-                    }
-                }
-                continue;
-            }
-
-            // Check if contact exists
-            if self
-                .storage
-                .load_contact(&public_id)
-                .map_err(|e| e.to_string())?
-                .is_some()
-            {
-                continue;
-            }
-
-            let ephemeral_key = match Self::parse_hex_key(&exchange.ephemeral_public_key) {
-                Some(key) => key,
-                None => continue,
-            };
-
-            // Perform X3DH
-            let shared_secret = match vauchi_core::exchange::X3DH::respond(
-                &our_x3dh,
-                &identity_key,
-                &ephemeral_key,
-            ) {
-                Ok(secret) => secret,
-                Err(_) => continue,
-            };
-
-            // Create contact
-            let card = ContactCard::new(&exchange.display_name);
-            let contact = Contact::from_exchange(identity_key, card, shared_secret.clone());
-            let contact_id = contact.id().to_string();
-            self.storage
-                .save_contact(&contact)
-                .map_err(|e| e.to_string())?;
-
-            // Initialize ratchet
-            let ratchet_dh = X3DHKeyPair::from_bytes(our_x3dh.secret_bytes());
-            let ratchet = DoubleRatchetState::initialize_responder(&shared_secret, ratchet_dh);
-            let _ = self.storage.save_ratchet_state(&contact_id, &ratchet, true);
-
-            added += 1;
-
-            // Send response
-            let _ = self
-                .send_exchange_response(identity, &public_id, &ephemeral_key)
-                .await;
-        }
-
-        Ok(added)
-    }
-
-    /// Process encrypted exchange messages.
-    async fn process_encrypted_exchanges(
-        &self,
-        identity: &Identity,
-        encrypted_data: Vec<Vec<u8>>,
-    ) -> Result<u32, String> {
-        let mut added = 0u32;
-        let our_x3dh = identity.x3dh_keypair();
-
-        for data in encrypted_data {
-            let encrypted_msg = match EncryptedExchangeMessage::from_bytes(&data) {
-                Ok(msg) => msg,
-                Err(_) => continue,
-            };
-
-            let (payload, shared_secret) = match encrypted_msg.decrypt(&our_x3dh) {
-                Ok(result) => result,
-                Err(_) => continue,
-            };
-
-            let public_id = hex::encode(payload.identity_key);
-
-            // Check if contact exists
-            if self
-                .storage
-                .load_contact(&public_id)
-                .map_err(|e| e.to_string())?
-                .is_some()
-            {
-                continue;
-            }
-
-            // Create contact
-            let card = ContactCard::new(&payload.display_name);
-            let contact = Contact::from_exchange(payload.identity_key, card, shared_secret.clone());
-            let contact_id = contact.id().to_string();
-            self.storage
-                .save_contact(&contact)
-                .map_err(|e| e.to_string())?;
-
-            // Initialize ratchet
-            let ratchet_dh = X3DHKeyPair::from_bytes(our_x3dh.secret_bytes());
-            let ratchet = DoubleRatchetState::initialize_responder(&shared_secret, ratchet_dh);
-            let _ = self
-                .storage
-                .save_ratchet_state(&contact_id, &ratchet, false);
-
-            added += 1;
-
-            // Send response
-            let _ = self
-                .send_exchange_response(identity, &public_id, &payload.exchange_key)
-                .await;
-        }
-
-        Ok(added)
-    }
-
-    /// Send exchange response.
-    async fn send_exchange_response(
-        &self,
-        identity: &Identity,
-        recipient_id: &str,
-        recipient_exchange_key: &[u8; 32],
-    ) -> Result<(), String> {
-        let mut socket = Self::connect_to_relay(&self.relay_url).await?;
-
-        Self::send_handshake(&mut socket, identity, None).await?;
-
-        let our_id = identity.public_id();
-        let our_x3dh = identity.x3dh_keypair();
-        let (encrypted_msg, _) = EncryptedExchangeMessage::create(
-            &our_x3dh,
-            recipient_exchange_key,
-            identity.signing_public_key(),
-            identity.display_name(),
-        )
-        .map_err(|e| format!("Failed to encrypt exchange: {:?}", e))?;
-
-        let update = SimpleEncryptedUpdate {
-            recipient_id: recipient_id.to_string(),
-            sender_id: our_id,
-            ciphertext: encrypted_msg.to_bytes(),
-        };
-
-        let envelope = create_simple_envelope(SimplePayload::EncryptedUpdate(update));
-        let data = encode_simple_message(&envelope).map_err(|e| e.to_string())?;
-        socket
-            .send(Message::Binary(data))
-            .await
-            .map_err(|e| e.to_string())?;
-
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        let _ = socket.close(None).await;
-
-        Ok(())
-    }
-
-    // Card update processing now handled by vauchi_core::sync::process_card_updates
-    // which provides the full secure pipeline (revocation, signature, replay detection).
-
-    /// Process incoming device sync messages from other devices.
-    fn process_device_sync_messages(
-        &self,
-        identity: &Identity,
-        messages: Vec<SimpleDeviceSyncMessage>,
-    ) -> Result<u32, String> {
-        if messages.is_empty() {
-            return Ok(0);
-        }
-
-        // Try to load device registry - if none exists, skip
-        let registry = match self.storage.load_device_registry() {
-            Ok(Some(r)) if r.device_count() > 1 => r,
-            _ => return Ok(0),
-        };
-
-        let mut orchestrator = DeviceSyncOrchestrator::new(
-            &self.storage,
-            identity.create_device_info(),
-            registry.clone(),
-        );
-
-        let mut processed = 0u32;
-
-        for msg in messages {
-            // Parse sender device ID
-            let sender_device_id: [u8; 32] = match hex::decode(&msg.sender_device_id) {
-                Ok(bytes) if bytes.len() == 32 => {
-                    let mut arr = [0u8; 32];
-                    arr.copy_from_slice(&bytes);
-                    arr
-                }
-                _ => continue,
-            };
-
-            // Find sender in registry
-            let sender_device = match registry.find_device(&sender_device_id) {
-                Some(d) => d,
-                None => continue,
-            };
-
-            // Decrypt payload
-            let plaintext = match orchestrator
-                .decrypt_from_device(&sender_device.exchange_public_key, &msg.encrypted_payload)
-            {
-                Ok(pt) => pt,
-                Err(_) => continue,
-            };
-
-            // Parse SyncItems
-            let items: Vec<SyncItem> = match serde_json::from_slice(&plaintext) {
-                Ok(items) => items,
-                Err(_) => continue,
-            };
-
-            // Process items with conflict resolution
-            let applied = match orchestrator.process_incoming(items) {
-                Ok(applied) => applied,
-                Err(_) => continue,
-            };
-
-            // Apply the items
-            for item in &applied {
-                let _ = self.apply_sync_item(item);
-            }
-
-            if !applied.is_empty() {
-                processed += 1;
-            }
-        }
-
-        Ok(processed)
-    }
-
-    /// Apply a single sync item to local storage.
-    fn apply_sync_item(&self, item: &SyncItem) -> Result<(), String> {
-        match item {
-            SyncItem::ContactAdded { contact_data, .. } => {
-                if let Ok(contact) = contact_data.to_contact() {
-                    self.storage
-                        .save_contact(&contact)
-                        .map_err(|e| e.to_string())?;
-                }
-            }
-            SyncItem::ContactRemoved { contact_id, .. } => {
-                self.storage
-                    .delete_contact(contact_id)
-                    .map_err(|e| e.to_string())?;
-            }
-            SyncItem::CardUpdated {
-                field_label,
-                new_value,
-                ..
-            } => {
-                if let Ok(Some(mut card)) = self.storage.load_own_card() {
-                    if card.update_field_value(field_label, new_value).is_ok() {
-                        self.storage
-                            .save_own_card(&card)
-                            .map_err(|e| e.to_string())?;
-                    }
-                }
-            }
-            SyncItem::VisibilityChanged {
-                contact_id,
-                field_label,
-                is_visible,
-                ..
-            } => {
-                if let Some(mut contact) = self
-                    .storage
-                    .load_contact(contact_id)
-                    .map_err(|e| e.to_string())?
-                {
-                    if *is_visible {
-                        contact.visibility_rules_mut().set_everyone(field_label);
-                    } else {
-                        contact.visibility_rules_mut().set_nobody(field_label);
-                    }
-                    self.storage
-                        .save_contact(&contact)
-                        .map_err(|e| e.to_string())?;
-                }
-            }
-            SyncItem::LabelChange { .. }
-            | SyncItem::ContactTrustChanged { .. }
-            | SyncItem::DeletionScheduled { .. }
-            | SyncItem::DeletionCancelled { .. } => {
-                // Informational sync items — no local storage action needed
-            }
-        }
-        Ok(())
-    }
-
-    /// Collect pending outbound updates as serialized data for async sending.
-    ///
-    /// Returns `(update_id, serialized_envelope)` pairs. The caller sends
-    /// them over the async WebSocket and then deletes the IDs on success.
-    fn collect_pending_updates_data(&self, identity: &Identity) -> Vec<(String, Vec<u8>)> {
-        let contacts = match self.storage.list_contacts() {
-            Ok(c) => c,
-            Err(_) => return Vec::new(),
-        };
-        let our_id = identity.public_id();
-        let mut result = Vec::new();
-
-        for contact in contacts {
-            let pending = match self.storage.get_pending_updates(contact.id()) {
-                Ok(p) => p,
-                Err(_) => continue,
-            };
-
-            for update in pending {
-                let msg = SimpleEncryptedUpdate {
-                    recipient_id: contact.id().to_string(),
-                    sender_id: our_id.clone(),
-                    ciphertext: update.payload,
-                };
-
-                let envelope = create_simple_envelope(SimplePayload::EncryptedUpdate(msg));
-                if let Ok(data) = encode_simple_message(&envelope) {
-                    result.push((update.id, data));
-                }
-            }
-        }
-
-        result
     }
 
     // ========== Tor Privacy Mode ==========
@@ -1504,23 +529,6 @@ impl Backend {
             .save_tor_config(&config)
             .context("Failed to save Tor config")?;
         Ok(count)
-    }
-
-    /// Test connection to the relay server.
-    pub fn test_relay_connection(&self) -> Result<bool> {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .map_err(|e| anyhow::anyhow!("Runtime error: {}", e))?;
-
-        rt.block_on(async {
-            let mut socket = Self::connect_to_relay(&self.relay_url)
-                .await
-                .map_err(|e| anyhow::anyhow!("Connection failed: {}", e))?;
-
-            let _ = socket.close(None).await;
-            Ok(true)
-        })
     }
 
     // === GDPR Operations ===
@@ -1787,24 +795,6 @@ impl Backend {
     }
 }
 
-/// Field visibility information for display.
-#[derive(Debug, Clone)]
-pub struct FieldVisibilityInfo {
-    pub field_label: String,
-    pub can_see: bool,
-}
-
-/// Contact field information for display.
-#[derive(Debug, Clone)]
-pub struct ContactFieldInfo {
-    pub label: String,
-    pub value: String,
-    #[allow(dead_code)]
-    pub field_type: String,
-    pub action_type: String,
-    pub uri: Option<String>,
-}
-
 /// Device information for display.
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -1816,65 +806,8 @@ pub struct DeviceInfo {
     pub is_active: bool,
 }
 
-/// Recovery status information.
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub struct RecoveryStatus {
-    pub has_active_claim: bool,
-    pub voucher_count: u32,
-    pub required_vouchers: u32,
-    pub claim_expires: Option<String>,
-}
-
 /// Available field types for selection.
 pub const FIELD_TYPES: &[&str] = &["Email", "Phone", "Website", "Address", "Social", "Custom"];
-
-/// Result of a sync operation.
-#[derive(Debug, Clone)]
-pub struct SyncResult {
-    /// Number of new contacts added from exchange messages.
-    pub contacts_added: u32,
-    /// Number of contact cards updated.
-    pub cards_updated: u32,
-    /// Number of outbound updates sent.
-    pub updates_sent: u32,
-    /// Whether sync completed successfully.
-    pub success: bool,
-    /// Error message if sync failed.
-    pub error: Option<String>,
-}
-
-impl SyncResult {
-    /// Create a success result.
-    pub fn success(contacts_added: u32, cards_updated: u32, updates_sent: u32) -> Self {
-        Self {
-            contacts_added,
-            cards_updated,
-            updates_sent,
-            success: true,
-            error: None,
-        }
-    }
-
-    /// Create an error result.
-    pub fn error(msg: impl Into<String>) -> Self {
-        Self {
-            contacts_added: 0,
-            cards_updated: 0,
-            updates_sent: 0,
-            success: false,
-            error: Some(msg.into()),
-        }
-    }
-}
-
-/// Messages received from the relay during sync.
-struct ReceivedMessages {
-    legacy_exchange: Vec<LegacyExchangeMessage>,
-    encrypted_exchange: Vec<Vec<u8>>,
-    card_updates: Vec<(String, Vec<u8>)>,
-    device_sync_messages: Vec<SimpleDeviceSyncMessage>,
-}
 
 // ===========================================================================
 // Backend Tests
@@ -2728,6 +1661,7 @@ mod tests {
 
     /// Helper: create a test contact and save it to storage.
     fn create_and_save_test_contact(backend: &Backend, name: &str) -> String {
+        use vauchi_core::{Contact, ContactCard, SymmetricKey};
         let pk: [u8; 32] = {
             let mut arr = [0u8; 32];
             // Derive unique key from name bytes
