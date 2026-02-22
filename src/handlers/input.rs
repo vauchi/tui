@@ -577,6 +577,32 @@ fn handle_edit_relay_url_keys(app: &mut App, key: KeyCode) {
 }
 
 fn handle_devices_keys(app: &mut App, key: KeyCode) {
+    // Handle revoke confirmation overlay
+    if app.revoke_confirm {
+        match key {
+            KeyCode::Char('y') => {
+                app.revoke_confirm = false;
+                match app.backend.revoke_device(app.selected_device) {
+                    Ok(name) => app.set_status(format!("Device '{}' revoked", name)),
+                    Err(e) => app.set_status(format!("Revoke failed: {}", e)),
+                }
+            }
+            KeyCode::Char('n') | KeyCode::Esc => {
+                app.revoke_confirm = false;
+            }
+            _ => {}
+        }
+        return;
+    }
+
+    // Handle QR overlay — Esc dismisses
+    if app.device_link_result.is_some() {
+        if key == KeyCode::Esc {
+            app.device_link_result = None;
+        }
+        return;
+    }
+
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
             if let Ok(devices) = app.backend.list_devices() {
@@ -591,9 +617,25 @@ fn handle_devices_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('l') => match app.backend.generate_device_link() {
-            Ok(link) => app.set_status(format!("Link code: {}", &link[..40.min(link.len())])),
+            Ok(result) => {
+                app.device_link_result = Some(result);
+            }
             Err(e) => app.set_status(format!("Error: {}", e)),
         },
+        KeyCode::Char('r') => {
+            // Check if selected device is current or already revoked
+            if let Ok(devices) = app.backend.list_devices() {
+                if let Some(device) = devices.get(app.selected_device) {
+                    if device.is_current {
+                        app.set_status("Cannot revoke the current device");
+                    } else if !device.is_active {
+                        app.set_status("Device is already revoked");
+                    } else {
+                        app.revoke_confirm = true;
+                    }
+                }
+            }
+        }
         _ => {}
     }
 }

@@ -5,17 +5,9 @@
 //! Device Management Screen
 
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
+use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap};
 
 use crate::app::App;
-
-/// State for device link display
-#[derive(Default)]
-#[allow(dead_code)]
-pub struct DeviceLinkState {
-    pub qr_data: Option<String>,
-    pub show_qr: bool,
-}
 
 /// Draw the devices screen.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
@@ -36,6 +28,16 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Key hints
     draw_key_hints(f, main_chunks[2], app);
+
+    // Overlay: QR code display
+    if let Some(ref link_result) = app.device_link_result {
+        draw_link_overlay(f, area, link_result);
+    }
+
+    // Overlay: Revoke confirmation
+    if app.revoke_confirm {
+        draw_revoke_confirm(f, area, app);
+    }
 }
 
 fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
@@ -183,43 +185,155 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(device_list, area);
 }
 
-fn draw_key_hints(f: &mut Frame, area: Rect, _app: &App) {
-    let hints = Paragraph::new(Line::from(vec![
-        Span::styled("j/↓", Style::default().fg(Color::Yellow)),
-        Span::raw(" Down  "),
-        Span::styled("k/↑", Style::default().fg(Color::Yellow)),
-        Span::raw(" Up  "),
-        Span::styled("l", Style::default().fg(Color::Yellow)),
-        Span::raw(" Link  "),
-        Span::styled("r", Style::default().fg(Color::Yellow)),
-        Span::raw(" Revoke  "),
-        Span::styled("Esc", Style::default().fg(Color::Yellow)),
-        Span::raw(" Back"),
-    ]))
+fn draw_key_hints(f: &mut Frame, area: Rect, app: &App) {
+    let hints = if app.device_link_result.is_some() || app.revoke_confirm {
+        Paragraph::new(Line::from(vec![
+            Span::styled("Esc", Style::default().fg(Color::Yellow)),
+            Span::raw(" Dismiss"),
+        ]))
+    } else {
+        Paragraph::new(Line::from(vec![
+            Span::styled("j/↓", Style::default().fg(Color::Yellow)),
+            Span::raw(" Down  "),
+            Span::styled("k/↑", Style::default().fg(Color::Yellow)),
+            Span::raw(" Up  "),
+            Span::styled("l", Style::default().fg(Color::Yellow)),
+            Span::raw(" Link  "),
+            Span::styled("r", Style::default().fg(Color::Yellow)),
+            Span::raw(" Revoke  "),
+            Span::styled("Esc", Style::default().fg(Color::Yellow)),
+            Span::raw(" Back"),
+        ]))
+    };
+
+    f.render_widget(
+        hints
+            .alignment(Alignment::Center)
+            .block(Block::default().borders(Borders::TOP)),
+        area,
+    );
+}
+
+/// Draw the device link QR code overlay.
+fn draw_link_overlay(f: &mut Frame, area: Rect, link_result: &crate::backend::DeviceLinkResult) {
+    // Center overlay at 80% of screen
+    let overlay_area = centered_rect(80, 90, area);
+    f.render_widget(Clear, overlay_area);
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([
+            Constraint::Length(3), // Title + fingerprint
+            Constraint::Min(0),    // QR code
+            Constraint::Length(5), // Data string + instructions
+        ])
+        .split(overlay_area);
+
+    // Title with fingerprint
+    let title = Paragraph::new(vec![
+        Line::from(Span::styled(
+            "Device Link QR Code",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(vec![
+            Span::styled("Fingerprint: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(&link_result.fingerprint, Style::default().fg(Color::Yellow)),
+        ]),
+    ])
     .alignment(Alignment::Center)
-    .block(Block::default().borders(Borders::TOP));
+    .block(Block::default().borders(Borders::ALL).title(" Link "));
+    f.render_widget(title, chunks[0]);
 
-    f.render_widget(hints, area);
+    // QR code (ASCII art)
+    let qr = Paragraph::new(link_result.qr_ascii.as_str())
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL).title(" QR Code "));
+    f.render_widget(qr, chunks[1]);
+
+    // Data string for copy-paste + instructions
+    let truncated_data = if link_result.data_string.len() > 60 {
+        format!("{}...", &link_result.data_string[..60])
+    } else {
+        link_result.data_string.clone()
+    };
+
+    let info = Paragraph::new(vec![
+        Line::from(vec![
+            Span::styled("Data: ", Style::default().fg(Color::DarkGray)),
+            Span::raw(truncated_data),
+        ]),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Scan with new device or copy data string. Press Esc to dismiss.",
+            Style::default().fg(Color::DarkGray),
+        )),
+    ])
+    .wrap(Wrap { trim: true })
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Instructions "),
+    );
+    f.render_widget(info, chunks[2]);
 }
 
-/// Generate and display device link QR code
-#[allow(dead_code)]
-pub fn show_device_link_qr(app: &mut App) -> Option<String> {
-    app.backend.generate_device_link().ok()
+/// Draw the revoke confirmation overlay.
+fn draw_revoke_confirm(f: &mut Frame, area: Rect, app: &App) {
+    let devices = app.backend.list_devices().unwrap_or_default();
+    let device_name = devices
+        .get(app.selected_device)
+        .map(|d| d.device_name.as_str())
+        .unwrap_or("Unknown");
+
+    let overlay_area = centered_rect(50, 30, area);
+    f.render_widget(Clear, overlay_area);
+
+    let confirm = Paragraph::new(vec![
+        Line::from(""),
+        Line::from(Span::styled(
+            format!("Revoke device '{}'?", device_name),
+            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+        Line::from("This device will lose access to your identity."),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("[y]", Style::default().fg(Color::Red)),
+            Span::raw(" Confirm  "),
+            Span::styled("[n/Esc]", Style::default().fg(Color::Yellow)),
+            Span::raw(" Cancel"),
+        ]),
+    ])
+    .alignment(Alignment::Center)
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Confirm Revoke ")
+            .border_style(Style::default().fg(Color::Red)),
+    );
+    f.render_widget(confirm, overlay_area);
 }
 
-/// Render a QR code as ASCII art.
-#[allow(dead_code)]
-fn render_qr_ascii(data: &str) -> String {
-    use qrcode::QrCode;
+/// Create a centered rectangle with the given percentage of the parent area.
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
 
-    match QrCode::new(data) {
-        Ok(code) => code
-            .render()
-            .dark_color('█')
-            .light_color(' ')
-            .quiet_zone(true)
-            .build(),
-        Err(_) => "Failed to generate QR code".to_string(),
-    }
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }

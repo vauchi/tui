@@ -4,7 +4,7 @@
 
 //! Application State
 
-use crate::backend::{Backend, QRData};
+use crate::backend::{Backend, DeviceLinkResult, QRData};
 use crate::i18n::I18n;
 
 /// Current screen in the application.
@@ -120,6 +120,10 @@ pub struct App {
     pub backup_state: BackupState,
     /// Selected device index
     pub selected_device: usize,
+    /// Device link result (shown as overlay on Devices screen)
+    pub device_link_result: Option<DeviceLinkResult>,
+    /// Whether a revoke confirmation is pending
+    pub revoke_confirm: bool,
     /// Contact search query
     pub contact_search_query: String,
     /// Contact search mode active
@@ -255,6 +259,8 @@ impl App {
             visibility_state: VisibilityState::default(),
             backup_state: BackupState::default(),
             selected_device: 0,
+            device_link_result: None,
+            revoke_confirm: false,
             contact_search_query: String::new(),
             contact_search_mode: false,
             current_qr: None,
@@ -293,10 +299,14 @@ impl App {
             | Screen::Exchange
             | Screen::Settings
             | Screen::Help
-            | Screen::Devices
             | Screen::Recovery
             | Screen::Sync
             | Screen::TorSettings => {
+                self.screen = Screen::Home;
+            }
+            Screen::Devices => {
+                self.device_link_result = None;
+                self.revoke_confirm = false;
                 self.screen = Screen::Home;
             }
             Screen::Privacy => {
@@ -340,6 +350,7 @@ impl App {
     }
 }
 
+// INLINE_TEST_REQUIRED: Tests need access to private detect_locale() and App internals
 #[cfg(test)]
 mod tests {
     use super::*;

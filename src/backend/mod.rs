@@ -427,44 +427,85 @@ impl Backend {
 
     /// List all linked devices.
     pub fn list_devices(&self) -> Result<Vec<DeviceInfo>> {
+        let identity = self.identity.as_ref().context("No identity")?;
+        let current_device_id = identity.device_id();
+
         // Try to load device registry from storage
         if let Ok(Some(registry)) = self.storage.load_device_registry() {
             Ok(registry
                 .all_devices()
                 .iter()
                 .enumerate()
-                .map(|(i, device)| {
-                    DeviceInfo {
-                        device_index: i as u32,
-                        device_name: device.device_name.clone(),
-                        public_key_prefix: hex::encode(&device.device_id[..8]),
-                        is_current: i == 0, // First device is current for now
-                        is_active: !device.revoked,
-                    }
+                .map(|(i, device)| DeviceInfo {
+                    device_index: i as u32,
+                    device_name: device.device_name.clone(),
+                    public_key_prefix: hex::encode(&device.device_id[..8]),
+                    is_current: device.device_id == *current_device_id,
+                    is_active: !device.revoked,
                 })
                 .collect())
         } else {
             // Return current device only
-            let identity = self.identity.as_ref().context("No identity")?;
             Ok(vec![DeviceInfo {
                 device_index: 0,
                 device_name: "This Device".to_string(),
-                public_key_prefix: hex::encode(&identity.device_id()[..8]),
+                public_key_prefix: hex::encode(&current_device_id[..8]),
                 is_current: true,
                 is_active: true,
             }])
         }
     }
 
-    /// Generate device link data.
-    pub fn generate_device_link(&self) -> Result<String> {
+    /// Generate device link QR code and data string using the core API.
+    ///
+    /// Returns `(qr_ascii, data_string, fingerprint)` for display.
+    pub fn generate_device_link(&self) -> Result<DeviceLinkResult> {
         let identity = self.identity.as_ref().context("No identity")?;
-        // Generate a simplified link invitation
-        let public_id = identity.public_id();
-        Ok(format!(
-            "wb://link/{}",
-            &public_id[..32.min(public_id.len())]
-        ))
+
+        let registry = self
+            .storage
+            .load_device_registry()?
+            .unwrap_or_else(|| identity.initial_device_registry());
+
+        let initiator = identity.create_device_link_initiator(registry);
+        let qr = initiator.qr();
+
+        Ok(DeviceLinkResult {
+            qr_ascii: qr.to_qr_image_string(),
+            data_string: qr.to_data_string(),
+            fingerprint: qr.identity_fingerprint(),
+        })
+    }
+
+    /// Revoke a device from the registry by its public key prefix.
+    pub fn revoke_device(&self, device_index: usize) -> Result<String> {
+        let identity = self.identity.as_ref().context("No identity")?;
+
+        let mut registry = self
+            .storage
+            .load_device_registry()?
+            .context("No device registry found")?;
+
+        let devices = registry.all_devices().to_vec();
+        if device_index >= devices.len() {
+            anyhow::bail!("Invalid device index: {}", device_index);
+        }
+
+        let device = &devices[device_index];
+
+        if device.device_id == *identity.device_id() {
+            anyhow::bail!("Cannot revoke the current device");
+        }
+
+        if device.revoked {
+            anyhow::bail!("Device '{}' is already revoked", device.device_name);
+        }
+
+        let device_name = device.device_name.clone();
+        registry.revoke_device(&device.device_id, identity.signing_keypair())?;
+        self.storage.save_device_registry(&registry)?;
+
+        Ok(device_name)
     }
 
     // ========== Tor Privacy Mode ==========
@@ -806,6 +847,17 @@ pub struct DeviceInfo {
     pub is_active: bool,
 }
 
+/// Result from generating a device link.
+#[derive(Debug, Clone)]
+pub struct DeviceLinkResult {
+    /// ASCII art QR code for terminal display.
+    pub qr_ascii: String,
+    /// Data string (base64) for copy-paste transport.
+    pub data_string: String,
+    /// Identity fingerprint for verification.
+    pub fingerprint: String,
+}
+
 /// Available field types for selection.
 pub const FIELD_TYPES: &[&str] = &["Email", "Phone", "Website", "Address", "Social", "Custom"];
 
@@ -814,6 +866,7 @@ pub const FIELD_TYPES: &[&str] = &["Email", "Phone", "Website", "Address", "Soci
 // Trace: features/identity_management.feature, contact_card_management.feature
 // ===========================================================================
 
+// INLINE_TEST_REQUIRED: Tests need access to private Backend fields (storage, identity)
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1356,11 +1409,74 @@ mod tests {
             .create_identity("Alice Smith")
             .expect("Failed to create identity");
 
-        let link = backend
+        let result = backend
             .generate_device_link()
             .expect("Failed to generate link");
 
-        assert!(link.starts_with("wb://link/"));
+        assert!(
+            !result.data_string.is_empty(),
+            "data_string must not be empty"
+        );
+        assert!(!result.qr_ascii.is_empty(), "qr_ascii must not be empty");
+        assert!(
+            !result.fingerprint.is_empty(),
+            "fingerprint must not be empty"
+        );
+        // Fingerprint follows XXXX-XXXX-XXXX-XXXX pattern
+        assert!(
+            result.fingerprint.contains('-'),
+            "fingerprint must contain dashes"
+        );
+    }
+
+    /// Trace: device_management.feature - Revoke device requires other devices
+    #[test]
+    fn test_revoke_device_no_registry() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        let result = backend.revoke_device(0);
+        assert!(result.is_err(), "Should fail without device registry");
+    }
+
+    /// Trace: device_management.feature - Cannot revoke current device
+    #[test]
+    fn test_revoke_current_device_rejected() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        // Initialize registry so current device is at index 0
+        let identity = backend.identity.as_ref().unwrap();
+        let registry = identity.initial_device_registry();
+        backend.storage.save_device_registry(&registry).unwrap();
+
+        let result = backend.revoke_device(0);
+        assert!(result.is_err(), "Should reject revoking current device");
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("current device"),
+            "Error should mention current device"
+        );
+    }
+
+    /// Trace: device_management.feature - Invalid device index rejected
+    #[test]
+    fn test_revoke_invalid_index() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice Smith")
+            .expect("Failed to create identity");
+
+        let identity = backend.identity.as_ref().unwrap();
+        let registry = identity.initial_device_registry();
+        backend.storage.save_device_registry(&registry).unwrap();
+
+        let result = backend.revoke_device(99);
+        assert!(result.is_err(), "Should reject invalid index");
     }
 
     // === Sync Tests ===

@@ -2702,3 +2702,7 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
 ]
+
+[[patch.unused]]
+name = "vauchi-core"
+version = "0.1.15"
