@@ -74,29 +74,36 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
 fn build_consent_items(app: &App) -> Vec<ListItem<'static>> {
     let consent_types = [
-        ("Data Processing", "Required for local operation"),
-        ("Contact Sharing", "Share info with exchanged contacts"),
-        ("Analytics", "Anonymous usage analytics"),
-        ("Recovery Vouching", "Participate in recovery"),
+        (
+            vauchi_core::api::ConsentType::DataProcessing,
+            "Data Processing",
+            "Required for local operation",
+        ),
+        (
+            vauchi_core::api::ConsentType::ContactSharing,
+            "Contact Sharing",
+            "Share info with exchanged contacts",
+        ),
+        (
+            vauchi_core::api::ConsentType::Analytics,
+            "Analytics",
+            "Anonymous usage analytics",
+        ),
+        (
+            vauchi_core::api::ConsentType::RecoveryVouching,
+            "Recovery Vouching",
+            "Participate in recovery",
+        ),
     ];
-
-    let records = app.backend.consent_records().unwrap_or_default();
 
     consent_types
         .iter()
         .enumerate()
-        .map(|(i, (name, desc))| {
-            let consent_type = match i {
-                0 => vauchi_core::api::ConsentType::DataProcessing,
-                1 => vauchi_core::api::ConsentType::ContactSharing,
-                2 => vauchi_core::api::ConsentType::Analytics,
-                _ => vauchi_core::api::ConsentType::RecoveryVouching,
-            };
-
-            let granted = records
-                .iter()
-                .rfind(|r| r.consent_type == consent_type)
-                .map(|r| r.granted)
+        .map(|(i, (consent_type, name, desc))| {
+            let granted = app
+                .backend
+                .consent_status_for_type(consent_type)
+                .map(|s| s.granted)
                 .unwrap_or(false);
 
             let status = if granted { "[x]" } else { "[ ]" };
