@@ -10,18 +10,31 @@ use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 use crate::app::App;
 
 /// Filter contacts based on search query.
-fn filter_contacts<'a>(
-    contacts: &'a [crate::backend::ContactInfo],
+///
+/// Delegates to core's find_contact_fuzzy when a query is provided,
+/// which combines name substring matching with ID prefix matching.
+fn filter_contacts(
+    app: &App,
+    contacts: &[crate::backend::ContactInfo],
     query: &str,
-) -> Vec<(usize, &'a crate::backend::ContactInfo)> {
+) -> Vec<(usize, crate::backend::ContactInfo)> {
     if query.is_empty() {
-        contacts.iter().enumerate().collect()
-    } else {
-        let query = query.to_lowercase();
         contacts
             .iter()
             .enumerate()
-            .filter(|(_, c)| c.display_name.to_lowercase().contains(&query))
+            .map(|(i, c)| (i, c.clone()))
+            .collect()
+    } else {
+        let fuzzy_results = app.backend.find_contact_fuzzy(query).unwrap_or_default();
+        // Map fuzzy results back to original indices for selection tracking
+        fuzzy_results
+            .into_iter()
+            .filter_map(|result| {
+                contacts
+                    .iter()
+                    .position(|c| c.id == result.id)
+                    .map(|i| (i, result))
+            })
             .collect()
     }
 }
@@ -57,7 +70,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(search_bar, chunks[0]);
 
     // Filter contacts
-    let filtered = filter_contacts(&contacts, &app.contact_search_query);
+    let filtered = filter_contacts(app, &contacts, &app.contact_search_query);
 
     if filtered.is_empty() {
         let msg = if contacts.is_empty() {

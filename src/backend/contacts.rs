@@ -4,8 +4,11 @@
 
 //! Contact-related backend methods.
 
+use std::sync::Arc;
+
 use anyhow::{Context, Result};
 
+use vauchi_core::api::{ContactManager, EventDispatcher};
 use vauchi_core::contact_card::ContactAction;
 
 use super::{Backend, ContactInfo};
@@ -36,6 +39,27 @@ impl Backend {
             .list_contacts()
             .context("Failed to list contacts")?;
 
+        Ok(contacts
+            .into_iter()
+            .map(|c| ContactInfo {
+                id: c.id().to_string(),
+                display_name: c.display_name().to_string(),
+                verified: c.is_fingerprint_verified(),
+                recovery_trusted: c.is_recovery_trusted(),
+            })
+            .collect())
+    }
+
+    /// Fuzzy-find contacts by display name or ID prefix.
+    ///
+    /// Delegates to core's ContactManager::find_contact_fuzzy, which combines
+    /// case-insensitive name substring matching with ID prefix matching.
+    pub fn find_contact_fuzzy(&self, query: &str) -> Result<Vec<ContactInfo>> {
+        let events = Arc::new(EventDispatcher::new());
+        let manager = ContactManager::new(&self.storage, events);
+        let contacts = manager
+            .find_contact_fuzzy(query)
+            .context("Failed to fuzzy-find contacts")?;
         Ok(contacts
             .into_iter()
             .map(|c| ContactInfo {
