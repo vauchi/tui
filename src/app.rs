@@ -6,6 +6,7 @@
 
 use crate::backend::{Backend, DeviceLinkResult, QRData};
 use crate::i18n::I18n;
+use crate::theme::{get_default_tui_theme, get_tui_theme, list_themes, TuiTheme};
 
 /// Current screen in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,6 +139,12 @@ pub struct App {
     pub privacy_state: PrivacyState,
     /// Internationalization
     pub i18n: I18n,
+    /// Active theme
+    pub theme: TuiTheme,
+    /// Index of the selected theme in the themes list
+    pub theme_index: usize,
+    /// Available theme IDs for cycling
+    pub theme_ids: Vec<String>,
 }
 
 /// State for the add field dialog.
@@ -217,6 +224,51 @@ pub struct PrivacyState {
     pub selected_item: usize,
 }
 
+/// Path to theme config file.
+fn theme_config_path() -> Option<std::path::PathBuf> {
+    dirs::config_dir().map(|d| d.join("vauchi").join("theme"))
+}
+
+/// Load saved theme ID from config, or detect from VAUCHI_THEME env var,
+/// or default to dark.
+fn load_saved_theme(theme_ids: &[String]) -> (TuiTheme, usize) {
+    // Check env var first
+    if let Ok(id) = std::env::var("VAUCHI_THEME") {
+        if let Some(pos) = theme_ids.iter().position(|t| t == &id) {
+            if let Some(t) = get_tui_theme(&id) {
+                return (t, pos);
+            }
+        }
+    }
+
+    // Check saved config
+    if let Some(path) = theme_config_path() {
+        if let Ok(id) = std::fs::read_to_string(&path) {
+            let id = id.trim();
+            if let Some(pos) = theme_ids.iter().position(|t| t == id) {
+                if let Some(t) = get_tui_theme(id) {
+                    return (t, pos);
+                }
+            }
+        }
+    }
+
+    // Default to dark
+    let default_id = "default-dark";
+    let index = theme_ids.iter().position(|t| t == default_id).unwrap_or(0);
+    (get_default_tui_theme(true), index)
+}
+
+/// Save theme preference to config file.
+fn save_theme_preference(theme_id: &str) {
+    if let Some(path) = theme_config_path() {
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let _ = std::fs::write(&path, theme_id);
+    }
+}
+
 /// Detect locale from environment variables (LANG, LC_ALL, LC_MESSAGES).
 fn detect_locale() -> I18n {
     for var in ["LC_ALL", "LC_MESSAGES", "LANG"] {
@@ -241,6 +293,11 @@ impl App {
         } else {
             Screen::Setup
         };
+
+        let theme_ids: Vec<String> = list_themes().into_iter().map(|(id, _, _)| id).collect();
+
+        // Load saved theme or detect from environment
+        let (theme, theme_index) = load_saved_theme(&theme_ids);
 
         App {
             backend,
@@ -268,6 +325,37 @@ impl App {
             tor_state: TorState::default(),
             privacy_state: PrivacyState::default(),
             i18n: detect_locale(),
+            theme,
+            theme_index,
+            theme_ids,
+        }
+    }
+
+    /// Cycle to the next theme.
+    pub fn next_theme(&mut self) {
+        if self.theme_ids.is_empty() {
+            return;
+        }
+        self.theme_index = (self.theme_index + 1) % self.theme_ids.len();
+        if let Some(t) = get_tui_theme(&self.theme_ids[self.theme_index]) {
+            self.theme = t;
+            save_theme_preference(&self.theme_ids[self.theme_index]);
+        }
+    }
+
+    /// Cycle to the previous theme.
+    pub fn prev_theme(&mut self) {
+        if self.theme_ids.is_empty() {
+            return;
+        }
+        self.theme_index = if self.theme_index == 0 {
+            self.theme_ids.len() - 1
+        } else {
+            self.theme_index - 1
+        };
+        if let Some(t) = get_tui_theme(&self.theme_ids[self.theme_index]) {
+            self.theme = t;
+            save_theme_preference(&self.theme_ids[self.theme_index]);
         }
     }
 

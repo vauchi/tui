@@ -20,7 +20,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
         .split(area);
 
     let instructions = Paragraph::new(app.i18n.t("exchange.instruction"))
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(instructions, chunks[0]);
 
@@ -37,15 +37,15 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
         let (timer_text, timer_style) = if remaining == 0 {
             (
                 app.i18n.t("exchange.expired"),
-                Style::default().fg(Color::Red),
+                Style::default().fg(app.theme.error),
             )
         } else {
             let mins = remaining / 60;
             let secs = remaining % 60;
             let style = if remaining <= 60 {
-                Style::default().fg(Color::Yellow)
+                Style::default().fg(app.theme.warning)
             } else {
-                Style::default().fg(Color::Green)
+                Style::default().fg(app.theme.success)
             };
             (
                 app.i18n.t_args(
@@ -65,7 +65,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
         if remaining > 0 {
             let qr_display = render_qr_ascii(&qr_data.data);
             let qr = Paragraph::new(qr_display)
-                .style(Style::default().fg(Color::White))
+                .style(Style::default().fg(app.theme.fg))
                 .block(
                     Block::default()
                         .title(app.i18n.t("exchange.your_qr"))
@@ -74,7 +74,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
             f.render_widget(qr, chunks[2]);
         } else {
             let expired = Paragraph::new(app.i18n.t("exchange.expired_hint"))
-                .style(Style::default().fg(Color::DarkGray))
+                .style(Style::default().fg(app.theme.fg_secondary))
                 .alignment(Alignment::Center)
                 .block(
                     Block::default()
@@ -86,7 +86,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
     } else {
         // Error generating QR
         let error = Paragraph::new(app.i18n.t("exchange.qr_error"))
-            .style(Style::default().fg(Color::Red))
+            .style(Style::default().fg(app.theme.error))
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(error, chunks[2]);
     }

@@ -42,7 +42,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         app.i18n.t("contacts.search_hint")
     };
     let search_style = if app.contact_search_mode {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(app.theme.warning)
     } else {
         Style::default()
     };
@@ -66,7 +66,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             app.i18n.t("contacts.no_match")
         };
         let empty = Paragraph::new(msg)
-            .style(Style::default().fg(Color::DarkGray))
+            .style(Style::default().fg(app.theme.fg_secondary))
             .block(
                 Block::default()
                     .borders(Borders::ALL)
@@ -91,7 +91,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             );
             let style = if display_idx == app.selected_contact {
                 Style::default()
-                    .fg(Color::Yellow)
+                    .fg(app.theme.warning)
                     .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
@@ -146,19 +146,19 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
             if c.verified {
                 status_lines.push(Span::styled(
                     app.i18n.t("contacts.verified"),
-                    Style::default().fg(Color::Green),
+                    Style::default().fg(app.theme.success),
                 ));
             } else {
                 status_lines.push(Span::styled(
                     app.i18n.t("contacts.not_verified"),
-                    Style::default().fg(Color::Yellow),
+                    Style::default().fg(app.theme.warning),
                 ));
             }
             if c.recovery_trusted {
                 status_lines.push(Span::raw("  "));
                 status_lines.push(Span::styled(
                     "★ Recovery Trusted",
-                    Style::default().fg(Color::Green),
+                    Style::default().fg(app.theme.success),
                 ));
             }
             let verified = Paragraph::new(Line::from(status_lines)).block(
@@ -171,7 +171,7 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
             // Fields list with selection
             if fields.is_empty() {
                 let empty = Paragraph::new(app.i18n.t("contacts.no_info"))
-                    .style(Style::default().fg(Color::DarkGray))
+                    .style(Style::default().fg(app.theme.fg_secondary))
                     .block(
                         Block::default()
                             .title(app.i18n.t("contacts.info"))
@@ -194,7 +194,7 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                         let content = format!("{} {}: {}", action_icon, field.label, field.value);
                         let style = if i == app.selected_contact_field {
                             Style::default()
-                                .fg(Color::Yellow)
+                                .fg(app.theme.warning)
                                 .add_modifier(Modifier::BOLD)
                         } else {
                             Style::default()
@@ -218,12 +218,12 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
 
             // Help line
             let help = Paragraph::new("t=trust  v=visibility  x=delete  o/Enter=open  Esc=back")
-                .style(Style::default().fg(Color::DarkGray));
+                .style(Style::default().fg(app.theme.fg_secondary));
             f.render_widget(help, chunks[3]);
         }
         None => {
             let empty = Paragraph::new(app.i18n.t("contacts.not_found"))
-                .style(Style::default().fg(Color::Red));
+                .style(Style::default().fg(app.theme.error));
             f.render_widget(empty, area);
         }
     }

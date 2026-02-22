@@ -37,7 +37,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Info section
     let info = Paragraph::new(format!("What {} can see of your card:", contact_name))
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(app.theme.warning))
         .block(Block::default().borders(Borders::BOTTOM));
     f.render_widget(info, chunks[0]);
 
@@ -47,7 +47,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             if fields.is_empty() {
                 let empty =
                     Paragraph::new("No fields on your card yet. Add fields to manage visibility.")
-                        .style(Style::default().fg(Color::DarkGray))
+                        .style(Style::default().fg(app.theme.fg_secondary))
                         .block(Block::default().borders(Borders::ALL).title("Fields"));
                 f.render_widget(empty, chunks[1]);
             } else {
@@ -59,12 +59,12 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
                         let visibility = if field.can_see { "Visible" } else { "Hidden" };
                         let style = if i == app.visibility_state.selected_field {
                             Style::default()
-                                .fg(Color::Yellow)
+                                .fg(app.theme.warning)
                                 .add_modifier(Modifier::BOLD)
                         } else if field.can_see {
-                            Style::default().fg(Color::Green)
+                            Style::default().fg(app.theme.success)
                         } else {
-                            Style::default().fg(Color::Red)
+                            Style::default().fg(app.theme.error)
                         };
                         ListItem::new(format!("{} {} - {}", icon, field.field_label, visibility))
                             .style(style)
@@ -82,7 +82,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             }
         } else {
             let error = Paragraph::new("Error loading visibility data")
-                .style(Style::default().fg(Color::Red))
+                .style(Style::default().fg(app.theme.error))
                 .block(Block::default().borders(Borders::ALL).title("Error"));
             f.render_widget(error, chunks[1]);
         }

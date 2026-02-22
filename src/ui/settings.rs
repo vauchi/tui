@@ -28,7 +28,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         app.i18n.t("settings.display_name"),
         name
     ))
-    .style(Style::default().fg(Color::Yellow))
+    .style(Style::default().fg(app.theme.warning))
     .block(
         Block::default()
             .title(app.i18n.t("settings.identity"))
@@ -39,7 +39,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     // Public ID
     if let Some(id) = app.backend.public_id() {
         let id_para = Paragraph::new(format!("{}: {}", app.i18n.t("home.public_id"), id))
-            .style(Style::default().fg(Color::DarkGray))
+            .style(Style::default().fg(app.theme.fg_secondary))
             .block(Block::default().borders(Borders::ALL));
         f.render_widget(id_para, chunks[1]);
     }
@@ -51,7 +51,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         app.i18n.t("settings.relay"),
         relay_url
     ))
-    .style(Style::default().fg(Color::Cyan))
+    .style(Style::default().fg(app.theme.accent))
     .block(
         Block::default()
             .title(app.i18n.t("settings.sync_server"))
@@ -91,7 +91,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     );
 
     let help_para = Paragraph::new(options)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(help_para, chunks[3]);
 }
@@ -116,7 +116,7 @@ pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
         app.i18n.t("settings.current"),
         current_name
     ))
-    .style(Style::default().fg(Color::DarkGray))
+    .style(Style::default().fg(app.theme.fg_secondary))
     .block(Block::default().borders(Borders::ALL));
     f.render_widget(info_para, chunks[0]);
 
@@ -127,7 +127,7 @@ pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
         state.new_name.clone()
     };
     let name_para = Paragraph::new(name_text)
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(app.theme.warning))
         .block(
             Block::default()
                 .title(app.i18n.t("settings.new_name"))
@@ -157,7 +157,7 @@ pub fn draw_edit_relay_url(f: &mut Frame, area: Rect, app: &App) {
         app.i18n.t("settings.current"),
         current_url
     ))
-    .style(Style::default().fg(Color::DarkGray))
+    .style(Style::default().fg(app.theme.fg_secondary))
     .block(Block::default().borders(Borders::ALL));
     f.render_widget(info_para, chunks[0]);
 
@@ -168,7 +168,7 @@ pub fn draw_edit_relay_url(f: &mut Frame, area: Rect, app: &App) {
         state.new_url.clone()
     };
     let url_para = Paragraph::new(url_text)
-        .style(Style::default().fg(Color::Cyan))
+        .style(Style::default().fg(app.theme.accent))
         .block(
             Block::default()
                 .title(app.i18n.t("settings.new_relay"))
@@ -178,7 +178,7 @@ pub fn draw_edit_relay_url(f: &mut Frame, area: Rect, app: &App) {
 
     // Help text
     let help_para = Paragraph::new(app.i18n.t("settings.relay_help"))
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(Block::default().borders(Borders::NONE));
     f.render_widget(help_para, chunks[2]);
 }

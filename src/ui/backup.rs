@@ -31,7 +31,7 @@ fn draw_menu(f: &mut Frame, area: Rect, app: &App) {
         .split(area);
 
     let info = Paragraph::new(app.i18n.t("backup.description"))
-        .style(Style::default().fg(Color::Cyan))
+        .style(Style::default().fg(app.theme.accent))
         .block(
             Block::default()
                 .borders(Borders::ALL)
@@ -40,12 +40,12 @@ fn draw_menu(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(info, chunks[0]);
 
     let export = Paragraph::new(format!("[e] {}", app.i18n.t("backup.export")))
-        .style(Style::default().fg(Color::Green))
+        .style(Style::default().fg(app.theme.success))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(export, chunks[1]);
 
     let import = Paragraph::new(format!("[i] {}", app.i18n.t("backup.import")))
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(app.theme.warning))
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(import, chunks[2]);
 }
@@ -64,13 +64,13 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
         .split(area);
 
     let info = Paragraph::new(app.i18n.t("backup.password_prompt"))
-        .style(Style::default().fg(Color::Cyan))
+        .style(Style::default().fg(app.theme.accent))
         .block(Block::default().borders(Borders::BOTTOM));
     f.render_widget(info, chunks[0]);
 
     let pw_style = if app.backup_state.focus == BackupFocus::Password {
         Style::default()
-            .fg(Color::Yellow)
+            .fg(app.theme.warning)
             .add_modifier(Modifier::BOLD)
     } else {
         Style::default()
@@ -86,22 +86,22 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
 
     // Password strength indicator
     let (strength_label, strength_ratio, strength_color) = if app.backup_state.password.is_empty() {
-        ("", 0.0, Color::DarkGray)
+        ("", 0.0, app.theme.fg_secondary)
     } else {
         match validate_password(&app.backup_state.password) {
             Ok(strength) => match strength {
-                PasswordStrength::Strong => ("Strong", 0.75, Color::Green),
-                PasswordStrength::VeryStrong => ("Very Strong", 1.0, Color::Green),
-                _ => ("Acceptable", 0.6, Color::Yellow),
+                PasswordStrength::Strong => ("Strong", 0.75, app.theme.success),
+                PasswordStrength::VeryStrong => ("Very Strong", 1.0, app.theme.success),
+                _ => ("Acceptable", 0.6, app.theme.warning),
             },
             Err(_) => {
                 let feedback = password_feedback(&app.backup_state.password);
                 if app.backup_state.password.len() < 8 {
-                    ("Too short", 0.2, Color::Red)
+                    ("Too short", 0.2, app.theme.error)
                 } else if !feedback.is_empty() {
-                    ("Weak", 0.35, Color::Red)
+                    ("Weak", 0.35, app.theme.error)
                 } else {
-                    ("Too weak", 0.25, Color::Red)
+                    ("Too weak", 0.25, app.theme.error)
                 }
             }
         }
@@ -120,7 +120,7 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
 
     let confirm_style = if app.backup_state.focus == BackupFocus::Confirm {
         Style::default()
-            .fg(Color::Yellow)
+            .fg(app.theme.warning)
             .add_modifier(Modifier::BOLD)
     } else {
         Style::default()
@@ -145,7 +145,7 @@ fn draw_export(f: &mut Frame, area: Rect, app: &App) {
     }
 
     let instructions = Paragraph::new(instructions_text)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(Block::default().borders(Borders::TOP));
     f.render_widget(instructions, chunks[4]);
 }
@@ -163,13 +163,13 @@ fn draw_import(f: &mut Frame, area: Rect, app: &App) {
         .split(area);
 
     let info = Paragraph::new(app.i18n.t("backup.import_prompt"))
-        .style(Style::default().fg(Color::Cyan))
+        .style(Style::default().fg(app.theme.accent))
         .block(Block::default().borders(Borders::BOTTOM));
     f.render_widget(info, chunks[0]);
 
     let data_style = if app.backup_state.focus == BackupFocus::Data {
         Style::default()
-            .fg(Color::Yellow)
+            .fg(app.theme.warning)
             .add_modifier(Modifier::BOLD)
     } else {
         Style::default()
@@ -186,7 +186,7 @@ fn draw_import(f: &mut Frame, area: Rect, app: &App) {
 
     let pw_style = if app.backup_state.focus == BackupFocus::Password {
         Style::default()
-            .fg(Color::Yellow)
+            .fg(app.theme.warning)
             .add_modifier(Modifier::BOLD)
     } else {
         Style::default()
@@ -201,7 +201,7 @@ fn draw_import(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(password, chunks[2]);
 
     let instructions = Paragraph::new("[Tab] switch fields  [Enter] import  [Esc] cancel")
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(Block::default().borders(Borders::TOP));
     f.render_widget(instructions, chunks[3]);
 }

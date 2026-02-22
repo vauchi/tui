@@ -429,6 +429,18 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
             app.privacy_state = PrivacyState::default();
             app.goto(Screen::Privacy);
         }
+        KeyCode::Char(']') | KeyCode::Right => {
+            // Next theme
+            app.next_theme();
+            let id = &app.theme_ids[app.theme_index];
+            app.set_status(format!("Theme: {}", id));
+        }
+        KeyCode::Char('[') | KeyCode::Left => {
+            // Previous theme
+            app.prev_theme();
+            let id = &app.theme_ids[app.theme_index];
+            app.set_status(format!("Theme: {}", id));
+        }
         _ => {}
     }
 }

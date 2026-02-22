@@ -25,9 +25,9 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     // Tor status block
     let status_style = if tor.enabled {
-        Style::default().fg(Color::Green)
+        Style::default().fg(app.theme.success)
     } else {
-        Style::default().fg(Color::DarkGray)
+        Style::default().fg(app.theme.fg_secondary)
     };
 
     let status_text = if tor.enabled { "ENABLED" } else { "DISABLED" };
@@ -42,7 +42,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             Span::raw("  Prefer .onion:  "),
             Span::styled(
                 if tor.prefer_onion { "yes" } else { "no" },
-                Style::default().fg(Color::Yellow),
+                Style::default().fg(app.theme.warning),
             ),
         ]),
         Line::from(""),
@@ -59,7 +59,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
             Span::raw("  Circuit rotation:  "),
             Span::styled(
                 format!("{}s", tor.circuit_rotation_secs),
-                Style::default().fg(Color::Cyan),
+                Style::default().fg(app.theme.accent),
             ),
         ]),
         Line::from(vec![
@@ -70,7 +70,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
                 } else {
                     "none".to_string()
                 },
-                Style::default().fg(Color::Cyan),
+                Style::default().fg(app.theme.accent),
             ),
         ]),
         Line::from(""),
@@ -89,7 +89,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         ListItem::new(Span::styled(
             "  Actions:",
             Style::default()
-                .fg(Color::Cyan)
+                .fg(app.theme.accent)
                 .add_modifier(Modifier::BOLD),
         )),
         ListItem::new(""),
@@ -98,24 +98,24 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     if tor.enabled {
         items.push(ListItem::new(Span::styled(
             "  [d] Disable Tor mode",
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(app.theme.warning),
         )));
     } else {
         items.push(ListItem::new(Span::styled(
             "  [e] Enable Tor mode",
-            Style::default().fg(Color::Green),
+            Style::default().fg(app.theme.success),
         )));
     }
 
     items.push(ListItem::new(Span::styled(
         "  [o] Toggle .onion preference",
-        Style::default().fg(Color::Yellow),
+        Style::default().fg(app.theme.warning),
     )));
 
     if tor.enabled {
         items.push(ListItem::new(Span::styled(
             "  [n] Request new circuit",
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(app.theme.warning),
         )));
     }
 
@@ -123,18 +123,18 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     items.push(ListItem::new(Span::styled(
         "  Bridges:",
         Style::default()
-            .fg(Color::Cyan)
+            .fg(app.theme.accent)
             .add_modifier(Modifier::BOLD),
     )));
     items.push(ListItem::new(Span::styled(
         "  [x] Clear all bridges",
-        Style::default().fg(Color::DarkGray),
+        Style::default().fg(app.theme.fg_secondary),
     )));
 
     items.push(ListItem::new(""));
     items.push(ListItem::new(Span::styled(
         "  Use CLI for bridge management: vauchi tor bridges add <addr>",
-        Style::default().fg(Color::DarkGray),
+        Style::default().fg(app.theme.fg_secondary),
     )));
 
     let options = List::new(items).block(Block::default().borders(Borders::ALL).title("Options"));

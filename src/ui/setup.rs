@@ -30,7 +30,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Line::from(Span::styled(
             app.i18n.t("welcome.title"),
             Style::default()
-                .fg(Color::Cyan)
+                .fg(app.theme.accent)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
@@ -38,7 +38,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
         Line::from(Span::styled(
             app.i18n.t("setup.identity_required"),
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(app.theme.warning),
         )),
     ];
 
@@ -47,7 +47,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
+                .border_style(Style::default().fg(app.theme.accent))
                 .title(format!(" {} ", app.i18n.t("setup.title"))),
         );
     f.render_widget(welcome, chunks[1]);
@@ -57,13 +57,13 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Line::from(Span::styled(
             format!("[c] {}", app.i18n.t("setup.create")),
             Style::default()
-                .fg(Color::Green)
+                .fg(app.theme.success)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(Span::styled(
             app.i18n.t("setup.create_description"),
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(app.theme.fg_secondary),
         )),
     ];
 
@@ -77,13 +77,13 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         Line::from(Span::styled(
             format!("[i] {}", app.i18n.t("setup.import")),
             Style::default()
-                .fg(Color::Yellow)
+                .fg(app.theme.warning)
                 .add_modifier(Modifier::BOLD),
         )),
         Line::from(""),
         Line::from(Span::styled(
             app.i18n.t("setup.import_description"),
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(app.theme.fg_secondary),
         )),
     ];
 

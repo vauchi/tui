@@ -32,7 +32,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let welcome_para = Paragraph::new(welcome)
         .style(
             Style::default()
-                .fg(Color::White)
+                .fg(app.theme.fg)
                 .add_modifier(Modifier::BOLD),
         )
         .block(Block::default().borders(Borders::NONE));
@@ -41,7 +41,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     // Public ID
     if let Some(id) = app.backend.public_id() {
         let id_para = Paragraph::new(format!("{}: {}", app.i18n.t("home.public_id"), id))
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(app.theme.fg_secondary));
         f.render_widget(id_para, chunks[1]);
     }
 
@@ -50,7 +50,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 
     if fields.is_empty() {
         let empty = Paragraph::new(app.i18n.t("home.no_fields"))
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(app.theme.fg_secondary));
         f.render_widget(empty, chunks[2]);
     } else {
         let items: Vec<ListItem> = fields
@@ -72,7 +72,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
                 );
                 let style = if i == app.selected_field {
                     Style::default()
-                        .fg(Color::Yellow)
+                        .fg(app.theme.warning)
                         .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
@@ -97,7 +97,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let count_text = app
         .i18n
         .t_args("contacts.count", &[("count", &count.to_string())]);
-    let count_para = Paragraph::new(count_text).style(Style::default().fg(Color::DarkGray));
+    let count_para = Paragraph::new(count_text).style(Style::default().fg(app.theme.fg_secondary));
     f.render_widget(count_para, chunks[3]);
 }
 
@@ -119,7 +119,7 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
     let type_text = format!("< {} >", FIELD_TYPES[state.field_type_index]);
     let type_style = if state.focus == AddFieldFocus::Type {
         Style::default()
-            .fg(Color::Yellow)
+            .fg(app.theme.warning)
             .add_modifier(Modifier::BOLD)
     } else {
         Style::default()
@@ -133,7 +133,7 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
 
     // Label input
     let label_style = if state.focus == AddFieldFocus::Label {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(app.theme.warning)
     } else {
         Style::default()
     };
@@ -153,7 +153,7 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
 
     // Value input
     let value_style = if state.focus == AddFieldFocus::Value {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(app.theme.warning)
     } else {
         Style::default()
     };
@@ -188,7 +188,7 @@ pub fn draw_edit_field(f: &mut Frame, area: Rect, app: &App) {
     // Field info (read-only)
     let info_text = format!("{} ({})", state.field_label, state.field_type);
     let info_para = Paragraph::new(info_text)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(
             Block::default()
                 .title(app.i18n.t("card.field"))
@@ -203,7 +203,7 @@ pub fn draw_edit_field(f: &mut Frame, area: Rect, app: &App) {
         state.new_value.clone()
     };
     let value_para = Paragraph::new(value_text)
-        .style(Style::default().fg(Color::Yellow))
+        .style(Style::default().fg(app.theme.warning))
         .block(
             Block::default()
                 .title(app.i18n.t("card.new_value"))

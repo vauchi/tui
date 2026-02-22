@@ -26,9 +26,9 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
          Press [e] to export.",
     )
     .style(if app.privacy_state.selected_item == 0 {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(app.theme.warning)
     } else {
-        Style::default().fg(Color::White)
+        Style::default().fg(app.theme.fg)
     })
     .block(
         Block::default()
@@ -49,9 +49,9 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     );
     let deletion_para = Paragraph::new(deletion_text)
         .style(if app.privacy_state.selected_item == 1 {
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(app.theme.warning)
         } else {
-            Style::default().fg(Color::White)
+            Style::default().fg(app.theme.fg)
         })
         .block(
             Block::default()
@@ -68,7 +68,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
                 .title("Consent Management (GDPR Art. 7)")
                 .borders(Borders::ALL),
         )
-        .highlight_style(Style::default().fg(Color::Yellow));
+        .highlight_style(Style::default().fg(app.theme.warning));
     f.render_widget(consent_list, chunks[2]);
 }
 
@@ -102,9 +102,9 @@ fn build_consent_items(app: &App) -> Vec<ListItem<'static>> {
             let status = if granted { "[x]" } else { "[ ]" };
             let selected = app.privacy_state.selected_item == i + 2;
             let style = if selected {
-                Style::default().fg(Color::Yellow)
+                Style::default().fg(app.theme.warning)
             } else {
-                Style::default().fg(Color::White)
+                Style::default().fg(app.theme.fg)
             };
 
             ListItem::new(format!("  {} {} — {}", status, name, desc)).style(style)

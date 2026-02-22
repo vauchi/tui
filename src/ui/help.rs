@@ -95,7 +95,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     help_text.push_str(&format!("\n{}\n", app.i18n.t("help.close_hint")));
 
     let help = Paragraph::new(help_text)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(app.theme.fg))
         .wrap(Wrap { trim: true })
         .block(
             Block::default()

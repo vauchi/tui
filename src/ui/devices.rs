@@ -57,14 +57,14 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
             Line::from(vec![
                 Span::styled(
                     format!("{}: ", app.i18n.t("devices.count")),
-                    Style::default().fg(Color::Cyan),
+                    Style::default().fg(app.theme.accent),
                 ),
                 Span::raw(format!("{}", device_count)),
             ]),
             Line::from(""),
             Line::from(Span::styled(
                 app.i18n.t("devices.manage_description"),
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(app.theme.fg_secondary),
             )),
         ]
     } else {
@@ -72,12 +72,12 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
             Line::from(""),
             Line::from(Span::styled(
                 app.i18n.t("devices.no_identity"),
-                Style::default().fg(Color::Yellow),
+                Style::default().fg(app.theme.warning),
             )),
             Line::from(""),
             Line::from(Span::styled(
                 app.i18n.t("devices.create_first"),
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(app.theme.fg_secondary),
             )),
         ]
     };
@@ -93,11 +93,11 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
     let instructions = Paragraph::new(vec![
         Line::from(""),
         Line::from(vec![
-            Span::styled("[l]", Style::default().fg(Color::Yellow)),
+            Span::styled("[l]", Style::default().fg(app.theme.warning)),
             Span::raw(format!(" {}", app.i18n.t("devices.generate_link"))),
         ]),
         Line::from(vec![
-            Span::styled("[r]", Style::default().fg(Color::Yellow)),
+            Span::styled("[r]", Style::default().fg(app.theme.warning)),
             Span::raw(format!(" {}", app.i18n.t("devices.revoke"))),
         ]),
     ])
@@ -117,7 +117,7 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
             Line::from(""),
             Line::from(Span::styled(
                 app.i18n.t("devices.empty"),
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(app.theme.fg_secondary),
             )),
             Line::from(""),
             Line::from(Span::raw(app.i18n.t("devices.link_hint"))),
@@ -140,18 +140,18 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
             let prefix = if is_selected { "› " } else { "  " };
 
             let status_span = if device.is_current {
-                Span::styled(" [this device]", Style::default().fg(Color::Green))
+                Span::styled(" [this device]", Style::default().fg(app.theme.success))
             } else if device.is_active {
-                Span::styled(" [active]", Style::default().fg(Color::Blue))
+                Span::styled(" [active]", Style::default().fg(app.theme.accent))
             } else {
-                Span::styled(" [revoked]", Style::default().fg(Color::Red))
+                Span::styled(" [revoked]", Style::default().fg(app.theme.error))
             };
 
             let line = Line::from(vec![
-                Span::styled(prefix, Style::default().fg(Color::Yellow)),
+                Span::styled(prefix, Style::default().fg(app.theme.warning)),
                 Span::styled(
                     format!("{}. ", device.device_index + 1),
-                    Style::default().fg(Color::DarkGray),
+                    Style::default().fg(app.theme.fg_secondary),
                 ),
                 Span::raw(&device.device_name),
                 status_span,
@@ -160,7 +160,7 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
                         "  ({}...)",
                         &device.public_key_prefix[..8.min(device.public_key_prefix.len())]
                     ),
-                    Style::default().fg(Color::DarkGray),
+                    Style::default().fg(app.theme.fg_secondary),
                 ),
             ]);
 
@@ -188,20 +188,20 @@ fn draw_device_list(f: &mut Frame, area: Rect, app: &App) {
 fn draw_key_hints(f: &mut Frame, area: Rect, app: &App) {
     let hints = if app.device_link_result.is_some() || app.revoke_confirm {
         Paragraph::new(Line::from(vec![
-            Span::styled("Esc", Style::default().fg(Color::Yellow)),
+            Span::styled("Esc", Style::default().fg(app.theme.warning)),
             Span::raw(" Dismiss"),
         ]))
     } else {
         Paragraph::new(Line::from(vec![
-            Span::styled("j/↓", Style::default().fg(Color::Yellow)),
+            Span::styled("j/↓", Style::default().fg(app.theme.warning)),
             Span::raw(" Down  "),
-            Span::styled("k/↑", Style::default().fg(Color::Yellow)),
+            Span::styled("k/↑", Style::default().fg(app.theme.warning)),
             Span::raw(" Up  "),
-            Span::styled("l", Style::default().fg(Color::Yellow)),
+            Span::styled("l", Style::default().fg(app.theme.warning)),
             Span::raw(" Link  "),
-            Span::styled("r", Style::default().fg(Color::Yellow)),
+            Span::styled("r", Style::default().fg(app.theme.warning)),
             Span::raw(" Revoke  "),
-            Span::styled("Esc", Style::default().fg(Color::Yellow)),
+            Span::styled("Esc", Style::default().fg(app.theme.warning)),
             Span::raw(" Back"),
         ]))
     };

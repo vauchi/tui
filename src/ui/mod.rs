@@ -89,7 +89,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     let header = Paragraph::new(title)
         .style(
             Style::default()
-                .fg(Color::Cyan)
+                .fg(app.theme.accent)
                 .add_modifier(Modifier::BOLD),
         )
         .block(Block::default().borders(Borders::BOTTOM));
@@ -105,7 +105,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::ContactDetail => "[v]isibility  [x]delete  [esc] back  [?]help",
         Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
         Screen::Exchange => "[r]efresh  [esc] back  [?]help",
-        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [esc] back  [?]help",
+        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [←/→] theme  [esc] back  [?]help",
         Screen::Help => "[esc/q] close",
         Screen::AddField => "[tab] next  [enter] submit  [esc] cancel",
         Screen::EditField => "[enter] save  [esc] cancel",
@@ -126,7 +126,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     };
 
     let footer = Paragraph::new(status)
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(app.theme.fg_secondary))
         .block(Block::default().borders(Borders::TOP));
 
     f.render_widget(footer, area);

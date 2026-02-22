@@ -31,7 +31,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     draw_info_section(f, chunks[2], app);
 
     // Key hints
-    draw_key_hints(f, chunks[3]);
+    draw_key_hints(f, chunks[3], app);
 }
 
 fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
@@ -43,9 +43,9 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
             let trusted_count = app.backend.trusted_contact_count().unwrap_or(0);
             let threshold = status.required_vouchers;
             let trusted_color = if trusted_count >= threshold as usize {
-                Color::Green
+                app.theme.success
             } else {
-                Color::Yellow
+                app.theme.warning
             };
 
             if status.has_active_claim {
@@ -56,11 +56,11 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                 };
 
                 let progress_color = if progress >= 1.0 {
-                    Color::Green
+                    app.theme.success
                 } else if progress >= 0.5 {
-                    Color::Yellow
+                    app.theme.warning
                 } else {
-                    Color::Red
+                    app.theme.error
                 };
 
                 let expiry_text = status
@@ -73,7 +73,7 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                     Line::from(Span::styled(
                         app.i18n.t("recovery.claim_active"),
                         Style::default()
-                            .fg(Color::Yellow)
+                            .fg(app.theme.warning)
                             .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
@@ -93,7 +93,7 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                     ]),
                     Line::from(vec![
                         Span::raw("  Expires: "),
-                        Span::styled(expiry_text, Style::default().fg(Color::DarkGray)),
+                        Span::styled(expiry_text, Style::default().fg(app.theme.fg_secondary)),
                     ]),
                     Line::from(""),
                 ]
@@ -103,7 +103,7 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                     Line::from(Span::styled(
                         app.i18n.t("recovery.title"),
                         Style::default()
-                            .fg(Color::Cyan)
+                            .fg(app.theme.accent)
                             .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
@@ -117,11 +117,11 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                     Line::from(""),
                     Line::from(Span::styled(
                         format!("  {}", app.i18n.t("recovery.no_active_claim")),
-                        Style::default().fg(Color::DarkGray),
+                        Style::default().fg(app.theme.fg_secondary),
                     )),
                     Line::from(Span::styled(
                         format!("  {}", app.i18n.t("recovery.create_hint")),
-                        Style::default().fg(Color::DarkGray),
+                        Style::default().fg(app.theme.fg_secondary),
                     )),
                     Line::from(""),
                 ]
@@ -133,13 +133,13 @@ fn draw_status_section(f: &mut Frame, area: Rect, app: &App) {
                 Line::from(Span::styled(
                     app.i18n.t("recovery.title"),
                     Style::default()
-                        .fg(Color::Cyan)
+                        .fg(app.theme.accent)
                         .add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
                 Line::from(Span::styled(
                     format!("  {}", app.i18n.t("recovery.load_error")),
-                    Style::default().fg(Color::Red),
+                    Style::default().fg(app.theme.error),
                 )),
                 Line::from(""),
             ]
@@ -161,15 +161,15 @@ fn draw_actions_section(f: &mut Frame, area: Rect, app: &App) {
         vec![
             Line::from(""),
             Line::from(vec![
-                Span::styled("  [c]", Style::default().fg(Color::Yellow)),
+                Span::styled("  [c]", Style::default().fg(app.theme.warning)),
                 Span::raw(format!(" {}", app.i18n.t("recovery.create_claim"))),
             ]),
             Line::from(vec![
-                Span::styled("  [v]", Style::default().fg(Color::Yellow)),
+                Span::styled("  [v]", Style::default().fg(app.theme.warning)),
                 Span::raw(format!(" {}", app.i18n.t("recovery.vouch"))),
             ]),
             Line::from(vec![
-                Span::styled("  [s]", Style::default().fg(Color::Yellow)),
+                Span::styled("  [s]", Style::default().fg(app.theme.warning)),
                 Span::raw(format!(" {}", app.i18n.t("recovery.check_status"))),
             ]),
             Line::from(""),
@@ -179,12 +179,12 @@ fn draw_actions_section(f: &mut Frame, area: Rect, app: &App) {
             Line::from(""),
             Line::from(Span::styled(
                 format!("  {}", app.i18n.t("devices.no_identity")),
-                Style::default().fg(Color::Yellow),
+                Style::default().fg(app.theme.warning),
             )),
             Line::from(""),
             Line::from(Span::styled(
                 format!("  {}", app.i18n.t("devices.create_first")),
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(app.theme.fg_secondary),
             )),
             Line::from(""),
         ]
@@ -203,7 +203,7 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
         Line::from(Span::styled(
             app.i18n.t("recovery.how_it_works"),
-            Style::default().fg(Color::Cyan),
+            Style::default().fg(app.theme.accent),
         )),
         Line::from(""),
         Line::from(format!("  1. {}", app.i18n.t("recovery.step1"))),
@@ -214,11 +214,11 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
         Line::from(""),
         Line::from(Span::styled(
             app.i18n.t("recovery.note"),
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(app.theme.warning),
         )),
         Line::from(Span::styled(
             "Use CLI for detailed recovery workflow: vauchi recovery --help",
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(app.theme.fg_secondary),
         )),
         Line::from(""),
     ];
@@ -231,15 +231,15 @@ fn draw_info_section(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(info, area);
 }
 
-fn draw_key_hints(f: &mut Frame, area: Rect) {
+fn draw_key_hints(f: &mut Frame, area: Rect, app: &App) {
     let hints = Paragraph::new(Line::from(vec![
-        Span::styled("c", Style::default().fg(Color::Yellow)),
+        Span::styled("c", Style::default().fg(app.theme.warning)),
         Span::raw(" Claim  "),
-        Span::styled("v", Style::default().fg(Color::Yellow)),
+        Span::styled("v", Style::default().fg(app.theme.warning)),
         Span::raw(" Vouch  "),
-        Span::styled("s", Style::default().fg(Color::Yellow)),
+        Span::styled("s", Style::default().fg(app.theme.warning)),
         Span::raw(" Status  "),
-        Span::styled("Esc", Style::default().fg(Color::Yellow)),
+        Span::styled("Esc", Style::default().fg(app.theme.warning)),
         Span::raw(" Back"),
     ]))
     .alignment(Alignment::Center)

@@ -25,11 +25,11 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let sync_state = &app.sync_state;
 
     let status_style = if sync_state.connected {
-        Style::default().fg(Color::Green)
+        Style::default().fg(app.theme.success)
     } else if sync_state.is_syncing {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(app.theme.warning)
     } else {
-        Style::default().fg(Color::DarkGray)
+        Style::default().fg(app.theme.fg_secondary)
     };
 
     let status_text = if sync_state.is_syncing {
@@ -43,16 +43,16 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     // Tor status indicator
     let tor_state = &app.tor_state;
     let tor_indicator = if tor_state.enabled {
-        Span::styled("Tor: ON", Style::default().fg(Color::Green))
+        Span::styled("Tor: ON", Style::default().fg(app.theme.success))
     } else {
-        Span::styled("Tor: OFF", Style::default().fg(Color::DarkGray))
+        Span::styled("Tor: OFF", Style::default().fg(app.theme.fg_secondary))
     };
 
     let status_lines = vec![
         Line::from(""),
         Line::from(vec![
             Span::raw(format!("  {}: ", app.i18n.t("sync.relay"))),
-            Span::styled(relay_url, Style::default().fg(Color::Cyan)),
+            Span::styled(relay_url, Style::default().fg(app.theme.accent)),
         ]),
         Line::from(vec![
             Span::raw(format!("  {}: ", app.i18n.t("sync.status"))),
@@ -109,7 +109,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
                 .borders(Borders::ALL)
                 .title(app.i18n.t("sync.progress")),
         )
-        .gauge_style(Style::default().fg(Color::Cyan))
+        .gauge_style(Style::default().fg(app.theme.accent))
         .ratio(progress_ratio)
         .label(progress_label);
 
@@ -123,7 +123,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         log_items.push(ListItem::new(Line::from(vec![
             Span::styled(
                 format!("  {}: ", app.i18n.t("sync.last_sync")),
-                Style::default().fg(Color::Cyan),
+                Style::default().fg(app.theme.accent),
             ),
             Span::raw(result.as_str()),
         ])));
@@ -134,7 +134,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     for entry in sync_state.sync_log.iter().rev().take(5) {
         log_items.push(ListItem::new(Span::styled(
             format!("  {}", entry),
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(app.theme.fg_secondary),
         )));
     }
 
@@ -142,12 +142,12 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         log_items.push(ListItem::new(""));
         log_items.push(ListItem::new(Span::styled(
             format!("  {}", app.i18n.t("sync.start_hint")),
-            Style::default().fg(Color::Yellow),
+            Style::default().fg(app.theme.warning),
         )));
         log_items.push(ListItem::new(""));
         log_items.push(ListItem::new(Span::styled(
             format!("  {}:", app.i18n.t("sync.operations")),
-            Style::default().fg(Color::Cyan),
+            Style::default().fg(app.theme.accent),
         )));
         log_items.push(ListItem::new(format!(
             "  - {}",
@@ -165,7 +165,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         log_items.push(ListItem::new(""));
         log_items.push(ListItem::new(Span::styled(
             format!("  {}", app.i18n.t("sync.test_hint")),
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(app.theme.fg_secondary),
         )));
     }
 
