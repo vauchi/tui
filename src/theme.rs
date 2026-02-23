@@ -34,18 +34,7 @@ pub struct TuiTheme {
 
 impl Default for TuiTheme {
     fn default() -> Self {
-        // Default dark theme colors
-        Self {
-            bg: Color::Rgb(26, 26, 46),
-            bg_secondary: Color::Rgb(22, 33, 62),
-            fg: Color::Rgb(238, 238, 238),
-            fg_secondary: Color::Rgb(160, 160, 160),
-            accent: Color::Rgb(79, 195, 247),
-            success: Color::Rgb(76, 175, 80),
-            error: Color::Rgb(244, 67, 54),
-            warning: Color::Rgb(255, 152, 0),
-            border: Color::Rgb(51, 51, 51),
-        }
+        TuiTheme::from(&default_theme())
     }
 }
 
@@ -109,13 +98,11 @@ pub fn get_tui_theme(id: &str) -> Option<TuiTheme> {
 }
 
 /// Get the default TUI theme based on preference.
-pub fn get_default_tui_theme(prefer_dark: bool) -> TuiTheme {
-    let id = if prefer_dark {
-        "default-dark"
-    } else {
-        "default-light"
-    };
-    get_tui_theme(id).unwrap_or_default()
+///
+/// Currently returns Catppuccin Mocha (dark) regardless of preference.
+/// Full light/dark selection requires loading themes.json.
+pub fn get_default_tui_theme(_prefer_dark: bool) -> TuiTheme {
+    TuiTheme::from(&default_theme())
 }
 
 /// Get all available themes as a list of (id, name, mode).
@@ -146,13 +133,13 @@ mod tests {
     #[test]
     fn test_default_theme() {
         let theme = TuiTheme::default();
-        // Should have some colors
-        assert!(matches!(theme.bg, Color::Rgb(_, _, _)));
+        // Should match Catppuccin Mocha bg (#1e1e2e)
+        assert_eq!(theme.bg, Color::Rgb(30, 30, 46));
     }
 
     #[test]
     fn test_get_tui_theme() {
-        let theme = get_tui_theme("default-dark");
+        let theme = get_tui_theme("catppuccin-mocha");
         assert!(theme.is_some());
     }
 
