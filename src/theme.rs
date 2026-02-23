@@ -7,7 +7,7 @@
 //! Provides Ratatui color conversion from vauchi-core themes.
 
 use ratatui::style::Color;
-use vauchi_core::theme::{get_bundled_themes, get_theme_by_id, Theme, ThemeColors, ThemeMode};
+use vauchi_core::theme::{default_theme, Theme, ThemeColors, ThemeMode};
 
 /// TUI-compatible theme with Ratatui colors.
 #[derive(Debug, Clone)]
@@ -96,8 +96,16 @@ pub fn hex_to_color(hex: &str) -> Color {
 }
 
 /// Get a TUI theme by ID.
+///
+/// Returns the default theme if the ID matches, otherwise None.
+/// Full theme catalog requires loading themes.json via `load_themes_from_json`.
 pub fn get_tui_theme(id: &str) -> Option<TuiTheme> {
-    get_theme_by_id(id).map(|t| TuiTheme::from(&t))
+    let dt = default_theme();
+    if dt.id == id {
+        Some(TuiTheme::from(&dt))
+    } else {
+        None
+    }
 }
 
 /// Get the default TUI theme based on preference.
@@ -111,13 +119,14 @@ pub fn get_default_tui_theme(prefer_dark: bool) -> TuiTheme {
 }
 
 /// Get all available themes as a list of (id, name, mode).
+///
+/// Returns the default theme. Full catalog requires loading themes.json.
 pub fn list_themes() -> Vec<(String, String, ThemeMode)> {
-    get_bundled_themes()
-        .into_iter()
-        .map(|t| (t.id, t.name, t.mode))
-        .collect()
+    let dt = default_theme();
+    vec![(dt.id, dt.name, dt.mode)]
 }
 
+// INLINE_TEST_REQUIRED: Tests exercise private hex_to_color helper and TuiTheme conversions
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_get_tui_theme() {
-        let theme = get_tui_theme("catppuccin-mocha");
+        let theme = get_tui_theme("default-dark");
         assert!(theme.is_some());
     }
 
