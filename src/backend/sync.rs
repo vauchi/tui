@@ -11,10 +11,15 @@ use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::tungstenite::Message;
 
 use vauchi_core::{
-    network::simple_message::{
-        create_device_sync_ack, create_signed_handshake, create_simple_ack, create_simple_envelope,
-        decode_simple_message, encode_simple_message, LegacyExchangeMessage, SimpleAckStatus,
-        SimpleDeviceSyncMessage, SimpleEncryptedUpdate, SimplePayload,
+    network::{
+        classify_message,
+        simple_message::{
+            create_device_sync_ack, create_signed_handshake, create_simple_ack,
+            create_simple_envelope, decode_simple_message, encode_simple_message,
+            LegacyExchangeMessage, SimpleAckStatus, SimpleDeviceSyncMessage, SimpleEncryptedUpdate,
+            SimplePayload,
+        },
+        MessageType,
     },
     sync::{process_card_updates, DeviceSyncOrchestrator, SyncItem},
     Identity,
@@ -268,44 +273,52 @@ impl Backend {
 
             match msg {
                 Message::Binary(data) => {
-                    if let Ok(envelope) = decode_simple_message(&data) {
-                        match envelope.payload {
-                            SimplePayload::EncryptedUpdate(update) => {
-                                // Classify the message
-                                if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
-                                    if let Some(exchange) =
-                                        LegacyExchangeMessage::from_bytes(&update.ciphertext)
-                                    {
-                                        legacy_exchange.push(exchange);
-                                    }
-                                } else if EncryptedExchangeMessage::from_bytes(&update.ciphertext)
+                    // Use core classify_message() to route by type before full decode
+                    let msg_type = classify_message(&data);
+                    match msg_type {
+                        MessageType::EncryptedUpdate => {
+                            if let Ok(envelope) = decode_simple_message(&data) {
+                                if let SimplePayload::EncryptedUpdate(update) = envelope.payload {
+                                    if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
+                                        if let Some(exchange) =
+                                            LegacyExchangeMessage::from_bytes(&update.ciphertext)
+                                        {
+                                            legacy_exchange.push(exchange);
+                                        }
+                                    } else if EncryptedExchangeMessage::from_bytes(
+                                        &update.ciphertext,
+                                    )
                                     .is_ok()
-                                {
-                                    encrypted_exchange.push(update.ciphertext);
-                                } else {
-                                    card_updates.push((update.sender_id, update.ciphertext));
-                                }
+                                    {
+                                        encrypted_exchange.push(update.ciphertext);
+                                    } else {
+                                        card_updates.push((update.sender_id, update.ciphertext));
+                                    }
 
-                                // Send acknowledgment
-                                let ack = create_simple_ack(
-                                    &envelope.message_id,
-                                    SimpleAckStatus::ReceivedByRecipient,
-                                );
-                                if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data)).await;
+                                    let ack = create_simple_ack(
+                                        &envelope.message_id,
+                                        SimpleAckStatus::ReceivedByRecipient,
+                                    );
+                                    if let Ok(ack_data) = encode_simple_message(&ack) {
+                                        let _ = socket.send(Message::Binary(ack_data)).await;
+                                    }
                                 }
                             }
-                            SimplePayload::DeviceSyncMessage(msg) => {
-                                let version = msg.version;
-                                device_sync_messages.push(msg);
-
-                                let ack = create_device_sync_ack(&envelope.message_id, version);
-                                if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data)).await;
-                                }
-                            }
-                            _ => {}
                         }
+                        MessageType::DeviceSync => {
+                            if let Ok(envelope) = decode_simple_message(&data) {
+                                if let SimplePayload::DeviceSyncMessage(msg) = envelope.payload {
+                                    let version = msg.version;
+                                    device_sync_messages.push(msg);
+
+                                    let ack = create_device_sync_ack(&envelope.message_id, version);
+                                    if let Ok(ack_data) = encode_simple_message(&ack) {
+                                        let _ = socket.send(Message::Binary(ack_data)).await;
+                                    }
+                                }
+                            }
+                        }
+                        _ => {} // Ack, Handshake, Unknown — not expected inbound
                     }
                 }
                 Message::Ping(data) => {
