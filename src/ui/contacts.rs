@@ -7,6 +7,8 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 
+use vauchi_core::TrustLevel;
+
 use crate::app::App;
 
 /// Filter contacts based on search query.
@@ -204,15 +206,36 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                             "map" => "📍",
                             _ => "📋",
                         };
-                        let content = format!("{} {}: {}", action_icon, field.label, field.value);
-                        let style = if i == app.selected_contact_field {
+
+                        // Build trust badge from validation status
+                        let (badge_text, badge_color) = app
+                            .backend
+                            .get_field_validation_status(&c.id, &field.label, &field.value)
+                            .map(|status| match status.trust_level {
+                                TrustLevel::HighConfidence => (" [verified]", Color::Green),
+                                TrustLevel::PartialConfidence => (" [partial]", Color::LightGreen),
+                                TrustLevel::LowConfidence => (" [low]", Color::Yellow),
+                                TrustLevel::Unverified => (" [unverified]", Color::DarkGray),
+                            })
+                            .unwrap_or((" [unverified]", Color::DarkGray));
+
+                        let base_style = if i == app.selected_contact_field {
                             Style::default()
                                 .fg(app.theme.warning)
                                 .add_modifier(Modifier::BOLD)
                         } else {
                             Style::default()
                         };
-                        ListItem::new(content).style(style)
+
+                        let line = Line::from(vec![
+                            Span::styled(
+                                format!("{} {}: {}", action_icon, field.label, field.value),
+                                base_style,
+                            ),
+                            Span::styled(badge_text, Style::default().fg(badge_color)),
+                        ]);
+
+                        ListItem::new(line)
                     })
                     .collect();
 
@@ -230,8 +253,10 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
             }
 
             // Help line
-            let help = Paragraph::new("t=trust  v=visibility  x=delete  o/Enter=open  Esc=back")
-                .style(Style::default().fg(app.theme.fg_secondary));
+            let help = Paragraph::new(
+                "t=trust  v=visibility  V=validate  R=revoke  x=delete  o/Enter=open  Esc=back",
+            )
+            .style(Style::default().fg(app.theme.fg_secondary));
             f.render_widget(help, chunks[3]);
         }
         None => {

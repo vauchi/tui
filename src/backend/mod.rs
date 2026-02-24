@@ -1951,4 +1951,119 @@ mod tests {
             "Different installs must produce different keys"
         );
     }
+
+    // === Field Validation Tests ===
+    // Trace: features/field_validation.feature
+
+    /// Trace: field_validation.feature - Get status for unvalidated field returns Unverified
+    #[test]
+    fn test_get_field_validation_status_returns_unverified_for_new_field() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let bob_id = create_and_save_test_contact(&backend, "Bob");
+
+        let status = backend
+            .get_field_validation_status(&bob_id, "twitter", "@bob")
+            .unwrap();
+
+        assert_eq!(
+            status.trust_level,
+            vauchi_core::TrustLevel::Unverified,
+            "New field should be Unverified"
+        );
+        assert_eq!(status.count, 0, "Should have zero validations");
+        assert!(
+            !status.validated_by_me,
+            "Current user should not have validated"
+        );
+    }
+
+    /// Trace: field_validation.feature - Validate a contact's field
+    #[test]
+    fn test_validate_field_creates_validation() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let bob_id = create_and_save_test_contact(&backend, "Bob");
+
+        let result = backend.validate_field(&bob_id, "twitter", "@bob");
+        assert!(
+            result.is_ok(),
+            "validate_field should succeed: {:?}",
+            result
+        );
+
+        let status = backend
+            .get_field_validation_status(&bob_id, "twitter", "@bob")
+            .unwrap();
+
+        assert!(
+            status.count >= 1,
+            "Should have at least 1 validation after validate_field"
+        );
+        assert!(
+            status.validated_by_me,
+            "Current user should show as having validated"
+        );
+    }
+
+    /// Trace: field_validation.feature - Revoke validation
+    #[test]
+    fn test_revoke_field_validation_removes_validation() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let bob_id = create_and_save_test_contact(&backend, "Bob");
+
+        // Validate first
+        backend.validate_field(&bob_id, "twitter", "@bob").unwrap();
+
+        // Then revoke
+        let revoked = backend.revoke_field_validation(&bob_id, "twitter").unwrap();
+        assert!(
+            revoked,
+            "Should return true when revoking existing validation"
+        );
+
+        let status = backend
+            .get_field_validation_status(&bob_id, "twitter", "@bob")
+            .unwrap();
+
+        assert_eq!(status.count, 0, "Should have zero validations after revoke");
+        assert!(
+            !status.validated_by_me,
+            "Current user should not show as having validated after revoke"
+        );
+    }
+
+    /// Trace: field_validation.feature - Revoke when no validation exists returns false
+    #[test]
+    fn test_revoke_field_validation_returns_false_when_none_exists() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+        let bob_id = create_and_save_test_contact(&backend, "Bob");
+
+        let revoked = backend.revoke_field_validation(&bob_id, "twitter").unwrap();
+        assert!(
+            !revoked,
+            "Should return false when no validation exists to revoke"
+        );
+    }
+
+    /// Trace: field_validation.feature - Cannot validate own field
+    #[test]
+    fn test_validate_field_rejects_self_validation() {
+        let (mut backend, _temp) = create_test_backend();
+        backend.create_identity("Alice").unwrap();
+
+        // Get own identity ID (full hex-encoded signing public key)
+        let my_id = hex::encode(
+            backend
+                .identity
+                .as_ref()
+                .expect("Should have identity")
+                .signing_public_key(),
+        );
+
+        let result = backend.validate_field(&my_id, "twitter", "@alice");
+        assert!(result.is_err(), "Should not be able to validate own field");
+    }
 }

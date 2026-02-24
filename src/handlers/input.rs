@@ -331,6 +331,64 @@ fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 }
             }
         }
+        KeyCode::Char('V') => {
+            // Validate selected field
+            if let Ok(contacts) = app.backend.list_contacts() {
+                if let Some(contact) = contacts.get(app.selected_contact) {
+                    if let Ok(fields) = app.backend.get_contact_fields(app.selected_contact) {
+                        if let Some(field) = fields.get(app.selected_contact_field) {
+                            match app.backend.validate_field(
+                                &contact.id,
+                                &field.label,
+                                &field.value,
+                            ) {
+                                Ok(_) => app.set_status(format!(
+                                    "Validated {} for {}",
+                                    field.label, contact.display_name
+                                )),
+                                Err(e) => app.set_status(format!("Error: {}", e)),
+                            }
+                        } else {
+                            app.set_status("No field selected");
+                        }
+                    } else {
+                        app.set_status("No fields available");
+                    }
+                } else {
+                    app.set_status("No contact selected");
+                }
+            } else {
+                app.set_status("No contacts available");
+            }
+        }
+        KeyCode::Char('R') => {
+            // Revoke validation on selected field
+            if let Ok(contacts) = app.backend.list_contacts() {
+                if let Some(contact) = contacts.get(app.selected_contact) {
+                    if let Ok(fields) = app.backend.get_contact_fields(app.selected_contact) {
+                        if let Some(field) = fields.get(app.selected_contact_field) {
+                            match app
+                                .backend
+                                .revoke_field_validation(&contact.id, &field.label)
+                            {
+                                Ok(true) => app
+                                    .set_status(format!("Revoked validation for {}", field.label)),
+                                Ok(false) => app.set_status("No validation to revoke"),
+                                Err(e) => app.set_status(format!("Error: {}", e)),
+                            }
+                        } else {
+                            app.set_status("No field selected");
+                        }
+                    } else {
+                        app.set_status("No fields available");
+                    }
+                } else {
+                    app.set_status("No contact selected");
+                }
+            } else {
+                app.set_status("No contacts available");
+            }
+        }
         KeyCode::Char('x') | KeyCode::Delete => {
             // Delete contact
             if let Ok(contacts) = app.backend.list_contacts() {
