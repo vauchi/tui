@@ -478,7 +478,12 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
     // path is still wired correctly (not overridden by V).
     handle_key(&mut app, KeyCode::Char('v'));
 
-    // The v handler attempts to get a contact; with none, it does nothing.
-    // The important thing is that it doesn't set a validation status message.
-    // (The uppercase V handler sets validation-related status.)
+    // The v handler attempts to get a contact; with none, it stays on ContactDetail.
+    // The important thing is that lowercase v does NOT set a validation status message
+    // (the uppercase V handler sets validation-related status).
+    assert_eq!(
+        app.screen,
+        Screen::ContactDetail,
+        "lowercase v without contact should stay on ContactDetail"
+    );
 }
