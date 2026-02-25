@@ -14,6 +14,7 @@ mod home;
 mod recovery;
 mod settings;
 mod setup;
+mod support;
 mod sync;
 mod tor;
 mod visibility;
@@ -58,6 +59,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Backup => backup::draw(f, chunks[1], app),
         Screen::TorSettings => tor::draw(f, chunks[1], app),
         Screen::Privacy => gdpr::draw(f, chunks[1], app),
+        Screen::Support => support::draw(f, chunks[1], app),
     }
 
     // Footer
@@ -84,6 +86,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Backup => "Backup & Restore",
         Screen::TorSettings => "Tor Privacy",
         Screen::Privacy => "Privacy & Data",
+        Screen::Support => "Support Vauchi",
     };
 
     let header = Paragraph::new(title)
@@ -105,7 +108,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::ContactDetail => "[v]isibility  [x]delete  [esc] back  [?]help",
         Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
         Screen::Exchange => "[r]efresh  [esc] back  [?]help",
-        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [←/→] theme  [esc] back  [?]help",
+        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [s]upport  [←/→] theme  [esc] back  [?]help",
         Screen::Help => "[esc/q] close",
         Screen::AddField => "[tab] next  [enter] submit  [esc] cancel",
         Screen::EditField => "[enter] save  [esc] cancel",
@@ -117,6 +120,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::Backup => "[e]xport  [i]mport  [esc] back  [?]help",
         Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
         Screen::Privacy => "[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back",
+        Screen::Support => "[1] GitHub Sponsors  [2] Liberapay  [esc] back",
     };
 
     let status = if let Some(msg) = &app.status_message {

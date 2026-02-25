@@ -47,6 +47,8 @@ pub enum Screen {
     TorSettings,
     /// Privacy & GDPR screen
     Privacy,
+    /// Support Vauchi screen
+    Support,
 }
 
 /// Input mode for text entry.
@@ -401,6 +403,7 @@ impl App {
                 self.screen = Screen::Settings;
                 self.privacy_state = PrivacyState::default();
             }
+            Screen::Support => self.screen = Screen::Settings,
             // From Backup, go back to Setup if no identity, otherwise Home
             Screen::Backup => {
                 if self.backend.has_identity() {

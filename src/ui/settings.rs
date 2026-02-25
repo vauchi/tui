@@ -68,7 +68,8 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
          \x20 [d] {devices}\n\
          \x20 [r] {recovery}\n\
          \x20 [t] {tor}\n\
-         \x20 [p] {privacy}\n\n\
+         \x20 [p] {privacy}\n\
+         \x20 [s] {support}\n\n\
          {help_support}:\n\
          \x20 User Guide:     https://vauchi.app/user-guide\n\
          \x20 FAQ:            https://vauchi.app/faq\n\
@@ -85,6 +86,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         recovery = app.i18n.t("recovery.title"),
         tor = app.i18n.t("privacy.title"),
         privacy = app.i18n.t("privacy.title"),
+        support = app.i18n.t("support.title"),
         help_support = app.i18n.t("settings.help_support"),
         auto_save = app.i18n.t("settings.auto_save"),
         local_encrypted = app.i18n.t("settings.local_encrypted"),

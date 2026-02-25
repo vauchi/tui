@@ -69,6 +69,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Backup => handle_backup_keys(app, key),
         Screen::TorSettings => handle_tor_settings_keys(app, key),
         Screen::Privacy => handle_privacy_keys(app, key),
+        Screen::Support => handle_support_keys(app, key),
     }
 
     Action::Continue
@@ -486,6 +487,10 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
             // Open Privacy & Data screen
             app.privacy_state = PrivacyState::default();
             app.goto(Screen::Privacy);
+        }
+        KeyCode::Char('s') => {
+            // Open Support Vauchi screen
+            app.goto(Screen::Support);
         }
         KeyCode::Char(']') | KeyCode::Right => {
             // Next theme
@@ -1008,6 +1013,22 @@ fn handle_privacy_keys(app: &mut App, key: KeyCode) {
                     }
                     Err(e) => app.set_status(format!("Error: {}", e)),
                 }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn handle_support_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Char('1') => {
+            if open::that("https://github.com/sponsors/vauchi").is_err() {
+                app.set_status("Could not open browser");
+            }
+        }
+        KeyCode::Char('2') => {
+            if open::that("https://liberapay.com/Vauchi/donate").is_err() {
+                app.set_status("Could not open browser");
             }
         }
         _ => {}

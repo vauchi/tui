@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 179
 expression: output
 ---
 Settings
@@ -24,4 +25,4 @@ Settings
  └────────────────────────────────────────────────────────────────────────────┘
 
 ────────────────────────────────────────────────────────────────────────────────
-[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [←/→] theme  [esc] back  [?]
+[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [s]upport  [←/→] theme  [esc
