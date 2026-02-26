@@ -14,7 +14,8 @@ Terminal user interface for vauchi.
 
 ```bash
 cargo run -p vauchi-tui                     # Run TUI
-cargo test -p vauchi-tui                    # Run tests
+just test tui                               # Run tests
+just check tui                              # Format + lint + test
 ```
 
 ## Local Development
