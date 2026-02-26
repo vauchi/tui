@@ -14,3 +14,7 @@ Thumbs.db
 # TUI data
 .vauchi/
 .cargo/
+
+# CI local testing
+.gitlab-ci-local/
+.gitlab-ci-local/
