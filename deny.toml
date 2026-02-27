@@ -40,6 +40,7 @@ allow = [
     "Zlib",
     "Unicode-3.0",
     "MPL-2.0",
+    "BSL-1.0",              # clipboard-win, error-code (arboard Windows clipboard backend)
     "CDLA-Permissive-2.0",  # webpki-roots (Mozilla CA certs)
 ]
 confidence-threshold = 0.8
