@@ -21,7 +21,7 @@ mod visibility;
 mod widgets;
 
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
 
 use crate::app::{App, Screen};
 
@@ -60,6 +60,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::TorSettings => tor::draw(f, chunks[1], app),
         Screen::Privacy => gdpr::draw(f, chunks[1], app),
         Screen::Support => support::draw(f, chunks[1], app),
+        Screen::ActionMenu => {
+            // Draw contact detail underneath, then overlay action menu
+            contacts::draw_detail(f, chunks[1], app);
+            draw_action_menu(f, chunks[1], app);
+        }
     }
 
     // Footer
@@ -87,6 +92,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::TorSettings => "Tor Privacy",
         Screen::Privacy => "Privacy & Data",
         Screen::Support => "Support Vauchi",
+        Screen::ActionMenu => "Contact Details",
     };
 
     let header = Paragraph::new(title)
@@ -121,6 +127,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
         Screen::Privacy => "[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back",
         Screen::Support => "[1] GitHub Sponsors  [2] Liberapay  [esc] back",
+        Screen::ActionMenu => "[j/k] navigate  [enter] select  [esc] cancel",
     };
 
     let status = if let Some(msg) = &app.status_message {
@@ -134,4 +141,56 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         .block(Block::default().borders(Borders::TOP));
 
     f.render_widget(footer, area);
+}
+
+/// Draw the action menu popup centered in the given area.
+fn draw_action_menu(f: &mut Frame, area: Rect, app: &App) {
+    let actions = &app.action_menu_state.actions;
+    if actions.is_empty() {
+        return;
+    }
+
+    // Calculate popup size
+    let max_label_len = actions
+        .iter()
+        .map(|(label, _)| label.len())
+        .max()
+        .unwrap_or(20);
+    let popup_width = (max_label_len as u16 + 6).min(area.width.saturating_sub(4));
+    let popup_height = (actions.len() as u16 + 2).min(area.height.saturating_sub(2));
+
+    // Center the popup
+    let x = area.x + (area.width.saturating_sub(popup_width)) / 2;
+    let y = area.y + (area.height.saturating_sub(popup_height)) / 2;
+    let popup_area = Rect::new(x, y, popup_width, popup_height);
+
+    // Clear background
+    f.render_widget(Clear, popup_area);
+
+    // Build list items
+    let items: Vec<ListItem> = actions
+        .iter()
+        .enumerate()
+        .map(|(i, (label, _))| {
+            let style = if i == app.action_menu_state.selected {
+                Style::default()
+                    .fg(app.theme.bg)
+                    .bg(app.theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(app.theme.fg)
+            };
+            ListItem::new(format!("  {} ", label)).style(style)
+        })
+        .collect();
+
+    let list = List::new(items).block(
+        Block::default()
+            .title(" Actions ")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(app.theme.accent))
+            .style(Style::default().bg(app.theme.bg)),
+    );
+
+    f.render_widget(list, popup_area);
 }

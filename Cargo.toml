@@ -39,6 +39,9 @@ hex = "0.4"
 # Open URLs in system browser/app
 open = "5"
 
+# Clipboard support (copy field values)
+arboard = "3"
+
 # Async WebSocket for relay sync
 tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
 # Stream/Sink combinators for async WebSocket

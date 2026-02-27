@@ -203,7 +203,7 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                             "sms" => "💬",
                             "email" => "✉️",
                             "web" => "🌐",
-                            "map" => "📍",
+                            "map" | "directions" => "📍",
                             _ => "📋",
                         };
 

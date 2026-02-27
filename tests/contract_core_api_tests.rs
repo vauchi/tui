@@ -11,6 +11,7 @@
 //! Consumer: vauchi-tui
 //! Provider: vauchi-core
 
+use vauchi_core::contact_card::ContactAction;
 use vauchi_core::{Contact, ContactCard, ContactField, FieldType, Identity, Storage, SymmetricKey};
 
 // ============================================================
@@ -200,4 +201,59 @@ fn contract_contact_has_expected_accessors() {
         let _: bool = c.is_hidden();
         let _: bool = c.is_blocked();
     }
+}
+
+// ============================================================
+// Secondary actions contracts (SP-12a)
+// ============================================================
+
+#[test]
+fn contract_phone_secondary_actions_include_sms() {
+    let field = ContactField::new(FieldType::Phone, "Mobile", "+41791234567");
+    let actions = field.to_secondary_actions();
+
+    assert!(
+        actions.len() >= 3,
+        "phone field must have at least 3 secondary actions, got {}",
+        actions.len()
+    );
+    assert!(
+        actions
+            .iter()
+            .any(|a| matches!(a, ContactAction::SendSms(_))),
+        "phone secondary actions must include SendSms"
+    );
+}
+
+#[test]
+fn contract_address_secondary_actions_include_directions() {
+    let field = ContactField::new(FieldType::Address, "Home", "Bahnhofstrasse 1, Zurich");
+    let actions = field.to_secondary_actions();
+
+    assert!(
+        actions
+            .iter()
+            .any(|a| matches!(a, ContactAction::GetDirections(_))),
+        "address secondary actions must include GetDirections"
+    );
+}
+
+#[test]
+fn contract_get_directions_variant_exists() {
+    // allow(zero_assertions): Compile-time shape check
+    let _action = ContactAction::GetDirections("test".to_string());
+}
+
+#[test]
+fn contract_to_directions_uri_returns_some_for_address() {
+    let field = ContactField::new(FieldType::Address, "Office", "Limmatquai 1, Zurich");
+    let uri = field.to_directions_uri();
+    assert!(
+        uri.is_some(),
+        "to_directions_uri must return Some for address"
+    );
+    assert!(
+        uri.unwrap().contains("directions"),
+        "directions URI must contain 'directions'"
+    );
 }

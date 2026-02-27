@@ -4,6 +4,8 @@
 
 //! Application State
 
+use vauchi_core::contact_card::ContactAction;
+
 use crate::backend::{Backend, DeviceLinkResult, QRData};
 use crate::i18n::I18n;
 use crate::theme::{get_default_tui_theme, get_tui_theme, list_themes, TuiTheme};
@@ -49,6 +51,8 @@ pub enum Screen {
     Privacy,
     /// Support Vauchi screen
     Support,
+    /// Action menu popup for contact fields
+    ActionMenu,
 }
 
 /// Input mode for text entry.
@@ -139,6 +143,8 @@ pub struct App {
     pub tor_state: TorState,
     /// Privacy/GDPR screen state
     pub privacy_state: PrivacyState,
+    /// Action menu state (popup for field actions)
+    pub action_menu_state: ActionMenuState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -224,6 +230,15 @@ pub enum BackupFocus {
 pub struct PrivacyState {
     /// Currently selected section index (0=Export, 1=Deletion, 2..=Consent items).
     pub selected_item: usize,
+}
+
+/// State for the action menu popup.
+#[derive(Debug, Default)]
+pub struct ActionMenuState {
+    /// Available actions with display labels.
+    pub actions: Vec<(String, ContactAction)>,
+    /// Currently selected action index.
+    pub selected: usize,
 }
 
 /// Path to theme config file.
@@ -326,6 +341,7 @@ impl App {
             sync_state: SyncState::default(),
             tor_state: TorState::default(),
             privacy_state: PrivacyState::default(),
+            action_menu_state: ActionMenuState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,

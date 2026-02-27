@@ -7,8 +7,8 @@
 use crossterm::event::KeyCode;
 
 use crate::app::{
-    AddFieldFocus, App, BackupFocus, BackupMode, EditFieldState, EditNameState, EditRelayUrlState,
-    InputMode, PrivacyState, Screen,
+    ActionMenuState, AddFieldFocus, App, BackupFocus, BackupMode, EditFieldState, EditNameState,
+    EditRelayUrlState, InputMode, PrivacyState, Screen,
 };
 use crate::backend::{Backend, FIELD_TYPES};
 use vauchi_core::aha_moments::AhaMomentType;
@@ -70,6 +70,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::TorSettings => handle_tor_settings_keys(app, key),
         Screen::Privacy => handle_privacy_keys(app, key),
         Screen::Support => handle_support_keys(app, key),
+        Screen::ActionMenu => handle_action_menu_keys(app, key),
     }
 
     Action::Continue
@@ -303,10 +304,36 @@ fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Enter | KeyCode::Char('o') => {
-            // Open the selected field in external app
+            // Show action menu for the selected field
             match app
                 .backend
-                .open_contact_field(app.selected_contact, app.selected_contact_field)
+                .get_secondary_actions(app.selected_contact, app.selected_contact_field)
+            {
+                Ok(actions) if actions.len() > 1 => {
+                    app.action_menu_state = ActionMenuState {
+                        actions,
+                        selected: 0,
+                    };
+                    app.goto(Screen::ActionMenu);
+                }
+                Ok(_) => {
+                    // Single action — execute directly
+                    match app
+                        .backend
+                        .open_contact_field(app.selected_contact, app.selected_contact_field)
+                    {
+                        Ok(msg) => app.set_status(msg),
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
+        KeyCode::Char('c') => {
+            // Copy field value to clipboard
+            match app
+                .backend
+                .copy_field_to_clipboard(app.selected_contact, app.selected_contact_field)
             {
                 Ok(msg) => app.set_status(msg),
                 Err(e) => app.set_status(format!("Error: {}", e)),
@@ -400,6 +427,47 @@ fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                     }
                 }
             }
+        }
+        _ => {}
+    }
+}
+
+fn handle_action_menu_keys(app: &mut App, key: KeyCode) {
+    use vauchi_core::contact_card::ContactAction;
+
+    let action_count = app.action_menu_state.actions.len();
+    match key {
+        KeyCode::Char('j') | KeyCode::Down => {
+            if app.action_menu_state.selected < action_count.saturating_sub(1) {
+                app.action_menu_state.selected += 1;
+            }
+        }
+        KeyCode::Char('k') | KeyCode::Up => {
+            if app.action_menu_state.selected > 0 {
+                app.action_menu_state.selected -= 1;
+            }
+        }
+        KeyCode::Enter => {
+            if let Some((_, action)) = app
+                .action_menu_state
+                .actions
+                .get(app.action_menu_state.selected)
+            {
+                let result = if matches!(action, ContactAction::CopyToClipboard) {
+                    app.backend
+                        .copy_field_to_clipboard(app.selected_contact, app.selected_contact_field)
+                } else {
+                    app.backend.execute_action(action)
+                };
+                match result {
+                    Ok(msg) => app.set_status(msg),
+                    Err(e) => app.set_status(format!("Error: {}", e)),
+                }
+            }
+            app.go_back();
+        }
+        KeyCode::Esc | KeyCode::Char('q') => {
+            app.go_back();
         }
         _ => {}
     }

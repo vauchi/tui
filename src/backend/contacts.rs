@@ -168,6 +168,7 @@ impl Backend {
                     ContactAction::SendEmail(_) => "email",
                     ContactAction::OpenUrl(_) => "web",
                     ContactAction::OpenMap(_) => "map",
+                    ContactAction::GetDirections(_) => "directions",
                     ContactAction::CopyToClipboard => "copy",
                 };
                 ContactFieldInfo {
@@ -192,6 +193,124 @@ impl Backend {
         } else {
             Ok(format!("No action available for {}", field.label))
         }
+    }
+
+    /// Get secondary actions for a contact field.
+    pub fn get_secondary_actions(
+        &self,
+        contact_index: usize,
+        field_index: usize,
+    ) -> Result<Vec<(String, ContactAction)>> {
+        let contacts = self
+            .storage
+            .list_contacts()
+            .context("Failed to list contacts")?;
+        let contact = contacts.get(contact_index).context("Contact not found")?;
+        let field = contact
+            .card()
+            .fields()
+            .get(field_index)
+            .context("Field not found")?;
+
+        Ok(field
+            .to_secondary_actions()
+            .into_iter()
+            .map(|a| {
+                let label = match &a {
+                    ContactAction::Call(v) => format!("Call {}", v),
+                    ContactAction::SendSms(v) => format!("Send SMS to {}", v),
+                    ContactAction::SendEmail(v) => format!("Email {}", v),
+                    ContactAction::OpenUrl(_) => "Open in Browser".to_string(),
+                    ContactAction::OpenMap(_) => "Open in Maps".to_string(),
+                    ContactAction::GetDirections(_) => "Get Directions".to_string(),
+                    ContactAction::CopyToClipboard => "Copy to Clipboard".to_string(),
+                };
+                (label, a)
+            })
+            .collect())
+    }
+
+    /// Execute a contact action (open URI or copy to clipboard).
+    pub fn execute_action(&self, action: &ContactAction) -> Result<String> {
+        match action {
+            ContactAction::Call(v) => {
+                open::that(format!("tel:{}", v)).context("Failed to open dialer")?;
+                Ok("Opened dialer".to_string())
+            }
+            ContactAction::SendSms(v) => {
+                open::that(format!("sms:{}", v)).context("Failed to open messaging")?;
+                Ok("Opened messaging".to_string())
+            }
+            ContactAction::SendEmail(v) => {
+                open::that(format!("mailto:{}", v)).context("Failed to open email")?;
+                Ok("Opened email client".to_string())
+            }
+            ContactAction::OpenUrl(v) => {
+                open::that(v).context("Failed to open browser")?;
+                Ok("Opened browser".to_string())
+            }
+            ContactAction::OpenMap(v) => {
+                let encoded: String = v
+                    .chars()
+                    .map(|c| {
+                        if c.is_ascii_alphanumeric() || "-._~,+/".contains(c) {
+                            c.to_string()
+                        } else if c == ' ' {
+                            "%20".to_string()
+                        } else {
+                            format!("%{:02X}", c as u32)
+                        }
+                    })
+                    .collect();
+                open::that(format!(
+                    "https://www.openstreetmap.org/search?query={}",
+                    encoded
+                ))
+                .context("Failed to open maps")?;
+                Ok("Opened maps".to_string())
+            }
+            ContactAction::GetDirections(v) => {
+                let encoded: String = v
+                    .chars()
+                    .map(|c| {
+                        if c.is_ascii_alphanumeric() || "-._~,+/".contains(c) {
+                            c.to_string()
+                        } else if c == ' ' {
+                            "%20".to_string()
+                        } else {
+                            format!("%{:02X}", c as u32)
+                        }
+                    })
+                    .collect();
+                open::that(format!(
+                    "https://www.openstreetmap.org/directions?route=&to={}",
+                    encoded
+                ))
+                .context("Failed to open directions")?;
+                Ok("Opened directions".to_string())
+            }
+            ContactAction::CopyToClipboard => {
+                anyhow::bail!("CopyToClipboard should be handled by the caller with field value")
+            }
+        }
+    }
+
+    /// Copy a field value to the system clipboard.
+    pub fn copy_field_to_clipboard(
+        &self,
+        contact_index: usize,
+        field_index: usize,
+    ) -> Result<String> {
+        let fields = self.get_contact_fields(contact_index)?;
+        let field = fields.get(field_index).context("Field not found")?;
+
+        let mut clipboard =
+            arboard::Clipboard::new().context("Failed to access system clipboard")?;
+        clipboard
+            .set_text(&field.value)
+            .context("Failed to copy to clipboard")?;
+
+        Ok(format!("Copied {} to clipboard", field.label))
     }
 
     // ========== Field Validation ==========
