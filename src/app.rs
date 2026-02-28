@@ -51,6 +51,8 @@ pub enum Screen {
     Privacy,
     /// Support Vauchi screen
     Support,
+    /// Delivery status screen
+    Delivery,
     /// Action menu popup for contact fields
     ActionMenu,
 }
@@ -77,6 +79,27 @@ pub struct SyncState {
     pub last_result: Option<String>,
     /// Log of sync operations.
     pub sync_log: Vec<String>,
+}
+
+/// Delivery status state for the UI.
+#[derive(Debug, Clone, Default)]
+pub struct DeliveryState {
+    /// Number of queued deliveries.
+    pub queued: usize,
+    /// Number of sent deliveries.
+    pub sent: usize,
+    /// Number of stored deliveries.
+    pub stored: usize,
+    /// Number of delivered messages.
+    pub delivered: usize,
+    /// Number of failed deliveries.
+    pub failed: usize,
+    /// Number of pending retries.
+    pub pending_retries: usize,
+    /// Offline queue depth.
+    pub offline_queue_depth: usize,
+    /// Last action result message.
+    pub last_result: Option<String>,
 }
 
 /// Tor privacy mode state for the UI.
@@ -139,6 +162,8 @@ pub struct App {
     pub current_qr: Option<QRData>,
     /// Sync state
     pub sync_state: SyncState,
+    /// Delivery state
+    pub delivery_state: DeliveryState,
     /// Tor privacy mode state
     pub tor_state: TorState,
     /// Privacy/GDPR screen state
@@ -339,6 +364,7 @@ impl App {
             contact_search_mode: false,
             current_qr: None,
             sync_state: SyncState::default(),
+            delivery_state: DeliveryState::default(),
             tor_state: TorState::default(),
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
@@ -407,6 +433,7 @@ impl App {
             | Screen::Help
             | Screen::Recovery
             | Screen::Sync
+            | Screen::Delivery
             | Screen::TorSettings => {
                 self.screen = Screen::Home;
             }

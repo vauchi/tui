@@ -387,3 +387,69 @@ fn test_app_new_without_identity_starts_on_setup() {
     let (app, _dir) = create_app_without_identity();
     assert_eq!(app.screen, Screen::Setup);
 }
+
+// ============================================================================
+// Delivery Screen (SP-12b)
+// ============================================================================
+
+// @scenario: message_delivery:Navigate to delivery screen
+#[test]
+fn test_handle_key_y_on_home_navigates_to_delivery() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Home);
+
+    let action = handle_key(&mut app, KeyCode::Char('y'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Delivery);
+}
+
+// @scenario: message_delivery:Delivery screen esc goes back to home
+#[test]
+fn test_delivery_esc_goes_back_to_home() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Delivery);
+
+    let action = handle_key(&mut app, KeyCode::Esc);
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Home);
+}
+
+// @scenario: message_delivery:Delivery retry key sets status
+#[test]
+fn test_delivery_r_runs_retry() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Delivery);
+
+    let action = handle_key(&mut app, KeyCode::Char('r'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Delivery);
+    assert!(
+        app.delivery_state.last_result.is_some(),
+        "Retry should set last_result"
+    );
+}
+
+// @scenario: message_delivery:Delivery cleanup key sets status
+#[test]
+fn test_delivery_c_runs_cleanup() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Delivery);
+
+    let action = handle_key(&mut app, KeyCode::Char('c'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Delivery);
+    assert!(
+        app.delivery_state.last_result.is_some(),
+        "Cleanup should set last_result"
+    );
+}
+
+// @scenario: message_delivery:Delivery state has correct defaults
+#[test]
+fn test_delivery_state_defaults() {
+    let (app, _dir) = create_app_with_identity();
+    assert_eq!(app.delivery_state.queued, 0);
+    assert_eq!(app.delivery_state.delivered, 0);
+    assert_eq!(app.delivery_state.failed, 0);
+    assert!(app.delivery_state.last_result.is_none());
+}

@@ -6,6 +6,7 @@
 
 mod backup;
 mod contacts;
+mod delivery;
 mod devices;
 pub mod exchange;
 mod gdpr;
@@ -56,6 +57,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Devices => devices::draw(f, chunks[1], app),
         Screen::Recovery => recovery::draw(f, chunks[1], app),
         Screen::Sync => sync::draw(f, chunks[1], app),
+        Screen::Delivery => delivery::draw(f, chunks[1], app),
         Screen::Backup => backup::draw(f, chunks[1], app),
         Screen::TorSettings => tor::draw(f, chunks[1], app),
         Screen::Privacy => gdpr::draw(f, chunks[1], app),
@@ -88,6 +90,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Devices => "Devices",
         Screen::Recovery => "Recovery",
         Screen::Sync => "Sync",
+        Screen::Delivery => "Delivery",
         Screen::Backup => "Backup & Restore",
         Screen::TorSettings => "Tor Privacy",
         Screen::Privacy => "Privacy & Data",
@@ -109,7 +112,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     let help_text = match app.screen {
         Screen::Setup => "[c]reate new identity  [i]mport backup  [q]uit",
-        Screen::Home => "[c]ontacts  [s]ettings  [d]evices  [r]ecovery  sy[n]c  [b]ackup  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
+        Screen::Home => "[c]ontacts  [s]ettings  [d]evices  [r]ecovery  sy[n]c  deliver[y]  [b]ackup  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
         Screen::Contacts => "[j/k] navigate  [enter] view  [d]elete  [v]erify  [esc] back  [?]help",
         Screen::ContactDetail => "[v]isibility  [x]delete  [esc] back  [?]help",
         Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
@@ -123,6 +126,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::Devices => "[j/k] navigate  [l]ink new device  [esc] back  [?]help",
         Screen::Recovery => "[c]laim  [v]ouch  [s]tatus  [esc] back  [?]help",
         Screen::Sync => "[s]ync now  [esc] back  [?]help",
+        Screen::Delivery => "[r]etry  [c]leanup  [esc] back",
         Screen::Backup => "[e]xport  [i]mport  [esc] back  [?]help",
         Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
         Screen::Privacy => "[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back",

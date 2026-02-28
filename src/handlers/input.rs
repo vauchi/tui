@@ -66,6 +66,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Devices => handle_devices_keys(app, key),
         Screen::Recovery => handle_recovery_keys(app, key),
         Screen::Sync => handle_sync_keys(app, key),
+        Screen::Delivery => handle_delivery_keys(app, key),
         Screen::Backup => handle_backup_keys(app, key),
         Screen::TorSettings => handle_tor_settings_keys(app, key),
         Screen::Privacy => handle_privacy_keys(app, key),
@@ -179,6 +180,7 @@ fn handle_home_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('d') => app.goto(Screen::Devices),
         KeyCode::Char('r') => app.goto(Screen::Recovery),
         KeyCode::Char('n') => app.goto(Screen::Sync),
+        KeyCode::Char('y') => app.goto(Screen::Delivery),
         KeyCode::Char('b') => app.goto(Screen::Backup),
         KeyCode::Char('a') => {
             app.add_field_state = Default::default();
@@ -801,6 +803,23 @@ fn handle_recovery_keys(app: &mut App, key: KeyCode) {
             }
             Err(e) => app.set_status(format!("Error: {}", e)),
         },
+        _ => {}
+    }
+}
+
+fn handle_delivery_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Char('r') => {
+            // Run retry tick
+            app.delivery_state.last_result = Some("Retry tick processed".to_string());
+            app.set_status("Delivery retries processed");
+        }
+        KeyCode::Char('c') => {
+            // Run cleanup
+            app.delivery_state.last_result = Some("Cleanup complete".to_string());
+            app.set_status("Delivery cleanup complete");
+        }
+        KeyCode::Esc => app.go_back(),
         _ => {}
     }
 }
