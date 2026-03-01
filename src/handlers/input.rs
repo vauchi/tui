@@ -419,6 +419,32 @@ fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 app.set_status("No contacts available");
             }
         }
+        KeyCode::Char('f') => {
+            // Show fingerprint and verify
+            if let Ok(contacts) = app.backend.list_contacts() {
+                if let Some(contact) = contacts.get(app.selected_contact) {
+                    match app.backend.get_contact_fingerprint(&contact.id) {
+                        Ok(fp) => {
+                            if fp.is_verified {
+                                app.set_status(format!(
+                                    "Already verified. Theirs: {}  Ours: {}",
+                                    fp.their_fingerprint, fp.our_fingerprint
+                                ));
+                            } else {
+                                match app.backend.verify_contact_fingerprint(&contact.id) {
+                                    Ok(()) => app.set_status(format!(
+                                        "Verified! Theirs: {}  Ours: {}",
+                                        fp.their_fingerprint, fp.our_fingerprint
+                                    )),
+                                    Err(e) => app.set_status(format!("Error: {}", e)),
+                                }
+                            }
+                        }
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+            }
+        }
         KeyCode::Char('x') | KeyCode::Delete => {
             // Delete contact
             if let Ok(contacts) = app.backend.list_contacts() {

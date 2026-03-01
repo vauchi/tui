@@ -10,7 +10,7 @@ mod identity;
 mod recovery;
 mod sync;
 
-pub use contacts::{ContactFieldInfo, FieldVisibilityInfo};
+pub use contacts::{ContactFieldInfo, FieldVisibilityInfo, FingerprintInfo};
 pub use exchange::QRData;
 pub use recovery::RecoveryStatus;
 pub use sync::SyncResult;
@@ -1184,6 +1184,79 @@ mod tests {
         let contacts = backend.list_contacts().expect("Failed to list contacts");
         assert!(contacts.is_empty());
         assert_eq!(backend.contact_count().unwrap(), 0);
+    }
+
+    // === Fingerprint Verification Tests ===
+    // Trace: security.feature - Verify contact fingerprint manually
+
+    // @scenario: security.feature:Verify contact fingerprint manually
+    #[test]
+    fn test_get_contact_fingerprint_returns_formatted_strings() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice")
+            .expect("Failed to create identity");
+
+        let contact_id = create_and_save_test_contact(&backend, "Bob");
+
+        let fp = backend
+            .get_contact_fingerprint(&contact_id)
+            .expect("fingerprint");
+
+        // Formatted fingerprints should contain spaces (groups of 4)
+        assert!(
+            fp.their_fingerprint.contains(' '),
+            "Contact fingerprint should be formatted: {}",
+            fp.their_fingerprint
+        );
+        assert!(
+            fp.our_fingerprint.contains(' '),
+            "Own fingerprint should be formatted: {}",
+            fp.our_fingerprint
+        );
+        // Both should be uppercase hex
+        assert_eq!(
+            fp.their_fingerprint,
+            fp.their_fingerprint.to_uppercase(),
+            "Contact fingerprint should be uppercase"
+        );
+        assert_eq!(
+            fp.our_fingerprint,
+            fp.our_fingerprint.to_uppercase(),
+            "Own fingerprint should be uppercase"
+        );
+        // Should not be verified initially
+        assert!(!fp.is_verified, "Should not be verified initially");
+    }
+
+    // @scenario: security.feature:Verify contact fingerprint manually
+    #[test]
+    fn test_verify_contact_fingerprint_marks_verified() {
+        let (mut backend, _temp) = create_test_backend();
+        backend
+            .create_identity("Alice")
+            .expect("Failed to create identity");
+
+        let contact_id = create_and_save_test_contact(&backend, "Bob");
+
+        let contacts = backend.list_contacts().expect("list");
+        assert!(!contacts[0].verified, "Should not be verified initially");
+
+        backend
+            .verify_contact_fingerprint(&contact_id)
+            .expect("verify");
+
+        let contacts = backend.list_contacts().expect("list");
+        assert!(
+            contacts[0].verified,
+            "Should be verified after calling verify_contact_fingerprint"
+        );
+
+        // get_contact_fingerprint should also reflect verified state
+        let fp = backend
+            .get_contact_fingerprint(&contact_id)
+            .expect("fingerprint");
+        assert!(fp.is_verified, "FingerprintInfo should show verified");
     }
 
     // === Settings Tests ===

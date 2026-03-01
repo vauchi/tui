@@ -13,6 +13,17 @@ use vauchi_core::contact_card::ContactAction;
 
 use super::{Backend, ContactInfo};
 
+/// Fingerprint information for manual verification.
+#[derive(Debug, Clone)]
+pub struct FingerprintInfo {
+    /// The contact's formatted fingerprint (groups of 4 uppercase hex chars).
+    pub their_fingerprint: String,
+    /// Our own formatted fingerprint (groups of 4 uppercase hex chars).
+    pub our_fingerprint: String,
+    /// Whether this contact's fingerprint is already verified.
+    pub is_verified: bool,
+}
+
 /// Field visibility information for display.
 #[derive(Debug, Clone)]
 pub struct FieldVisibilityInfo {
@@ -455,5 +466,55 @@ impl Backend {
         }
 
         Ok(deleted)
+    }
+
+    /// Get fingerprint information for a contact (for manual verification).
+    ///
+    /// Returns both the contact's and our own fingerprint as formatted strings
+    /// (groups of 4 uppercase hex chars) using the core `Contact::fingerprint()` API.
+    pub fn get_contact_fingerprint(&self, contact_id: &str) -> Result<FingerprintInfo> {
+        let identity = self.identity.as_ref().context("No identity")?;
+
+        let contact = self
+            .storage
+            .load_contact(contact_id)
+            .context("Failed to load contact")?
+            .context("Contact not found")?;
+
+        let their_fingerprint = contact.fingerprint();
+
+        // Format our own fingerprint the same way as Contact::fingerprint()
+        let our_hex = hex::encode(identity.signing_public_key());
+        let our_fingerprint = our_hex
+            .chars()
+            .collect::<Vec<_>>()
+            .chunks(4)
+            .map(|c| c.iter().collect::<String>())
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_uppercase();
+
+        Ok(FingerprintInfo {
+            their_fingerprint,
+            our_fingerprint,
+            is_verified: contact.is_fingerprint_verified(),
+        })
+    }
+
+    /// Mark a contact's fingerprint as verified.
+    pub fn verify_contact_fingerprint(&self, contact_id: &str) -> Result<()> {
+        let mut contact = self
+            .storage
+            .load_contact(contact_id)
+            .context("Failed to load contact")?
+            .context("Contact not found")?;
+
+        contact.mark_fingerprint_verified();
+
+        self.storage
+            .save_contact(&contact)
+            .context("Failed to save contact")?;
+
+        Ok(())
     }
 }
