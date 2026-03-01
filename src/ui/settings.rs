@@ -68,6 +68,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
          \x20 [d] {devices}\n\
          \x20 [r] {recovery}\n\
          \x20 [t] {tor}\n\
+         \x20 [e] {emergency}\n\
          \x20 [p] {privacy}\n\
          \x20 [s] {support}\n\n\
          {help_support}:\n\
@@ -85,6 +86,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         devices = app.i18n.t("devices.title"),
         recovery = app.i18n.t("recovery.title"),
         tor = app.i18n.t("privacy.title"),
+        emergency = app.i18n.t("emergency.title"),
         privacy = app.i18n.t("privacy.title"),
         support = app.i18n.t("support.title"),
         help_support = app.i18n.t("settings.help_support"),

@@ -856,6 +856,45 @@ impl Backend {
         }
         moment
     }
+
+    // ================================================================
+    // Emergency Broadcast
+    // ================================================================
+
+    /// Get the current emergency broadcast configuration.
+    pub fn get_emergency_config(
+        &self,
+    ) -> Result<Option<vauchi_core::api::EmergencyBroadcastConfig>> {
+        self.storage
+            .load_emergency_config()
+            .context("Failed to load emergency config")
+    }
+
+    /// Configure the emergency broadcast system.
+    pub fn configure_emergency_broadcast(
+        &self,
+        contact_ids: Vec<String>,
+        message: String,
+        include_location: bool,
+    ) -> Result<()> {
+        let config = vauchi_core::api::EmergencyBroadcastConfig {
+            trusted_contact_ids: contact_ids,
+            message,
+            include_location,
+        };
+        self.storage
+            .save_emergency_config(&config)
+            .context("Failed to save emergency config")?;
+        Ok(())
+    }
+
+    /// Disable the emergency broadcast system.
+    pub fn disable_emergency_broadcast(&self) -> Result<()> {
+        self.storage
+            .delete_emergency_config()
+            .context("Failed to delete emergency config")?;
+        Ok(())
+    }
 }
 
 /// Device information for display.
@@ -2138,5 +2177,55 @@ mod tests {
 
         let result = backend.validate_field(&my_id, "twitter", "@alice");
         assert!(result.is_err(), "Should not be able to validate own field");
+    }
+
+    // ================================================================
+    // Emergency Broadcast Tests
+    // ================================================================
+
+    #[test]
+    fn test_get_emergency_config_returns_none_when_not_configured() {
+        let _lock = ENV_VAR_MUTEX.lock().unwrap();
+        let (backend, _dir) = create_test_backend();
+
+        let config = backend.get_emergency_config().unwrap();
+        assert!(config.is_none(), "Should return None when not configured");
+    }
+
+    #[test]
+    fn test_configure_emergency_broadcast_stores_config() {
+        let _lock = ENV_VAR_MUTEX.lock().unwrap();
+        let (backend, _dir) = create_test_backend();
+
+        let ids = vec!["contact-1".to_string(), "contact-2".to_string()];
+        backend
+            .configure_emergency_broadcast(ids.clone(), "Help me!".to_string(), true)
+            .unwrap();
+
+        let config = backend.get_emergency_config().unwrap().unwrap();
+        assert_eq!(config.trusted_contact_ids, ids);
+        assert_eq!(config.message, "Help me!");
+        assert!(config.include_location);
+    }
+
+    #[test]
+    fn test_disable_emergency_broadcast_removes_config() {
+        let _lock = ENV_VAR_MUTEX.lock().unwrap();
+        let (backend, _dir) = create_test_backend();
+
+        backend
+            .configure_emergency_broadcast(
+                vec!["contact-1".to_string()],
+                "Alert".to_string(),
+                false,
+            )
+            .unwrap();
+        assert!(backend.get_emergency_config().unwrap().is_some());
+
+        backend.disable_emergency_broadcast().unwrap();
+        assert!(
+            backend.get_emergency_config().unwrap().is_none(),
+            "Config should be removed after disable"
+        );
     }
 }

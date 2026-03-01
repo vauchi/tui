@@ -8,7 +8,7 @@ use crossterm::event::KeyCode;
 
 use crate::app::{
     ActionMenuState, AddFieldFocus, App, BackupFocus, BackupMode, EditFieldState, EditNameState,
-    EditRelayUrlState, InputMode, PrivacyState, Screen,
+    EditRelayUrlState, EmergencyFocus, EmergencyState, InputMode, PrivacyState, Screen,
 };
 use crate::backend::{Backend, FIELD_TYPES};
 use vauchi_core::aha_moments::AhaMomentType;
@@ -72,6 +72,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Privacy => handle_privacy_keys(app, key),
         Screen::Support => handle_support_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
+        Screen::Emergency => handle_emergency_keys(app, key),
     }
 
     Action::Continue
@@ -583,6 +584,11 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
             // Open Privacy & Data screen
             app.privacy_state = PrivacyState::default();
             app.goto(Screen::Privacy);
+        }
+        KeyCode::Char('e') => {
+            // Open Emergency Broadcast screen
+            refresh_emergency_state(app);
+            app.goto(Screen::Emergency);
         }
         KeyCode::Char('s') => {
             // Open Support Vauchi screen
@@ -1243,6 +1249,145 @@ fn handle_backup_keys(app: &mut App, key: KeyCode) {
             }
             KeyCode::Esc => {
                 app.backup_state.mode = BackupMode::Menu;
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        },
+    }
+}
+
+fn refresh_emergency_state(app: &mut App) {
+    match app.backend.get_emergency_config() {
+        Ok(Some(config)) => {
+            app.emergency_state = EmergencyState {
+                configured: true,
+                contact_ids_input: config.trusted_contact_ids.join(", "),
+                message_input: config.message,
+                include_location: config.include_location,
+                trusted_count: config.trusted_contact_ids.len(),
+                focus: EmergencyFocus::Status,
+            };
+        }
+        _ => {
+            app.emergency_state = EmergencyState::default();
+        }
+    }
+}
+
+fn handle_emergency_keys(app: &mut App, key: KeyCode) {
+    match app.emergency_state.focus {
+        EmergencyFocus::Status => match key {
+            KeyCode::Char('c') => {
+                // Configure: start editing contact IDs
+                if !app.emergency_state.configured {
+                    app.emergency_state.message_input =
+                        vauchi_core::api::emergency::DEFAULT_EMERGENCY_MESSAGE.to_string();
+                }
+                app.emergency_state.focus = EmergencyFocus::ContactIds;
+                app.input_mode = InputMode::Editing;
+            }
+            KeyCode::Char('l') => {
+                // Toggle location
+                app.emergency_state.include_location = !app.emergency_state.include_location;
+                if app.emergency_state.configured {
+                    let ids: Vec<String> = app
+                        .emergency_state
+                        .contact_ids_input
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty())
+                        .collect();
+                    let _ = app.backend.configure_emergency_broadcast(
+                        ids,
+                        app.emergency_state.message_input.clone(),
+                        app.emergency_state.include_location,
+                    );
+                    app.set_status(format!(
+                        "Location: {}",
+                        if app.emergency_state.include_location {
+                            "included"
+                        } else {
+                            "excluded"
+                        }
+                    ));
+                }
+            }
+            KeyCode::Char('x') => {
+                // Disable emergency broadcast
+                if app.emergency_state.configured {
+                    match app.backend.disable_emergency_broadcast() {
+                        Ok(()) => {
+                            app.emergency_state = EmergencyState::default();
+                            app.set_status("Emergency broadcast disabled");
+                        }
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+            }
+            _ => {}
+        },
+        EmergencyFocus::ContactIds => match key {
+            KeyCode::Char(c) => {
+                app.emergency_state.contact_ids_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.emergency_state.contact_ids_input.pop();
+            }
+            KeyCode::Tab | KeyCode::Enter => {
+                // Move to message editing
+                app.emergency_state.focus = EmergencyFocus::Message;
+            }
+            KeyCode::Esc => {
+                app.emergency_state.focus = EmergencyFocus::Status;
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        },
+        EmergencyFocus::Message => match key {
+            KeyCode::Char(c) => {
+                app.emergency_state.message_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.emergency_state.message_input.pop();
+            }
+            KeyCode::Enter => {
+                // Save configuration
+                let ids: Vec<String> = app
+                    .emergency_state
+                    .contact_ids_input
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                if ids.is_empty() {
+                    app.set_status("At least one contact ID is required");
+                } else if ids.len() > vauchi_core::api::MAX_TRUSTED_CONTACTS {
+                    app.set_status(format!(
+                        "Maximum {} trusted contacts",
+                        vauchi_core::api::MAX_TRUSTED_CONTACTS
+                    ));
+                } else {
+                    match app.backend.configure_emergency_broadcast(
+                        ids.clone(),
+                        app.emergency_state.message_input.clone(),
+                        app.emergency_state.include_location,
+                    ) {
+                        Ok(()) => {
+                            app.emergency_state.configured = true;
+                            app.emergency_state.trusted_count = ids.len();
+                            app.emergency_state.focus = EmergencyFocus::Status;
+                            app.input_mode = InputMode::Normal;
+                            app.set_status(format!(
+                                "Emergency broadcast configured ({} contacts)",
+                                ids.len()
+                            ));
+                        }
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+            }
+            KeyCode::Esc => {
+                app.emergency_state.focus = EmergencyFocus::Status;
                 app.input_mode = InputMode::Normal;
             }
             _ => {}

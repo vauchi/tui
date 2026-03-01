@@ -55,6 +55,8 @@ pub enum Screen {
     Delivery,
     /// Action menu popup for contact fields
     ActionMenu,
+    /// Emergency broadcast configuration screen
+    Emergency,
 }
 
 /// Input mode for text entry.
@@ -115,6 +117,35 @@ pub struct TorState {
     pub bridge_count: usize,
 }
 
+/// Emergency broadcast screen state.
+#[derive(Debug, Clone, Default)]
+pub struct EmergencyState {
+    /// Whether a config is currently saved.
+    pub configured: bool,
+    /// Trusted contact IDs (comma-separated in input).
+    pub contact_ids_input: String,
+    /// Alert message.
+    pub message_input: String,
+    /// Whether to include location.
+    pub include_location: bool,
+    /// Number of trusted contacts (for display).
+    pub trusted_count: usize,
+    /// Current input focus.
+    pub focus: EmergencyFocus,
+}
+
+/// Focus states for the emergency screen.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum EmergencyFocus {
+    #[default]
+    /// Viewing status (not editing).
+    Status,
+    /// Editing contact IDs.
+    ContactIds,
+    /// Editing message.
+    Message,
+}
+
 /// Application state.
 #[allow(dead_code)]
 pub struct App {
@@ -170,6 +201,8 @@ pub struct App {
     pub privacy_state: PrivacyState,
     /// Action menu state (popup for field actions)
     pub action_menu_state: ActionMenuState,
+    /// Emergency broadcast state
+    pub emergency_state: EmergencyState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -368,6 +401,7 @@ impl App {
             tor_state: TorState::default(),
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
+            emergency_state: EmergencyState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,
@@ -447,6 +481,10 @@ impl App {
                 self.privacy_state = PrivacyState::default();
             }
             Screen::Support => self.screen = Screen::Settings,
+            Screen::Emergency => {
+                self.screen = Screen::Settings;
+                self.emergency_state = EmergencyState::default();
+            }
             // From Backup, go back to Setup if no identity, otherwise Home
             Screen::Backup => {
                 if self.backend.has_identity() {

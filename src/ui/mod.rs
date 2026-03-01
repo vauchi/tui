@@ -8,6 +8,7 @@ mod backup;
 mod contacts;
 mod delivery;
 mod devices;
+mod emergency;
 pub mod exchange;
 mod gdpr;
 mod help;
@@ -62,6 +63,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::TorSettings => tor::draw(f, chunks[1], app),
         Screen::Privacy => gdpr::draw(f, chunks[1], app),
         Screen::Support => support::draw(f, chunks[1], app),
+        Screen::Emergency => emergency::draw(f, chunks[1], app),
         Screen::ActionMenu => {
             // Draw contact detail underneath, then overlay action menu
             contacts::draw_detail(f, chunks[1], app);
@@ -95,6 +97,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::TorSettings => "Tor Privacy",
         Screen::Privacy => "Privacy & Data",
         Screen::Support => "Support Vauchi",
+        Screen::Emergency => "Emergency Broadcast",
         Screen::ActionMenu => "Contact Details",
     };
 
@@ -131,6 +134,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
         Screen::Privacy => "[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back",
         Screen::Support => "[1] GitHub Sponsors  [2] Liberapay  [esc] back",
+        Screen::Emergency => "[c]onfigure  [l]ocation toggle  [x]disable  [esc] back",
         Screen::ActionMenu => "[j/k] navigate  [enter] select  [esc] cancel",
     };
 
