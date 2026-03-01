@@ -235,6 +235,17 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                             Span::styled(badge_text, Style::default().fg(badge_color)),
                         ]);
 
+                        // Show profile URL for social fields
+                        if field.field_type == "Social" {
+                            if let Some(ref uri) = field.uri {
+                                let url_line = Line::from(vec![Span::styled(
+                                    format!("    ({})", uri),
+                                    Style::default().fg(app.theme.fg_secondary),
+                                )]);
+                                return ListItem::new(vec![line, url_line]);
+                            }
+                        }
+
                         ListItem::new(line)
                     })
                     .collect();
