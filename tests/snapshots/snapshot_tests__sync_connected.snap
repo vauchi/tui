@@ -8,7 +8,7 @@ Sync
 ────────────────────────────────────────────────────────────────────────────────
 ┌Connection────────────────────────────────────────────────────────────────────┐
 │                                                                              │
-│  Relay: relay.vauchi.app                                                     │
+│  Relay: wss://relay.vauchi.app                                               │
 │  Status: Connected                                                           │
 │  Privacy: Tor: OFF                                                           │
 │                                                                              │
