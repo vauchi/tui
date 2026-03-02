@@ -86,7 +86,7 @@ coverage:
       optional: true
   rules:
     # Skip on triggered pipelines (downstream verification doesn't need coverage)
-    - if: $CI_PIPELINE_SOURCE == "pipeline"
+    - if: $CI_PIPELINE_SOURCE == "pipeline" || $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "api"
       when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   before_script:
@@ -137,9 +137,9 @@ mutation:incremental:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   allow_failure: true
   variables:
-    GIT_DEPTH: "100"
+    GIT_DEPTH: "20"
   script:
-    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth=100
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth=20
     - git diff "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"...HEAD > mr.diff
     - cargo mutants --in-diff mr.diff --timeout 120 --baseline skip
   artifacts:
