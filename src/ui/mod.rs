@@ -8,6 +8,7 @@ mod backup;
 mod contacts;
 mod delivery;
 mod devices;
+mod duress;
 mod emergency;
 pub mod exchange;
 mod gdpr;
@@ -64,6 +65,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Privacy => gdpr::draw(f, chunks[1], app),
         Screen::Support => support::draw(f, chunks[1], app),
         Screen::Emergency => emergency::draw(f, chunks[1], app),
+        Screen::Duress => duress::draw(f, chunks[1], app),
         Screen::ActionMenu => {
             // Draw contact detail underneath, then overlay action menu
             contacts::draw_detail(f, chunks[1], app);
@@ -98,6 +100,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Privacy => "Privacy & Data",
         Screen::Support => "Support Vauchi",
         Screen::Emergency => "Emergency Broadcast",
+        Screen::Duress => "Duress Protection",
         Screen::ActionMenu => "Contact Details",
     };
 
@@ -120,7 +123,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::ContactDetail => "[v]isibility  [x]delete  [esc] back  [?]help",
         Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
         Screen::Exchange => "[r]efresh  [esc] back  [?]help",
-        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [p]rivacy  [s]upport  [←/→] theme  [esc] back  [?]help",
+        Screen::Settings => "[n]ame  [b]ackup  [d]evices  [r]ecovery  [e]mergency  [D]uress  [p]rivacy  [s]upport  [←/→] theme  [esc] back",
         Screen::Help => "[esc/q] close",
         Screen::AddField => "[tab] next  [enter] submit  [esc] cancel",
         Screen::EditField => "[enter] save  [esc] cancel",
@@ -135,6 +138,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::Privacy => "[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back",
         Screen::Support => "[1] GitHub Sponsors  [2] Liberapay  [esc] back",
         Screen::Emergency => "[c]onfigure  [l]ocation toggle  [x]disable  [esc] back",
+        Screen::Duress => "[p]in setup  [a]lert config  [l]ocation  [x]disable  [esc] back",
         Screen::ActionMenu => "[j/k] navigate  [enter] select  [esc] cancel",
     };
 

@@ -7,8 +7,9 @@
 use crossterm::event::KeyCode;
 
 use crate::app::{
-    ActionMenuState, AddFieldFocus, App, BackupFocus, BackupMode, EditFieldState, EditNameState,
-    EditRelayUrlState, EmergencyFocus, EmergencyState, InputMode, PrivacyState, Screen,
+    ActionMenuState, AddFieldFocus, App, BackupFocus, BackupMode, DuressFocus, DuressState,
+    EditFieldState, EditNameState, EditRelayUrlState, EmergencyFocus, EmergencyState, InputMode,
+    PrivacyState, Screen,
 };
 use crate::backend::{Backend, FIELD_TYPES};
 use vauchi_core::aha_moments::AhaMomentType;
@@ -73,6 +74,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Support => handle_support_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Emergency => handle_emergency_keys(app, key),
+        Screen::Duress => handle_duress_keys(app, key),
     }
 
     Action::Continue
@@ -615,6 +617,11 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
             // Open Emergency Broadcast screen
             refresh_emergency_state(app);
             app.goto(Screen::Emergency);
+        }
+        KeyCode::Char('D') => {
+            // Open Duress PIN screen
+            refresh_duress_state(app);
+            app.goto(Screen::Duress);
         }
         KeyCode::Char('s') => {
             // Open Support Vauchi screen
@@ -1414,6 +1421,189 @@ fn handle_emergency_keys(app: &mut App, key: KeyCode) {
             }
             KeyCode::Esc => {
                 app.emergency_state.focus = EmergencyFocus::Status;
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        },
+    }
+}
+
+fn refresh_duress_state(app: &mut App) {
+    let password_enabled = app.backend.is_password_enabled().unwrap_or(false);
+    let enabled = app.backend.is_duress_enabled().unwrap_or(false);
+
+    let (contact_ids_input, message_input, include_location, alert_contact_count) =
+        match app.backend.load_duress_settings() {
+            Ok(Some(settings)) => (
+                settings.alert_contact_ids.join(", "),
+                settings.alert_message,
+                settings.include_location,
+                settings.alert_contact_ids.len(),
+            ),
+            _ => (String::new(), String::new(), false, 0),
+        };
+
+    app.duress_state = DuressState {
+        password_enabled,
+        enabled,
+        pin_input: String::new(),
+        contact_ids_input,
+        message_input,
+        include_location,
+        alert_contact_count,
+        focus: DuressFocus::Status,
+    };
+}
+
+fn handle_duress_keys(app: &mut App, key: KeyCode) {
+    match app.duress_state.focus {
+        DuressFocus::Status => match key {
+            KeyCode::Char('p') if app.duress_state.password_enabled => {
+                // Start PIN setup
+                app.duress_state.pin_input.clear();
+                app.duress_state.focus = DuressFocus::PinSetup;
+                app.input_mode = InputMode::Editing;
+            }
+            KeyCode::Char('a') if app.duress_state.enabled => {
+                // Configure alert settings
+                app.duress_state.focus = DuressFocus::ContactIds;
+                app.input_mode = InputMode::Editing;
+            }
+            KeyCode::Char('l') if app.duress_state.enabled => {
+                // Toggle location
+                app.duress_state.include_location = !app.duress_state.include_location;
+                if app.duress_state.alert_contact_count > 0 {
+                    let ids: Vec<String> = app
+                        .duress_state
+                        .contact_ids_input
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty())
+                        .collect();
+                    let settings = vauchi_core::api::DuressSettings {
+                        alert_contact_ids: ids,
+                        alert_message: app.duress_state.message_input.clone(),
+                        include_location: app.duress_state.include_location,
+                    };
+                    let _ = app.backend.save_duress_settings(&settings);
+                }
+                app.set_status(format!(
+                    "Location: {}",
+                    if app.duress_state.include_location {
+                        "included"
+                    } else {
+                        "excluded"
+                    }
+                ));
+            }
+            KeyCode::Char('x') if app.duress_state.enabled => {
+                // Disable duress mode
+                match app.backend.disable_duress() {
+                    Ok(()) => {
+                        let _ = app.backend.delete_duress_settings();
+                        refresh_duress_state(app);
+                        app.set_status("Duress mode disabled");
+                    }
+                    Err(e) => app.set_status(format!("Error: {}", e)),
+                }
+            }
+            _ => {}
+        },
+        DuressFocus::PinSetup => match key {
+            KeyCode::Char(c) => {
+                app.duress_state.pin_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.duress_state.pin_input.pop();
+            }
+            KeyCode::Enter => {
+                let pin = app.duress_state.pin_input.clone();
+                if pin.is_empty() {
+                    app.set_status("PIN cannot be empty");
+                } else {
+                    match app.backend.setup_duress_password(&pin) {
+                        Ok(()) => {
+                            app.duress_state.enabled = true;
+                            app.duress_state.pin_input.clear();
+                            app.duress_state.focus = DuressFocus::Status;
+                            app.input_mode = InputMode::Normal;
+                            app.set_status("Duress PIN configured");
+                        }
+                        Err(e) => {
+                            app.duress_state.pin_input.clear();
+                            app.set_status(format!("Error: {}", e));
+                        }
+                    }
+                }
+            }
+            KeyCode::Esc => {
+                app.duress_state.pin_input.clear();
+                app.duress_state.focus = DuressFocus::Status;
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        },
+        DuressFocus::ContactIds => match key {
+            KeyCode::Char(c) => {
+                app.duress_state.contact_ids_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.duress_state.contact_ids_input.pop();
+            }
+            KeyCode::Tab | KeyCode::Enter => {
+                // Move to message editing
+                if app.duress_state.message_input.is_empty() {
+                    app.duress_state.message_input =
+                        "Duress alert — contact may be under coercion".to_string();
+                }
+                app.duress_state.focus = DuressFocus::Message;
+            }
+            KeyCode::Esc => {
+                app.duress_state.focus = DuressFocus::Status;
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        },
+        DuressFocus::Message => match key {
+            KeyCode::Char(c) => {
+                app.duress_state.message_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.duress_state.message_input.pop();
+            }
+            KeyCode::Enter => {
+                // Save alert settings
+                let ids: Vec<String> = app
+                    .duress_state
+                    .contact_ids_input
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                if ids.is_empty() {
+                    app.set_status("At least one contact ID is required");
+                } else {
+                    let settings = vauchi_core::api::DuressSettings {
+                        alert_contact_ids: ids.clone(),
+                        alert_message: app.duress_state.message_input.clone(),
+                        include_location: app.duress_state.include_location,
+                    };
+                    match app.backend.save_duress_settings(&settings) {
+                        Ok(()) => {
+                            app.duress_state.alert_contact_count = ids.len();
+                            app.duress_state.focus = DuressFocus::Status;
+                            app.input_mode = InputMode::Normal;
+                            app.set_status(format!(
+                                "Duress alerts configured ({} contacts)",
+                                ids.len()
+                            ));
+                        }
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+            }
+            KeyCode::Esc => {
+                app.duress_state.focus = DuressFocus::Status;
                 app.input_mode = InputMode::Normal;
             }
             _ => {}

@@ -57,6 +57,8 @@ pub enum Screen {
     ActionMenu,
     /// Emergency broadcast configuration screen
     Emergency,
+    /// Duress PIN and alert configuration screen
+    Duress,
 }
 
 /// Input mode for text entry.
@@ -146,6 +148,41 @@ pub enum EmergencyFocus {
     Message,
 }
 
+/// Duress PIN and alert configuration screen state.
+#[derive(Debug, Clone, Default)]
+pub struct DuressState {
+    /// Whether an app password is configured (required for duress).
+    pub password_enabled: bool,
+    /// Whether duress mode is enabled.
+    pub enabled: bool,
+    /// PIN input for setup.
+    pub pin_input: String,
+    /// Trusted contact IDs (comma-separated in input).
+    pub contact_ids_input: String,
+    /// Alert message.
+    pub message_input: String,
+    /// Whether to include location in alerts.
+    pub include_location: bool,
+    /// Number of alert contacts (for display).
+    pub alert_contact_count: usize,
+    /// Current input focus.
+    pub focus: DuressFocus,
+}
+
+/// Focus states for the duress screen.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum DuressFocus {
+    #[default]
+    /// Viewing status (not editing).
+    Status,
+    /// Entering a new duress PIN.
+    PinSetup,
+    /// Editing alert contact IDs.
+    ContactIds,
+    /// Editing alert message.
+    Message,
+}
+
 /// Application state.
 #[allow(dead_code)]
 pub struct App {
@@ -203,6 +240,8 @@ pub struct App {
     pub action_menu_state: ActionMenuState,
     /// Emergency broadcast state
     pub emergency_state: EmergencyState,
+    /// Duress PIN and alert state
+    pub duress_state: DuressState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -402,6 +441,7 @@ impl App {
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
             emergency_state: EmergencyState::default(),
+            duress_state: DuressState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,
@@ -484,6 +524,10 @@ impl App {
             Screen::Emergency => {
                 self.screen = Screen::Settings;
                 self.emergency_state = EmergencyState::default();
+            }
+            Screen::Duress => {
+                self.screen = Screen::Settings;
+                self.duress_state = DuressState::default();
             }
             // From Backup, go back to Setup if no identity, otherwise Home
             Screen::Backup => {

@@ -16,8 +16,8 @@ use ratatui::Terminal;
 use tempfile::TempDir;
 
 use vauchi_tui::app::{
-    AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState, EditFieldState,
-    EditNameState, EditRelayUrlState, PrivacyState, Screen, SyncState, TorState,
+    AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState, DuressState,
+    EditFieldState, EditNameState, EditRelayUrlState, PrivacyState, Screen, SyncState, TorState,
 };
 use vauchi_tui::backend::Backend;
 
@@ -387,4 +387,36 @@ fn test_snapshot_backup_import() {
     };
     let output = render_to_string(&mut app);
     insta::assert_snapshot!("backup_import", output);
+}
+
+// @scenario: duress:View duress configuration
+#[test]
+fn test_snapshot_duress_not_configured() {
+    let (mut app, _tmp) = create_app_with_identity();
+    app.screen = Screen::Duress;
+    app.duress_state = DuressState {
+        password_enabled: false,
+        enabled: false,
+        ..DuressState::default()
+    };
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("duress_not_configured", output);
+}
+
+// @scenario: duress:View duress enabled state
+#[test]
+fn test_snapshot_duress_enabled() {
+    let (mut app, _tmp) = create_app_with_identity();
+    app.screen = Screen::Duress;
+    app.duress_state = DuressState {
+        password_enabled: true,
+        enabled: true,
+        contact_ids_input: "abc123, def456".to_string(),
+        message_input: "Duress alert — contact may be under coercion".to_string(),
+        include_location: true,
+        alert_contact_count: 2,
+        ..DuressState::default()
+    };
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("duress_enabled", output);
 }

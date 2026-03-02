@@ -453,3 +453,44 @@ fn test_delivery_state_defaults() {
     assert_eq!(app.delivery_state.failed, 0);
     assert!(app.delivery_state.last_result.is_none());
 }
+
+// ============================================================================
+// Duress screen tests
+// ============================================================================
+
+#[test]
+fn test_go_back_from_duress_returns_to_settings() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Duress);
+    assert_eq!(app.screen, Screen::Duress);
+    app.go_back();
+    assert_eq!(app.screen, Screen::Settings);
+}
+
+#[test]
+fn test_settings_shift_d_navigates_to_duress() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Settings);
+    let action = handle_key(&mut app, KeyCode::Char('D'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Duress);
+}
+
+#[test]
+fn test_duress_state_defaults() {
+    let (app, _dir) = create_app_with_identity();
+    assert!(!app.duress_state.enabled);
+    assert!(!app.duress_state.password_enabled);
+    assert!(app.duress_state.pin_input.is_empty());
+    assert!(app.duress_state.contact_ids_input.is_empty());
+    assert_eq!(app.duress_state.alert_contact_count, 0);
+}
+
+#[test]
+fn test_duress_esc_in_status_goes_back() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Duress);
+    let action = handle_key(&mut app, KeyCode::Esc);
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Settings);
+}

@@ -69,6 +69,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
          \x20 [r] {recovery}\n\
          \x20 [t] {tor}\n\
          \x20 [e] {emergency}\n\
+         \x20 [D] Duress PIN\n\
          \x20 [p] {privacy}\n\
          \x20 [s] {support}\n\n\
          {help_support}:\n\
