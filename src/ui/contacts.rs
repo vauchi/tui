@@ -265,7 +265,7 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
 
             // Help line
             let help = Paragraph::new(
-                "f=verify  t=trust  v=visibility  V=validate  R=revoke  x=delete  o/Enter=open  Esc=back",
+                "f=verify  t=trust  h=hide  v=visibility  V=validate  R=revoke  x=delete  o/Enter=open  Esc=back",
             )
             .style(Style::default().fg(app.theme.fg_secondary));
             f.render_widget(help, chunks[3]);

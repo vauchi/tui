@@ -446,6 +446,32 @@ fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 }
             }
         }
+        KeyCode::Char('h') => {
+            // Toggle hide/unhide contact
+            if let Ok(contacts) = app.backend.list_contacts() {
+                if let Some(contact) = contacts.get(app.selected_contact) {
+                    match app.backend.is_contact_hidden(&contact.id) {
+                        Ok(true) => match app.backend.unhide_contact(&contact.id) {
+                            Ok(()) => {
+                                app.set_status(format!("{} is now visible", contact.display_name));
+                            }
+                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        },
+                        Ok(false) => match app.backend.hide_contact(&contact.id) {
+                            Ok(()) => {
+                                app.set_status(format!(
+                                    "{} hidden from contact list",
+                                    contact.display_name
+                                ));
+                                app.go_back();
+                            }
+                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        },
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                }
+            }
+        }
         KeyCode::Char('x') | KeyCode::Delete => {
             // Delete contact
             if let Ok(contacts) = app.backend.list_contacts() {

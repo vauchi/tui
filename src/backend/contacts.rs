@@ -501,6 +501,70 @@ impl Backend {
         })
     }
 
+    /// Hide a contact from the default contact list.
+    pub fn hide_contact(&self, contact_id: &str) -> Result<()> {
+        let mut contact = self
+            .storage
+            .load_contact(contact_id)
+            .context("Failed to load contact")?
+            .context("Contact not found")?;
+
+        contact.hide();
+
+        self.storage
+            .save_contact(&contact)
+            .context("Failed to save contact")?;
+
+        Ok(())
+    }
+
+    /// Unhide a previously hidden contact.
+    pub fn unhide_contact(&self, contact_id: &str) -> Result<()> {
+        let mut contact = self
+            .storage
+            .load_contact(contact_id)
+            .context("Failed to load contact")?
+            .context("Contact not found")?;
+
+        contact.unhide();
+
+        self.storage
+            .save_contact(&contact)
+            .context("Failed to save contact")?;
+
+        Ok(())
+    }
+
+    /// List hidden contacts.
+    pub fn list_hidden_contacts(&self) -> Result<Vec<ContactInfo>> {
+        let contacts = self
+            .storage
+            .list_contacts()
+            .context("Failed to list contacts")?;
+
+        Ok(contacts
+            .into_iter()
+            .filter(|c| c.is_hidden())
+            .map(|c| ContactInfo {
+                id: c.id().to_string(),
+                display_name: c.display_name().to_string(),
+                verified: c.is_fingerprint_verified(),
+                recovery_trusted: c.is_recovery_trusted(),
+            })
+            .collect())
+    }
+
+    /// Check if a contact is hidden.
+    pub fn is_contact_hidden(&self, contact_id: &str) -> Result<bool> {
+        let contact = self
+            .storage
+            .load_contact(contact_id)
+            .context("Failed to load contact")?
+            .context("Contact not found")?;
+
+        Ok(contact.is_hidden())
+    }
+
     /// Mark a contact's fingerprint as verified.
     pub fn verify_contact_fingerprint(&self, contact_id: &str) -> Result<()> {
         let mut contact = self
