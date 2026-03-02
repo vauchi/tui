@@ -2,585 +2,27 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! Keyboard Input Handling
+//! Feature screen handlers: exchange, settings, devices, recovery, delivery,
+//! sync, tor, privacy, support, backup, emergency, duress.
 
 use crossterm::event::KeyCode;
 
+use crate::app::App;
 use crate::app::{
-    ActionMenuState, AddFieldFocus, App, BackupFocus, BackupMode, DuressFocus, DuressState,
-    EditFieldState, EditNameState, EditRelayUrlState, EmergencyFocus, EmergencyState, InputMode,
-    PrivacyState, Screen,
+    BackupFocus, BackupMode, DuressFocus, DuressState, EditNameState, EditRelayUrlState,
+    EmergencyFocus, EmergencyState, InputMode, PrivacyState, Screen,
 };
-use crate::backend::{Backend, FIELD_TYPES};
 use vauchi_core::aha_moments::AhaMomentType;
 use vauchi_core::identity::password::validate_password;
 
-/// Action to take after handling input.
-pub enum Action {
-    Continue,
-    Quit,
-}
-
-/// Handle a key press.
-pub fn handle_key(app: &mut App, key: KeyCode) -> Action {
-    match app.input_mode {
-        InputMode::Normal => handle_normal_mode(app, key),
-        InputMode::Editing => handle_editing_mode(app, key),
-    }
-}
-
-fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
-    // Don't process global keys if in contact search mode
-    if app.contact_search_mode && app.screen == Screen::Contacts {
-        handle_contacts_keys(app, key);
-        return Action::Continue;
-    }
-
-    // Global keys
-    match key {
-        KeyCode::Char('q') => return Action::Quit,
-        KeyCode::Char('?') => {
-            app.goto(Screen::Help);
-            return Action::Continue;
-        }
-        KeyCode::Esc => {
-            app.go_back();
-            return Action::Continue;
-        }
-        _ => {}
-    }
-
-    // Screen-specific keys
-    match app.screen {
-        Screen::Setup => handle_setup_keys(app, key),
-        Screen::Home => handle_home_keys(app, key),
-        Screen::Contacts => handle_contacts_keys(app, key),
-        Screen::ContactDetail => handle_contact_detail_keys(app, key),
-        Screen::ContactVisibility => handle_visibility_keys(app, key),
-        Screen::Exchange => handle_exchange_keys(app, key),
-        Screen::Settings => handle_settings_keys(app, key),
-        Screen::Help => handle_help_keys(app, key),
-        Screen::AddField => handle_add_field_keys(app, key),
-        Screen::EditField => handle_edit_field_keys(app, key),
-        Screen::EditName => handle_edit_name_keys(app, key),
-        Screen::EditRelayUrl => handle_edit_relay_url_keys(app, key),
-        Screen::Devices => handle_devices_keys(app, key),
-        Screen::Recovery => handle_recovery_keys(app, key),
-        Screen::Sync => handle_sync_keys(app, key),
-        Screen::Delivery => handle_delivery_keys(app, key),
-        Screen::Backup => handle_backup_keys(app, key),
-        Screen::TorSettings => handle_tor_settings_keys(app, key),
-        Screen::Privacy => handle_privacy_keys(app, key),
-        Screen::Support => handle_support_keys(app, key),
-        Screen::ActionMenu => handle_action_menu_keys(app, key),
-        Screen::Emergency => handle_emergency_keys(app, key),
-        Screen::Duress => handle_duress_keys(app, key),
-    }
-
-    Action::Continue
-}
-
-fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
-    match key {
-        KeyCode::Esc => {
-            app.input_mode = InputMode::Normal;
-        }
-        KeyCode::Enter => {
-            // Submit the input
-            app.input_mode = InputMode::Normal;
-        }
-        KeyCode::Backspace => match app.screen {
-            Screen::AddField => match app.add_field_state.focus {
-                AddFieldFocus::Label => {
-                    app.add_field_state.label.pop();
-                }
-                AddFieldFocus::Value => {
-                    app.add_field_state.value.pop();
-                }
-                _ => {}
-            },
-            Screen::EditField => {
-                app.edit_field_state.new_value.pop();
-            }
-            Screen::EditName => {
-                app.edit_name_state.new_name.pop();
-            }
-            Screen::EditRelayUrl => {
-                app.edit_relay_url_state.new_url.pop();
-            }
-            Screen::Backup => match app.backup_state.focus {
-                BackupFocus::Password => {
-                    app.backup_state.password.pop();
-                }
-                BackupFocus::Confirm => {
-                    app.backup_state.confirm_password.pop();
-                }
-                BackupFocus::Data => {
-                    app.backup_state.backup_data.pop();
-                }
-            },
-            _ => {
-                app.input_buffer.pop();
-            }
-        },
-        KeyCode::Char(c) => match app.screen {
-            Screen::AddField => match app.add_field_state.focus {
-                AddFieldFocus::Label => app.add_field_state.label.push(c),
-                AddFieldFocus::Value => app.add_field_state.value.push(c),
-                _ => {}
-            },
-            Screen::EditField => app.edit_field_state.new_value.push(c),
-            Screen::EditName => app.edit_name_state.new_name.push(c),
-            Screen::EditRelayUrl => app.edit_relay_url_state.new_url.push(c),
-            Screen::Backup => match app.backup_state.focus {
-                BackupFocus::Password => app.backup_state.password.push(c),
-                BackupFocus::Confirm => app.backup_state.confirm_password.push(c),
-                BackupFocus::Data => app.backup_state.backup_data.push(c),
-            },
-            _ => app.input_buffer.push(c),
-        },
-        _ => {}
-    }
-    Action::Continue
-}
-
-fn handle_setup_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('c') => {
-            // Create a new identity with a default name
-            // User can change it later in settings
-            if let Err(e) = app.backend.create_identity("New User") {
-                app.set_status(format!("Failed to create identity: {}", e));
-            } else {
-                if let Some(moment) = app
-                    .backend
-                    .check_aha_moment(AhaMomentType::CardCreationComplete)
-                {
-                    app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                } else {
-                    app.set_status("Identity created! You can edit your name in Settings.");
-                }
-                app.goto(Screen::Home);
-            }
-        }
-        KeyCode::Char('i') => {
-            // Go to backup import
-            app.backup_state.mode = BackupMode::Import;
-            app.backup_state.backup_data.clear();
-            app.backup_state.password.clear();
-            app.backup_state.focus = BackupFocus::Data;
-            app.input_mode = InputMode::Editing;
-            app.goto(Screen::Backup);
-        }
-        _ => {}
-    }
-}
-
-fn handle_home_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('c') => app.goto(Screen::Contacts),
-        KeyCode::Char('s') => app.goto(Screen::Settings),
-        KeyCode::Char('d') => app.goto(Screen::Devices),
-        KeyCode::Char('r') => app.goto(Screen::Recovery),
-        KeyCode::Char('n') => app.goto(Screen::Sync),
-        KeyCode::Char('y') => app.goto(Screen::Delivery),
-        KeyCode::Char('b') => app.goto(Screen::Backup),
-        KeyCode::Char('a') => {
-            app.add_field_state = Default::default();
-            app.goto(Screen::AddField);
-        }
-        KeyCode::Char('e') | KeyCode::Enter => {
-            // Edit selected field
-            if let Ok(fields) = app.backend.get_card_fields() {
-                if let Some(field) = fields.get(app.selected_field) {
-                    app.edit_field_state = EditFieldState {
-                        field_label: field.label.clone(),
-                        field_type: field.field_type.clone(),
-                        new_value: field.value.clone(),
-                    };
-                    app.goto(Screen::EditField);
-                    app.input_mode = InputMode::Editing;
-                } else {
-                    // No fields, open Exchange
-                    app.goto(Screen::Exchange);
-                }
-            }
-        }
-        KeyCode::Char('j') | KeyCode::Down => {
-            let fields = app.backend.get_card_fields().unwrap_or_default();
-            if app.selected_field < fields.len().saturating_sub(1) {
-                app.selected_field += 1;
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            if app.selected_field > 0 {
-                app.selected_field -= 1;
-            }
-        }
-        KeyCode::Char('x') | KeyCode::Delete => {
-            // Delete selected field
-            if let Ok(fields) = app.backend.get_card_fields() {
-                if let Some(field) = fields.get(app.selected_field) {
-                    if app.backend.remove_field(&field.label).is_ok() {
-                        app.set_status("Field removed");
-                        if app.selected_field > 0 {
-                            app.selected_field -= 1;
-                        }
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
-}
-
-fn handle_contacts_keys(app: &mut App, key: KeyCode) {
-    // Handle search mode
-    if app.contact_search_mode {
-        match key {
-            KeyCode::Esc => {
-                app.contact_search_mode = false;
-            }
-            KeyCode::Enter => {
-                app.contact_search_mode = false;
-            }
-            KeyCode::Backspace => {
-                app.contact_search_query.pop();
-                app.selected_contact = 0;
-            }
-            KeyCode::Char(c) => {
-                app.contact_search_query.push(c);
-                app.selected_contact = 0;
-            }
-            _ => {}
-        }
-        return;
-    }
-
-    // Normal navigation mode
-    match key {
-        KeyCode::Char('/') => {
-            app.contact_search_mode = true;
-            app.contact_search_query.clear();
-            app.selected_contact = 0;
-        }
-        KeyCode::Char('j') | KeyCode::Down => {
-            // Count filtered contacts
-            let contacts = app.backend.list_contacts().unwrap_or_default();
-            let filtered_count = if app.contact_search_query.is_empty() {
-                contacts.len()
-            } else {
-                let query = app.contact_search_query.to_lowercase();
-                contacts
-                    .iter()
-                    .filter(|c| c.display_name.to_lowercase().contains(&query))
-                    .count()
-            };
-            if app.selected_contact < filtered_count.saturating_sub(1) {
-                app.selected_contact += 1;
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            if app.selected_contact > 0 {
-                app.selected_contact -= 1;
-            }
-        }
-        KeyCode::Enter => {
-            app.goto(Screen::ContactDetail);
-        }
-        _ => {}
-    }
-}
-
-fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('j') | KeyCode::Down => {
-            // Navigate down through contact fields
-            if let Ok(fields) = app.backend.get_contact_fields(app.selected_contact) {
-                if app.selected_contact_field < fields.len().saturating_sub(1) {
-                    app.selected_contact_field += 1;
-                }
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            // Navigate up through contact fields
-            if app.selected_contact_field > 0 {
-                app.selected_contact_field -= 1;
-            }
-        }
-        KeyCode::Enter | KeyCode::Char('o') => {
-            // Show action menu for the selected field
-            match app
-                .backend
-                .get_secondary_actions(app.selected_contact, app.selected_contact_field)
-            {
-                Ok(actions) if actions.len() > 1 => {
-                    app.action_menu_state = ActionMenuState {
-                        actions,
-                        selected: 0,
-                    };
-                    app.goto(Screen::ActionMenu);
-                }
-                Ok(_) => {
-                    // Single action — execute directly
-                    match app
-                        .backend
-                        .open_contact_field(app.selected_contact, app.selected_contact_field)
-                    {
-                        Ok(msg) => app.set_status(msg),
-                        Err(e) => app.set_status(format!("Error: {}", e)),
-                    }
-                }
-                Err(e) => app.set_status(format!("Error: {}", e)),
-            }
-        }
-        KeyCode::Char('c') => {
-            // Copy field value to clipboard
-            match app
-                .backend
-                .copy_field_to_clipboard(app.selected_contact, app.selected_contact_field)
-            {
-                Ok(msg) => app.set_status(msg),
-                Err(e) => app.set_status(format!("Error: {}", e)),
-            }
-        }
-        KeyCode::Char('v') => {
-            // Open visibility settings for this contact
-            if let Ok(Some(contact)) = app.backend.get_contact_by_index(app.selected_contact) {
-                app.visibility_state.contact_id = Some(contact.id);
-                app.visibility_state.selected_field = 0;
-                app.goto(Screen::ContactVisibility);
-            }
-        }
-        KeyCode::Char('t') => {
-            // Toggle recovery trust
-            if let Ok(contacts) = app.backend.list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    match app.backend.toggle_recovery_trust(&contact.id) {
-                        Ok(true) => app.set_status("Marked as recovery-trusted"),
-                        Ok(false) => app.set_status("Removed recovery trust"),
-                        Err(e) => app.set_status(format!("Error: {}", e)),
-                    }
-                }
-            }
-        }
-        KeyCode::Char('V') => {
-            // Validate selected field
-            if let Ok(contacts) = app.backend.list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if let Ok(fields) = app.backend.get_contact_fields(app.selected_contact) {
-                        if let Some(field) = fields.get(app.selected_contact_field) {
-                            match app.backend.validate_field(
-                                &contact.id,
-                                &field.label,
-                                &field.value,
-                            ) {
-                                Ok(_) => app.set_status(format!(
-                                    "Validated {} for {}",
-                                    field.label, contact.display_name
-                                )),
-                                Err(e) => app.set_status(format!("Error: {}", e)),
-                            }
-                        } else {
-                            app.set_status("No field selected");
-                        }
-                    } else {
-                        app.set_status("No fields available");
-                    }
-                } else {
-                    app.set_status("No contact selected");
-                }
-            } else {
-                app.set_status("No contacts available");
-            }
-        }
-        KeyCode::Char('R') => {
-            // Revoke validation on selected field
-            if let Ok(contacts) = app.backend.list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if let Ok(fields) = app.backend.get_contact_fields(app.selected_contact) {
-                        if let Some(field) = fields.get(app.selected_contact_field) {
-                            match app
-                                .backend
-                                .revoke_field_validation(&contact.id, &field.label)
-                            {
-                                Ok(true) => app
-                                    .set_status(format!("Revoked validation for {}", field.label)),
-                                Ok(false) => app.set_status("No validation to revoke"),
-                                Err(e) => app.set_status(format!("Error: {}", e)),
-                            }
-                        } else {
-                            app.set_status("No field selected");
-                        }
-                    } else {
-                        app.set_status("No fields available");
-                    }
-                } else {
-                    app.set_status("No contact selected");
-                }
-            } else {
-                app.set_status("No contacts available");
-            }
-        }
-        KeyCode::Char('f') => {
-            // Show fingerprint and verify
-            if let Ok(contacts) = app.backend.list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    match app.backend.get_contact_fingerprint(&contact.id) {
-                        Ok(fp) => {
-                            if fp.is_verified {
-                                app.set_status(format!(
-                                    "Already verified. Theirs: {}  Ours: {}",
-                                    fp.their_fingerprint, fp.our_fingerprint
-                                ));
-                            } else {
-                                match app.backend.verify_contact_fingerprint(&contact.id) {
-                                    Ok(()) => app.set_status(format!(
-                                        "Verified! Theirs: {}  Ours: {}",
-                                        fp.their_fingerprint, fp.our_fingerprint
-                                    )),
-                                    Err(e) => app.set_status(format!("Error: {}", e)),
-                                }
-                            }
-                        }
-                        Err(e) => app.set_status(format!("Error: {}", e)),
-                    }
-                }
-            }
-        }
-        KeyCode::Char('h') => {
-            // Toggle hide/unhide contact
-            if let Ok(contacts) = app.backend.list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    match app.backend.is_contact_hidden(&contact.id) {
-                        Ok(true) => match app.backend.unhide_contact(&contact.id) {
-                            Ok(()) => {
-                                app.set_status(format!("{} is now visible", contact.display_name));
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
-                        },
-                        Ok(false) => match app.backend.hide_contact(&contact.id) {
-                            Ok(()) => {
-                                app.set_status(format!(
-                                    "{} hidden from contact list",
-                                    contact.display_name
-                                ));
-                                app.go_back();
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
-                        },
-                        Err(e) => app.set_status(format!("Error: {}", e)),
-                    }
-                }
-            }
-        }
-        KeyCode::Char('x') | KeyCode::Delete => {
-            // Delete contact
-            if let Ok(contacts) = app.backend.list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if app.backend.remove_contact(&contact.id).is_ok() {
-                        app.set_status("Contact removed");
-                        app.go_back();
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
-}
-
-fn handle_action_menu_keys(app: &mut App, key: KeyCode) {
-    use vauchi_core::contact_card::ContactAction;
-
-    let action_count = app.action_menu_state.actions.len();
-    match key {
-        KeyCode::Char('j') | KeyCode::Down => {
-            if app.action_menu_state.selected < action_count.saturating_sub(1) {
-                app.action_menu_state.selected += 1;
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            if app.action_menu_state.selected > 0 {
-                app.action_menu_state.selected -= 1;
-            }
-        }
-        KeyCode::Enter => {
-            if let Some((_, action)) = app
-                .action_menu_state
-                .actions
-                .get(app.action_menu_state.selected)
-            {
-                let result = if matches!(action, ContactAction::CopyToClipboard) {
-                    app.backend
-                        .copy_field_to_clipboard(app.selected_contact, app.selected_contact_field)
-                } else {
-                    app.backend.execute_action(action)
-                };
-                match result {
-                    Ok(msg) => app.set_status(msg),
-                    Err(e) => app.set_status(format!("Error: {}", e)),
-                }
-            }
-            app.go_back();
-        }
-        KeyCode::Esc | KeyCode::Char('q') => {
-            app.go_back();
-        }
-        _ => {}
-    }
-}
-
-fn handle_visibility_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('j') | KeyCode::Down => {
-            if let Some(ref contact_id) = app.visibility_state.contact_id {
-                if let Ok(fields) = app.backend.get_contact_visibility(contact_id) {
-                    if app.visibility_state.selected_field < fields.len().saturating_sub(1) {
-                        app.visibility_state.selected_field += 1;
-                    }
-                }
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            if app.visibility_state.selected_field > 0 {
-                app.visibility_state.selected_field -= 1;
-            }
-        }
-        KeyCode::Enter | KeyCode::Char(' ') => {
-            // Toggle visibility for selected field
-            if let Some(ref contact_id) = app.visibility_state.contact_id.clone() {
-                if let Ok(fields) = app.backend.get_contact_visibility(contact_id) {
-                    if let Some(field) = fields.get(app.visibility_state.selected_field) {
-                        match app
-                            .backend
-                            .toggle_field_visibility(contact_id, &field.field_label)
-                        {
-                            Ok(now_visible) => {
-                                let status = if now_visible {
-                                    "now visible"
-                                } else {
-                                    "now hidden"
-                                };
-                                app.set_status(format!("Field {} {}", field.field_label, status));
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
-                        }
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
-}
-
-fn handle_exchange_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_exchange_keys(app: &mut App, key: KeyCode) {
     use crate::ui::exchange::regenerate_qr;
     if let KeyCode::Char('r') = key {
         regenerate_qr(app);
     }
 }
 
-fn handle_settings_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('n') | KeyCode::Enter => {
             // Edit display name
@@ -643,150 +85,7 @@ fn handle_settings_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_help_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('q') | KeyCode::Esc | KeyCode::Enter => {
-            app.go_back();
-        }
-        _ => {}
-    }
-}
-
-fn handle_add_field_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Tab => {
-            // Cycle through fields
-            app.add_field_state.focus = match app.add_field_state.focus {
-                AddFieldFocus::Type => AddFieldFocus::Label,
-                AddFieldFocus::Label => AddFieldFocus::Value,
-                AddFieldFocus::Value => AddFieldFocus::Type,
-            };
-            app.input_mode = if app.add_field_state.focus == AddFieldFocus::Type {
-                InputMode::Normal
-            } else {
-                InputMode::Editing
-            };
-        }
-        KeyCode::Enter => {
-            if app.add_field_state.focus == AddFieldFocus::Value {
-                // Submit the field
-                let field_type =
-                    Backend::parse_field_type(FIELD_TYPES[app.add_field_state.field_type_index]);
-                if let Err(e) = app.backend.add_field(
-                    field_type,
-                    &app.add_field_state.label,
-                    &app.add_field_state.value,
-                ) {
-                    app.set_status(format!("Error: {}", e));
-                } else {
-                    app.set_status("Field added");
-                    app.go_back();
-                }
-            } else {
-                // Move to next field
-                app.add_field_state.focus = match app.add_field_state.focus {
-                    AddFieldFocus::Type => {
-                        app.input_mode = InputMode::Editing;
-                        AddFieldFocus::Label
-                    }
-                    AddFieldFocus::Label => AddFieldFocus::Value,
-                    AddFieldFocus::Value => AddFieldFocus::Value,
-                };
-            }
-        }
-        KeyCode::Left | KeyCode::Char('h') if app.add_field_state.focus == AddFieldFocus::Type => {
-            if app.add_field_state.field_type_index > 0 {
-                app.add_field_state.field_type_index -= 1;
-            }
-        }
-        KeyCode::Right | KeyCode::Char('l') if app.add_field_state.focus == AddFieldFocus::Type => {
-            if app.add_field_state.field_type_index < FIELD_TYPES.len() - 1 {
-                app.add_field_state.field_type_index += 1;
-            }
-        }
-        _ => {}
-    }
-}
-
-fn handle_edit_field_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Enter => {
-            // Save the edited field
-            let label = app.edit_field_state.field_label.clone();
-            let new_value = app.edit_field_state.new_value.trim().to_string();
-            if new_value.is_empty() {
-                app.set_status("Value cannot be empty");
-            } else {
-                match app.backend.update_field(&label, &new_value) {
-                    Ok(()) => {
-                        if let Some(moment) = app.backend.check_aha_moment(AhaMomentType::FirstEdit)
-                        {
-                            app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                        } else {
-                            app.set_status("Field updated");
-                        }
-                        app.go_back();
-                    }
-                    Err(e) => app.set_status(format!("Error: {}", e)),
-                }
-            }
-        }
-        KeyCode::Esc => {
-            app.go_back();
-        }
-        _ => {}
-    }
-}
-
-fn handle_edit_name_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Enter => {
-            // Save the new display name
-            let new_name = app.edit_name_state.new_name.trim().to_string();
-            if new_name.is_empty() {
-                app.set_status("Name cannot be empty");
-            } else {
-                match app.backend.update_display_name(&new_name) {
-                    Ok(()) => {
-                        app.set_status("Display name updated");
-                        app.go_back();
-                    }
-                    Err(e) => app.set_status(format!("Error: {}", e)),
-                }
-            }
-        }
-        KeyCode::Esc => {
-            app.go_back();
-        }
-        _ => {}
-    }
-}
-
-fn handle_edit_relay_url_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Enter => {
-            // Save the new relay URL
-            let new_url = app.edit_relay_url_state.new_url.trim().to_string();
-            if new_url.is_empty() {
-                app.set_status("URL cannot be empty");
-            } else {
-                match app.backend.set_relay_url(&new_url) {
-                    Ok(()) => {
-                        app.set_status("Relay URL updated");
-                        app.go_back();
-                    }
-                    Err(e) => app.set_status(format!("Error: {}", e)),
-                }
-            }
-        }
-        KeyCode::Esc => {
-            app.go_back();
-        }
-        _ => {}
-    }
-}
-
-fn handle_devices_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_devices_keys(app: &mut App, key: KeyCode) {
     // Handle revoke confirmation overlay
     if app.revoke_confirm {
         match key {
@@ -850,7 +149,7 @@ fn handle_devices_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_recovery_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_recovery_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('c') => {
             app.set_status("Create claim: use CLI 'vauchi recovery claim <old-pk>'");
@@ -872,7 +171,7 @@ fn handle_recovery_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_delivery_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_delivery_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('r') => {
             // Run retry tick
@@ -889,7 +188,7 @@ fn handle_delivery_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_sync_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('s') => {
             // Start sync
@@ -1005,7 +304,7 @@ fn refresh_tor_state(app: &mut App) {
     }
 }
 
-fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('e') => {
             // Enable Tor
@@ -1073,7 +372,7 @@ fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_privacy_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
     // Total items: 0=Export, 1=Deletion, 2..5=Consent types
     let total_items = 6;
 
@@ -1171,7 +470,7 @@ fn handle_privacy_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_support_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_support_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('1') => {
             if open::that("https://github.com/sponsors/vauchi").is_err() {
@@ -1187,7 +486,7 @@ fn handle_support_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_backup_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_backup_keys(app: &mut App, key: KeyCode) {
     match app.backup_state.mode {
         BackupMode::Menu => match key {
             KeyCode::Char('e') => {
@@ -1307,7 +606,7 @@ fn refresh_emergency_state(app: &mut App) {
     }
 }
 
-fn handle_emergency_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
     match app.emergency_state.focus {
         EmergencyFocus::Status => match key {
             KeyCode::Char('c') => {
@@ -1455,7 +754,7 @@ fn refresh_duress_state(app: &mut App) {
     };
 }
 
-fn handle_duress_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
     match app.duress_state.focus {
         DuressFocus::Status => match key {
             KeyCode::Char('p') if app.duress_state.password_enabled => {
