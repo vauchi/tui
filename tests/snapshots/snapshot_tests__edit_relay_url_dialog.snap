@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 335
 expression: output
 ---
 Edit Relay URL
