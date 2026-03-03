@@ -194,13 +194,29 @@ impl Backend {
     }
 
     /// Open a contact field in the system default app.
+    ///
+    /// If opening fails, automatically copies the field value to the clipboard as a fallback.
     pub fn open_contact_field(&self, contact_index: usize, field_index: usize) -> Result<String> {
         let fields = self.get_contact_fields(contact_index)?;
         let field = fields.get(field_index).context("Field not found")?;
 
         if let Some(ref uri) = field.uri {
-            open::that(uri).context("Failed to open URI")?;
-            Ok(format!("Opened {} in {}", field.label, field.action_type))
+            match open::that(uri) {
+                Ok(_) => Ok(format!("Opened {} in {}", field.label, field.action_type)),
+                Err(e) => {
+                    // Fallback: copy value to clipboard
+                    match arboard::Clipboard::new().and_then(|mut cb| cb.set_text(&field.value)) {
+                        Ok(_) => Ok(format!(
+                            "Could not open {} ({}). Copied to clipboard.",
+                            field.label, e
+                        )),
+                        Err(_) => Ok(format!(
+                            "Could not open {} ({}). Value: {}",
+                            field.label, e, field.value
+                        )),
+                    }
+                }
+            }
         } else {
             Ok(format!("No action available for {}", field.label))
         }
@@ -241,25 +257,41 @@ impl Backend {
             .collect())
     }
 
+    /// Attempts to copy a value to the clipboard as a fallback when opening fails.
+    fn clipboard_fallback(value: &str, action_name: &str, error: std::io::Error) -> Result<String> {
+        match arboard::Clipboard::new().and_then(|mut cb| cb.set_text(value)) {
+            Ok(_) => Ok(format!(
+                "Could not open {} ({}). Copied to clipboard.",
+                action_name, error
+            )),
+            Err(_) => Ok(format!(
+                "Could not open {} ({}). Value: {}",
+                action_name, error, value
+            )),
+        }
+    }
+
     /// Execute a contact action (open URI or copy to clipboard).
+    ///
+    /// If opening fails, automatically copies the relevant value to the clipboard as a fallback.
     pub fn execute_action(&self, action: &ContactAction) -> Result<String> {
         match action {
-            ContactAction::Call(v) => {
-                open::that(format!("tel:{}", v)).context("Failed to open dialer")?;
-                Ok("Opened dialer".to_string())
-            }
-            ContactAction::SendSms(v) => {
-                open::that(format!("sms:{}", v)).context("Failed to open messaging")?;
-                Ok("Opened messaging".to_string())
-            }
-            ContactAction::SendEmail(v) => {
-                open::that(format!("mailto:{}", v)).context("Failed to open email")?;
-                Ok("Opened email client".to_string())
-            }
-            ContactAction::OpenUrl(v) => {
-                open::that(v).context("Failed to open browser")?;
-                Ok("Opened browser".to_string())
-            }
+            ContactAction::Call(v) => match open::that(format!("tel:{}", v)) {
+                Ok(_) => Ok("Opened dialer".to_string()),
+                Err(e) => Self::clipboard_fallback(v, "dialer", e),
+            },
+            ContactAction::SendSms(v) => match open::that(format!("sms:{}", v)) {
+                Ok(_) => Ok("Opened messaging".to_string()),
+                Err(e) => Self::clipboard_fallback(v, "messaging", e),
+            },
+            ContactAction::SendEmail(v) => match open::that(format!("mailto:{}", v)) {
+                Ok(_) => Ok("Opened email client".to_string()),
+                Err(e) => Self::clipboard_fallback(v, "email client", e),
+            },
+            ContactAction::OpenUrl(v) => match open::that(v) {
+                Ok(_) => Ok("Opened browser".to_string()),
+                Err(e) => Self::clipboard_fallback(v, "browser", e),
+            },
             ContactAction::OpenMap(v) => {
                 let encoded: String = v
                     .chars()
@@ -273,12 +305,13 @@ impl Backend {
                         }
                     })
                     .collect();
-                open::that(format!(
+                match open::that(format!(
                     "https://www.openstreetmap.org/search?query={}",
                     encoded
-                ))
-                .context("Failed to open maps")?;
-                Ok("Opened maps".to_string())
+                )) {
+                    Ok(_) => Ok("Opened maps".to_string()),
+                    Err(e) => Self::clipboard_fallback(v, "maps", e),
+                }
             }
             ContactAction::GetDirections(v) => {
                 let encoded: String = v
@@ -293,12 +326,13 @@ impl Backend {
                         }
                     })
                     .collect();
-                open::that(format!(
+                match open::that(format!(
                     "https://www.openstreetmap.org/directions?route=&to={}",
                     encoded
-                ))
-                .context("Failed to open directions")?;
-                Ok("Opened directions".to_string())
+                )) {
+                    Ok(_) => Ok("Opened directions".to_string()),
+                    Err(e) => Self::clipboard_fallback(v, "directions", e),
+                }
             }
             ContactAction::CopyToClipboard => {
                 anyhow::bail!("CopyToClipboard should be handled by the caller with field value")
