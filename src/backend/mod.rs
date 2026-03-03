@@ -151,6 +151,22 @@ fn load_or_generate_backup_password(data_dir: &Path) -> Result<String> {
     Ok(password)
 }
 
+/// Derives a per-data-dir keychain key name using FNV-1a hash.
+///
+/// Ensures that TUI instances with different `--data-dir` values get
+/// separate OS keychain entries, preventing key collisions (T-M4).
+#[cfg(feature = "secure-storage")]
+fn keychain_key_name(data_dir: &Path) -> String {
+    let path_str = data_dir.to_string_lossy();
+    // FNV-1a hash — stable, well-defined algorithm (matches CLI implementation)
+    let mut hash: u64 = 0xcbf29ce484222325; // FNV offset basis
+    for byte in path_str.as_bytes() {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(0x100000001b3); // FNV prime
+    }
+    format!("storage_key_{:016x}", hash)
+}
+
 /// Formats a shred report and verification into a display string.
 fn format_shred_summary(
     report: &vauchi_core::api::ShredReport,
@@ -179,16 +195,31 @@ impl Backend {
 
     /// Loads or creates the storage encryption key using SecureStorage.
     ///
-    /// When the `secure-storage` feature is enabled, uses the OS keychain.
+    /// When the `secure-storage` feature is enabled, uses the OS keychain
+    /// with a per-data-dir key name (FNV-1a hash of the path) to prevent
+    /// collisions between TUI instances with different `--data-dir` values.
+    /// Migrates from the legacy fixed `"storage_key"` entry if present.
+    ///
     /// Otherwise, falls back to encrypted file storage.
     #[allow(unused_variables)]
     fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
+        /// Key name for non-keychain (file-based) storage.
         const KEY_NAME: &str = "storage_key";
+
+        /// Legacy fixed keychain key name (pre per-data-dir fix).
+        ///
+        /// Before the per-data-dir fix, all TUI instances shared a single OS
+        /// keychain entry named "storage_key". Concurrent instances with different
+        /// `--data-dir` values would corrupt each other's storage keys (T-M4).
+        #[cfg(feature = "secure-storage")]
+        const LEGACY_KEY_NAME: &str = "storage_key";
 
         #[cfg(feature = "secure-storage")]
         {
             let storage = PlatformKeyring::new("vauchi-tui");
-            match storage.load_key(KEY_NAME) {
+            let key_name = keychain_key_name(data_dir);
+
+            match storage.load_key(&key_name) {
                 Ok(Some(bytes)) if bytes.len() == 32 => {
                     let mut arr = [0u8; 32];
                     arr.copy_from_slice(&bytes);
@@ -198,10 +229,24 @@ impl Backend {
                     anyhow::bail!("Invalid storage key length in keychain");
                 }
                 Ok(None) => {
-                    // Generate and save new key
+                    // Try migrating from the old fixed key name
+                    if let Ok(Some(legacy_bytes)) = storage.load_key(LEGACY_KEY_NAME) {
+                        if legacy_bytes.len() == 32 {
+                            // Migrate: save under new per-dir name, delete legacy entry
+                            storage.save_key(&key_name, &legacy_bytes).map_err(|e| {
+                                anyhow::anyhow!("Failed to migrate keychain key: {}", e)
+                            })?;
+                            let _ = storage.delete_key(LEGACY_KEY_NAME);
+                            let mut arr = [0u8; 32];
+                            arr.copy_from_slice(&legacy_bytes);
+                            return Ok(SymmetricKey::from_bytes(arr));
+                        }
+                    }
+
+                    // No existing key — generate a new one
                     let key = SymmetricKey::generate();
                     storage
-                        .save_key(KEY_NAME, key.as_bytes())
+                        .save_key(&key_name, key.as_bytes())
                         .map_err(|e| anyhow::anyhow!("Failed to save key to keychain: {}", e))?;
                     Ok(key)
                 }
