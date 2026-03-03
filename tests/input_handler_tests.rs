@@ -743,7 +743,7 @@ fn test_create_group_adds_group_to_list() {
 /// @scenario: Delete a group
 #[test]
 fn test_delete_group() {
-    let (mut app, _dir) = create_app_with_identity();
+    let (app, _dir) = create_app_with_identity();
 
     // Create a group
     let group = app
@@ -765,7 +765,7 @@ fn test_delete_group() {
 /// @scenario: Rename a group
 #[test]
 fn test_rename_group() {
-    let (mut app, _dir) = create_app_with_identity();
+    let (app, _dir) = create_app_with_identity();
 
     // Create a group
     let group = app.backend.create_group("Work").expect("create group");
@@ -785,7 +785,7 @@ fn test_rename_group() {
 /// @scenario: Multiple groups can be created
 #[test]
 fn test_multiple_groups() {
-    let (mut app, _dir) = create_app_with_identity();
+    let (app, _dir) = create_app_with_identity();
 
     app.backend.create_group("Friends").expect("create friends");
     app.backend
