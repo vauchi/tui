@@ -10,6 +10,28 @@ use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 use crate::app::{AddFieldFocus, App, InputMode};
 use crate::backend::FIELD_TYPES;
 
+/// Icon for a social network ID (used in the picker list).
+fn social_icon(network_id: &str) -> &'static str {
+    match network_id {
+        "twitter" => "🐦",
+        "instagram" => "📸",
+        "facebook" => "👤",
+        "linkedin" => "💼",
+        "github" => "🐙",
+        "gitlab" => "🦊",
+        "youtube" => "🎬",
+        "twitch" => "🎮",
+        "reddit" => "🗨",
+        "mastodon" => "🐘",
+        "telegram" => "✈",
+        "discord" => "💬",
+        "tiktok" => "🎵",
+        "spotify" => "🎧",
+        "bluesky" => "☁",
+        _ => "🔗",
+    }
+}
+
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -102,6 +124,17 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
 }
 
 pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
+    let is_social = FIELD_TYPES[app.add_field_state.field_type_index] == "Social";
+
+    if is_social {
+        draw_add_social_field(f, area, app);
+    } else {
+        draw_add_generic_field(f, area, app);
+    }
+}
+
+/// Draw the standard add-field dialog (non-social types).
+fn draw_add_generic_field(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -116,20 +149,7 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
     let state = &app.add_field_state;
 
     // Type selector
-    let type_text = format!("< {} >", FIELD_TYPES[state.field_type_index]);
-    let type_style = if state.focus == AddFieldFocus::Type {
-        Style::default()
-            .fg(app.theme.warning)
-            .add_modifier(Modifier::BOLD)
-    } else {
-        Style::default()
-    };
-    let type_para = Paragraph::new(type_text).style(type_style).block(
-        Block::default()
-            .title(app.i18n.t("card.field_type"))
-            .borders(Borders::ALL),
-    );
-    f.render_widget(type_para, chunks[0]);
+    draw_type_selector(f, chunks[0], app);
 
     // Label input
     let label_style = if state.focus == AddFieldFocus::Label {
@@ -152,6 +172,141 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(label_para, chunks[1]);
 
     // Value input
+    draw_value_input(f, chunks[2], app);
+}
+
+/// Draw the social field dialog with a network picker.
+fn draw_add_social_field(f: &mut Frame, area: Rect, app: &App) {
+    let state = &app.add_field_state;
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Type selector
+            Constraint::Min(8),    // Network picker
+            Constraint::Length(3), // Value input (username)
+            Constraint::Length(2), // Help text
+        ])
+        .margin(2)
+        .split(area);
+
+    // Type selector
+    draw_type_selector(f, chunks[0], app);
+
+    // Network picker
+    let picker = &state.social_picker;
+    let picker_style = if state.focus == AddFieldFocus::Network {
+        Style::default()
+            .fg(app.theme.accent)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(app.theme.fg_secondary)
+    };
+
+    if picker.networks.is_empty() {
+        let empty = Paragraph::new("No networks available")
+            .style(Style::default().fg(app.theme.fg_secondary))
+            .block(
+                Block::default()
+                    .title("Social Network")
+                    .borders(Borders::ALL),
+            );
+        f.render_widget(empty, chunks[1]);
+    } else {
+        let items: Vec<ListItem> = picker
+            .networks
+            .iter()
+            .enumerate()
+            .map(|(i, (id, display_name))| {
+                let icon = social_icon(id);
+                let content = format!(" {} {}", icon, display_name);
+                let style = if i == picker.selected && state.focus == AddFieldFocus::Network {
+                    Style::default()
+                        .fg(app.theme.bg)
+                        .bg(app.theme.accent)
+                        .add_modifier(Modifier::BOLD)
+                } else if i == picker.selected {
+                    picker_style
+                } else {
+                    Style::default().fg(app.theme.fg)
+                };
+                ListItem::new(content).style(style)
+            })
+            .collect();
+
+        let border_style = if state.focus == AddFieldFocus::Network {
+            Style::default().fg(app.theme.accent)
+        } else {
+            Style::default().fg(app.theme.fg_secondary)
+        };
+
+        let list = List::new(items).block(
+            Block::default()
+                .title("Social Network [j/k to navigate, Enter to select]")
+                .borders(Borders::ALL)
+                .border_style(border_style),
+        );
+
+        let mut list_state = ListState::default();
+        list_state.select(Some(picker.selected));
+        f.render_stateful_widget(list, chunks[1], &mut list_state);
+    }
+
+    // Value input (username/handle)
+    let value_title = if !state.label.is_empty() {
+        format!("Username ({})", state.label)
+    } else {
+        "Username".to_string()
+    };
+    let value_style = if state.focus == AddFieldFocus::Value {
+        Style::default().fg(app.theme.warning)
+    } else {
+        Style::default()
+    };
+    let value_text = if state.value.is_empty() && state.focus != AddFieldFocus::Value {
+        "Enter username or handle".to_string()
+    } else if state.focus == AddFieldFocus::Value && app.input_mode == InputMode::Editing {
+        format!("{}|", state.value)
+    } else {
+        state.value.clone()
+    };
+    let value_para = Paragraph::new(value_text)
+        .style(value_style)
+        .block(Block::default().title(value_title).borders(Borders::ALL));
+    f.render_widget(value_para, chunks[2]);
+
+    // Help text
+    let help_text = match state.focus {
+        AddFieldFocus::Type => "[←/→] change type  [Tab/Enter] next  [Esc] cancel",
+        AddFieldFocus::Network => "[j/k] navigate  [Enter] select  [Tab] skip  [Esc] cancel",
+        AddFieldFocus::Label | AddFieldFocus::Value => "[Enter] submit  [Tab] next  [Esc] cancel",
+    };
+    let help = Paragraph::new(help_text).style(Style::default().fg(app.theme.fg_secondary));
+    f.render_widget(help, chunks[3]);
+}
+
+/// Draw the field type selector (shared between social and generic).
+fn draw_type_selector(f: &mut Frame, area: Rect, app: &App) {
+    let state = &app.add_field_state;
+    let type_text = format!("< {} >", FIELD_TYPES[state.field_type_index]);
+    let type_style = if state.focus == AddFieldFocus::Type {
+        Style::default()
+            .fg(app.theme.warning)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default()
+    };
+    let type_para = Paragraph::new(type_text).style(type_style).block(
+        Block::default()
+            .title(app.i18n.t("card.field_type"))
+            .borders(Borders::ALL),
+    );
+    f.render_widget(type_para, area);
+}
+
+/// Draw the value input field (shared between social and generic).
+fn draw_value_input(f: &mut Frame, area: Rect, app: &App) {
+    let state = &app.add_field_state;
     let value_style = if state.focus == AddFieldFocus::Value {
         Style::default().fg(app.theme.warning)
     } else {
@@ -169,7 +324,7 @@ pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
             .title(app.i18n.t("card.value"))
             .borders(Borders::ALL),
     );
-    f.render_widget(value_para, chunks[2]);
+    f.render_widget(value_para, area);
 }
 
 pub fn draw_edit_field(f: &mut Frame, area: Rect, app: &App) {

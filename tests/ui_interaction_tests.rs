@@ -204,6 +204,7 @@ fn test_add_field_state_fields() {
         label: "Work Email".to_string(),
         value: "alice@work.com".to_string(),
         focus: AddFieldFocus::Value,
+        ..Default::default()
     };
 
     assert_eq!(state.field_type_index, 2);

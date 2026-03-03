@@ -259,12 +259,25 @@ pub struct AddFieldState {
     pub label: String,
     pub value: String,
     pub focus: AddFieldFocus,
+    /// Social network picker state (used when field type is Social).
+    pub social_picker: SocialPickerState,
+}
+
+/// State for the social network picker.
+#[derive(Debug, Default)]
+pub struct SocialPickerState {
+    /// Available networks (id, display_name) pairs, sorted by display name.
+    pub networks: Vec<(String, String)>,
+    /// Currently selected network index.
+    pub selected: usize,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum AddFieldFocus {
     #[default]
     Type,
+    /// Social network picker (only shown when field type is Social).
+    Network,
     Label,
     Value,
 }

@@ -293,6 +293,7 @@ fn test_snapshot_add_field_dialog() {
         label: String::new(),
         value: String::new(),
         focus: AddFieldFocus::Type,
+        ..Default::default()
     };
     let output = render_to_string(&mut app);
     insta::assert_snapshot!("add_field_dialog", output);

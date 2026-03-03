@@ -526,6 +526,32 @@ impl Backend {
 /// Available field types for selection.
 pub const FIELD_TYPES: &[&str] = &["Email", "Phone", "Website", "Address", "Social", "Custom"];
 
+/// Social network information for the picker.
+#[derive(Debug, Clone)]
+pub struct SocialNetworkInfo {
+    /// Unique identifier (e.g., "twitter", "github").
+    pub id: String,
+    /// Human-readable display name (e.g., "Twitter / X", "GitHub").
+    pub display_name: String,
+}
+
+impl Backend {
+    /// List available social networks from the registry.
+    ///
+    /// Returns networks sorted alphabetically by display name.
+    pub fn list_social_networks() -> Vec<SocialNetworkInfo> {
+        let registry = vauchi_core::social::SocialNetworkRegistry::with_defaults();
+        registry
+            .all()
+            .into_iter()
+            .map(|n| SocialNetworkInfo {
+                id: n.id().to_string(),
+                display_name: n.display_name().to_string(),
+            })
+            .collect()
+    }
+}
+
 // ===========================================================================
 // Backend Tests
 // Trace: features/identity_management.feature, contact_card_management.feature
