@@ -47,6 +47,91 @@ impl Backend {
             .context("Failed to delete emergency config")?;
         Ok(())
     }
+
+    /// Send emergency broadcast to all trusted contacts.
+    ///
+    /// Encrypts alert via each contact's double ratchet and queues as
+    /// a card update (indistinguishable from normal sync on the wire).
+    /// Returns (sent, total) counts.
+    pub fn send_emergency_broadcast(&self) -> Result<(usize, usize)> {
+        use vauchi_core::crypto::SymmetricKey;
+        use vauchi_core::network::EmergencyAlert;
+        use vauchi_core::storage::{PendingUpdate, UpdateStatus};
+
+        let config = self
+            .get_emergency_config()?
+            .ok_or_else(|| anyhow::anyhow!("Emergency broadcast not configured"))?;
+
+        let identity = self
+            .identity
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No identity found"))?;
+
+        let sender_id = identity.public_id();
+        let total = config.trusted_contact_ids.len();
+        let mut sent = 0;
+
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+
+        for contact_id in &config.trusted_contact_ids {
+            let contact = match self.storage.load_contact(contact_id) {
+                Ok(Some(c)) => c,
+                _ => continue,
+            };
+            if contact.is_blocked() {
+                continue;
+            }
+            let (mut ratchet, is_initiator) = match self.storage.load_ratchet_state(contact_id) {
+                Ok(Some(r)) => r,
+                _ => continue,
+            };
+
+            let alert = EmergencyAlert {
+                sender_id: sender_id.clone(),
+                message: config.message.clone(),
+                timestamp: now,
+                location: None,
+            };
+            let alert_bytes = match serde_json::to_vec(&alert) {
+                Ok(b) => b,
+                Err(_) => continue,
+            };
+            let ratchet_msg = match ratchet.encrypt(&alert_bytes) {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            let encrypted = match serde_json::to_vec(&ratchet_msg) {
+                Ok(b) => b,
+                Err(_) => continue,
+            };
+            if self
+                .storage
+                .save_ratchet_state(contact_id, &ratchet, is_initiator)
+                .is_err()
+            {
+                continue;
+            }
+
+            let update_id = hex::encode(&SymmetricKey::generate().as_bytes()[..16]);
+            let update = PendingUpdate {
+                id: update_id,
+                contact_id: contact_id.to_string(),
+                update_type: "card_delta".to_string(),
+                payload: encrypted,
+                created_at: now,
+                retry_count: 0,
+                status: UpdateStatus::Pending,
+            };
+            if self.storage.queue_update(&update).is_ok() {
+                sent += 1;
+            }
+        }
+
+        Ok((sent, total))
+    }
 }
 
 // ================================================================

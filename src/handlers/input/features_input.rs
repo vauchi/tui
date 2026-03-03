@@ -589,6 +589,7 @@ pub(super) fn handle_backup_keys(app: &mut App, key: KeyCode) {
 }
 
 fn refresh_emergency_state(app: &mut App) {
+    let last_broadcast = app.emergency_state.last_broadcast_time;
     match app.backend.get_emergency_config() {
         Ok(Some(config)) => {
             app.emergency_state = EmergencyState {
@@ -598,10 +599,14 @@ fn refresh_emergency_state(app: &mut App) {
                 include_location: config.include_location,
                 trusted_count: config.trusted_contact_ids.len(),
                 focus: EmergencyFocus::Status,
+                last_broadcast_time: last_broadcast,
             };
         }
         _ => {
-            app.emergency_state = EmergencyState::default();
+            app.emergency_state = EmergencyState {
+                last_broadcast_time: last_broadcast,
+                ..EmergencyState::default()
+            };
         }
     }
 }
@@ -609,6 +614,25 @@ fn refresh_emergency_state(app: &mut App) {
 pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
     match app.emergency_state.focus {
         EmergencyFocus::Status => match key {
+            KeyCode::Char('s') => {
+                // Send emergency broadcast (with confirmation)
+                if !app.emergency_state.configured {
+                    app.set_status("Configure emergency broadcast first");
+                    return;
+                }
+                // Rate limit: 60 seconds between broadcasts
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                if let Some(last) = app.emergency_state.last_broadcast_time {
+                    if now.saturating_sub(last) < 60 {
+                        app.set_status("Alert recently sent. Wait before sending again.");
+                        return;
+                    }
+                }
+                app.emergency_state.focus = EmergencyFocus::Confirm;
+            }
             KeyCode::Char('c') => {
                 // Configure: start editing contact IDs
                 if !app.emergency_state.configured {
@@ -655,6 +679,32 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
                         Err(e) => app.set_status(format!("Error: {}", e)),
                     }
                 }
+            }
+            _ => {}
+        },
+        EmergencyFocus::Confirm => match key {
+            KeyCode::Char('y') | KeyCode::Enter => {
+                // Confirmed: send broadcast
+                match app.backend.send_emergency_broadcast() {
+                    Ok((sent, total)) => {
+                        let now = std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .map(|d| d.as_secs())
+                            .unwrap_or(0);
+                        app.emergency_state.last_broadcast_time = Some(now);
+                        app.set_status(format!(
+                            "Emergency broadcast sent: {}/{} contacts reached",
+                            sent, total
+                        ));
+                    }
+                    Err(e) => app.set_status(format!("Broadcast failed: {}", e)),
+                }
+                app.emergency_state.focus = EmergencyFocus::Status;
+            }
+            KeyCode::Char('n') | KeyCode::Esc => {
+                // Cancelled
+                app.emergency_state.focus = EmergencyFocus::Status;
+                app.set_status("Broadcast cancelled");
             }
             _ => {}
         },

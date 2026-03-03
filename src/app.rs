@@ -136,6 +136,8 @@ pub struct EmergencyState {
     pub trusted_count: usize,
     /// Current input focus.
     pub focus: EmergencyFocus,
+    /// Timestamp of last broadcast (for rate limiting).
+    pub last_broadcast_time: Option<u64>,
 }
 
 /// Focus states for the emergency screen.
@@ -148,6 +150,8 @@ pub enum EmergencyFocus {
     ContactIds,
     /// Editing message.
     Message,
+    /// Confirmation before sending broadcast.
+    Confirm,
 }
 
 /// Duress PIN and alert configuration screen state.

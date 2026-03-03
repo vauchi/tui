@@ -90,13 +90,50 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .block(Block::default().borders(Borders::ALL));
     f.render_widget(location, chunks[3]);
 
+    // Confirmation overlay
+    if app.emergency_state.focus == EmergencyFocus::Confirm {
+        let confirm_text = format!(
+            "Send alert to {} contacts? [y] yes  [n/Esc] cancel",
+            app.emergency_state.trusted_count
+        );
+        let confirm = Paragraph::new(confirm_text)
+            .style(
+                Style::default()
+                    .fg(app.theme.warning)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .title(" Confirm ")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(app.theme.warning)),
+            );
+        f.render_widget(confirm, chunks[4]);
+        return;
+    }
+
     // Help text
-    let help_text = match app.emergency_state.focus {
-        EmergencyFocus::Status => "[c] configure  [l] toggle location  [x] disable  [Esc] back",
-        EmergencyFocus::ContactIds => {
-            "Enter contact IDs (comma-separated, max 10)  [Tab/Enter] next  [Esc] cancel"
+    let help_text = if app.emergency_state.configured {
+        match app.emergency_state.focus {
+            EmergencyFocus::Status => {
+                "[s] send  [c] configure  [l] toggle location  [x] disable  [Esc] back"
+            }
+            EmergencyFocus::ContactIds => {
+                "Enter contact IDs (comma-separated, max 10)  [Tab/Enter] next  [Esc] cancel"
+            }
+            EmergencyFocus::Message => "Enter alert message  [Enter] save  [Esc] cancel",
+            EmergencyFocus::Confirm => unreachable!(),
         }
-        EmergencyFocus::Message => "Enter alert message  [Enter] save  [Esc] cancel",
+    } else {
+        match app.emergency_state.focus {
+            EmergencyFocus::Status => "[c] configure  [Esc] back",
+            EmergencyFocus::ContactIds => {
+                "Enter contact IDs (comma-separated, max 10)  [Tab/Enter] next  [Esc] cancel"
+            }
+            EmergencyFocus::Message => "Enter alert message  [Enter] save  [Esc] cancel",
+            EmergencyFocus::Confirm => unreachable!(),
+        }
     };
     let help = Paragraph::new(help_text).style(Style::default().fg(app.theme.fg_secondary));
     f.render_widget(help, chunks[4]);
