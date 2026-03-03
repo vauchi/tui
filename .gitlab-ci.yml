@@ -73,7 +73,12 @@ test:
     - !reference [.git-credentials, before_script]
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
   script:
-    - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --all-targets
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --profile ci --all-targets
+  artifacts:
+    when: always
+    reports:
+      junit: target/nextest/ci/junit.xml
+    expire_in: 1 week
 
 # Main: full coverage with llvm-cov
 coverage:
@@ -128,28 +133,6 @@ mutation:nightly:
     paths:
       - target/mutants/
     expire_in: 1 week
-
-# Per-MR incremental mutation testing (advisory, runs after tests pass)
-mutation:incremental:
-  extends: [.rust-runner, .timeout-extended]
-  stage: mutation
-  needs:
-    - job: test
-      optional: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  allow_failure: true
-  variables:
-    GIT_DEPTH: "20"
-  script:
-    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --depth=20
-    - git diff "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"...HEAD > mr.diff
-    - cargo mutants --in-diff mr.diff --timeout 120 --baseline skip
-  artifacts:
-    paths:
-      - mutants.out/
-    expire_in: 1 week
-    when: always
 
 # ============================================================
 # Security Stage (runs on dependency changes, gated by lint, parallel with test)
