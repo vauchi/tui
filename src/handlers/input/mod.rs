@@ -23,8 +23,9 @@ use editing::{
 };
 use features_input::{
     handle_backup_keys, handle_delivery_keys, handle_devices_keys, handle_duress_keys,
-    handle_emergency_keys, handle_exchange_keys, handle_privacy_keys, handle_recovery_keys,
-    handle_settings_keys, handle_support_keys, handle_sync_keys, handle_tor_settings_keys,
+    handle_emergency_keys, handle_exchange_keys, handle_lock_keys, handle_privacy_keys,
+    handle_recovery_keys, handle_settings_keys, handle_support_keys, handle_sync_keys,
+    handle_tor_settings_keys,
 };
 use navigation::{handle_help_keys, handle_home_keys, handle_setup_keys};
 
@@ -43,6 +44,12 @@ pub fn handle_key(app: &mut App, key: KeyCode) -> Action {
 }
 
 fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
+    // Lock screen bypasses ALL global keys — PIN chars include 'q', Esc, etc.
+    if app.screen == Screen::Lock {
+        handle_lock_keys(app, key);
+        return Action::Continue;
+    }
+
     // Don't process global keys if in contact search mode
     if app.contact_search_mode && app.screen == Screen::Contacts {
         handle_contacts_keys(app, key);
@@ -88,6 +95,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Emergency => handle_emergency_keys(app, key),
         Screen::Duress => handle_duress_keys(app, key),
+        Screen::Lock => unreachable!("Lock screen handled before global keys"),
     }
 
     Action::Continue

@@ -14,6 +14,7 @@ pub mod exchange;
 mod gdpr;
 mod help;
 mod home;
+mod lock;
 mod recovery;
 mod settings;
 mod setup;
@@ -66,6 +67,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Support => support::draw(f, chunks[1], app),
         Screen::Emergency => emergency::draw(f, chunks[1], app),
         Screen::Duress => duress::draw(f, chunks[1], app),
+        Screen::Lock => lock::draw(f, chunks[1], app),
         Screen::ActionMenu => {
             // Draw contact detail underneath, then overlay action menu
             contacts::draw_detail(f, chunks[1], app);
@@ -101,6 +103,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Support => "Support Vauchi",
         Screen::Emergency => "Emergency Broadcast",
         Screen::Duress => "Duress Protection",
+        Screen::Lock => "Vauchi",
         Screen::ActionMenu => "Contact Details",
     };
 
@@ -139,6 +142,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::Support => "[1] GitHub Sponsors  [2] Liberapay  [esc] back",
         Screen::Emergency => "[c]onfigure  [l]ocation toggle  [x]disable  [esc] back",
         Screen::Duress => "[p]in setup  [a]lert config  [l]ocation  [x]disable  [esc] back",
+        Screen::Lock => "[enter] unlock",
         Screen::ActionMenu => "[j/k] navigate  [enter] select  [esc] cancel",
     };
 

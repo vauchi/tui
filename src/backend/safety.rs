@@ -50,10 +50,56 @@ impl Backend {
 }
 
 // ================================================================
+// Authentication
+// ================================================================
+
+/// Result of PIN authentication.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AuthResult {
+    /// Normal password — show real contacts.
+    Normal,
+    /// Duress PIN — show decoy contacts.
+    Duress,
+    /// PIN didn't match either password.
+    Invalid,
+}
+
+impl Backend {
+    /// Authenticates with a PIN and returns the result.
+    ///
+    /// Uses `AppPasswordConfig::verify()` to check the PIN against stored
+    /// password hash(es). Does not set internal auth mode — the caller
+    /// (lock screen handler) decides what to do with the result.
+    pub fn authenticate(&self, pin: &str) -> Result<AuthResult> {
+        let config = self
+            .storage
+            .load_password_config()
+            .context("Failed to load password config")?
+            .ok_or_else(|| anyhow::anyhow!("No app password configured"))?;
+
+        match config.verify(pin) {
+            vauchi_core::AuthResult::Normal => Ok(AuthResult::Normal),
+            vauchi_core::AuthResult::Duress => Ok(AuthResult::Duress),
+            vauchi_core::AuthResult::Invalid => Ok(AuthResult::Invalid),
+        }
+    }
+}
+
+// ================================================================
 // Duress Mode & Passwords
 // ================================================================
 
 impl Backend {
+    /// Sets up an app password for PIN-based lock screen.
+    pub fn setup_app_password(&self, password: &str) -> Result<()> {
+        let config = vauchi_core::api::AppPasswordConfig::create(password)
+            .map_err(|e| anyhow::anyhow!("{}", e))?;
+        self.storage
+            .save_app_password(config.password_hash(), config.password_salt())
+            .context("Failed to save app password")?;
+        Ok(())
+    }
+
     /// Returns whether an app password is configured.
     pub fn is_password_enabled(&self) -> Result<bool> {
         Ok(self

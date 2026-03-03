@@ -10,7 +10,7 @@ use crossterm::event::KeyCode;
 use crate::app::App;
 use crate::app::{
     BackupFocus, BackupMode, DuressFocus, DuressState, EditNameState, EditRelayUrlState,
-    EmergencyFocus, EmergencyState, InputMode, PrivacyState, Screen,
+    EmergencyFocus, EmergencyState, InputMode, LockState, PrivacyState, Screen,
 };
 use vauchi_core::aha_moments::AhaMomentType;
 use vauchi_core::identity::password::validate_password;
@@ -907,5 +907,54 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
             }
             _ => {}
         },
+    }
+}
+
+/// Handle lock screen input — PIN entry to unlock the app.
+///
+/// Feature: duress_pin.feature @unlock
+/// The lock screen intercepts all input. Only character entry, backspace,
+/// and Enter are processed. Esc stays on the lock screen (no escape).
+/// 'q' does NOT quit — it's a PIN character.
+pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
+    use crate::backend::AuthResult;
+
+    match key {
+        KeyCode::Char(c) => {
+            app.lock_state.error = false;
+            app.lock_state.pin_input.push(c);
+        }
+        KeyCode::Backspace => {
+            app.lock_state.pin_input.pop();
+            app.lock_state.error = false;
+        }
+        KeyCode::Enter => {
+            if app.lock_state.pin_input.is_empty() {
+                return;
+            }
+            match app.backend.authenticate(&app.lock_state.pin_input) {
+                Ok(AuthResult::Normal) => {
+                    app.lock_state = LockState::default();
+                    app.goto(Screen::Home);
+                }
+                Ok(AuthResult::Duress) => {
+                    // Duress mode — proceed to Home but contacts will show decoys
+                    app.lock_state = LockState::default();
+                    app.goto(Screen::Home);
+                    // No visual indication of duress mode (by design)
+                }
+                Ok(AuthResult::Invalid) => {
+                    app.lock_state.pin_input.clear();
+                    app.lock_state.attempts += 1;
+                    app.lock_state.error = true;
+                }
+                Err(_) => {
+                    app.lock_state.pin_input.clear();
+                    app.lock_state.error = true;
+                }
+            }
+        }
+        // Esc, q, etc. — do nothing on lock screen
+        _ => {}
     }
 }

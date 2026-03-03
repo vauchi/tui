@@ -494,3 +494,114 @@ fn test_duress_esc_in_status_goes_back() {
     assert!(matches!(action, Action::Continue));
     assert_eq!(app.screen, Screen::Settings);
 }
+
+// ============================================================================
+// Lock Screen Tests
+// Feature: duress_pin.feature @unlock
+// ============================================================================
+
+#[test]
+fn test_lock_screen_no_password_starts_on_home() {
+    let (app, _dir) = create_app_with_identity();
+    // No password configured → should start on Home, not Lock
+    assert_eq!(app.screen, Screen::Home);
+}
+
+#[test]
+fn test_lock_screen_q_does_not_quit() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Lock);
+    // 'q' should NOT quit from lock screen — it's a PIN character
+    let action = handle_key(&mut app, KeyCode::Char('q'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.lock_state.pin_input, "q");
+}
+
+#[test]
+fn test_lock_screen_esc_does_not_navigate() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Lock);
+    let action = handle_key(&mut app, KeyCode::Esc);
+    assert!(matches!(action, Action::Continue));
+    // Should stay on Lock screen
+    assert_eq!(app.screen, Screen::Lock);
+}
+
+#[test]
+fn test_lock_screen_char_input_accumulates() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Lock);
+    handle_key(&mut app, KeyCode::Char('1'));
+    handle_key(&mut app, KeyCode::Char('2'));
+    handle_key(&mut app, KeyCode::Char('3'));
+    assert_eq!(app.lock_state.pin_input, "123");
+}
+
+#[test]
+fn test_lock_screen_backspace_removes_char() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Lock);
+    handle_key(&mut app, KeyCode::Char('a'));
+    handle_key(&mut app, KeyCode::Char('b'));
+    handle_key(&mut app, KeyCode::Backspace);
+    assert_eq!(app.lock_state.pin_input, "a");
+}
+
+#[test]
+fn test_lock_screen_empty_enter_does_nothing() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Lock);
+    handle_key(&mut app, KeyCode::Enter);
+    // Should stay on Lock — empty PIN doesn't attempt auth
+    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.lock_state.attempts, 0);
+}
+
+#[test]
+fn test_lock_screen_wrong_pin_increments_attempts() {
+    let (mut app, _dir) = create_app_with_identity();
+    // Set up an app password
+    app.backend.setup_app_password("correctpin").unwrap();
+    app.goto(Screen::Lock);
+    // Enter wrong PIN
+    handle_key(&mut app, KeyCode::Char('w'));
+    handle_key(&mut app, KeyCode::Char('r'));
+    handle_key(&mut app, KeyCode::Char('o'));
+    handle_key(&mut app, KeyCode::Char('n'));
+    handle_key(&mut app, KeyCode::Char('g'));
+    handle_key(&mut app, KeyCode::Enter);
+    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.lock_state.attempts, 1);
+    assert!(app.lock_state.error);
+    assert!(app.lock_state.pin_input.is_empty()); // cleared after failure
+}
+
+#[test]
+fn test_lock_screen_correct_pin_unlocks() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.backend.setup_app_password("mypin").unwrap();
+    app.goto(Screen::Lock);
+    for c in "mypin".chars() {
+        handle_key(&mut app, KeyCode::Char(c));
+    }
+    handle_key(&mut app, KeyCode::Enter);
+    assert_eq!(app.screen, Screen::Home);
+    assert!(!app.lock_state.error);
+}
+
+#[test]
+fn test_lock_state_defaults() {
+    let (app, _dir) = create_app_with_identity();
+    assert!(app.lock_state.pin_input.is_empty());
+    assert_eq!(app.lock_state.attempts, 0);
+    assert!(!app.lock_state.error);
+}
+
+#[test]
+fn test_lock_go_back_stays_on_lock() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Lock);
+    app.go_back();
+    assert_eq!(app.screen, Screen::Lock);
+}

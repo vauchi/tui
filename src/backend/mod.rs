@@ -19,6 +19,7 @@ pub use contacts::{ContactFieldInfo, FieldVisibilityInfo, FingerprintInfo};
 pub use devices::{DeviceInfo, DeviceLinkResult};
 pub use exchange::QRData;
 pub use recovery::RecoveryStatus;
+pub use safety::AuthResult;
 pub use sync::SyncResult;
 
 use std::path::Path;

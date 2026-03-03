@@ -59,6 +59,8 @@ pub enum Screen {
     Emergency,
     /// Duress PIN and alert configuration screen
     Duress,
+    /// Lock screen (shown on startup when app password is configured)
+    Lock,
 }
 
 /// Input mode for text entry.
@@ -183,6 +185,17 @@ pub enum DuressFocus {
     Message,
 }
 
+/// Lock screen state for PIN entry on startup.
+#[derive(Debug, Clone, Default)]
+pub struct LockState {
+    /// Current PIN input (masked in UI).
+    pub pin_input: String,
+    /// Number of failed attempts.
+    pub attempts: u8,
+    /// Whether the last attempt failed.
+    pub error: bool,
+}
+
 /// Application state.
 #[allow(dead_code)]
 pub struct App {
@@ -242,6 +255,8 @@ pub struct App {
     pub emergency_state: EmergencyState,
     /// Duress PIN and alert state
     pub duress_state: DuressState,
+    /// Lock screen state
+    pub lock_state: LockState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -414,11 +429,13 @@ fn detect_locale() -> I18n {
 impl App {
     /// Create a new application.
     pub fn new(backend: Backend) -> Self {
-        // Start on Setup screen if no identity exists
-        let initial_screen = if backend.has_identity() {
-            Screen::Home
-        } else {
+        // Start on Lock screen if password is configured, Setup if no identity, else Home
+        let initial_screen = if !backend.has_identity() {
             Screen::Setup
+        } else if backend.is_password_enabled().unwrap_or(false) {
+            Screen::Lock
+        } else {
+            Screen::Home
         };
 
         let theme_ids: Vec<String> = list_themes().into_iter().map(|(id, _, _)| id).collect();
@@ -455,6 +472,7 @@ impl App {
             action_menu_state: ActionMenuState::default(),
             emergency_state: EmergencyState::default(),
             duress_state: DuressState::default(),
+            lock_state: LockState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,
@@ -513,6 +531,10 @@ impl App {
             // Can't go back from Setup until identity is configured
             Screen::Setup => {
                 // Stay on setup screen
+            }
+            // Can't escape the lock screen — must enter PIN
+            Screen::Lock => {
+                // Stay on lock screen
             }
             Screen::Contacts
             | Screen::Exchange
