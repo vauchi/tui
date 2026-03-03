@@ -66,8 +66,6 @@ vauchi-tui/src/
 
 **Structure**: `src/` = production code only. `tests/` = tests only. Siblings, not nested.
 
-See [CLAUDE.md](../CLAUDE.md) for additional mandatory rules.
-
 ## Support the Project
 
 Vauchi is open source and community-funded — no VC money, no data harvesting.
