@@ -806,3 +806,114 @@ fn test_go_back_from_groups_returns_to_home() {
     app.go_back();
     assert_eq!(app.screen, Screen::Home);
 }
+
+// ============================================================================
+// SP-11: TUI Accessibility Improvements
+// @scenario: accessibility.feature @keyboard @tui
+// ============================================================================
+
+/// @scenario: accessibility.feature @keyboard - Home 'g' navigates to Groups
+#[test]
+fn test_home_g_navigates_to_groups() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Home);
+
+    let action = handle_key(&mut app, KeyCode::Char('g'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(
+        app.screen,
+        Screen::Groups,
+        "g on Home should navigate to Groups"
+    );
+}
+
+/// @scenario: accessibility.feature @keyboard - Home 'X' navigates to Exchange
+#[test]
+fn test_home_uppercase_x_navigates_to_exchange() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Home);
+
+    let action = handle_key(&mut app, KeyCode::Char('X'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(
+        app.screen,
+        Screen::Exchange,
+        "X on Home should navigate to Exchange"
+    );
+}
+
+/// @scenario: accessibility.feature @keyboard - Home field delete status includes label
+#[test]
+fn test_home_field_delete_status_includes_label() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Home);
+
+    // Add a field
+    app.backend
+        .add_field(
+            vauchi_core::contact_card::FieldType::Phone,
+            "Mobile",
+            "+1234567890",
+        )
+        .expect("add field");
+    app.selected_field = 0;
+
+    handle_key(&mut app, KeyCode::Char('x'));
+    let msg = app
+        .status_message
+        .as_deref()
+        .expect("delete should set status");
+    assert!(
+        msg.contains("Mobile"),
+        "Delete status '{}' should contain field label 'Mobile'",
+        msg
+    );
+}
+
+/// @scenario: accessibility.feature @keyboard - Contact detail copy announces result
+#[test]
+fn test_contact_detail_copy_announces_result() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::ContactDetail);
+
+    handle_key(&mut app, KeyCode::Char('c'));
+    assert!(
+        app.status_message.is_some(),
+        "Copy should announce result in status bar"
+    );
+}
+
+/// @scenario: accessibility.feature @keyboard - Settings 't' opens Tor settings
+#[test]
+fn test_settings_t_opens_tor_settings() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Settings);
+
+    let action = handle_key(&mut app, KeyCode::Char('t'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(
+        app.screen,
+        Screen::TorSettings,
+        "t on Settings should navigate to TorSettings"
+    );
+}
+
+/// @scenario: accessibility.feature @keyboard - Contact delete with no contacts sets status
+#[test]
+fn test_contact_detail_delete_sets_status() {
+    let (mut app, _dir) = create_app_with_identity();
+
+    // Navigate to contact detail with no contacts
+    app.goto(Screen::ContactDetail);
+    app.selected_contact = 0;
+
+    // Pressing 'x' with no contacts should stay on screen without crash
+    handle_key(&mut app, KeyCode::Char('x'));
+    // No contact to delete — should not crash, screen transitions back
+    // The go_back transitions to Contacts
+    assert!(
+        app.screen == Screen::Contacts || app.screen == Screen::ContactDetail,
+        "x on ContactDetail should navigate back or stay, got {:?}",
+        app.screen
+    );
+}

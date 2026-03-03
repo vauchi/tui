@@ -487,3 +487,132 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
         "lowercase v without contact should stay on ContactDetail"
     );
 }
+
+// ============================================================================
+// SP-11: TUI Accessibility Improvements
+// @scenario: accessibility.feature @keyboard @tui
+// ============================================================================
+
+// --- Home screen: Groups shortcut via 'g' key ---
+
+/// @scenario: accessibility.feature @keyboard - All screens reachable via keyboard
+#[test]
+fn test_handle_key_home_g_navigates_to_groups() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Home;
+
+    handle_key(&mut app, KeyCode::Char('g'));
+    assert_eq!(
+        app.screen,
+        Screen::Groups,
+        "g on Home should navigate to Groups"
+    );
+}
+
+/// @scenario: accessibility.feature @keyboard - All screens reachable via keyboard
+#[test]
+fn test_handle_key_home_uppercase_x_navigates_to_exchange() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Home;
+
+    handle_key(&mut app, KeyCode::Char('X'));
+    assert_eq!(
+        app.screen,
+        Screen::Exchange,
+        "X on Home should navigate to Exchange"
+    );
+}
+
+// --- Sync screen: test connection 't' and refresh 'r' keys ---
+
+/// @scenario: accessibility.feature @keyboard - Sync test connection shortcut
+#[test]
+fn test_handle_key_sync_t_tests_connection() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Sync;
+
+    handle_key(&mut app, KeyCode::Char('t'));
+    assert!(
+        app.status_message.is_some(),
+        "t on Sync should set a status message about connection test"
+    );
+    assert_eq!(app.screen, Screen::Sync, "t should stay on Sync screen");
+}
+
+/// @scenario: accessibility.feature @keyboard - Sync refresh pending count shortcut
+#[test]
+fn test_handle_key_sync_r_refreshes_pending() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Sync;
+
+    handle_key(&mut app, KeyCode::Char('r'));
+    assert!(
+        app.status_message.is_some(),
+        "r on Sync should set a status message about pending updates"
+    );
+    assert_eq!(app.screen, Screen::Sync, "r should stay on Sync screen");
+}
+
+// --- Settings screen: Tor shortcut key ---
+
+/// @scenario: accessibility.feature @keyboard - Settings Tor shortcut
+#[test]
+fn test_handle_key_settings_t_navigates_to_tor() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Settings;
+
+    handle_key(&mut app, KeyCode::Char('t'));
+    assert_eq!(
+        app.screen,
+        Screen::TorSettings,
+        "t on Settings should navigate to Tor settings"
+    );
+}
+
+// --- Contact detail: copy shortcut announces field info ---
+
+/// @scenario: accessibility.feature @keyboard - Copy field value announces result
+#[test]
+fn test_handle_key_contact_detail_c_announces_copy_result() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::ContactDetail;
+    app.selected_contact = 0;
+    app.selected_contact_field = 0;
+
+    handle_key(&mut app, KeyCode::Char('c'));
+    // Even without a contact, the copy handler should set a status message
+    assert!(
+        app.status_message.is_some(),
+        "c on ContactDetail should set a status message (error or success)"
+    );
+}
+
+// --- Home screen field delete announces field label ---
+
+/// @scenario: accessibility.feature @keyboard - Field delete announces label in status
+#[test]
+fn test_handle_key_home_delete_announces_field_label() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Home;
+    // Add a field, then delete it
+    app.backend
+        .add_field(
+            vauchi_core::contact_card::FieldType::Email,
+            "Work Email",
+            "test@example.com",
+        )
+        .unwrap();
+    app.selected_field = 0;
+
+    handle_key(&mut app, KeyCode::Char('x'));
+    assert!(
+        app.status_message.is_some(),
+        "x on Home should set a status message"
+    );
+    let msg = app.status_message.as_deref().unwrap();
+    assert!(
+        msg.contains("Work Email"),
+        "Delete status should include field label, got: '{}'",
+        msg
+    );
+}
