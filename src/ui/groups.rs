@@ -9,6 +9,7 @@ use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 
 use crate::app::App;
 
+/// Renders the groups list screen with a create hint and scrollable group list.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let groups = app.backend.list_groups().unwrap_or_default();
 
@@ -74,6 +75,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     f.render_stateful_widget(list, chunks[1], &mut state);
 }
 
+/// Renders the detail view for a selected group, listing its member contacts.
 pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
     let groups = app.backend.list_groups().unwrap_or_default();
     let group = groups.get(app.groups_state.selected_group);

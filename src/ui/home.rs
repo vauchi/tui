@@ -32,6 +32,7 @@ fn social_icon(network_id: &str) -> &'static str {
     }
 }
 
+/// Renders the home screen showing the user's identity card, fields, and contact count.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -123,6 +124,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(count_para, chunks[3]);
 }
 
+/// Renders the add-field dialog, dispatching to social or generic field forms.
 pub fn draw_add_field(f: &mut Frame, area: Rect, app: &App) {
     let is_social = FIELD_TYPES[app.add_field_state.field_type_index] == "Social";
 
@@ -327,6 +329,7 @@ fn draw_value_input(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(value_para, area);
 }
 
+/// Renders the edit-field dialog for modifying an existing field's value.
 pub fn draw_edit_field(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

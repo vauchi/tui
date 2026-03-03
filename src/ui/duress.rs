@@ -9,6 +9,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::app::{App, DuressFocus, InputMode};
 
+/// Renders the duress PIN configuration screen.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

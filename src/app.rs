@@ -297,6 +297,7 @@ pub struct SocialPickerState {
     pub selected: usize,
 }
 
+/// Tracks which input field is focused in the add-field dialog.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum AddFieldFocus {
     #[default]
@@ -344,6 +345,7 @@ pub struct BackupState {
     pub focus: BackupFocus,
 }
 
+/// Which backup sub-screen is active: top-level menu, export, or import.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum BackupMode {
     #[default]
@@ -352,6 +354,7 @@ pub enum BackupMode {
     Import,
 }
 
+/// Tracks which input field is focused in the backup export/import form.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum BackupFocus {
     #[default]

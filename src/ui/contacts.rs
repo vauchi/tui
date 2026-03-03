@@ -41,6 +41,7 @@ fn filter_contacts(
     }
 }
 
+/// Renders the contacts list screen with search bar and scrollable contact list.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let contacts = app.backend.list_contacts().unwrap_or_default();
 
@@ -127,6 +128,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     f.render_stateful_widget(list, chunks[1], &mut state);
 }
 
+/// Renders the detail view for a selected contact, showing their fields and metadata.
 pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
     let contacts = app.backend.list_contacts().unwrap_or_default();
     let contact = contacts.get(app.selected_contact);

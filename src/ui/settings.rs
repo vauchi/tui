@@ -9,6 +9,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::app::{App, InputMode};
 
+/// Renders the settings screen showing display name, public ID, and relay configuration.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -101,6 +102,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(help_para, chunks[3]);
 }
 
+/// Renders the edit-name dialog for changing the user's display name.
 pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -141,6 +143,7 @@ pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(name_para, chunks[1]);
 }
 
+/// Renders the edit-relay-URL dialog for changing the relay server address.
 pub fn draw_edit_relay_url(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

@@ -9,6 +9,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::app::App;
 
+/// Renders the contact exchange screen.
 pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

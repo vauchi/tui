@@ -11,6 +11,7 @@ use ratatui::widgets::{Block, Borders, Paragraph, Row, Table, Wrap};
 
 use crate::app::App;
 
+/// Renders the support screen with funding links and fund allocation details.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)

@@ -13,6 +13,7 @@ use vauchi_core::i18n::Locale;
 
 use crate::app::App;
 
+/// Renders the help screen with keyboard shortcuts and FAQ.
 pub fn draw(f: &mut Frame, area: Rect, app: &App) {
     let locale = app.i18n.locale();
 
