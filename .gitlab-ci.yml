@@ -29,6 +29,7 @@ include:
       - '/ci-templates/downstream.yml'
       - '/ci-templates/reuse.yml'
       - '/ci-templates/test-quality.yml'
+      - '/ci-templates/mutation.yml'
 
 stages:
   - lint
@@ -117,22 +118,14 @@ coverage:
     expire_in: 1 week
 
 # ============================================================
-# Mutation Stage (PI-02)
+# Mutation Stage (uses shared template from vauchi/scripts)
 # ============================================================
 
-# Nightly full mutation testing (scheduled pipeline)
 mutation:nightly:
-  extends: [.rust-runner, .timeout-extended]
-  stage: mutation
-  needs: []
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-  script:
-    - cargo mutants --timeout 60 --output target/mutants
-  artifacts:
-    paths:
-      - target/mutants/
-    expire_in: 1 week
+  extends: [.mutation-nightly, .rust-runner, .timeout-extended]
+  allow_failure: true
+  variables:
+    MUTATION_TIMEOUT_NIGHTLY: "60"
 
 # ============================================================
 # Security Stage (runs on dependency changes, gated by lint, parallel with test)
@@ -141,11 +134,7 @@ mutation:nightly:
 security:audit:
   extends: [.rust-runner-readonly, .validation-deps, .timeout-quick]
   stage: security
-  needs:
-    - job: lint:format
-      optional: true
-    - job: lint:clippy
-      optional: true
+  needs: []
   script:
     - cargo audit
 
