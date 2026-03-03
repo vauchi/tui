@@ -616,3 +616,127 @@ impl Backend {
         Ok(())
     }
 }
+
+// ============================================================================
+// Group Management (Labels) - SP-12a Scenarios
+// ============================================================================
+
+/// Group information for display in UI.
+#[derive(Debug, Clone)]
+pub struct GroupInfo {
+    /// Group ID (label ID from core).
+    pub id: String,
+    /// Group name.
+    pub name: String,
+    /// Number of contacts in this group.
+    pub contact_count: usize,
+}
+
+impl Backend {
+    /// List all groups (labels).
+    pub fn list_groups(&self) -> Result<Vec<GroupInfo>> {
+        let labels = self
+            .storage
+            .load_all_labels()
+            .context("Failed to list groups")?;
+
+        Ok(labels
+            .into_iter()
+            .map(|label| GroupInfo {
+                id: label.id().to_string(),
+                name: label.name().to_string(),
+                contact_count: label.contact_count(),
+            })
+            .collect())
+    }
+
+    /// Create a new group with the given name.
+    pub fn create_group(&self, name: &str) -> Result<GroupInfo> {
+        // Validate name length
+        if name.is_empty() || name.len() > 50 {
+            anyhow::bail!("Group name must be 1-50 characters");
+        }
+
+        let label = self
+            .storage
+            .create_label(name)
+            .context("Failed to create group")?;
+
+        Ok(GroupInfo {
+            id: label.id().to_string(),
+            name: label.name().to_string(),
+            contact_count: label.contact_count(),
+        })
+    }
+
+    /// Get a group by ID.
+    pub fn get_group(&self, group_id: &str) -> Result<GroupInfo> {
+        let label = self
+            .storage
+            .load_label(group_id)
+            .context("Failed to load group")?;
+
+        Ok(GroupInfo {
+            id: label.id().to_string(),
+            name: label.name().to_string(),
+            contact_count: label.contact_count(),
+        })
+    }
+
+    /// Add a contact to a group.
+    pub fn add_contact_to_group(&self, group_id: &str, contact_id: &str) -> Result<()> {
+        self.storage
+            .add_contact_to_label(group_id, contact_id)
+            .context("Failed to add contact to group")
+    }
+
+    /// Remove a contact from a group.
+    pub fn remove_contact_from_group(&self, group_id: &str, contact_id: &str) -> Result<()> {
+        self.storage
+            .remove_contact_from_label(group_id, contact_id)
+            .context("Failed to remove contact from group")
+    }
+
+    /// Delete a group (contacts remain in contact list).
+    pub fn delete_group(&self, group_id: &str) -> Result<()> {
+        self.storage
+            .delete_label(group_id)
+            .context("Failed to delete group")
+    }
+
+    /// Rename a group.
+    pub fn rename_group(&self, group_id: &str, new_name: &str) -> Result<()> {
+        // Validate name length
+        if new_name.is_empty() || new_name.len() > 50 {
+            anyhow::bail!("Group name must be 1-50 characters");
+        }
+
+        self.storage
+            .rename_label(group_id, new_name)
+            .context("Failed to rename group")
+    }
+
+    /// Get all contacts in a specific group.
+    pub fn get_contacts_in_group(&self, group_id: &str) -> Result<Vec<ContactInfo>> {
+        let label = self
+            .storage
+            .load_label(group_id)
+            .context("Failed to load group")?;
+
+        let all_contacts = self
+            .storage
+            .list_contacts()
+            .context("Failed to list contacts")?;
+
+        Ok(all_contacts
+            .into_iter()
+            .filter(|c| label.contains_contact(c.id()))
+            .map(|c| ContactInfo {
+                id: c.id().to_string(),
+                display_name: c.display_name().to_string(),
+                verified: c.is_fingerprint_verified(),
+                recovery_trusted: c.is_recovery_trusted(),
+            })
+            .collect())
+    }
+}

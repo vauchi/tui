@@ -718,3 +718,91 @@ fn test_emergency_state_defaults_include_last_broadcast() {
     assert!(state.last_broadcast_time.is_none());
     assert_eq!(state.focus, EmergencyFocus::Status);
 }
+
+// ============================================================================
+// Contact Groups Tests (@groups feature from contacts_management.feature)
+// ============================================================================
+
+/// @scenario: Create a contact group
+#[test]
+fn test_create_group_adds_group_to_list() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Groups);
+
+    // Backend method should create a group
+    let group = app.backend.create_group("Family").expect("create group");
+    assert_eq!(group.name, "Family");
+    assert_eq!(group.contact_count, 0);
+
+    // List should contain the new group
+    let groups = app.backend.list_groups().expect("list groups");
+    assert_eq!(groups.len(), 1);
+    assert_eq!(groups[0].name, "Family");
+}
+
+/// @scenario: Delete a group
+#[test]
+fn test_delete_group() {
+    let (mut app, _dir) = create_app_with_identity();
+
+    // Create a group
+    let group = app
+        .backend
+        .create_group("Old Friends")
+        .expect("create group");
+
+    let groups = app.backend.list_groups().expect("list groups");
+    assert_eq!(groups.len(), 1);
+
+    // Delete the group
+    app.backend.delete_group(&group.id).expect("delete group");
+
+    // Verify group is deleted
+    let groups = app.backend.list_groups().expect("list groups");
+    assert_eq!(groups.len(), 0);
+}
+
+/// @scenario: Rename a group
+#[test]
+fn test_rename_group() {
+    let (mut app, _dir) = create_app_with_identity();
+
+    // Create a group
+    let group = app.backend.create_group("Work").expect("create group");
+
+    assert_eq!(group.name, "Work");
+
+    // Rename the group
+    app.backend
+        .rename_group(&group.id, "Office")
+        .expect("rename group");
+
+    // Verify group is renamed
+    let updated_group = app.backend.get_group(&group.id).expect("get group");
+    assert_eq!(updated_group.name, "Office");
+}
+
+/// @scenario: Multiple groups can be created
+#[test]
+fn test_multiple_groups() {
+    let (mut app, _dir) = create_app_with_identity();
+
+    app.backend.create_group("Friends").expect("create friends");
+    app.backend
+        .create_group("Colleagues")
+        .expect("create colleagues");
+    app.backend.create_group("Family").expect("create family");
+
+    let groups = app.backend.list_groups().expect("list groups");
+    assert_eq!(groups.len(), 3);
+}
+
+/// Test go_back from Groups screen returns to Home
+#[test]
+fn test_go_back_from_groups_returns_to_home() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::Groups);
+    assert_eq!(app.screen, Screen::Groups);
+    app.go_back();
+    assert_eq!(app.screen, Screen::Home);
+}

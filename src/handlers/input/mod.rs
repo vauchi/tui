@@ -15,7 +15,7 @@ use crate::app::{App, InputMode, Screen};
 
 use contacts_input::{
     handle_action_menu_keys, handle_contact_detail_keys, handle_contacts_keys,
-    handle_visibility_keys,
+    handle_group_detail_keys, handle_groups_keys, handle_visibility_keys,
 };
 use editing::{
     handle_add_field_keys, handle_edit_field_keys, handle_edit_name_keys,
@@ -95,6 +95,8 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Emergency => handle_emergency_keys(app, key),
         Screen::Duress => handle_duress_keys(app, key),
+        Screen::Groups => handle_groups_keys(app, key),
+        Screen::GroupDetail => handle_group_detail_keys(app, key),
         Screen::Lock => unreachable!("Lock screen handled before global keys"),
     }
 

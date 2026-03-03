@@ -61,6 +61,10 @@ pub enum Screen {
     Duress,
     /// Lock screen (shown on startup when app password is configured)
     Lock,
+    /// Contact groups management screen
+    Groups,
+    /// Group detail view
+    GroupDetail,
 }
 
 /// Input mode for text entry.
@@ -261,6 +265,8 @@ pub struct App {
     pub duress_state: DuressState,
     /// Lock screen state
     pub lock_state: LockState,
+    /// Groups management state
+    pub groups_state: GroupsState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -370,6 +376,27 @@ pub struct ActionMenuState {
     pub selected: usize,
 }
 
+/// State for the groups management screen.
+#[derive(Debug, Default)]
+pub struct GroupsState {
+    /// Currently selected group index in the list.
+    pub selected_group: usize,
+    /// Whether to show group detail view.
+    pub show_group_detail: bool,
+    /// Group edit mode (for creating/renaming).
+    pub edit_mode: bool,
+    /// Input buffer for group name (when creating or renaming).
+    pub group_name_input: String,
+    /// Currently selected contact index in group detail view.
+    pub selected_contact_in_group: usize,
+    /// Search query for filtering groups.
+    pub group_search_query: String,
+    /// Whether group search mode is active.
+    pub group_search_mode: bool,
+    /// Whether a delete confirmation is pending.
+    pub delete_confirm: bool,
+}
+
 /// Path to theme config file.
 fn theme_config_path() -> Option<std::path::PathBuf> {
     dirs::config_dir().map(|d| d.join("vauchi").join("theme"))
@@ -477,6 +504,7 @@ impl App {
             emergency_state: EmergencyState::default(),
             duress_state: DuressState::default(),
             lock_state: LockState::default(),
+            groups_state: GroupsState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,
@@ -598,6 +626,19 @@ impl App {
             Screen::EditRelayUrl => {
                 self.screen = Screen::Settings;
                 self.edit_relay_url_state = EditRelayUrlState::default();
+            }
+            Screen::Groups => {
+                self.screen = Screen::Home;
+                self.groups_state = GroupsState::default();
+            }
+            Screen::GroupDetail => {
+                self.screen = Screen::Groups;
+                self.groups_state.show_group_detail = false;
+                self.groups_state.selected_contact_in_group = 0;
+            }
+            Screen::ActionMenu => {
+                self.screen = Screen::ContactDetail;
+                self.action_menu_state = ActionMenuState::default();
             }
             _ => {}
         }

@@ -66,6 +66,132 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
     }
 }
 
+/// Handle input for the groups list screen.
+pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
+    // Handle search mode
+    if app.groups_state.group_search_mode {
+        match key {
+            KeyCode::Esc => {
+                app.groups_state.group_search_mode = false;
+            }
+            KeyCode::Enter => {
+                app.groups_state.group_search_mode = false;
+            }
+            KeyCode::Backspace => {
+                app.groups_state.group_search_query.pop();
+                app.groups_state.selected_group = 0;
+            }
+            KeyCode::Char(c) => {
+                app.groups_state.group_search_query.push(c);
+                app.groups_state.selected_group = 0;
+            }
+            _ => {}
+        }
+        return;
+    }
+
+    // Normal navigation mode
+    match key {
+        KeyCode::Char('/') => {
+            app.groups_state.group_search_mode = true;
+            app.groups_state.group_search_query.clear();
+            app.groups_state.selected_group = 0;
+        }
+        KeyCode::Char('n') => {
+            // Start creating a new group
+            app.groups_state.edit_mode = true;
+            app.groups_state.group_name_input.clear();
+        }
+        KeyCode::Char('j') | KeyCode::Down => {
+            if let Ok(groups) = app.backend.list_groups() {
+                let filtered_count = if app.groups_state.group_search_query.is_empty() {
+                    groups.len()
+                } else {
+                    let query = app.groups_state.group_search_query.to_lowercase();
+                    groups
+                        .iter()
+                        .filter(|g| g.name.to_lowercase().contains(&query))
+                        .count()
+                };
+                if app.groups_state.selected_group < filtered_count.saturating_sub(1) {
+                    app.groups_state.selected_group += 1;
+                }
+            }
+        }
+        KeyCode::Char('k') | KeyCode::Up => {
+            if app.groups_state.selected_group > 0 {
+                app.groups_state.selected_group -= 1;
+            }
+        }
+        KeyCode::Enter => {
+            app.groups_state.show_group_detail = true;
+            app.goto(Screen::GroupDetail);
+        }
+        KeyCode::Char('d') => {
+            app.groups_state.delete_confirm = true;
+        }
+        _ => {}
+    }
+}
+
+/// Handle input for the group detail screen.
+pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
+    if app.groups_state.edit_mode {
+        match key {
+            KeyCode::Esc => {
+                app.groups_state.edit_mode = false;
+                app.groups_state.group_name_input.clear();
+            }
+            KeyCode::Enter => {
+                // Save the group name (create or rename)
+                app.groups_state.edit_mode = false;
+                app.groups_state.group_name_input.clear();
+            }
+            KeyCode::Backspace => {
+                app.groups_state.group_name_input.pop();
+            }
+            KeyCode::Char(c) => {
+                if app.groups_state.group_name_input.len() < 50 {
+                    app.groups_state.group_name_input.push(c);
+                }
+            }
+            _ => {}
+        }
+        return;
+    }
+
+    match key {
+        KeyCode::Char('j') | KeyCode::Down => {
+            if let Ok(groups) = app.backend.list_groups() {
+                if let Some(group) = groups.get(app.groups_state.selected_group) {
+                    if let Ok(contacts) = app.backend.get_contacts_in_group(&group.id) {
+                        if app.groups_state.selected_contact_in_group
+                            < contacts.len().saturating_sub(1)
+                        {
+                            app.groups_state.selected_contact_in_group += 1;
+                        }
+                    }
+                }
+            }
+        }
+        KeyCode::Char('k') | KeyCode::Up => {
+            if app.groups_state.selected_contact_in_group > 0 {
+                app.groups_state.selected_contact_in_group -= 1;
+            }
+        }
+        KeyCode::Char('r') => {
+            // Start renaming
+            app.groups_state.edit_mode = true;
+            if let Ok(groups) = app.backend.list_groups() {
+                if let Some(group) = groups.get(app.groups_state.selected_group) {
+                    app.groups_state.group_name_input = group.name.clone();
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
@@ -263,13 +389,13 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
     }
 }
 
+/// Handle input for the action menu popup.
 pub(super) fn handle_action_menu_keys(app: &mut App, key: KeyCode) {
-    use vauchi_core::contact_card::ContactAction;
-
-    let action_count = app.action_menu_state.actions.len();
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
-            if app.action_menu_state.selected < action_count.saturating_sub(1) {
+            if app.action_menu_state.selected
+                < app.action_menu_state.actions.len().saturating_sub(1)
+            {
                 app.action_menu_state.selected += 1;
             }
         }
@@ -284,26 +410,18 @@ pub(super) fn handle_action_menu_keys(app: &mut App, key: KeyCode) {
                 .actions
                 .get(app.action_menu_state.selected)
             {
-                let result = if matches!(action, ContactAction::CopyToClipboard) {
-                    app.backend
-                        .copy_field_to_clipboard(app.selected_contact, app.selected_contact_field)
-                } else {
-                    app.backend.execute_action(action)
-                };
-                match result {
+                match app.backend.execute_action(action) {
                     Ok(msg) => app.set_status(msg),
                     Err(e) => app.set_status(format!("Error: {}", e)),
                 }
             }
             app.go_back();
         }
-        KeyCode::Esc | KeyCode::Char('q') => {
-            app.go_back();
-        }
         _ => {}
     }
 }
 
+/// Handle input for the visibility settings screen.
 pub(super) fn handle_visibility_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
@@ -320,9 +438,8 @@ pub(super) fn handle_visibility_keys(app: &mut App, key: KeyCode) {
                 app.visibility_state.selected_field -= 1;
             }
         }
-        KeyCode::Enter | KeyCode::Char(' ') => {
-            // Toggle visibility for selected field
-            if let Some(ref contact_id) = app.visibility_state.contact_id.clone() {
+        KeyCode::Char(' ') | KeyCode::Enter => {
+            if let Some(ref contact_id) = app.visibility_state.contact_id {
                 if let Ok(fields) = app.backend.get_contact_visibility(contact_id) {
                     if let Some(field) = fields.get(app.visibility_state.selected_field) {
                         match app
