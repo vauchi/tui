@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 191
 expression: output
 ---
 Help
@@ -21,7 +22,7 @@ Help
 │Tab     Next field (in forms)                                                 │
 │                                                                              │
 │Home                                                                          │
-│e       Open exchange (QR code)                                               │
+│c       View contacts                                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 ────────────────────────────────────────────────────────────────────────────────
 [esc/q] close

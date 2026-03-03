@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 365
 expression: output
 ---
 Privacy & Data
@@ -24,4 +25,4 @@ Privacy & Data
  └────────────────────────────────────────────────────────────────────────────┘
 
 ────────────────────────────────────────────────────────────────────────────────
-[e]xport  [d]elete  [c]ancel  [j/k] navigate  [space] toggle consent  [esc] back
+[j/k] navigate  [e]xport  [d]elete  [c]ancel  [space] toggle consent  [esc] back

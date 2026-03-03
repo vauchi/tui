@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 230
 expression: output
 ---
 Sync
@@ -24,4 +25,4 @@ Sync
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ────────────────────────────────────────────────────────────────────────────────
-[s]ync now  [esc] back  [?]help
+[s]ync now  [t]est connection  [r]efresh pending  [esc] back  [?]help

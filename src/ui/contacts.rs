@@ -263,9 +263,9 @@ pub fn draw_detail(f: &mut Frame, area: Rect, app: &App) {
                 f.render_stateful_widget(list, chunks[2], &mut state);
             }
 
-            // Help line
+            // Help line — matches footer keybinding hints
             let help = Paragraph::new(
-                "f=verify  t=trust  h=hide  v=visibility  V=validate  R=revoke  x=delete  o/Enter=open  Esc=back",
+                "c=copy  o/Enter=open  f=verify  t=trust  h=hide  v=visibility  V=validate  R=revoke  x=delete",
             )
             .style(Style::default().fg(app.theme.fg_secondary));
             f.render_widget(help, chunks[3]);

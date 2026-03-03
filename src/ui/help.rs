@@ -36,13 +36,18 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
          \x20 Esc     {back}\n\
          \x20 Tab     {next_field}\n\n\
          {home}\n\
-         \x20 e       {exchange}\n\
          \x20 c       {contacts}\n\
          \x20 s       {settings}\n\
+         \x20 g       Groups\n\
+         \x20 X       {exchange}\n\
          \x20 a       {add_field}\n\
-         \x20 d       {del_field}\n\n\
+         \x20 e       Edit selected field\n\
+         \x20 x       {del_field}\n\n\
          {contacts_screen}\n\
-         \x20 Enter   {view_detail}\n\n\
+         \x20 /       Search contacts\n\
+         \x20 Enter   {view_detail}\n\
+         \x20 c       Copy field value\n\
+         \x20 o       Open / action menu\n\n\
          {general}\n\
          \x20 ?       {show_help}\n\
          \x20 q       {quit}\n\n\n\

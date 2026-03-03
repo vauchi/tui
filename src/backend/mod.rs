@@ -55,6 +55,8 @@ pub struct Backend {
 /// Contact card field information for display.
 #[derive(Debug, Clone)]
 pub struct FieldInfo {
+    /// Unique field ID (used for remove/update operations).
+    pub id: String,
     pub field_type: String,
     pub label: String,
     pub value: String,
@@ -371,6 +373,7 @@ impl Backend {
                 c.fields()
                     .iter()
                     .map(|f| FieldInfo {
+                        id: f.id().to_string(),
                         field_type: format!("{:?}", f.field_type()),
                         label: f.label().to_string(),
                         value: f.value().to_string(),

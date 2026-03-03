@@ -50,6 +50,8 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('n') => app.goto(Screen::Sync),
         KeyCode::Char('y') => app.goto(Screen::Delivery),
         KeyCode::Char('b') => app.goto(Screen::Backup),
+        KeyCode::Char('g') => app.goto(Screen::Groups),
+        KeyCode::Char('X') => app.goto(Screen::Exchange),
         KeyCode::Char('a') => {
             app.add_field_state = Default::default();
             app.goto(Screen::AddField);
@@ -86,8 +88,9 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
             // Delete selected field
             if let Ok(fields) = app.backend.get_card_fields() {
                 if let Some(field) = fields.get(app.selected_field) {
-                    if app.backend.remove_field(&field.label).is_ok() {
-                        app.set_status("Field removed");
+                    let label = field.label.clone();
+                    if app.backend.remove_field(&field.id).is_ok() {
+                        app.set_status(format!("Field removed: {}", label));
                         if app.selected_field > 0 {
                             app.selected_field -= 1;
                         }

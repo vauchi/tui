@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 204
 expression: output
 ---
 Devices
@@ -24,4 +25,4 @@ Devices
                   j/↓ Down  k/↑ Up  l Link  r Revoke  Esc Back
 
 ────────────────────────────────────────────────────────────────────────────────
-[j/k] navigate  [l]ink new device  [esc] back  [?]help
+[j/k] navigate  [l]ink new device  [r]evoke  [esc] back  [?]help
