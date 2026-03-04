@@ -77,48 +77,27 @@ test:
     expire_in: 1 week
 
 # Main: full coverage with llvm-cov
-# (Not using .coverage-job template due to TUI's special VAUCHI_LOCALES_DIR env var requirement)
+# Note: TUI uses custom VAUMI_LOCALES_DIR before script to handle special locales path
 coverage:
-  extends: [.rust-runner, .timeout-standard]
-  stage: test
+  extends: [.coverage-job, .rust-runner, .timeout-long]
   needs:
     - job: lint:format
       optional: true
     - job: lint:clippy
       optional: true
-  rules:
-    # Skip on triggered pipelines (downstream verification doesn't need coverage)
-    - if: $CI_PIPELINE_SOURCE == "pipeline" || $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "api"
-      when: never
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_PIPELINE_SOURCE == "schedule"
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
     - rustup component add llvm-tools-preview 2>/dev/null || true
-    - command -v cargo-binstall >/dev/null 2>&1 || (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash)
-    - cargo binstall cargo-llvm-cov cargo-nextest --no-confirm 2>/dev/null || cargo install cargo-llvm-cov cargo-nextest --locked || true
-    - |
-      curl --silent --fail \
-        "${CI_API_V4_URL}/projects/vauchi%2Fscripts/repository/files/scripts%2Fci%2Fpush-coverage.sh/raw?ref=main" \
-        -o push-coverage.sh
-      chmod +x push-coverage.sh
   script:
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov nextest --all-targets --lcov --output-path lcov.info
     - cargo llvm-cov report --cobertura --output-path cobertura.xml
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov report
     - ./push-coverage.sh cobertura.xml tui || true
-  coverage: '/TOTAL\s+\d+\s+\d+\s+\d+\.\d+%\s+\d+\s+\d+\s+\d+\.\d+%\s+\d+\s+\d+\s+(\d+\.\d+%)/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: cobertura.xml
-    paths:
-      - lcov.info
-      - cobertura.xml
-    expire_in: 1 week
+  variables:
+    COVERAGE_REPO_LABEL: "tui"
+    COVERAGE_USE_NEXTEST: "true"
 
 # ============================================================
 # Mutation Stage (uses shared template from vauchi/scripts)
