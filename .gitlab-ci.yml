@@ -126,6 +126,8 @@ coverage:
 
 mutation:nightly:
   extends: [.mutation-nightly, .rust-runner, .timeout-extended]
+  variables:
+    MUTATION_TIMEOUT_NIGHTLY: "120"
 
 # ============================================================
 # Security Stage (runs on dependency changes, gated by lint, parallel with test)
