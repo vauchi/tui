@@ -6,7 +6,9 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, BackupFocus, BackupMode, EditFieldState, InputMode, Screen};
+use crate::app::{
+    App, BackupFocus, BackupMode, EditFieldState, InputMode, OnboardingState, Screen,
+};
 use vauchi_core::aha_moments::AhaMomentType;
 
 pub(super) fn handle_setup_keys(app: &mut App, key: KeyCode) {
@@ -108,5 +110,91 @@ pub(super) fn handle_help_keys(app: &mut App, key: KeyCode) {
             app.go_back();
         }
         _ => {}
+    }
+}
+
+// ── SP-21 Onboarding Wizard Handlers ──
+
+pub(super) fn handle_setup_welcome_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Enter => {
+            app.onboarding_state = OnboardingState::default();
+            app.goto(Screen::SetupCreateIdentity);
+            app.input_mode = InputMode::Editing;
+        }
+        KeyCode::Char('i') => {
+            // Go to backup import (same as original setup)
+            app.backup_state.mode = BackupMode::Import;
+            app.backup_state.backup_data.clear();
+            app.backup_state.password.clear();
+            app.backup_state.focus = BackupFocus::Data;
+            app.input_mode = InputMode::Editing;
+            app.goto(Screen::Backup);
+        }
+        _ => {}
+    }
+}
+
+pub(super) fn handle_setup_create_identity_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Enter => {
+            let name = app.onboarding_state.name_input.trim().to_string();
+            if name.is_empty() {
+                app.set_status("Please enter your name");
+                return;
+            }
+            match app.backend.create_identity(&name) {
+                Ok(()) => {
+                    app.onboarding_state.identity_created = true;
+                    if let Some(moment) = app
+                        .backend
+                        .check_aha_moment(AhaMomentType::CardCreationComplete)
+                    {
+                        app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                    }
+                    app.goto(Screen::SetupAddFields);
+                }
+                Err(e) => {
+                    app.set_status(format!("Failed to create identity: {}", e));
+                }
+            }
+        }
+        KeyCode::Backspace => {
+            app.onboarding_state.name_input.pop();
+        }
+        KeyCode::Char(c) => {
+            if app.onboarding_state.name_input.len() < 50 {
+                app.onboarding_state.name_input.push(c);
+            }
+        }
+        _ => {}
+    }
+}
+
+pub(super) fn handle_setup_add_fields_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Char('a') => {
+            // Open add-field dialog
+            app.add_field_state = Default::default();
+            app.goto(Screen::AddField);
+        }
+        KeyCode::Char('s') | KeyCode::Enter => {
+            // Skip / advance to security
+            app.goto(Screen::SetupSecurity);
+        }
+        _ => {}
+    }
+}
+
+pub(super) fn handle_setup_security_keys(app: &mut App, key: KeyCode) {
+    if let KeyCode::Enter = key {
+        app.goto(Screen::SetupReady);
+    }
+}
+
+pub(super) fn handle_setup_ready_keys(app: &mut App, key: KeyCode) {
+    if let KeyCode::Enter = key {
+        app.onboarding_state = OnboardingState::default();
+        app.goto(Screen::Home);
     }
 }

@@ -65,6 +65,24 @@ pub enum Screen {
     Groups,
     /// Group detail view
     GroupDetail,
+    // ── SP-21 Onboarding Wizard ──
+    /// Welcome screen with privacy highlights
+    SetupWelcome,
+    /// Name input step
+    SetupCreateIdentity,
+    /// Optional field addition step
+    SetupAddFields,
+    /// Security explanation step
+    SetupSecurity,
+    /// Completion / ready screen
+    SetupReady,
+    // ── SP-12a Merge / Duplicates / Limit ──
+    /// List of potential duplicate contacts
+    ContactDuplicates,
+    /// Side-by-side merge preview
+    ContactMerge,
+    /// Contact limit configuration
+    ContactLimit,
 }
 
 /// Input mode for text entry.
@@ -267,6 +285,14 @@ pub struct App {
     pub lock_state: LockState,
     /// Groups management state
     pub groups_state: GroupsState,
+    /// Onboarding wizard state (SP-21)
+    pub onboarding_state: OnboardingState,
+    /// Duplicates detection state (SP-12a)
+    pub duplicates_state: DuplicatesState,
+    /// Merge preview state (SP-12a)
+    pub merge_state: MergeState,
+    /// Contact limit state (SP-12a)
+    pub contact_limit_state: ContactLimitState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -400,6 +426,64 @@ pub struct GroupsState {
     pub delete_confirm: bool,
 }
 
+/// State for the onboarding wizard (SP-21).
+#[derive(Debug, Default)]
+pub struct OnboardingState {
+    /// Display name entered during onboarding.
+    pub name_input: String,
+    /// Whether identity has been created during this wizard run.
+    pub identity_created: bool,
+}
+
+/// A duplicate pair for the UI.
+#[derive(Debug, Clone)]
+pub struct DuplicateEntry {
+    pub id1: String,
+    pub name1: String,
+    pub id2: String,
+    pub name2: String,
+    pub similarity: f64,
+}
+
+/// State for the contact duplicates screen (SP-12a).
+#[derive(Debug, Default)]
+pub struct DuplicatesState {
+    /// Detected duplicate pairs.
+    pub pairs: Vec<DuplicateEntry>,
+    /// Currently selected pair index.
+    pub selected: usize,
+}
+
+/// State for the contact merge preview screen (SP-12a).
+#[derive(Debug, Default, Clone)]
+pub struct MergeState {
+    /// Primary contact ID.
+    pub primary_id: String,
+    /// Primary contact name.
+    pub primary_name: String,
+    /// Primary contact fields.
+    pub primary_fields: Vec<String>,
+    /// Secondary contact ID.
+    pub secondary_id: String,
+    /// Secondary contact name.
+    pub secondary_name: String,
+    /// Secondary contact fields.
+    pub secondary_fields: Vec<String>,
+}
+
+/// State for the contact limit screen (SP-12a).
+#[derive(Debug, Default)]
+pub struct ContactLimitState {
+    /// Current contact limit.
+    pub current_limit: usize,
+    /// Current contact count.
+    pub current_count: usize,
+    /// New limit input buffer.
+    pub limit_input: String,
+    /// Whether editing is active.
+    pub editing: bool,
+}
+
 /// Path to theme config file.
 fn theme_config_path() -> Option<std::path::PathBuf> {
     dirs::config_dir().map(|d| d.join("vauchi").join("theme"))
@@ -465,7 +549,7 @@ impl App {
     pub fn new(backend: Backend) -> Self {
         // Start on Lock screen if password is configured, Setup if no identity, else Home
         let initial_screen = if !backend.has_identity() {
-            Screen::Setup
+            Screen::SetupWelcome
         } else if backend.is_password_enabled().unwrap_or(false) {
             Screen::Lock
         } else {
@@ -508,6 +592,10 @@ impl App {
             duress_state: DuressState::default(),
             lock_state: LockState::default(),
             groups_state: GroupsState::default(),
+            onboarding_state: OnboardingState::default(),
+            duplicates_state: DuplicatesState::default(),
+            merge_state: MergeState::default(),
+            contact_limit_state: ContactLimitState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,
@@ -563,9 +651,33 @@ impl App {
     /// Go back to the previous screen.
     pub fn go_back(&mut self) {
         match self.screen {
-            // Can't go back from Setup until identity is configured
-            Screen::Setup => {
+            // Can't go back from Setup / onboarding until identity is configured
+            Screen::Setup | Screen::SetupWelcome => {
                 // Stay on setup screen
+            }
+            Screen::SetupCreateIdentity => {
+                self.screen = Screen::SetupWelcome;
+            }
+            Screen::SetupAddFields => {
+                self.screen = Screen::SetupCreateIdentity;
+            }
+            Screen::SetupSecurity => {
+                self.screen = Screen::SetupAddFields;
+            }
+            Screen::SetupReady => {
+                self.screen = Screen::SetupSecurity;
+            }
+            Screen::ContactDuplicates => {
+                self.screen = Screen::Contacts;
+                self.duplicates_state = DuplicatesState::default();
+            }
+            Screen::ContactMerge => {
+                self.screen = Screen::ContactDuplicates;
+                self.merge_state = MergeState::default();
+            }
+            Screen::ContactLimit => {
+                self.screen = Screen::Contacts;
+                self.contact_limit_state = ContactLimitState::default();
             }
             // Can't escape the lock screen — must enter PIN
             Screen::Lock => {
@@ -599,12 +711,12 @@ impl App {
                 self.screen = Screen::Settings;
                 self.duress_state = DuressState::default();
             }
-            // From Backup, go back to Setup if no identity, otherwise Home
+            // From Backup, go back to onboarding/setup if no identity, otherwise Home
             Screen::Backup => {
                 if self.backend.has_identity() {
                     self.screen = Screen::Home;
                 } else {
-                    self.screen = Screen::Setup;
+                    self.screen = Screen::SetupWelcome;
                 }
             }
             Screen::ContactDetail => {
@@ -615,7 +727,12 @@ impl App {
                 self.visibility_state = VisibilityState::default();
             }
             Screen::AddField => {
-                self.screen = Screen::Home;
+                // Return to onboarding wizard if we came from there
+                self.screen = if self.onboarding_state.identity_created {
+                    Screen::SetupAddFields
+                } else {
+                    Screen::Home
+                };
                 self.add_field_state = AddFieldState::default();
             }
             Screen::EditField => {

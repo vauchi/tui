@@ -136,7 +136,7 @@ fn buffer_to_string(buffer: &Buffer) -> String {
 #[test]
 fn test_snapshot_setup_screen() {
     let (mut app, _tmp) = create_app_without_identity();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
     let output = render_to_string(&mut app);
     insta::assert_snapshot!("setup_screen", output);
 }

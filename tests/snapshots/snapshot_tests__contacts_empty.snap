@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 167
 expression: output
 ---
 Contacts
@@ -25,4 +24,4 @@ Contacts
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ────────────────────────────────────────────────────────────────────────────────
-[j/k] navigate  [/]search  [enter] view  [esc] back  [?]help
+[j/k] navigate  [/]search  [d]uplicates  [L]imit  [enter] view  [esc] back  [?]h

@@ -14,8 +14,9 @@ use crossterm::event::KeyCode;
 use crate::app::{App, InputMode, Screen};
 
 use contacts_input::{
-    handle_action_menu_keys, handle_contact_detail_keys, handle_contacts_keys,
-    handle_group_detail_keys, handle_groups_keys, handle_visibility_keys,
+    handle_action_menu_keys, handle_contact_detail_keys, handle_contact_limit_keys,
+    handle_contacts_keys, handle_duplicates_keys, handle_group_detail_keys, handle_groups_keys,
+    handle_merge_keys, handle_visibility_keys,
 };
 use editing::{
     handle_add_field_keys, handle_edit_field_keys, handle_edit_name_keys,
@@ -27,7 +28,11 @@ use features_input::{
     handle_recovery_keys, handle_settings_keys, handle_support_keys, handle_sync_keys,
     handle_tor_settings_keys,
 };
-use navigation::{handle_help_keys, handle_home_keys, handle_setup_keys};
+use navigation::{
+    handle_help_keys, handle_home_keys, handle_setup_add_fields_keys,
+    handle_setup_create_identity_keys, handle_setup_keys, handle_setup_ready_keys,
+    handle_setup_security_keys, handle_setup_welcome_keys,
+};
 
 /// Action to take after handling input.
 pub enum Action {
@@ -47,6 +52,18 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     // Lock screen bypasses ALL global keys — PIN chars include 'q', Esc, etc.
     if app.screen == Screen::Lock {
         handle_lock_keys(app, key);
+        return Action::Continue;
+    }
+
+    // Onboarding name input bypasses global keys (characters are part of name input)
+    if app.screen == Screen::SetupCreateIdentity {
+        handle_setup_create_identity_keys(app, key);
+        return Action::Continue;
+    }
+
+    // Contact limit editing bypasses global keys (digits are input)
+    if app.screen == Screen::ContactLimit && app.contact_limit_state.editing {
+        handle_contact_limit_keys(app, key);
         return Action::Continue;
     }
 
@@ -98,6 +115,18 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Groups => handle_groups_keys(app, key),
         Screen::GroupDetail => handle_group_detail_keys(app, key),
         Screen::Lock => unreachable!("Lock screen handled before global keys"),
+        // SP-21 Onboarding wizard
+        Screen::SetupWelcome => handle_setup_welcome_keys(app, key),
+        Screen::SetupCreateIdentity => {
+            unreachable!("SetupCreateIdentity handled before global keys")
+        }
+        Screen::SetupAddFields => handle_setup_add_fields_keys(app, key),
+        Screen::SetupSecurity => handle_setup_security_keys(app, key),
+        Screen::SetupReady => handle_setup_ready_keys(app, key),
+        // SP-12a Duplicates / Merge / Limit
+        Screen::ContactDuplicates => handle_duplicates_keys(app, key),
+        Screen::ContactMerge => handle_merge_keys(app, key),
+        Screen::ContactLimit => handle_contact_limit_keys(app, key),
     }
 
     Action::Continue

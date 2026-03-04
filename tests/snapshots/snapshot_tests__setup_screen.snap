@@ -2,26 +2,26 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Vauchi - Setup
+Vauchi - Welcome
 
 ────────────────────────────────────────────────────────────────────────────────
 
-
-┌ Setup ───────────────────────────────────────────────────────────────────────┐
+┌ Getting Started ─────────────────────────────────────────────────────────────┐
+│                                                                              │
 │                               Welcome to Vauchi                              │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                            [c] Create New Identity                           │
+┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
+│Privacy by Design                                                             │
 │                                                                              │
-│                    Start fresh with a new Vauchi identity                    │
+│  * End-to-end encrypted contact cards                                        │
+│  * No phone number or email required                                         │
+│  * You control who sees what                                                 │
+│  * Local-first: your data stays on your device                               │
+│  * Decentralized: no single point of failure                                 │
+│  * Open source and auditable                                                 │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                               [i] Import Backup                              │
-│                                                                              │
-│                        Restore from an existing backup                       │
-└──────────────────────────────────────────────────────────────────────────────┘
+                                [1/5]  ● ○ ○ ○ ○
 ────────────────────────────────────────────────────────────────────────────────
-[c]reate new identity  [i]mport backup  [q]uit
+[Enter] start  [i]mport backup  [q]uit

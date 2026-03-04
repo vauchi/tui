@@ -205,12 +205,12 @@ fn test_go_back_from_edit_relay_url_returns_to_settings() {
 #[test]
 fn test_go_back_from_setup_stays_on_setup() {
     let (mut app, _dir) = create_app_without_identity();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
     app.go_back();
     assert_eq!(
         app.screen,
-        Screen::Setup,
-        "go_back from Setup should stay on Setup"
+        Screen::SetupWelcome,
+        "go_back from SetupWelcome should stay on SetupWelcome"
     );
 }
 
@@ -227,7 +227,7 @@ fn test_go_back_from_backup_without_identity_goes_to_setup() {
     let (mut app, _dir) = create_app_without_identity();
     app.goto(Screen::Backup);
     app.go_back();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
 }
 
 #[test]
@@ -385,7 +385,7 @@ fn test_app_new_with_identity_starts_on_home() {
 #[test]
 fn test_app_new_without_identity_starts_on_setup() {
     let (app, _dir) = create_app_without_identity();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
 }
 
 // ============================================================================

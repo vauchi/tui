@@ -8,6 +8,7 @@ mod backup;
 mod contacts;
 mod delivery;
 mod devices;
+mod duplicates;
 mod duress;
 mod emergency;
 pub mod exchange;
@@ -76,6 +77,16 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             contacts::draw_detail(f, chunks[1], app);
             draw_action_menu(f, chunks[1], app);
         }
+        // SP-21 Onboarding wizard
+        Screen::SetupWelcome => setup::draw_welcome(f, chunks[1], app),
+        Screen::SetupCreateIdentity => setup::draw_create_identity(f, chunks[1], app),
+        Screen::SetupAddFields => setup::draw_add_fields(f, chunks[1], app),
+        Screen::SetupSecurity => setup::draw_security(f, chunks[1], app),
+        Screen::SetupReady => setup::draw_ready(f, chunks[1], app),
+        // SP-12a Duplicates / Merge / Limit
+        Screen::ContactDuplicates => duplicates::draw_duplicates(f, chunks[1], app),
+        Screen::ContactMerge => duplicates::draw_merge(f, chunks[1], app),
+        Screen::ContactLimit => duplicates::draw_limit(f, chunks[1], app),
     }
 
     // Footer
@@ -110,6 +121,14 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::GroupDetail => "Group Details",
         Screen::Lock => "Vauchi",
         Screen::ActionMenu => "Contact Details",
+        Screen::SetupWelcome => "Vauchi - Welcome",
+        Screen::SetupCreateIdentity => "Vauchi - Create Identity",
+        Screen::SetupAddFields => "Vauchi - Add Fields",
+        Screen::SetupSecurity => "Vauchi - Security",
+        Screen::SetupReady => "Vauchi - Ready!",
+        Screen::ContactDuplicates => "Duplicate Detection",
+        Screen::ContactMerge => "Merge Contacts",
+        Screen::ContactLimit => "Contact Limit",
     };
 
     let header = Paragraph::new(title)
@@ -127,7 +146,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     let help_text = match app.screen {
         Screen::Setup => "[c]reate new identity  [i]mport backup  [q]uit",
         Screen::Home => "[c]ontacts  [s]ettings  [g]roups  e[X]change  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
-        Screen::Contacts => "[j/k] navigate  [/]search  [enter] view  [esc] back  [?]help",
+        Screen::Contacts => "[j/k] navigate  [/]search  [d]uplicates  [L]imit  [enter] view  [esc] back  [?]help",
         Screen::ContactDetail => "[j/k] navigate  [c]opy  [o]pen  [v]isibility  [f]ingerprint  [t]rust  [h]ide  [x]delete  [esc] back",
         Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
         Screen::Exchange => "[r]efresh  [esc] back  [?]help",
@@ -151,6 +170,14 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::GroupDetail => "[j/k] navigate  [r]ename  [esc] back",
         Screen::Lock => "[enter] unlock",
         Screen::ActionMenu => "[j/k] navigate  [enter] select  [esc] cancel",
+        Screen::SetupWelcome => "[Enter] start  [i]mport backup  [q]uit",
+        Screen::SetupCreateIdentity => "[Enter] continue  [Esc] back",
+        Screen::SetupAddFields => "[a]dd field  [s/Enter] skip  [Esc] back",
+        Screen::SetupSecurity => "[Enter] continue  [Esc] back",
+        Screen::SetupReady => "[Enter] go to Home",
+        Screen::ContactDuplicates => "[j/k] navigate  [m]erge  [d]ismiss  [esc] back",
+        Screen::ContactMerge => "[y] confirm merge  [n/Esc] cancel",
+        Screen::ContactLimit => "[e/Enter] edit  [Esc] back",
     };
 
     let status = if let Some(msg) = &app.status_message {

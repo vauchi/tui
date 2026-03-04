@@ -6,7 +6,10 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{ActionMenuState, App, Screen};
+use crate::app::{
+    ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, InputMode,
+    MergeState, Screen,
+};
 
 pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
     // Handle search mode
@@ -61,6 +64,40 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Enter => {
             app.goto(Screen::ContactDetail);
+        }
+        KeyCode::Char('d') => {
+            // Open duplicates screen
+            match app.backend.find_duplicates() {
+                Ok(pairs) => {
+                    app.duplicates_state = DuplicatesState {
+                        pairs: pairs
+                            .into_iter()
+                            .map(|p| DuplicateEntry {
+                                id1: p.id1,
+                                name1: p.name1,
+                                id2: p.id2,
+                                name2: p.name2,
+                                similarity: p.similarity,
+                            })
+                            .collect(),
+                        selected: 0,
+                    };
+                    app.goto(Screen::ContactDuplicates);
+                }
+                Err(e) => app.set_status(format!("Error: {}", e)),
+            }
+        }
+        KeyCode::Char('L') => {
+            // Open contact limit screen
+            let limit = app.backend.get_contact_limit().unwrap_or(500);
+            let count = app.backend.contact_count().unwrap_or(0);
+            app.contact_limit_state = ContactLimitState {
+                current_limit: limit,
+                current_count: count,
+                limit_input: limit.to_string(),
+                editing: false,
+            };
+            app.goto(Screen::ContactLimit);
         }
         _ => {}
     }
@@ -461,5 +498,157 @@ pub(super) fn handle_visibility_keys(app: &mut App, key: KeyCode) {
             }
         }
         _ => {}
+    }
+}
+
+// ── SP-12a Duplicate / Merge / Limit Handlers ──
+
+pub(super) fn handle_duplicates_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Char('j') | KeyCode::Down => {
+            if app.duplicates_state.selected < app.duplicates_state.pairs.len().saturating_sub(1) {
+                app.duplicates_state.selected += 1;
+            }
+        }
+        KeyCode::Char('k') | KeyCode::Up => {
+            if app.duplicates_state.selected > 0 {
+                app.duplicates_state.selected -= 1;
+            }
+        }
+        KeyCode::Char('m') => {
+            // Open merge preview for selected pair
+            if let Some(pair) = app
+                .duplicates_state
+                .pairs
+                .get(app.duplicates_state.selected)
+            {
+                let primary_fields = app
+                    .backend
+                    .get_contact_fields_by_id(&pair.id1)
+                    .unwrap_or_default();
+                let secondary_fields = app
+                    .backend
+                    .get_contact_fields_by_id(&pair.id2)
+                    .unwrap_or_default();
+                app.merge_state = MergeState {
+                    primary_id: pair.id1.clone(),
+                    primary_name: pair.name1.clone(),
+                    primary_fields,
+                    secondary_id: pair.id2.clone(),
+                    secondary_name: pair.name2.clone(),
+                    secondary_fields,
+                };
+                app.goto(Screen::ContactMerge);
+            }
+        }
+        KeyCode::Char('d') => {
+            // Dismiss selected pair
+            if let Some(pair) = app
+                .duplicates_state
+                .pairs
+                .get(app.duplicates_state.selected)
+            {
+                let id1 = pair.id1.clone();
+                let id2 = pair.id2.clone();
+                match app.backend.dismiss_duplicate(&id1, &id2) {
+                    Ok(()) => {
+                        app.duplicates_state
+                            .pairs
+                            .remove(app.duplicates_state.selected);
+                        if app.duplicates_state.selected > 0
+                            && app.duplicates_state.selected >= app.duplicates_state.pairs.len()
+                        {
+                            app.duplicates_state.selected -= 1;
+                        }
+                        app.set_status("Duplicate dismissed");
+                    }
+                    Err(e) => app.set_status(format!("Error: {}", e)),
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+pub(super) fn handle_merge_keys(app: &mut App, key: KeyCode) {
+    match key {
+        KeyCode::Char('y') => {
+            // Confirm merge
+            let primary_id = app.merge_state.primary_id.clone();
+            let secondary_id = app.merge_state.secondary_id.clone();
+            match app.backend.merge_contacts(&primary_id, &secondary_id) {
+                Ok(name) => {
+                    app.set_status(format!("Merged contacts into {}", name));
+                    // Remove the pair from duplicates list
+                    app.duplicates_state.pairs.retain(|p| {
+                        !((p.id1 == primary_id && p.id2 == secondary_id)
+                            || (p.id1 == secondary_id && p.id2 == primary_id))
+                    });
+                    if app.duplicates_state.selected > 0
+                        && app.duplicates_state.selected >= app.duplicates_state.pairs.len()
+                    {
+                        app.duplicates_state.selected =
+                            app.duplicates_state.pairs.len().saturating_sub(1);
+                    }
+                    app.merge_state = MergeState::default();
+                    app.goto(Screen::ContactDuplicates);
+                }
+                Err(e) => app.set_status(format!("Merge failed: {}", e)),
+            }
+        }
+        KeyCode::Char('n') | KeyCode::Esc => {
+            // Cancel merge
+            app.go_back();
+        }
+        _ => {}
+    }
+}
+
+pub(super) fn handle_contact_limit_keys(app: &mut App, key: KeyCode) {
+    if app.contact_limit_state.editing {
+        match key {
+            KeyCode::Char(c) if c.is_ascii_digit() => {
+                if app.contact_limit_state.limit_input.len() < 6 {
+                    app.contact_limit_state.limit_input.push(c);
+                }
+            }
+            KeyCode::Backspace => {
+                app.contact_limit_state.limit_input.pop();
+            }
+            KeyCode::Enter => {
+                if let Ok(limit) = app.contact_limit_state.limit_input.parse::<usize>() {
+                    if limit < 1 {
+                        app.set_status("Limit must be at least 1");
+                    } else {
+                        match app.backend.set_contact_limit(limit) {
+                            Ok(()) => {
+                                app.contact_limit_state.current_limit = limit;
+                                app.contact_limit_state.editing = false;
+                                app.input_mode = InputMode::Normal;
+                                app.set_status(format!("Contact limit set to {}", limit));
+                            }
+                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        }
+                    }
+                } else {
+                    app.set_status("Invalid number");
+                }
+            }
+            KeyCode::Esc => {
+                app.contact_limit_state.editing = false;
+                app.contact_limit_state.limit_input =
+                    app.contact_limit_state.current_limit.to_string();
+                app.input_mode = InputMode::Normal;
+            }
+            _ => {}
+        }
+    } else {
+        match key {
+            KeyCode::Char('e') | KeyCode::Enter => {
+                app.contact_limit_state.editing = true;
+                app.input_mode = InputMode::Editing;
+            }
+            _ => {}
+        }
     }
 }

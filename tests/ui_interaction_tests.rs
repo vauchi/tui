@@ -43,10 +43,28 @@ fn test_screen_variants_exist() {
         Screen::Backup,
         Screen::TorSettings,
         Screen::Privacy,
+        Screen::Support,
+        Screen::Delivery,
+        Screen::ActionMenu,
+        Screen::Emergency,
+        Screen::Duress,
+        Screen::Lock,
+        Screen::Groups,
+        Screen::GroupDetail,
+        // SP-21 Onboarding wizard
+        Screen::SetupWelcome,
+        Screen::SetupCreateIdentity,
+        Screen::SetupAddFields,
+        Screen::SetupSecurity,
+        Screen::SetupReady,
+        // SP-12a Duplicates / Merge / Limit
+        Screen::ContactDuplicates,
+        Screen::ContactMerge,
+        Screen::ContactLimit,
     ];
 
-    // Verify we have all 18 screen variants
-    assert_eq!(screens.len(), 18);
+    // Verify we have all 34 screen variants
+    assert_eq!(screens.len(), 34);
 }
 
 /// Test: Screen Home is the initial screen variant

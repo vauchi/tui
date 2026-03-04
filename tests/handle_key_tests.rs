@@ -78,13 +78,13 @@ fn test_handle_key_esc_goes_back_from_contacts() {
 #[test]
 fn test_handle_key_esc_stays_on_setup() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
 
     handle_key(&mut app, KeyCode::Esc);
     assert_eq!(
         app.screen,
-        Screen::Setup,
-        "Esc from Setup should stay on Setup"
+        Screen::SetupWelcome,
+        "Esc from SetupWelcome should stay on SetupWelcome"
     );
 }
 
@@ -259,12 +259,20 @@ fn test_handle_key_editing_enter_returns_to_normal() {
 // Setup Screen
 // ============================================================================
 
-// @scenario: identity_management:Create new identity on first launch
+// @scenario: identity_management:Create new identity via onboarding wizard
 #[test]
 fn test_handle_key_setup_c_creates_identity_and_goes_home() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
 
+    // Enter starts onboarding → SetupCreateIdentity
+    handle_key(&mut app, KeyCode::Enter);
+    assert_eq!(app.screen, Screen::SetupCreateIdentity);
+
+    // The legacy Setup screen still handles 'c' for backward compat
+    // Reset input mode since SetupWelcome → SetupCreateIdentity sets Editing
+    app.screen = Screen::Setup;
+    app.input_mode = InputMode::Normal;
     handle_key(&mut app, KeyCode::Char('c'));
     assert_eq!(
         app.screen,
@@ -280,8 +288,9 @@ fn test_handle_key_setup_c_creates_identity_and_goes_home() {
 #[test]
 fn test_handle_key_setup_i_opens_backup_import() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.screen, Screen::Setup);
+    assert_eq!(app.screen, Screen::SetupWelcome);
 
+    // 'i' on SetupWelcome goes to Backup import
     handle_key(&mut app, KeyCode::Char('i'));
     assert_eq!(app.screen, Screen::Backup);
     // Note: goto() resets input_mode to Normal, overriding the Editing
