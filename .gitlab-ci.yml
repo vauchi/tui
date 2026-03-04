@@ -25,6 +25,7 @@ include:
     file:
       - '/ci-templates/rust-base.yml'
       - '/ci-templates/security.yml'
+      - '/ci-templates/coverage.yml'
       - '/ci-templates/mr-rules.yml'
       - '/ci-templates/downstream.yml'
       - '/ci-templates/reuse.yml'
@@ -45,18 +46,12 @@ stages:
 # to pass before starting (PI-13 fail-fast DAG).
 
 lint:format:
-  extends: [.rust-runner-nocache, .validation-rust, .timeout-quick]
-  stage: lint
+  extends: [.rust-runner-nocache, .lint-format, .validation-rust, .timeout-quick]
   needs: []
-  script:
-    - cargo fmt --all -- --check
 
 lint:clippy:
-  extends: [.rust-runner-readonly, .validation-rust, .timeout-quick]
-  stage: lint
+  extends: [.rust-runner-readonly, .lint-clippy, .validation-rust, .timeout-quick]
   needs: []
-  script:
-    - cargo clippy --all-targets -- -D warnings
 
 # ============================================================
 # Test Stage (runs on Rust code changes, gated by lint)
@@ -82,6 +77,7 @@ test:
     expire_in: 1 week
 
 # Main: full coverage with llvm-cov
+# (Not using .coverage-job template due to TUI's special VAUCHI_LOCALES_DIR env var requirement)
 coverage:
   extends: [.rust-runner, .timeout-standard]
   stage: test
@@ -100,13 +96,19 @@ coverage:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
+    - rustup component add llvm-tools-preview 2>/dev/null || true
+    - command -v cargo-binstall >/dev/null 2>&1 || (curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash)
+    - cargo binstall cargo-llvm-cov cargo-nextest --no-confirm 2>/dev/null || cargo install cargo-llvm-cov cargo-nextest --locked || true
+    - |
+      curl --silent --fail \
+        "${CI_API_V4_URL}/projects/vauchi%2Fscripts/repository/files/scripts%2Fci%2Fpush-coverage.sh/raw?ref=main" \
+        -o push-coverage.sh
+      chmod +x push-coverage.sh
   script:
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov nextest --all-targets --lcov --output-path lcov.info
     - cargo llvm-cov report --cobertura --output-path cobertura.xml
-    - cargo llvm-cov report
-    - mkdir -p /tmp/ci-${CI_PIPELINE_ID} && curl -sL -H "JOB-TOKEN:$CI_JOB_TOKEN" "$CI_API_V4_URL/projects/vauchi%2Fscripts/repository/files/scripts%2Fci%2Fpush-coverage.sh/raw?ref=main" -o /tmp/ci-${CI_PIPELINE_ID}/push-coverage.sh
-    - "bash /tmp/ci-${CI_PIPELINE_ID}/push-coverage.sh cobertura.xml tui || echo WARNING: coverage push failed"
-    - rm -rf /tmp/ci-${CI_PIPELINE_ID}
+    - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov report
+    - ./push-coverage.sh cobertura.xml tui || true
   coverage: '/TOTAL\s+\d+\s+\d+\s+\d+\.\d+%\s+\d+\s+\d+\s+\d+\.\d+%\s+\d+\s+\d+\s+(\d+\.\d+%)/'
   artifacts:
     reports:
@@ -124,25 +126,21 @@ coverage:
 
 mutation:nightly:
   extends: [.mutation-nightly, .rust-runner, .timeout-extended]
-  allow_failure: true
-  variables:
-    MUTATION_TIMEOUT_NIGHTLY: "60"
 
 # ============================================================
 # Security Stage (runs on dependency changes, gated by lint, parallel with test)
 # ============================================================
 
 security:audit:
-  extends: [.rust-runner-readonly, .validation-deps, .timeout-quick]
-  stage: security
+  extends: [.rust-runner-readonly, .security-audit, .validation-deps, .timeout-quick]
   needs: []
-  script:
-    - cargo audit
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - command -v cargo-audit >/dev/null 2>&1 || cargo binstall cargo-audit --no-confirm 2>/dev/null || cargo install cargo-audit
 
 # Full cargo-deny check: advisories, licenses, bans, sources
 security:deny:
-  extends: [.rust-runner-readonly, .timeout-quick]
-  stage: security
+  extends: [.rust-runner-readonly, .security-deny, .timeout-quick]
   needs:
     - job: lint:format
       optional: true
@@ -151,8 +149,9 @@ security:deny:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_PIPELINE_SOURCE == "schedule"
-  script:
-    - cargo deny check
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - command -v cargo-deny >/dev/null 2>&1 || cargo binstall cargo-deny --no-confirm 2>/dev/null || cargo install cargo-deny
 
 # ============================================================
 # Verify Stage (upstream trigger only)
