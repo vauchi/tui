@@ -17,6 +17,7 @@ use vauchi_core::ui::{FieldDisplay, UiFieldVisibility, VisibilityMode};
 pub struct FieldListWidget<'a> {
     pub fields: &'a [FieldDisplay],
     pub visibility_mode: &'a VisibilityMode,
+    #[allow(dead_code)]
     pub available_groups: &'a [String],
     pub selected_index: usize,
     pub focused: bool,
