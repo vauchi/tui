@@ -701,7 +701,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1844,7 +1844,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2186,7 +2186,7 @@ dependencies = [
  "getrandom 0.4.1",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2421,8 +2421,7 @@ dependencies = [
 
 [[package]]
 name = "vauchi-core"
-version = "0.2.7"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#fc47c60a2245a4cfd1e1c84613136692beaf1bc8"
+version = "0.4.1-dev.0"
 dependencies = [
  "argon2",
  "async-trait",
@@ -3110,7 +3109,3 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
 ]
-
-[[patch.unused]]
-name = "vauchi-core"
-version = "0.2.8"
