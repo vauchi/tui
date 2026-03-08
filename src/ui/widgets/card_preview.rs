@@ -4,7 +4,7 @@
 
 //! CardPreview widget — renders a `Component::CardPreview` as a Ratatui widget.
 //!
-//! Shows a bordered box with card content. Tab or arrow keys switch between
+//! Shows a bordered box with card content. `[`/`]` or arrow keys switch between
 //! group views when available.
 
 use ratatui::prelude::*;

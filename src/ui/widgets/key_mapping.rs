@@ -160,16 +160,16 @@ fn map_component_key(
             selected_group,
             ..
         } => match key {
-            KeyCode::Left | KeyCode::Right | KeyCode::Tab => {
+            KeyCode::Left | KeyCode::Char('[') | KeyCode::Right | KeyCode::Char(']') => {
                 if group_views.is_empty() {
                     return KeyResult::Consumed;
                 }
-                // Find current index and cycle to next
+                // Find current index and cycle to next/previous
                 let current_idx = selected_group
                     .as_ref()
                     .and_then(|sg| group_views.iter().position(|g| &g.group_name == sg))
                     .unwrap_or(0);
-                let next_idx = if key == KeyCode::Left {
+                let next_idx = if matches!(key, KeyCode::Left | KeyCode::Char('[')) {
                     if current_idx == 0 {
                         group_views.len() - 1
                     } else {
