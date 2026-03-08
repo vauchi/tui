@@ -24,7 +24,7 @@ mod support;
 mod sync;
 mod tor;
 mod visibility;
-pub mod widgets;
+pub(crate) mod widgets;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};

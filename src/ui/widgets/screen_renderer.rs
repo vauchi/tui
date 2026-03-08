@@ -395,3 +395,65 @@ fn action_key_hint(action_id: &str) -> &'static str {
         _ => "Enter",
     }
 }
+
+// INLINE_TEST_REQUIRED: tests need access to pub(crate) screen_renderer internals
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_render_state_default() {
+        let state = ScreenRenderState::default();
+        assert_eq!(state.focused_component, 0);
+        assert!(state.component_selections.is_empty());
+        assert!(state.validation_errors.is_empty());
+    }
+
+    #[test]
+    fn test_render_state_ensure_capacity() {
+        let mut state = ScreenRenderState::default();
+        state.ensure_capacity(3);
+        assert_eq!(state.component_selections.len(), 3);
+        assert_eq!(state.selection_for(0), 0);
+        assert_eq!(state.selection_for(1), 0);
+        assert_eq!(state.selection_for(2), 0);
+    }
+
+    #[test]
+    fn test_render_state_selection_for_out_of_bounds() {
+        let state = ScreenRenderState::default();
+        assert_eq!(state.selection_for(99), 0);
+    }
+
+    #[test]
+    fn test_render_state_validation_errors() {
+        let mut state = ScreenRenderState::default();
+
+        // No error initially
+        assert!(state.validation_error_for("name").is_none());
+
+        // Set an error
+        state.set_validation_error("name".to_string(), "Required".to_string());
+        assert_eq!(state.validation_error_for("name"), Some("Required"));
+
+        // Update the error
+        state.set_validation_error("name".to_string(), "Too short".to_string());
+        assert_eq!(state.validation_error_for("name"), Some("Too short"));
+        assert_eq!(state.validation_errors.len(), 1);
+
+        // Clear the error
+        state.clear_validation_error("name");
+        assert!(state.validation_error_for("name").is_none());
+    }
+
+    #[test]
+    fn test_render_state_clear_all_errors() {
+        let mut state = ScreenRenderState::default();
+        state.set_validation_error("a".to_string(), "err1".to_string());
+        state.set_validation_error("b".to_string(), "err2".to_string());
+        assert_eq!(state.validation_errors.len(), 2);
+
+        state.clear_all_errors();
+        assert!(state.validation_errors.is_empty());
+    }
+}
