@@ -185,9 +185,128 @@ fn map_component_key(
             _ => KeyResult::Unhandled,
         },
 
-        Component::Text { .. } | Component::InfoPanel { .. } | Component::Divider => {
-            KeyResult::Unhandled
+        Component::ContactList { id, contacts, .. } => {
+            let idx = state.focused_component;
+            let sel = state.selection_for(idx);
+            match key {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    if sel > 0 {
+                        state.component_selections[idx] = sel - 1;
+                    }
+                    KeyResult::Consumed
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if sel < contacts.len().saturating_sub(1) {
+                        state.component_selections[idx] = sel + 1;
+                    }
+                    KeyResult::Consumed
+                }
+                KeyCode::Enter => {
+                    if let Some(contact) = contacts.get(sel) {
+                        KeyResult::Action(UserAction::ListItemSelected {
+                            component_id: id.clone(),
+                            item_id: contact.id.clone(),
+                        })
+                    } else {
+                        KeyResult::Consumed
+                    }
+                }
+                _ => KeyResult::Unhandled,
+            }
         }
+
+        Component::SettingsGroup { id, items, .. } => {
+            let idx = state.focused_component;
+            let sel = state.selection_for(idx);
+            match key {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    if sel > 0 {
+                        state.component_selections[idx] = sel - 1;
+                    }
+                    KeyResult::Consumed
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if sel < items.len().saturating_sub(1) {
+                        state.component_selections[idx] = sel + 1;
+                    }
+                    KeyResult::Consumed
+                }
+                KeyCode::Enter | KeyCode::Char(' ') => {
+                    if let Some(item) = items.get(sel) {
+                        match &item.kind {
+                            vauchi_core::ui::SettingsItemKind::Toggle { .. } => {
+                                KeyResult::Action(UserAction::SettingsToggled {
+                                    component_id: id.clone(),
+                                    item_id: item.id.clone(),
+                                })
+                            }
+                            _ => KeyResult::Action(UserAction::ListItemSelected {
+                                component_id: id.clone(),
+                                item_id: item.id.clone(),
+                            }),
+                        }
+                    } else {
+                        KeyResult::Consumed
+                    }
+                }
+                _ => KeyResult::Unhandled,
+            }
+        }
+
+        Component::ActionList { id, items, .. } => {
+            let idx = state.focused_component;
+            let sel = state.selection_for(idx);
+            match key {
+                KeyCode::Up | KeyCode::Char('k') => {
+                    if sel > 0 {
+                        state.component_selections[idx] = sel - 1;
+                    }
+                    KeyResult::Consumed
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if sel < items.len().saturating_sub(1) {
+                        state.component_selections[idx] = sel + 1;
+                    }
+                    KeyResult::Consumed
+                }
+                KeyCode::Enter => {
+                    if let Some(item) = items.get(sel) {
+                        KeyResult::Action(UserAction::ListItemSelected {
+                            component_id: id.clone(),
+                            item_id: item.id.clone(),
+                        })
+                    } else {
+                        KeyResult::Consumed
+                    }
+                }
+                _ => KeyResult::Unhandled,
+            }
+        }
+
+        Component::PinInput { id, .. } => match key {
+            KeyCode::Char(c) if c.is_ascii_digit() => KeyResult::Action(UserAction::TextChanged {
+                component_id: id.clone(),
+                value: c.to_string(),
+            }),
+            KeyCode::Backspace => KeyResult::Action(UserAction::TextChanged {
+                component_id: id.clone(),
+                value: String::new(),
+            }),
+            _ => KeyResult::Unhandled,
+        },
+
+        Component::ConfirmationDialog { .. } => match key {
+            KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
+                action_id: "confirm".to_string(),
+            }),
+            _ => KeyResult::Unhandled,
+        },
+
+        Component::Text { .. }
+        | Component::InfoPanel { .. }
+        | Component::StatusIndicator { .. }
+        | Component::QrCode { .. }
+        | Component::Divider => KeyResult::Unhandled,
     }
 }
 
