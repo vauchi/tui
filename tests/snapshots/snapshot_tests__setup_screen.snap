@@ -1,27 +1,28 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 141
 expression: output
 ---
-Vauchi - Welcome
+Vauchi - Welcome to Vauchi
 
 ────────────────────────────────────────────────────────────────────────────────
+                                Welcome to Vauchi
+                         Privacy-focused contact cards.
 
-┌ Getting Started ─────────────────────────────────────────────────────────────┐
+┌  ────────────────────────────────────────────────────────────────────────────┐
 │                                                                              │
-│                               Welcome to Vauchi                              │
+│  [*] Private by design                                                       │
+│      Your data is end-to-end encrypted and never leaves your control.        │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│Privacy by Design                                                             │
-│                                                                              │
-│  * End-to-end encrypted contact cards                                        │
-│  * No phone number or email required                                         │
-│  * You control who sees what                                                 │
-│  * Local-first: your data stays on your device                               │
-│  * Decentralized: no single point of failure                                 │
-│  * Open source and auditable                                                 │
-└──────────────────────────────────────────────────────────────────────────────┘
-                                [1/5]  ● ○ ○ ○ ○
+
+
+
+
+
+
+         [Enter] I already have an identity  [Enter] Create new identity
+
 ────────────────────────────────────────────────────────────────────────────────
-[Enter] start  [i]mport backup  [q]uit
+[Enter] I already have an identity  [Enter] Create new identity  [Esc] back  [q]
