@@ -1,0 +1,16 @@
+---
+source: src/ui/widget_snapshots.rs
+expression: buffer_to_string(&buf)
+---
+┌ Groups ──────────────────────────────┐
+│ [x] Family                           │
+│     Close relatives                  │
+│ [ ] Friends                          │
+│ [x] Coworkers                        │
+│     Professional contacts            │
+│                                      │
+│                                      │
+│                                      │
+│                                      │
+│                                      │
+└──────────────────────────────────────┘

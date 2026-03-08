@@ -1,0 +1,18 @@
+---
+source: src/ui/widget_snapshots.rs
+expression: buffer_to_string(&buf)
+---
+┌ [S] Security ──────────────────────────────────┐
+│                                                │
+│  [*] End-to-end encrypted                      │
+│      Your data is always encrypted.            │
+│                                                │
+│  [S] No tracking                               │
+│      We never track your usage.                │
+│                                                │
+│  Open source                                   │
+│  Fully auditable code.                         │
+│                                                │
+│                                                │
+│                                                │
+└────────────────────────────────────────────────┘

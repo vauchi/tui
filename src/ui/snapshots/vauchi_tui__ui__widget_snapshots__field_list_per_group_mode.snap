@@ -1,0 +1,14 @@
+---
+source: src/ui/widget_snapshots.rs
+expression: buffer_to_string(&buf)
+---
+┌ Fields (Per Group) ────────────────────────────────────────────────┐
+│Type       Label           Value                  Visibility        │
+│                                                                    │
+│Email      Work            alice@corp.com         Coworkers         │
+│Phone      Home            +41 79 000 00 00       No groups         │
+│                                                                    │
+│                                                                    │
+│                                                                    │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘

@@ -26,6 +26,10 @@ mod tor;
 mod visibility;
 pub(crate) mod widgets;
 
+// INLINE_TEST_REQUIRED: Widgets are pub(crate) — snapshot tests must live inside the crate to access them
+#[cfg(test)]
+mod widget_snapshots;
+
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
 
