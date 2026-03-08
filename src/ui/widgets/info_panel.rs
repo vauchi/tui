@@ -71,7 +71,7 @@ fn icon_to_text(icon: &str) -> &'static str {
         "lock" => "[*]",
         "refresh" => "[~]",
         "people" | "group" => "[#]",
-        "shield" => "[!]",
+        "shield" => "[S]",
         "server" => "[@]",
         "key" => "[K]",
         "check" => "[v]",
