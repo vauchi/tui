@@ -860,6 +860,11 @@ fn render_action_hints(
     f.render_widget(para, area);
 }
 
+/// Map action IDs to keyboard hints (public accessor for footer rendering).
+pub fn action_key_hint_pub(action_id: &str) -> &'static str {
+    action_key_hint(action_id)
+}
+
 /// Map action IDs to keyboard hints.
 fn action_key_hint(action_id: &str) -> &'static str {
     match action_id {

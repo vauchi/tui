@@ -968,43 +968,126 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
 /// 'q' does NOT quit — it's a PIN character.
 pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
     use crate::backend::AuthResult;
+    use crate::ui::widgets::key_mapping::{self, KeyResult};
+    use vauchi_core::ui::{ActionResult, WorkflowEngine};
 
-    match key {
-        KeyCode::Char(c) => {
-            app.lock_state.error = false;
-            app.lock_state.pin_input.push(c);
-        }
-        KeyCode::Backspace => {
-            app.lock_state.pin_input.pop();
-            app.lock_state.error = false;
-        }
-        KeyCode::Enter => {
-            if app.lock_state.pin_input.is_empty() {
-                return;
+    // Try engine-driven handling first
+    if let Some(engine) = app.lock_engine.as_mut() {
+        let screen = engine.current_screen();
+        let key_result = key_mapping::map_key(key, &screen, &mut app.render_state);
+
+        match key_result {
+            KeyResult::Action(action) => {
+                // Sync lock_state from TextChanged actions before forwarding
+                match &action {
+                    vauchi_core::ui::UserAction::TextChanged {
+                        component_id,
+                        value,
+                    } if component_id == "pin" => {
+                        // PinInput sends single chars — accumulate in lock_state
+                        match key {
+                            KeyCode::Char(c) => {
+                                app.lock_state.error = false;
+                                app.lock_state.pin_input.push(c);
+                            }
+                            KeyCode::Backspace => {
+                                app.lock_state.pin_input.pop();
+                                app.lock_state.error = false;
+                            }
+                            _ => {}
+                        }
+                        // Feed full accumulated value to engine
+                        if let Some(engine) = app.lock_engine.as_mut() {
+                            let _ =
+                                engine.handle_action(vauchi_core::ui::UserAction::TextChanged {
+                                    component_id: "pin".into(),
+                                    value: app.lock_state.pin_input.clone(),
+                                });
+                        }
+                        return;
+                    }
+                    _ => {}
+                }
+
+                let result = engine.handle_action(action);
+                match result {
+                    ActionResult::Complete => {
+                        // Engine says PIN was submitted — verify against backend
+                        let pin = &app.lock_state.pin_input;
+                        if pin.is_empty() {
+                            return;
+                        }
+                        match app.backend.authenticate(pin) {
+                            Ok(AuthResult::Normal) => {
+                                app.lock_state = LockState::default();
+                                app.lock_engine = None;
+                                app.goto(Screen::Home);
+                            }
+                            Ok(AuthResult::Duress) => {
+                                app.lock_state = LockState::default();
+                                app.lock_engine = None;
+                                app.goto(Screen::Home);
+                            }
+                            Ok(AuthResult::Invalid) => {
+                                app.lock_state.pin_input.clear();
+                                app.lock_state.attempts += 1;
+                                app.lock_state.error = true;
+                                if let Some(engine) = app.lock_engine.as_mut() {
+                                    engine.record_failed_attempt();
+                                }
+                            }
+                            Err(_) => {
+                                app.lock_state.pin_input.clear();
+                                app.lock_state.error = true;
+                            }
+                        }
+                    }
+                    ActionResult::UpdateScreen(_) => {}
+                    ActionResult::ValidationError { message, .. } => {
+                        app.set_status(message);
+                    }
+                    _ => {}
+                }
             }
-            match app.backend.authenticate(&app.lock_state.pin_input) {
-                Ok(AuthResult::Normal) => {
-                    app.lock_state = LockState::default();
-                    app.goto(Screen::Home);
+            KeyResult::Consumed => {}
+            KeyResult::Unhandled => {}
+        }
+    } else {
+        // Legacy fallback: no engine
+        match key {
+            KeyCode::Char(c) => {
+                app.lock_state.error = false;
+                app.lock_state.pin_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.lock_state.pin_input.pop();
+                app.lock_state.error = false;
+            }
+            KeyCode::Enter => {
+                if app.lock_state.pin_input.is_empty() {
+                    return;
                 }
-                Ok(AuthResult::Duress) => {
-                    // Duress mode — proceed to Home but contacts will show decoys
-                    app.lock_state = LockState::default();
-                    app.goto(Screen::Home);
-                    // No visual indication of duress mode (by design)
-                }
-                Ok(AuthResult::Invalid) => {
-                    app.lock_state.pin_input.clear();
-                    app.lock_state.attempts += 1;
-                    app.lock_state.error = true;
-                }
-                Err(_) => {
-                    app.lock_state.pin_input.clear();
-                    app.lock_state.error = true;
+                match app.backend.authenticate(&app.lock_state.pin_input) {
+                    Ok(AuthResult::Normal) => {
+                        app.lock_state = LockState::default();
+                        app.goto(Screen::Home);
+                    }
+                    Ok(AuthResult::Duress) => {
+                        app.lock_state = LockState::default();
+                        app.goto(Screen::Home);
+                    }
+                    Ok(AuthResult::Invalid) => {
+                        app.lock_state.pin_input.clear();
+                        app.lock_state.attempts += 1;
+                        app.lock_state.error = true;
+                    }
+                    Err(_) => {
+                        app.lock_state.pin_input.clear();
+                        app.lock_state.error = true;
+                    }
                 }
             }
+            _ => {}
         }
-        // Esc, q, etc. — do nothing on lock screen
-        _ => {}
     }
 }

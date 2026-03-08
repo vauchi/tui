@@ -55,7 +55,22 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
-    // Onboarding name input bypasses global keys (characters are part of name input)
+    // Engine-driven onboarding bypasses global keys (engine handles text input)
+    if app.onboarding_engine.is_some()
+        && matches!(
+            app.screen,
+            Screen::SetupWelcome
+                | Screen::SetupCreateIdentity
+                | Screen::SetupAddFields
+                | Screen::SetupSecurity
+                | Screen::SetupReady
+        )
+    {
+        navigation::handle_onboarding_engine_keys(app, key);
+        return Action::Continue;
+    }
+
+    // Legacy: Onboarding name input bypasses global keys
     if app.screen == Screen::SetupCreateIdentity {
         handle_setup_create_identity_keys(app, key);
         return Action::Continue;

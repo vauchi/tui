@@ -284,7 +284,7 @@ fn map_component_key(
         }
 
         Component::PinInput { id, .. } => match key {
-            KeyCode::Char(c) if c.is_ascii_digit() => KeyResult::Action(UserAction::TextChanged {
+            KeyCode::Char(c) => KeyResult::Action(UserAction::TextChanged {
                 component_id: id.clone(),
                 value: c.to_string(),
             }),

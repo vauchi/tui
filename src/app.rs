@@ -5,10 +5,12 @@
 //! Application State
 
 use vauchi_core::contact_card::ContactAction;
+use vauchi_core::ui::{LockScreenEngine, OnboardingEngine};
 
 use crate::backend::{Backend, DeviceLinkResult, QRData};
 use crate::i18n::I18n;
 use crate::theme::{get_default_tui_theme, get_tui_theme, list_themes, TuiTheme};
+use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
 /// Current screen in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -287,6 +289,13 @@ pub struct App {
     pub groups_state: GroupsState,
     /// Onboarding wizard state (SP-21)
     pub onboarding_state: OnboardingState,
+    // ── Core-driven workflow engines ──
+    /// Onboarding engine (core-driven state machine)
+    pub onboarding_engine: Option<OnboardingEngine>,
+    /// Lock screen engine (core-driven state machine)
+    pub lock_engine: Option<LockScreenEngine>,
+    /// Render state for engine-driven screens (focus, selections)
+    pub render_state: ScreenRenderState,
     /// Duplicates detection state (SP-12a)
     pub duplicates_state: DuplicatesState,
     /// Merge preview state (SP-12a)
@@ -556,6 +565,18 @@ impl App {
             Screen::Home
         };
 
+        // Create engines for initial screen
+        let onboarding_engine = if initial_screen == Screen::SetupWelcome {
+            Some(OnboardingEngine::new())
+        } else {
+            None
+        };
+        let lock_engine = if initial_screen == Screen::Lock {
+            Some(LockScreenEngine::new(5))
+        } else {
+            None
+        };
+
         let theme_ids: Vec<String> = list_themes().into_iter().map(|(id, _, _)| id).collect();
 
         // Load saved theme or detect from environment
@@ -593,6 +614,9 @@ impl App {
             lock_state: LockState::default(),
             groups_state: GroupsState::default(),
             onboarding_state: OnboardingState::default(),
+            onboarding_engine,
+            lock_engine,
+            render_state: ScreenRenderState::default(),
             duplicates_state: DuplicatesState::default(),
             merge_state: MergeState::default(),
             contact_limit_state: ContactLimitState::default(),
@@ -646,6 +670,23 @@ impl App {
     pub fn goto(&mut self, screen: Screen) {
         self.screen = screen;
         self.input_mode = InputMode::Normal;
+
+        // Create engines for engine-backed screens
+        match screen {
+            Screen::SetupWelcome => {
+                if self.onboarding_engine.is_none() {
+                    self.onboarding_engine = Some(OnboardingEngine::new());
+                }
+                self.render_state = ScreenRenderState::default();
+            }
+            Screen::Lock => {
+                if self.lock_engine.is_none() {
+                    self.lock_engine = Some(LockScreenEngine::new(5));
+                }
+                self.render_state = ScreenRenderState::default();
+            }
+            _ => {}
+        }
     }
 
     /// Go back to the previous screen.

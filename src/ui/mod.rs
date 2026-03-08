@@ -32,8 +32,10 @@ mod widget_snapshots;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
+use vauchi_core::ui::WorkflowEngine;
 
 use crate::app::{App, Screen};
+use crate::ui::widgets::screen_renderer;
 
 /// Draw the application.
 pub fn draw(f: &mut Frame, app: &mut App) {
@@ -75,18 +77,52 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Duress => duress::draw(f, chunks[1], app),
         Screen::Groups => groups::draw(f, chunks[1], app),
         Screen::GroupDetail => groups::draw_detail(f, chunks[1], app),
-        Screen::Lock => lock::draw(f, chunks[1], app),
+        Screen::Lock => {
+            if let Some(engine) = &app.lock_engine {
+                let screen_model = engine.current_screen();
+                screen_renderer::render_screen(
+                    f,
+                    chunks[1],
+                    &screen_model,
+                    &app.render_state,
+                    &app.theme,
+                );
+            } else {
+                lock::draw(f, chunks[1], app);
+            }
+        }
         Screen::ActionMenu => {
             // Draw contact detail underneath, then overlay action menu
             contacts::draw_detail(f, chunks[1], app);
             draw_action_menu(f, chunks[1], app);
         }
-        // SP-21 Onboarding wizard
-        Screen::SetupWelcome => setup::draw_welcome(f, chunks[1], app),
-        Screen::SetupCreateIdentity => setup::draw_create_identity(f, chunks[1], app),
-        Screen::SetupAddFields => setup::draw_add_fields(f, chunks[1], app),
-        Screen::SetupSecurity => setup::draw_security(f, chunks[1], app),
-        Screen::SetupReady => setup::draw_ready(f, chunks[1], app),
+        // SP-21 Onboarding wizard — engine-driven rendering
+        Screen::SetupWelcome
+        | Screen::SetupCreateIdentity
+        | Screen::SetupAddFields
+        | Screen::SetupSecurity
+        | Screen::SetupReady => {
+            if let Some(engine) = &app.onboarding_engine {
+                let screen_model = engine.current_screen();
+                screen_renderer::render_screen(
+                    f,
+                    chunks[1],
+                    &screen_model,
+                    &app.render_state,
+                    &app.theme,
+                );
+            } else {
+                // Fallback to legacy rendering if engine not initialized
+                match app.screen {
+                    Screen::SetupWelcome => setup::draw_welcome(f, chunks[1], app),
+                    Screen::SetupCreateIdentity => setup::draw_create_identity(f, chunks[1], app),
+                    Screen::SetupAddFields => setup::draw_add_fields(f, chunks[1], app),
+                    Screen::SetupSecurity => setup::draw_security(f, chunks[1], app),
+                    Screen::SetupReady => setup::draw_ready(f, chunks[1], app),
+                    _ => {}
+                }
+            }
+        }
         // SP-12a Duplicates / Merge / Limit
         Screen::ContactDuplicates => duplicates::draw_duplicates(f, chunks[1], app),
         Screen::ContactMerge => duplicates::draw_merge(f, chunks[1], app),
@@ -98,7 +134,21 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 }
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
-    let title = match app.screen {
+    // Use engine title for engine-driven screens
+    let engine_title: Option<String> = match app.screen {
+        Screen::SetupWelcome
+        | Screen::SetupCreateIdentity
+        | Screen::SetupAddFields
+        | Screen::SetupSecurity
+        | Screen::SetupReady => app
+            .onboarding_engine
+            .as_ref()
+            .map(|e| format!("Vauchi - {}", e.current_screen().title)),
+        Screen::Lock => app.lock_engine.as_ref().map(|e| e.current_screen().title),
+        _ => None,
+    };
+
+    let title = engine_title.as_deref().unwrap_or(match app.screen {
         Screen::Setup => "Vauchi - Setup",
         Screen::Home => "Vauchi",
         Screen::Contacts => "Contacts",
@@ -133,7 +183,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::ContactDuplicates => "Duplicate Detection",
         Screen::ContactMerge => "Merge Contacts",
         Screen::ContactLimit => "Contact Limit",
-    };
+    });
 
     let header = Paragraph::new(title)
         .style(
@@ -147,7 +197,43 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
-    let help_text = match app.screen {
+    // For engine-driven screens, show engine actions in footer
+    let engine_footer: Option<String> = match app.screen {
+        Screen::SetupWelcome
+        | Screen::SetupCreateIdentity
+        | Screen::SetupAddFields
+        | Screen::SetupSecurity
+        | Screen::SetupReady => app.onboarding_engine.as_ref().map(|e| {
+            let screen = e.current_screen();
+            screen
+                .actions
+                .iter()
+                .filter(|a| a.enabled)
+                .map(|a| {
+                    let key = screen_renderer::action_key_hint_pub(&a.id);
+                    format!("[{}] {}", key, a.label)
+                })
+                .collect::<Vec<_>>()
+                .join("  ")
+                + "  [Esc] back  [q]uit"
+        }),
+        Screen::Lock => app.lock_engine.as_ref().map(|e| {
+            let screen = e.current_screen();
+            screen
+                .actions
+                .iter()
+                .filter(|a| a.enabled)
+                .map(|a| {
+                    let key = screen_renderer::action_key_hint_pub(&a.id);
+                    format!("[{}] {}", key, a.label)
+                })
+                .collect::<Vec<_>>()
+                .join("  ")
+        }),
+        _ => None,
+    };
+
+    let help_text = engine_footer.as_deref().unwrap_or(match app.screen {
         Screen::Setup => "[c]reate new identity  [i]mport backup  [q]uit",
         Screen::Home => "[c]ontacts  [s]ettings  [g]roups  e[X]change  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
         Screen::Contacts => "[j/k] navigate  [/]search  [d]uplicates  [L]imit  [enter] view  [esc] back  [?]help",
@@ -182,7 +268,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         Screen::ContactDuplicates => "[j/k] navigate  [m]erge  [d]ismiss  [esc] back",
         Screen::ContactMerge => "[y] confirm merge  [n/Esc] cancel",
         Screen::ContactLimit => "[e/Enter] edit  [Esc] back",
-    };
+    });
 
     let status = if let Some(msg) = &app.status_message {
         format!("{} | {}", msg, help_text)

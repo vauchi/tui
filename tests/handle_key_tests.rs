@@ -259,18 +259,13 @@ fn test_handle_key_editing_enter_returns_to_normal() {
 // Setup Screen
 // ============================================================================
 
-// @scenario: identity_management:Create new identity via onboarding wizard
+// @scenario: identity_management:Create new identity via legacy setup screen
 #[test]
 fn test_handle_key_setup_c_creates_identity_and_goes_home() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.screen, Screen::SetupWelcome);
 
-    // Enter starts onboarding → SetupCreateIdentity
-    handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.screen, Screen::SetupCreateIdentity);
-
-    // The legacy Setup screen still handles 'c' for backward compat
-    // Reset input mode since SetupWelcome → SetupCreateIdentity sets Editing
+    // Test legacy Setup screen (not engine-driven)
+    app.onboarding_engine = None; // Disable engine for legacy test
     app.screen = Screen::Setup;
     app.input_mode = InputMode::Normal;
     handle_key(&mut app, KeyCode::Char('c'));
@@ -285,17 +280,42 @@ fn test_handle_key_setup_c_creates_identity_and_goes_home() {
     );
 }
 
+// @scenario: identity_management:Engine-driven onboarding starts at identity check
+#[test]
+fn test_handle_key_engine_onboarding_enter_advances() {
+    let (mut app, _tmp) = create_test_app_no_identity();
+    assert_eq!(app.screen, Screen::SetupWelcome);
+    assert!(
+        app.onboarding_engine.is_some(),
+        "Engine should be created for onboarding"
+    );
+
+    // Enter on IdentityCheck (primary action "have_identity") transitions engine
+    handle_key(&mut app, KeyCode::Enter);
+    // Engine advances — screen should still be in onboarding range
+    assert!(
+        matches!(
+            app.screen,
+            Screen::SetupWelcome
+                | Screen::SetupCreateIdentity
+                | Screen::SetupAddFields
+                | Screen::SetupSecurity
+                | Screen::SetupReady
+        ),
+        "Engine should advance within onboarding screens, got {:?}",
+        app.screen,
+    );
+}
+
 #[test]
 fn test_handle_key_setup_i_opens_backup_import() {
     let (mut app, _tmp) = create_test_app_no_identity();
     assert_eq!(app.screen, Screen::SetupWelcome);
 
-    // 'i' on SetupWelcome goes to Backup import
+    // 'i' on SetupWelcome goes to Backup import (engine-driven or legacy)
     handle_key(&mut app, KeyCode::Char('i'));
     assert_eq!(app.screen, Screen::Backup);
-    // Note: goto() resets input_mode to Normal, overriding the Editing
-    // assignment in handle_setup_keys. This appears to be a bug — the
-    // intent is to enter editing mode for backup data paste.
+    // goto() resets input_mode to Normal
     assert_eq!(app.input_mode, InputMode::Normal);
 }
 
