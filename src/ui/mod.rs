@@ -156,15 +156,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             if let Some(model) = &cached.onboarding {
                 screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
             } else {
-                // Fallback to legacy rendering if engine not initialized
-                match app.screen {
-                    Screen::SetupWelcome => setup::draw_welcome(f, chunks[1], app),
-                    Screen::SetupCreateIdentity => setup::draw_create_identity(f, chunks[1], app),
-                    Screen::SetupAddFields => setup::draw_add_fields(f, chunks[1], app),
-                    Screen::SetupSecurity => setup::draw_security(f, chunks[1], app),
-                    Screen::SetupReady => setup::draw_ready(f, chunks[1], app),
-                    _ => {}
-                }
+                unreachable!("OnboardingEngine always initialized for setup screens");
             }
         }
         // SP-12a Duplicates / Merge / Limit
