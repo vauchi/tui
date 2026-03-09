@@ -13,14 +13,13 @@ use vauchi_tui::app::{App, Screen};
 use vauchi_tui::backend::Backend;
 use vauchi_tui::ui;
 
-fn create_app_with_identity() -> App {
+fn create_app_with_identity() -> (App, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
     let mut backend = Backend::new(dir.path()).unwrap();
     backend.create_identity("Smoke Tester").unwrap();
-    // Leak the tempdir so it lives long enough
-    let path = dir.into_path();
-    let backend = Backend::new(&path).unwrap();
-    App::new(backend)
+    let backend = Backend::new(dir.path()).unwrap();
+    let app = App::new(backend);
+    (app, dir)
 }
 
 fn render_to_string(app: &mut App, width: u16, height: u16) -> String {
@@ -40,19 +39,19 @@ fn render_to_string(app: &mut App, width: u16, height: u16) -> String {
 
 #[test]
 fn smoke_home_screen_renders_via_engine() {
-    let mut app = create_app_with_identity();
+    let (mut app, _dir) = create_app_with_identity();
     app.screen = Screen::Home;
     let output = render_to_string(&mut app, 80, 24);
 
     // Home screen should have the title and engine-driven content
     assert!(
-        output.contains("Home") || output.contains("Vauchi"),
+        output.contains("Home"),
         "Home screen should show title. Got:\n{}",
         output
     );
     // Should show "Add Contact" action from engine
     assert!(
-        output.contains("Add Contact") || output.contains("add"),
+        output.contains("Add Contact"),
         "Home screen should show Add Contact action. Got:\n{}",
         output
     );
@@ -60,12 +59,12 @@ fn smoke_home_screen_renders_via_engine() {
 
 #[test]
 fn smoke_contacts_screen_renders_via_engine() {
-    let mut app = create_app_with_identity();
+    let (mut app, _dir) = create_app_with_identity();
     app.screen = Screen::Contacts;
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
-        output.contains("Contacts") || output.contains("contact"),
+        output.contains("Contacts"),
         "Contacts screen should show title. Got:\n{}",
         output
     );
@@ -73,50 +72,50 @@ fn smoke_contacts_screen_renders_via_engine() {
 
 #[test]
 fn smoke_exchange_screen_renders_via_engine() {
-    let mut app = create_app_with_identity();
+    let (mut app, _dir) = create_app_with_identity();
     app.screen = Screen::Exchange;
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
-        output.contains("Exchange") || output.contains("QR"),
-        "Exchange screen should show title or QR content. Got:\n{}",
+        output.contains("Share Your Code"),
+        "Exchange screen should show share prompt. Got:\n{}",
         output
     );
 }
 
 #[test]
 fn smoke_settings_screen_renders_via_engine() {
-    let mut app = create_app_with_identity();
+    let (mut app, _dir) = create_app_with_identity();
     app.screen = Screen::Settings;
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
-        output.contains("Settings") || output.contains("Profile"),
-        "Settings screen should show title or profile group. Got:\n{}",
+        output.contains("Settings"),
+        "Settings screen should show title. Got:\n{}",
         output
     );
     // Engine-driven settings should show setting groups
     assert!(
-        output.contains("Privacy") || output.contains("Security") || output.contains("Network"),
-        "Settings screen should show settings groups. Got:\n{}",
+        output.contains("Privacy"),
+        "Settings screen should show Privacy settings group. Got:\n{}",
         output
     );
 }
 
 #[test]
 fn smoke_help_screen_renders_via_engine() {
-    let mut app = create_app_with_identity();
+    let (mut app, _dir) = create_app_with_identity();
     app.screen = Screen::Help;
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
-        output.contains("Help") || output.contains("FAQ"),
+        output.contains("Help"),
         "Help screen should show title. Got:\n{}",
         output
     );
     // Engine-driven help should show FAQ items
     assert!(
-        output.contains("How do I") || output.contains("Getting Started"),
+        output.contains("How do I"),
         "Help screen should show FAQ content. Got:\n{}",
         output
     );
@@ -124,7 +123,7 @@ fn smoke_help_screen_renders_via_engine() {
 
 #[test]
 fn smoke_all_migrated_screens_no_panic() {
-    let mut app = create_app_with_identity();
+    let (mut app, _dir) = create_app_with_identity();
 
     for screen in [
         Screen::Home,
