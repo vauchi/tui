@@ -5,7 +5,8 @@
 //! Application State
 
 use vauchi_core::contact_card::ContactAction;
-use vauchi_core::ui::{LockScreenEngine, OnboardingEngine};
+use vauchi_core::ui::{AppEngine, AppScreen, LockScreenEngine, OnboardingEngine};
+use vauchi_core::MockTransport;
 
 use crate::backend::{Backend, DeviceLinkResult, QRData};
 use crate::i18n::I18n;
@@ -290,6 +291,8 @@ pub struct App {
     /// Onboarding wizard state (SP-21)
     pub onboarding_state: OnboardingState,
     // ── Core-driven workflow engines ──
+    /// Unified AppEngine orchestrator (core-driven navigation + rendering)
+    pub app_engine: Option<AppEngine<MockTransport>>,
     /// Onboarding engine (core-driven state machine)
     pub onboarding_engine: Option<OnboardingEngine>,
     /// Lock screen engine (core-driven state machine)
@@ -565,6 +568,22 @@ impl App {
             Screen::Home
         };
 
+        // Create AppEngine for engine-driven screens
+        let app_engine = backend.create_vauchi().ok().map(|vauchi| {
+            let mut engine = AppEngine::new(vauchi);
+            // Sync AppEngine to match Backend state — Vauchi doesn't auto-load
+            // identity from storage, so AppEngine defaults to Onboarding.
+            // Navigate to the correct screen based on Backend's identity state.
+            if backend.has_identity() {
+                let target = match initial_screen {
+                    Screen::Lock => AppScreen::Lock,
+                    _ => AppScreen::Home,
+                };
+                engine.navigate_to(target);
+            }
+            engine
+        });
+
         // Create engines for initial screen
         let onboarding_engine = if initial_screen == Screen::SetupWelcome {
             Some(OnboardingEngine::new())
@@ -614,6 +633,7 @@ impl App {
             lock_state: LockState::default(),
             groups_state: GroupsState::default(),
             onboarding_state: OnboardingState::default(),
+            app_engine,
             onboarding_engine,
             lock_engine,
             render_state: ScreenRenderState::default(),
@@ -671,6 +691,14 @@ impl App {
         self.screen = screen;
         self.input_mode = InputMode::Normal;
 
+        // Navigate AppEngine for engine-driven screens
+        if let Some(engine) = &mut self.app_engine {
+            if let Some(app_screen) = Self::to_app_screen(screen) {
+                engine.navigate_to(app_screen);
+                self.render_state = ScreenRenderState::default();
+            }
+        }
+
         // Create engines for engine-backed screens
         match screen {
             Screen::SetupWelcome => {
@@ -686,6 +714,18 @@ impl App {
                 self.render_state = ScreenRenderState::default();
             }
             _ => {}
+        }
+    }
+
+    /// Maps TUI Screen to core AppScreen for engine-driven screens.
+    pub fn to_app_screen(screen: Screen) -> Option<AppScreen> {
+        match screen {
+            Screen::Home => Some(AppScreen::Home),
+            Screen::Contacts => Some(AppScreen::Contacts),
+            Screen::Exchange => Some(AppScreen::Exchange),
+            Screen::Settings => Some(AppScreen::Settings),
+            Screen::Help => Some(AppScreen::Help),
+            _ => None,
         }
     }
 

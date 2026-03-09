@@ -37,8 +37,29 @@ use vauchi_core::ui::WorkflowEngine;
 use crate::app::{App, Screen};
 use crate::ui::widgets::screen_renderer;
 
+/// Helper: renders the current AppEngine screen if available.
+/// Navigates AppEngine to match the TUI screen if needed.
+fn render_engine_screen(f: &mut Frame, area: Rect, app: &App) -> bool {
+    if let Some(engine) = &app.app_engine {
+        let screen_model = engine.current_screen();
+        screen_renderer::render_screen(f, area, &screen_model, &app.render_state, &app.theme);
+        true
+    } else {
+        false
+    }
+}
+
 /// Draw the application.
 pub fn draw(f: &mut Frame, app: &mut App) {
+    // Sync AppEngine to match the current TUI screen before rendering
+    if let Some(target) = App::to_app_screen(app.screen) {
+        if let Some(engine) = &mut app.app_engine {
+            if *engine.current_app_screen() != target {
+                engine.navigate_to(target);
+            }
+        }
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -54,13 +75,33 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Content
     match app.screen {
         Screen::Setup => setup::draw(f, chunks[1], app),
-        Screen::Home => home::draw(f, chunks[1], app),
-        Screen::Contacts => contacts::draw(f, chunks[1], app),
+        Screen::Home => {
+            if !render_engine_screen(f, chunks[1], app) {
+                home::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Contacts => {
+            if !render_engine_screen(f, chunks[1], app) {
+                contacts::draw(f, chunks[1], app);
+            }
+        }
         Screen::ContactDetail => contacts::draw_detail(f, chunks[1], app),
         Screen::ContactVisibility => visibility::draw(f, chunks[1], app),
-        Screen::Exchange => exchange::draw(f, chunks[1], app),
-        Screen::Settings => settings::draw(f, chunks[1], app),
-        Screen::Help => help::draw(f, chunks[1], app),
+        Screen::Exchange => {
+            if !render_engine_screen(f, chunks[1], app) {
+                exchange::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Settings => {
+            if !render_engine_screen(f, chunks[1], app) {
+                settings::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Help => {
+            if !render_engine_screen(f, chunks[1], app) {
+                help::draw(f, chunks[1], app);
+            }
+        }
         Screen::AddField => home::draw_add_field(f, chunks[1], app),
         Screen::EditField => home::draw_edit_field(f, chunks[1], app),
         Screen::EditName => settings::draw_edit_name(f, chunks[1], app),
@@ -136,6 +177,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     // Use engine title for engine-driven screens
     let engine_title: Option<String> = match app.screen {
+        Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help => {
+            app.app_engine.as_ref().map(|e| e.current_screen().title)
+        }
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
@@ -199,6 +243,22 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     // For engine-driven screens, show engine actions in footer
     let engine_footer: Option<String> = match app.screen {
+        Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help => {
+            app.app_engine.as_ref().map(|e| {
+                let screen = e.current_screen();
+                let actions = screen
+                    .actions
+                    .iter()
+                    .filter(|a| a.enabled)
+                    .map(|a| {
+                        let key = screen_renderer::action_key_hint_pub(&a.id);
+                        format!("[{}] {}", key, a.label)
+                    })
+                    .collect::<Vec<_>>()
+                    .join("  ");
+                format!("{}  [Esc] back  [q]uit", actions)
+            })
+        }
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields

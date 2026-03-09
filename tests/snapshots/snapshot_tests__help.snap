@@ -3,26 +3,26 @@ source: tests/snapshot_tests.rs
 assertion_line: 191
 expression: output
 ---
-Help
+Help & FAQ
 
 ────────────────────────────────────────────────────────────────────────────────
-┌Help──────────────────────────────────────────────────────────────────────────┐
-│Help                                                                          │
-│================                                                              │
-│                                                                              │
-│KEYBOARD SHORTCUTS                                                            │
-│------------------                                                            │
-│Navigation                                                                    │
-│j/↓     Move down                                                             │
-│k/↑     Move up                                                               │
-│h/←     Move left (in dialogs)                                                │
-│l/→     Move right (in dialogs)                                               │
-│Enter   Select/confirm                                                        │
-│Esc     Go back/cancel                                                        │
-│Tab     Next field (in forms)                                                 │
-│                                                                              │
-│Home                                                                          │
-│c       View contacts                                                         │
-└──────────────────────────────────────────────────────────────────────────────┘
+                                   Help & FAQ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ────────────────────────────────────────────────────────────────────────────────
-[esc/q] close
+  [Esc] back  [q]uit

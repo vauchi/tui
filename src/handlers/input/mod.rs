@@ -10,8 +10,11 @@ mod features_input;
 mod navigation;
 
 use crossterm::event::KeyCode;
+use vauchi_core::ui::WorkflowEngine;
 
 use crate::app::{App, InputMode, Screen};
+use crate::handlers::action_result::handle_action_result;
+use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use contacts_input::{
     handle_action_menu_keys, handle_contact_detail_keys, handle_contact_limit_keys,
@@ -102,6 +105,17 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         _ => {}
     }
 
+    // Engine-driven screens — route through AppEngine key mapping
+    if app.app_engine.is_some()
+        && matches!(
+            app.screen,
+            Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help
+        )
+    {
+        handle_engine_keys(app, key);
+        return Action::Continue;
+    }
+
     // Screen-specific keys
     match app.screen {
         Screen::Setup => handle_setup_keys(app, key),
@@ -145,4 +159,50 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     Action::Continue
+}
+
+/// Handle keys for engine-driven screens via AppEngine key mapping.
+///
+/// Falls back to legacy screen handlers for keys not consumed by the engine
+/// (e.g., TUI-specific navigation shortcuts like 's' for Settings).
+fn handle_engine_keys(app: &mut App, key: KeyCode) {
+    // Ensure AppEngine is synced to the current TUI screen
+    if let Some(target) = App::to_app_screen(app.screen) {
+        if let Some(engine) = &mut app.app_engine {
+            if *engine.current_app_screen() != target {
+                engine.navigate_to(target);
+            }
+        }
+    }
+
+    // Get the current screen model from AppEngine
+    let screen_model = match &app.app_engine {
+        Some(engine) => engine.current_screen(),
+        None => return,
+    };
+
+    // Map the key to a UserAction via the key_mapping module
+    match key_mapping::map_key(key, &screen_model, &mut app.render_state) {
+        KeyResult::Action(action) => {
+            // Forward the action to AppEngine
+            if let Some(engine) = &mut app.app_engine {
+                let result = engine.handle_action(action);
+                handle_action_result(app, result);
+            }
+        }
+        KeyResult::Consumed => {
+            // Key was handled internally (focus change, etc.)
+        }
+        KeyResult::Unhandled => {
+            // Fall back to legacy handlers for TUI-specific shortcuts
+            match app.screen {
+                Screen::Home => handle_home_keys(app, key),
+                Screen::Contacts => handle_contacts_keys(app, key),
+                Screen::Exchange => handle_exchange_keys(app, key),
+                Screen::Settings => handle_settings_keys(app, key),
+                Screen::Help => handle_help_keys(app, key),
+                _ => {}
+            }
+        }
+    }
 }

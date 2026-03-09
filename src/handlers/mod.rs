@@ -4,6 +4,7 @@
 
 //! Input Handlers
 
+pub mod action_result;
 mod input;
 
 pub use input::{handle_key, Action};

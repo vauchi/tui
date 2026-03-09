@@ -3,26 +3,26 @@ source: tests/snapshot_tests.rs
 assertion_line: 154
 expression: output
 ---
-Vauchi
+Home
 
 ────────────────────────────────────────────────────────────────────────────────
-Hello, Alice Smith!
+                                      Home
 
-
-
-Public ID: [PUBLIC_ID]...
-
-
-┌My Card───────────────────────────────────────────────────────────────────────┐
-│📧  Work (Email)  alice@company.com                                            │
-│📱  Mobile (Phone)  +41 79 123 45 67                                           │
-│🌐  Blog (Website)  https://alice.example.com                                  │
-│                                                                              │
-│                                                                              │
-│                                                                              │
+┌ Contacts ────────────────────────────────────────────────────────────────────┐
+│  No contacts yet                                                             │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-0 contacts
+
+
+
+
+
+
+
+
+
+
+                                 [a] Add Contact
 
 ────────────────────────────────────────────────────────────────────────────────
-[c]ontacts  [s]ettings  [g]roups  e[X]change  [a]dd  [e]dit  [x]del  [?]help  [q
+[a] Add Contact  [Esc] back  [q]uit

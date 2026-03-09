@@ -1,27 +1,28 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 374
 expression: output
 ---
-Exchange
+Share Your Code
 
 ────────────────────────────────────────────────────────────────────────────────
-Share this QR code with others to exchange contact cards. Press 'r' to refresh.
+                                [1/5]  ● ○ ○ ○ ○
+                                 Share Your Code
 
-
-                                 Expires in 5:00
-
-
-┌Your QR Code──────────────────────────────────────────────────────────────────┐
+┌ QR Code ─────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  ┌──────────────┐                                                            │
+│  │  ▄▄▄▄  ▄▄▄▄ │                                                             │
+│  │  █  █  █  █ │                                                             │
+│  │  ▀▀▀▀  ▀▀▀▀ │                                                             │
+│  └──────────────┘                                                            │
 │                                                                              │
 │                                                                              │
+│  Alice Smith                                                                 │
 │                                                                              │
 │                                                                              │
-│    [QR_DATA] │
-│    [QR_DATA] │
-│    [QR_DATA] │
-│    [QR_DATA] │
-│    [QR_DATA] │
-│    [QR_DATA] │
 └──────────────────────────────────────────────────────────────────────────────┘
+                             [Enter] Scan Their Code
+
 ────────────────────────────────────────────────────────────────────────────────
-[r]efresh  [esc] back  [?]help
+[Enter] Scan Their Code  [Esc] back  [q]uit

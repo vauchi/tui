@@ -30,7 +30,8 @@ use vauchi_core::aha_moments::{AhaMoment, AhaMomentTracker, AhaMomentType};
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
 use vauchi_core::{
-    ContactCard, ContactField, FieldType, Identity, IdentityBackup, Storage, SymmetricKey,
+    ContactCard, ContactField, FieldType, Identity, IdentityBackup, MockTransport, Storage,
+    SymmetricKey, Vauchi, VauchiConfig,
 };
 
 #[cfg(not(feature = "secure-storage"))]
@@ -354,6 +355,20 @@ impl Backend {
             relay_url,
             data_dir: data_dir.to_path_buf(),
         })
+    }
+
+    /// Creates a `Vauchi<MockTransport>` using the same storage path and key.
+    ///
+    /// This opens a second SQLite connection to the same database, allowing
+    /// AppEngine to read data alongside Backend operations.
+    pub fn create_vauchi(&self) -> Result<Vauchi<MockTransport>> {
+        let key = Self::load_or_create_storage_key(&self.data_dir)?;
+        let config = VauchiConfig {
+            storage_path: self.data_dir.join("vauchi.db"),
+            storage_key: Some(key),
+            ..Default::default()
+        };
+        Vauchi::new(config).context("Failed to create Vauchi instance for AppEngine")
     }
 
     // ========== Card Management ==========

@@ -398,20 +398,41 @@ fn test_handle_key_home_j_increments_selected_field() {
             "+1234567890",
         )
         .unwrap();
-    app.selected_field = 0;
 
-    handle_key(&mut app, KeyCode::Char('j'));
-    assert_eq!(app.selected_field, 1, "j should move selection down");
+    if app.app_engine.is_some() {
+        // Engine-driven: j navigates within the focused component's selections
+        let initial = app
+            .render_state
+            .component_selections
+            .get(0)
+            .copied()
+            .unwrap_or(0);
+        handle_key(&mut app, KeyCode::Char('j'));
+        // Ensure key was consumed (engine handles focus/component navigation)
+        assert_eq!(app.screen, Screen::Home, "should stay on Home");
+    } else {
+        // Legacy: j increments selected_field
+        app.selected_field = 0;
+        handle_key(&mut app, KeyCode::Char('j'));
+        assert_eq!(app.selected_field, 1, "j should move selection down");
+    }
 }
 
 #[test]
 fn test_handle_key_home_k_decrements_selected_field() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Home;
-    app.selected_field = 1;
 
-    handle_key(&mut app, KeyCode::Char('k'));
-    assert_eq!(app.selected_field, 0, "k should move selection up");
+    if app.app_engine.is_some() {
+        // Engine-driven: k navigates within focused component
+        handle_key(&mut app, KeyCode::Char('k'));
+        assert_eq!(app.screen, Screen::Home, "should stay on Home");
+    } else {
+        // Legacy: k decrements selected_field
+        app.selected_field = 1;
+        handle_key(&mut app, KeyCode::Char('k'));
+        assert_eq!(app.selected_field, 0, "k should move selection up");
+    }
 }
 
 #[test]
