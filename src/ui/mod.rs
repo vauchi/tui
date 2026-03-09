@@ -4,26 +4,16 @@
 
 //! UI Rendering
 
-mod backup;
+#[allow(dead_code)]
 mod contacts;
-mod delivery;
-mod devices;
 mod duplicates;
-mod duress;
-mod emergency;
 pub mod exchange;
-mod gdpr;
-mod groups;
-mod help;
+#[allow(dead_code)]
 mod home;
 mod lock;
-mod recovery;
+#[allow(dead_code)]
 mod settings;
 mod setup;
-mod support;
-mod sync;
-mod tor;
-mod visibility;
 pub(crate) mod widgets;
 
 // INLINE_TEST_REQUIRED: Widgets are pub(crate) — snapshot tests must live inside the crate to access them
@@ -92,105 +82,33 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Content
     match app.screen {
         Screen::Setup => setup::draw(f, chunks[1], app),
-        Screen::Home => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                home::draw(f, chunks[1], app);
-            }
+        // Engine-driven screens — rendered via AppEngine ScreenModel
+        Screen::Home
+        | Screen::Contacts
+        | Screen::ContactDetail
+        | Screen::ContactVisibility
+        | Screen::Exchange
+        | Screen::Settings
+        | Screen::Help
+        | Screen::Devices
+        | Screen::Recovery
+        | Screen::Sync
+        | Screen::Delivery
+        | Screen::Backup
+        | Screen::TorSettings
+        | Screen::Privacy
+        | Screen::Support
+        | Screen::Emergency
+        | Screen::Duress
+        | Screen::Groups
+        | Screen::GroupDetail => {
+            render_cached_screen(f, chunks[1], cached.app.as_ref(), app);
         }
-        Screen::Contacts => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                contacts::draw(f, chunks[1], app);
-            }
-        }
-        Screen::ContactDetail => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                contacts::draw_detail(f, chunks[1], app);
-            }
-        }
-        Screen::ContactVisibility => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                visibility::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Exchange => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                exchange::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Settings => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                settings::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Help => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                help::draw(f, chunks[1], app);
-            }
-        }
+        // Form dialogs — TUI-specific text input, not engine-driven
         Screen::AddField => home::draw_add_field(f, chunks[1], app),
         Screen::EditField => home::draw_edit_field(f, chunks[1], app),
         Screen::EditName => settings::draw_edit_name(f, chunks[1], app),
         Screen::EditRelayUrl => settings::draw_edit_relay_url(f, chunks[1], app),
-        Screen::Devices => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                devices::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Recovery => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                recovery::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Sync => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                sync::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Delivery => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                delivery::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Backup => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                backup::draw(f, chunks[1], app);
-            }
-        }
-        Screen::TorSettings => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                tor::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Privacy => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                gdpr::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Support => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                support::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Emergency => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                emergency::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Duress => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                duress::draw(f, chunks[1], app);
-            }
-        }
-        Screen::Groups => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                groups::draw(f, chunks[1], app);
-            }
-        }
-        Screen::GroupDetail => {
-            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
-                groups::draw_detail(f, chunks[1], app);
-            }
-        }
         Screen::Lock => {
             if let Some(model) = &cached.lock {
                 screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
