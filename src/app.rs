@@ -738,6 +738,11 @@ impl App {
             Screen::Exchange => Some(AppScreen::Exchange),
             Screen::Settings => Some(AppScreen::Settings),
             Screen::Help => Some(AppScreen::Help),
+            Screen::Backup => Some(AppScreen::Backup),
+            Screen::Delivery => Some(AppScreen::DeliveryStatus),
+            Screen::Devices => Some(AppScreen::DeviceLinking),
+            Screen::Duress => Some(AppScreen::DuressPin),
+            Screen::Emergency => Some(AppScreen::EmergencyShred),
             _ => None,
         }
     }

@@ -123,16 +123,36 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::EditField => home::draw_edit_field(f, chunks[1], app),
         Screen::EditName => settings::draw_edit_name(f, chunks[1], app),
         Screen::EditRelayUrl => settings::draw_edit_relay_url(f, chunks[1], app),
-        Screen::Devices => devices::draw(f, chunks[1], app),
+        Screen::Devices => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                devices::draw(f, chunks[1], app);
+            }
+        }
         Screen::Recovery => recovery::draw(f, chunks[1], app),
         Screen::Sync => sync::draw(f, chunks[1], app),
-        Screen::Delivery => delivery::draw(f, chunks[1], app),
-        Screen::Backup => backup::draw(f, chunks[1], app),
+        Screen::Delivery => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                delivery::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Backup => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                backup::draw(f, chunks[1], app);
+            }
+        }
         Screen::TorSettings => tor::draw(f, chunks[1], app),
         Screen::Privacy => gdpr::draw(f, chunks[1], app),
         Screen::Support => support::draw(f, chunks[1], app),
-        Screen::Emergency => emergency::draw(f, chunks[1], app),
-        Screen::Duress => duress::draw(f, chunks[1], app),
+        Screen::Emergency => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                emergency::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Duress => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                duress::draw(f, chunks[1], app);
+            }
+        }
         Screen::Groups => groups::draw(f, chunks[1], app),
         Screen::GroupDetail => groups::draw_detail(f, chunks[1], app),
         Screen::Lock => {
@@ -172,9 +192,16 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
     // Use engine title for engine-driven screens (from cached models)
     let engine_title: Option<String> = match app.screen {
-        Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help => {
-            cached.app.as_ref().map(|m| m.title.clone())
-        }
+        Screen::Home
+        | Screen::Contacts
+        | Screen::Exchange
+        | Screen::Settings
+        | Screen::Help
+        | Screen::Backup
+        | Screen::Delivery
+        | Screen::Devices
+        | Screen::Duress
+        | Screen::Emergency => cached.app.as_ref().map(|m| m.title.clone()),
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
@@ -238,21 +265,28 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
 fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
     // For engine-driven screens, show engine actions in footer (from cached models)
     let engine_footer: Option<String> = match app.screen {
-        Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help => {
-            cached.app.as_ref().map(|screen| {
-                let actions = screen
-                    .actions
-                    .iter()
-                    .filter(|a| a.enabled)
-                    .map(|a| {
-                        let key = screen_renderer::action_key_hint_pub(&a.id);
-                        format!("[{}] {}", key, a.label)
-                    })
-                    .collect::<Vec<_>>()
-                    .join("  ");
-                format!("{}  [Esc] back  [q]uit", actions)
-            })
-        }
+        Screen::Home
+        | Screen::Contacts
+        | Screen::Exchange
+        | Screen::Settings
+        | Screen::Help
+        | Screen::Backup
+        | Screen::Delivery
+        | Screen::Devices
+        | Screen::Duress
+        | Screen::Emergency => cached.app.as_ref().map(|screen| {
+            let actions = screen
+                .actions
+                .iter()
+                .filter(|a| a.enabled)
+                .map(|a| {
+                    let key = screen_renderer::action_key_hint_pub(&a.id);
+                    format!("[{}] {}", key, a.label)
+                })
+                .collect::<Vec<_>>()
+                .join("  ");
+            format!("{}  [Esc] back  [q]uit", actions)
+        }),
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields

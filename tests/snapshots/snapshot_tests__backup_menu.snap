@@ -1,20 +1,17 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 263
 expression: output
 ---
-Backup & Restore
+Backup & Recovery
 
 ────────────────────────────────────────────────────────────────────────────────
-┌Backup & Restore──────────────────────────────────────────────────────────────┐
-│Back up your identity to transfer to another device or restore after reinstall│
-│Your backup is encrypted with a password you choose.                          │
+                                Backup & Recovery
+
+┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│[e] Export Backup - Create an encrypted backup                                │
-└──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│[i] Import Backup - Restore from a backup                                     │
+│  Backup                                                                      │
+│  Create an encrypted backup of your identity and contacts.                   │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -22,6 +19,10 @@ Backup & Restore
 
 
 
+
+
+
+                  [Enter] Create Backup  [Enter] Restore Backup
 
 ────────────────────────────────────────────────────────────────────────────────
-[e]xport  [i]mport  [esc] back  [?]help
+[Enter] Create Backup  [Enter] Restore Backup  [Esc] back  [q]uit

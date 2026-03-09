@@ -1,27 +1,28 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 390
 expression: output
 ---
-Backup & Restore
+Backup & Recovery
 
 ────────────────────────────────────────────────────────────────────────────────
-Paste your backup data and enter the password used to create it:
+                                Backup & Recovery
 
-────────────────────────────────────────────────────────────────────────────────
-┌──────────────────────────────────────────────────────────────────────────────┐
-│Backup data:                                                                  │
+┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
-│                                                                              │
+│  Backup                                                                      │
+│  Create an encrypted backup of your identity and contacts.                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│Password:                                                                     │
-└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+                  [Enter] Create Backup  [Enter] Restore Backup
+
 ────────────────────────────────────────────────────────────────────────────────
-[Tab] switch fields  [Enter] import  [Esc] cancel
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-[e]xport  [i]mport  [esc] back  [?]help
+[Enter] Create Backup  [Enter] Restore Backup  [Esc] back  [q]uit

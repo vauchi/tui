@@ -109,7 +109,16 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     if app.app_engine.is_some()
         && matches!(
             app.screen,
-            Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help
+            Screen::Home
+                | Screen::Contacts
+                | Screen::Exchange
+                | Screen::Settings
+                | Screen::Help
+                | Screen::Backup
+                | Screen::Delivery
+                | Screen::Devices
+                | Screen::Duress
+                | Screen::Emergency
         )
     {
         handle_engine_keys(app, key);
@@ -201,6 +210,11 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Exchange => handle_exchange_keys(app, key),
                 Screen::Settings => handle_settings_keys(app, key),
                 Screen::Help => handle_help_keys(app, key),
+                Screen::Backup => handle_backup_keys(app, key),
+                Screen::Delivery => handle_delivery_keys(app, key),
+                Screen::Devices => handle_devices_keys(app, key),
+                Screen::Duress => handle_duress_keys(app, key),
+                Screen::Emergency => handle_emergency_keys(app, key),
                 _ => {}
             }
         }
