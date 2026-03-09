@@ -45,6 +45,10 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::OpenContact { contact_id: _ } => {
             app.screen = Screen::ContactDetail;
         }
+        ActionResult::EditContact { contact_id: _ } => {
+            // ContactEdit has no dedicated TUI screen yet — route to ContactDetail
+            app.screen = Screen::ContactDetail;
+        }
         ActionResult::OpenUrl { url } => {
             app.set_status(format!("URL: {url}"));
         }
@@ -74,6 +78,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.screen = Screen::SetupWelcome;
             app.onboarding_engine = Some(vauchi_core::ui::OnboardingEngine::new());
             app.render_state = Default::default();
+            app.invalidate_engines();
+            app.app_engine = None;
         }
     }
 }
