@@ -124,6 +124,8 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                 | Screen::TorSettings
                 | Screen::Recovery
                 | Screen::Groups
+                | Screen::GroupDetail
+                | Screen::ContactVisibility
                 | Screen::Privacy
                 | Screen::Support
         )
@@ -227,6 +229,8 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::TorSettings => handle_tor_settings_keys(app, key),
                 Screen::Recovery => handle_recovery_keys(app, key),
                 Screen::Groups => handle_groups_keys(app, key),
+                Screen::GroupDetail => handle_group_detail_keys(app, key),
+                Screen::ContactVisibility => handle_visibility_keys(app, key),
                 Screen::Privacy => handle_privacy_keys(app, key),
                 Screen::Support => handle_support_keys(app, key),
                 _ => {}

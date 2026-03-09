@@ -472,6 +472,48 @@ fn navigate_to_syncs_support_screen() {
 }
 
 #[test]
+fn navigate_to_syncs_group_detail_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::GroupDetail {
+            group_id: "g1".into(),
+        });
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::GroupDetail);
+    assert_eq!(
+        app.groups_state.selected_group_id.as_deref(),
+        Some("g1"),
+        "selected_group_id should be set"
+    );
+}
+
+#[test]
+fn navigate_to_syncs_contact_visibility_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::ContactVisibility {
+            contact_id: "c1".into(),
+        });
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::ContactVisibility);
+    assert_eq!(
+        app.selected_contact_id.as_deref(),
+        Some("c1"),
+        "selected_contact_id should be set"
+    );
+}
+
+#[test]
 fn navigate_to_contact_edit_is_noop() {
     // ContactEdit has no dedicated TUI Screen — should not change screen
     let mut app = create_app_with_identity();

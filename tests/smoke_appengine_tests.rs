@@ -261,6 +261,32 @@ fn smoke_support_screen_renders_via_engine() {
 }
 
 #[test]
+fn smoke_group_detail_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.groups_state.selected_group_id = Some("test-group".into());
+    app.screen = Screen::GroupDetail;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Group") || output.contains("Members"),
+        "GroupDetail screen should show group content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_contact_visibility_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.selected_contact_id = Some("test-contact".into());
+    app.screen = Screen::ContactVisibility;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Visibility") || output.contains("toggle"),
+        "ContactVisibility screen should show visibility content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
 fn smoke_all_engine_screens_no_panic() {
     let (mut app, _dir) = create_app_with_identity();
 

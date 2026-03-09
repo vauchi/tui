@@ -107,7 +107,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 contacts::draw_detail(f, chunks[1], app);
             }
         }
-        Screen::ContactVisibility => visibility::draw(f, chunks[1], app),
+        Screen::ContactVisibility => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                visibility::draw(f, chunks[1], app);
+            }
+        }
         Screen::Exchange => {
             if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 exchange::draw(f, chunks[1], app);
@@ -182,7 +186,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 groups::draw(f, chunks[1], app);
             }
         }
-        Screen::GroupDetail => groups::draw_detail(f, chunks[1], app),
+        Screen::GroupDetail => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                groups::draw_detail(f, chunks[1], app);
+            }
+        }
         Screen::Lock => {
             if let Some(model) = &cached.lock {
                 screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
@@ -235,6 +243,8 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::TorSettings
         | Screen::Recovery
         | Screen::Groups
+        | Screen::GroupDetail
+        | Screen::ContactVisibility
         | Screen::Privacy
         | Screen::Support => cached.app.as_ref().map(|m| m.title.clone()),
         Screen::SetupWelcome
@@ -315,6 +325,8 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::TorSettings
         | Screen::Recovery
         | Screen::Groups
+        | Screen::GroupDetail
+        | Screen::ContactVisibility
         | Screen::Privacy
         | Screen::Support => cached.app.as_ref().map(|screen| {
             let actions = screen

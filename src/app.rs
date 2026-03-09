@@ -424,6 +424,8 @@ pub struct ActionMenuState {
 pub struct GroupsState {
     /// Currently selected group index in the list.
     pub selected_group: usize,
+    /// ID of the currently selected group (for engine routing).
+    pub selected_group_id: Option<String>,
     /// Whether to show group detail view.
     pub show_group_detail: bool,
     /// Group edit mode (for creating/renaming).
@@ -758,6 +760,21 @@ impl App {
             Screen::TorSettings => Some(AppScreen::TorSettings),
             Screen::Recovery => Some(AppScreen::Recovery),
             Screen::Groups => Some(AppScreen::Groups),
+            Screen::GroupDetail => {
+                self.groups_state
+                    .selected_group_id
+                    .as_ref()
+                    .map(|id| AppScreen::GroupDetail {
+                        group_id: id.clone(),
+                    })
+            }
+            Screen::ContactVisibility => {
+                self.selected_contact_id
+                    .as_ref()
+                    .map(|id| AppScreen::ContactVisibility {
+                        contact_id: id.clone(),
+                    })
+            }
             Screen::Privacy => Some(AppScreen::Privacy),
             Screen::Support => Some(AppScreen::Support),
             _ => None,

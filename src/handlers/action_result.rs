@@ -43,6 +43,18 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::Groups => app.screen = Screen::Groups,
                     vauchi_core::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
                     vauchi_core::ui::AppScreen::Support => app.screen = Screen::Support,
+                    vauchi_core::ui::AppScreen::GroupDetail { group_id } => {
+                        app.groups_state.selected_group_id = Some(group_id.clone());
+                        app.screen = Screen::GroupDetail;
+                    }
+                    vauchi_core::ui::AppScreen::ContactVisibility { contact_id } => {
+                        app.selected_contact_id = Some(contact_id.clone());
+                        app.screen = Screen::ContactVisibility;
+                    }
+                    vauchi_core::ui::AppScreen::FormDialog { .. } => {
+                        // Form dialogs stay on their current TUI screen (AddField, EditField, etc.)
+                        // The engine handles state; TUI screen doesn't change.
+                    }
                     // ContactEdit has no dedicated TUI screen yet — edits happen
                     // inline via EditField / EditName dialogs triggered by actions.
                     // Preserve contact_id so fallback to ContactDetail works.
