@@ -569,25 +569,6 @@ impl Backend {
         Ok(())
     }
 
-    /// List hidden contacts.
-    pub fn list_hidden_contacts(&self) -> Result<Vec<ContactInfo>> {
-        let contacts = self
-            .storage
-            .list_contacts()
-            .context("Failed to list contacts")?;
-
-        Ok(contacts
-            .into_iter()
-            .filter(|c| c.is_hidden())
-            .map(|c| ContactInfo {
-                id: c.id().to_string(),
-                display_name: c.display_name().to_string(),
-                verified: c.is_fingerprint_verified(),
-                recovery_trusted: c.is_recovery_trusted(),
-            })
-            .collect())
-    }
-
     /// Check if a contact is hidden.
     pub fn is_contact_hidden(&self, contact_id: &str) -> Result<bool> {
         let contact = self
@@ -681,20 +662,6 @@ impl Backend {
             name: label.name().to_string(),
             contact_count: label.contact_count(),
         })
-    }
-
-    /// Add a contact to a group.
-    pub fn add_contact_to_group(&self, group_id: &str, contact_id: &str) -> Result<()> {
-        self.storage
-            .add_contact_to_label(group_id, contact_id)
-            .context("Failed to add contact to group")
-    }
-
-    /// Remove a contact from a group.
-    pub fn remove_contact_from_group(&self, group_id: &str, contact_id: &str) -> Result<()> {
-        self.storage
-            .remove_contact_from_label(group_id, contact_id)
-            .context("Failed to remove contact from group")
     }
 
     /// Delete a group (contacts remain in contact list).

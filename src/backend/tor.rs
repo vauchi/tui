@@ -48,18 +48,6 @@ impl Backend {
         Ok(config.prefer_onion)
     }
 
-    /// Add a bridge address.
-    pub fn add_tor_bridge(&self, addr: &str) -> Result<()> {
-        let mut config = self.load_tor_config()?;
-        if !config.bridges.contains(&addr.to_string()) {
-            config.bridges.push(addr.to_string());
-            self.storage
-                .save_tor_config(&config)
-                .context("Failed to save Tor config")?;
-        }
-        Ok(())
-    }
-
     /// Clear all bridge addresses.
     pub fn clear_tor_bridges(&self) -> Result<usize> {
         let mut config = self.load_tor_config()?;
