@@ -27,7 +27,18 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::Onboarding => {
                         app.screen = Screen::SetupWelcome;
                     }
-                    _ => {}
+                    vauchi_core::ui::AppScreen::ContactDetail { .. } => {
+                        app.screen = Screen::ContactDetail;
+                    }
+                    vauchi_core::ui::AppScreen::Backup => app.screen = Screen::Backup,
+                    vauchi_core::ui::AppScreen::Lock => app.screen = Screen::Lock,
+                    vauchi_core::ui::AppScreen::DeviceLinking => app.screen = Screen::Devices,
+                    vauchi_core::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
+                    vauchi_core::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
+                    vauchi_core::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
+                    // ContactEdit has no dedicated TUI screen yet — edits happen
+                    // inline via EditField / EditName dialogs triggered by actions.
+                    vauchi_core::ui::AppScreen::ContactEdit { .. } => {}
                 }
             }
         }

@@ -258,3 +258,91 @@ fn navigate_to_without_engine_is_noop() {
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, original_screen);
 }
+
+// --- NavigateTo: previously missing mappings (C-2 fix) ---
+
+#[test]
+fn navigate_to_syncs_contact_detail_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::ContactDetail {
+            contact_id: "test-id".into(),
+        });
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::ContactDetail);
+}
+
+#[test]
+fn navigate_to_syncs_backup_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::Backup);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Backup);
+}
+
+#[test]
+fn navigate_to_syncs_lock_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::Lock);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Lock);
+}
+
+#[test]
+fn navigate_to_syncs_device_linking_to_devices_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::DeviceLinking);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Devices);
+}
+
+#[test]
+fn navigate_to_syncs_duress_pin_to_duress_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::DuressPin);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Duress);
+}
+
+#[test]
+fn navigate_to_syncs_emergency_shred_to_emergency_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::EmergencyShred);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Emergency);
+}
+
+#[test]
+fn navigate_to_syncs_delivery_status_to_delivery_screen() {
+    let mut app = create_app_with_identity();
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::DeliveryStatus);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Delivery);
+}
+
+#[test]
+fn navigate_to_contact_edit_is_noop() {
+    // ContactEdit has no dedicated TUI Screen — should not change screen
+    let mut app = create_app_with_identity();
+    let original_screen = app.screen;
+    if let Some(engine) = &mut app.app_engine {
+        engine.navigate_to(AppScreen::ContactEdit {
+            contact_id: "test-id".into(),
+        });
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, original_screen);
+}
