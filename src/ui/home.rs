@@ -45,7 +45,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .split(area);
 
     // Welcome message
-    let name = app.backend.display_name().unwrap_or("Guest");
+    let name = app.display_name().unwrap_or("Guest");
     let welcome = if app.backend.has_identity() {
         app.i18n.t_args("home.greeting", &[("name", name)])
     } else {

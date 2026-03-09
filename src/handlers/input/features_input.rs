@@ -26,7 +26,7 @@ pub(super) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('n') | KeyCode::Enter => {
             // Edit display name
-            let current_name = app.backend.display_name().unwrap_or("").to_string();
+            let current_name = app.display_name().unwrap_or("").to_string();
             app.edit_name_state = EditNameState {
                 new_name: current_name,
             };
@@ -835,6 +835,7 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
                         include_location: app.duress_state.include_location,
                     };
                     let _ = app.backend.save_duress_settings(&settings);
+                    app.invalidate_engines();
                 }
                 app.set_status(format!(
                     "Location: {}",
@@ -850,6 +851,7 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
                 match app.backend.disable_duress() {
                     Ok(()) => {
                         let _ = app.backend.delete_duress_settings();
+                        app.invalidate_engines();
                         refresh_duress_state(app);
                         app.set_status("Duress mode disabled");
                     }
@@ -939,6 +941,7 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
                     };
                     match app.backend.save_duress_settings(&settings) {
                         Ok(()) => {
+                            app.invalidate_engines();
                             app.duress_state.alert_contact_count = ids.len();
                             app.duress_state.focus = DuressFocus::Status;
                             app.input_mode = InputMode::Normal;

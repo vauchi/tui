@@ -294,8 +294,14 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
             if let Ok(contacts) = app.backend.list_contacts() {
                 if let Some(contact) = contacts.get(app.selected_contact) {
                     match app.backend.toggle_recovery_trust(&contact.id) {
-                        Ok(true) => app.set_status("Marked as recovery-trusted"),
-                        Ok(false) => app.set_status("Removed recovery trust"),
+                        Ok(true) => {
+                            app.invalidate_engines();
+                            app.set_status("Marked as recovery-trusted");
+                        }
+                        Ok(false) => {
+                            app.invalidate_engines();
+                            app.set_status("Removed recovery trust");
+                        }
                         Err(e) => app.set_status(format!("Error: {}", e)),
                     }
                 }
@@ -416,6 +422,7 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
             if let Ok(contacts) = app.backend.list_contacts() {
                 if let Some(contact) = contacts.get(app.selected_contact) {
                     if app.backend.remove_contact(&contact.id).is_ok() {
+                        app.invalidate_engines();
                         app.set_status("Contact removed");
                         app.go_back();
                     }
@@ -578,6 +585,7 @@ pub(super) fn handle_merge_keys(app: &mut App, key: KeyCode) {
             let secondary_id = app.merge_state.secondary_id.clone();
             match app.backend.merge_contacts(&primary_id, &secondary_id) {
                 Ok(name) => {
+                    app.invalidate_engines();
                     app.set_status(format!("Merged contacts into {}", name));
                     // Remove the pair from duplicates list
                     app.duplicates_state.pairs.retain(|p| {

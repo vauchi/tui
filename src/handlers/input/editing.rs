@@ -135,6 +135,7 @@ pub(super) fn handle_add_field_keys(app: &mut App, key: KeyCode) {
                     ) {
                         app.set_status(format!("Error: {}", e));
                     } else {
+                        app.invalidate_engines();
                         app.set_status("Field added");
                         app.go_back();
                     }
@@ -202,6 +203,7 @@ pub(super) fn handle_edit_field_keys(app: &mut App, key: KeyCode) {
             } else {
                 match app.backend.update_field(&label, &new_value) {
                     Ok(()) => {
+                        app.invalidate_engines();
                         if let Some(moment) = app.backend.check_aha_moment(AhaMomentType::FirstEdit)
                         {
                             app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
@@ -231,6 +233,7 @@ pub(super) fn handle_edit_name_keys(app: &mut App, key: KeyCode) {
             } else {
                 match app.backend.update_display_name(&new_name) {
                     Ok(()) => {
+                        app.invalidate_engines();
                         app.set_status("Display name updated");
                         app.go_back();
                     }
@@ -255,6 +258,7 @@ pub(super) fn handle_edit_relay_url_keys(app: &mut App, key: KeyCode) {
             } else {
                 match app.backend.set_relay_url(&new_url) {
                     Ok(()) => {
+                        app.invalidate_engines();
                         app.set_status("Relay URL updated");
                         app.go_back();
                     }

@@ -23,7 +23,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &App) {
         .split(area);
 
     // Display name (editable)
-    let name = app.backend.display_name().unwrap_or("Not set");
+    let name = app.display_name().unwrap_or("Not set");
     let name_para = Paragraph::new(format!(
         "{}: {}  [press n to edit]",
         app.i18n.t("settings.display_name"),
@@ -117,7 +117,7 @@ pub fn draw_edit_name(f: &mut Frame, area: Rect, app: &App) {
     let state = &app.edit_name_state;
 
     // Current name info
-    let current_name = app.backend.display_name().unwrap_or("Not set");
+    let current_name = app.display_name().unwrap_or("Not set");
     let info_para = Paragraph::new(format!(
         "{}: {}",
         app.i18n.t("settings.current"),

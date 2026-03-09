@@ -647,6 +647,12 @@ impl App {
         }
     }
 
+    /// Returns the user's display name.
+    /// Currently reads from Backend; will migrate to AppEngine in future.
+    pub fn display_name(&self) -> Option<&str> {
+        self.backend.display_name()
+    }
+
     /// Cycle to the next theme.
     pub fn next_theme(&mut self) {
         if self.theme_ids.is_empty() {
@@ -672,6 +678,13 @@ impl App {
         if let Some(t) = get_tui_theme(&self.theme_ids[self.theme_index]) {
             self.theme = t;
             save_theme_preference(&self.theme_ids[self.theme_index]);
+        }
+    }
+
+    /// Invalidates all cached AppEngine screens after a Backend mutation.
+    pub fn invalidate_engines(&mut self) {
+        if let Some(engine) = &mut self.app_engine {
+            engine.invalidate_all();
         }
     }
 

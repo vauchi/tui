@@ -21,6 +21,7 @@ pub(super) fn handle_setup_keys(app: &mut App, key: KeyCode) {
             if let Err(e) = app.backend.create_identity("New User") {
                 app.set_status(format!("Failed to create identity: {}", e));
             } else {
+                app.invalidate_engines();
                 if let Some(moment) = app
                     .backend
                     .check_aha_moment(AhaMomentType::CardCreationComplete)
@@ -94,6 +95,7 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
                 if let Some(field) = fields.get(app.selected_field) {
                     let label = field.label.clone();
                     if app.backend.remove_field(&field.id).is_ok() {
+                        app.invalidate_engines();
                         app.set_status(format!("Field removed: {}", label));
                         if app.selected_field > 0 {
                             app.selected_field -= 1;
@@ -177,6 +179,7 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
                 if !name.is_empty() && !app.onboarding_state.identity_created {
                     match app.backend.create_identity(&name) {
                         Ok(()) => {
+                            app.invalidate_engines();
                             app.onboarding_state.identity_created = true;
                             if let Some(moment) = app
                                 .backend
@@ -277,6 +280,7 @@ pub(super) fn handle_setup_create_identity_keys(app: &mut App, key: KeyCode) {
             }
             match app.backend.create_identity(&name) {
                 Ok(()) => {
+                    app.invalidate_engines();
                     app.onboarding_state.identity_created = true;
                     if let Some(moment) = app
                         .backend
