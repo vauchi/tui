@@ -830,6 +830,7 @@ impl App {
                 }
             }
             Screen::ContactDetail => {
+                self.selected_contact_id = None;
                 self.screen = Screen::Contacts;
             }
             Screen::ContactVisibility => {

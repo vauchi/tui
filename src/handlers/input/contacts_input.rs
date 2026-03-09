@@ -234,6 +234,18 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
 }
 
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
+    // Resolve the correct contact index from selected_contact_id if available.
+    // The engine path sets selected_contact_id (String), but all legacy operations
+    // below use selected_contact (usize index). Sync the index to prevent operating
+    // on the wrong contact.
+    if let Some(ref id) = app.selected_contact_id {
+        if let Ok(contacts) = app.backend.list_contacts() {
+            if let Some(idx) = contacts.iter().position(|c| &c.id == id) {
+                app.selected_contact = idx;
+            }
+        }
+    }
+
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
             // Navigate down through contact fields
