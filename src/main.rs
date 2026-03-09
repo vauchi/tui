@@ -31,10 +31,15 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Resolve data directory
-    let data_dir = dirs::data_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("vauchi");
+    // Resolve data directory (VAUCHI_DATA_DIR env var overrides default)
+    let data_dir = std::env::var("VAUCHI_DATA_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            dirs::data_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join("vauchi")
+        });
 
     // Create app state
     let vauchi_backend = Backend::new(&data_dir)?;

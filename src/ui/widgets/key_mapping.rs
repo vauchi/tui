@@ -373,6 +373,20 @@ fn map_action_key(key: KeyCode, screen: &ScreenModel) -> KeyResult {
                 KeyResult::Unhandled
             }
         }
+        KeyCode::Char('c') => {
+            let action = screen
+                .actions
+                .iter()
+                .find(|a| a.enabled && a.id == "create_new");
+
+            if let Some(action) = action {
+                KeyResult::Action(UserAction::ActionPressed {
+                    action_id: action.id.clone(),
+                })
+            } else {
+                KeyResult::Unhandled
+            }
+        }
         _ => KeyResult::Unhandled,
     }
 }

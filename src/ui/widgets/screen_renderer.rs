@@ -877,6 +877,7 @@ fn action_key_hint(action_id: &str) -> &'static str {
         "view_all" | "view" => "v",
         "retry" | "retry_all" => "r",
         "cancel" | "back" => "Esc",
+        "create_new" => "c",
         "delete" | "wipe" | "emergency_wipe" => "x",
         "scan" => "s",
         "enable" | "disable" | "toggle" => "t",

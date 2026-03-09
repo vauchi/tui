@@ -193,12 +193,23 @@ fn test_handle_key_help_q_quits() {
 }
 
 #[test]
-fn test_handle_key_help_enter_goes_back() {
+fn test_handle_key_help_enter_selects_faq_item() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Help;
 
-    handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.screen, Screen::Home);
+    if app.app_engine.is_some() {
+        // Engine-driven: Enter selects a FAQ item (opens URL), stays on Help
+        handle_key(&mut app, KeyCode::Enter);
+        assert_eq!(
+            app.screen,
+            Screen::Help,
+            "Enter on Help should stay on Help (opens FAQ URL)"
+        );
+    } else {
+        // Legacy: Enter goes back
+        handle_key(&mut app, KeyCode::Enter);
+        assert_eq!(app.screen, Screen::Home);
+    }
 }
 
 // ============================================================================

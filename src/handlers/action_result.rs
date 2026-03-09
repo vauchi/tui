@@ -35,7 +35,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.screen = Screen::ContactDetail;
         }
         ActionResult::OpenUrl { url } => {
-            let _ = open::that(&url);
+            app.set_status(format!("URL: {url}"));
         }
         ActionResult::ShowAlert { title: _, message } => {
             app.set_status(message);
