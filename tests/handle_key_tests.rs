@@ -412,10 +412,10 @@ fn test_handle_key_home_j_increments_selected_field() {
 
     if app.app_engine.is_some() {
         // Engine-driven: j navigates within the focused component's selections
-        let initial = app
+        let _initial = app
             .render_state
             .component_selections
-            .get(0)
+            .first()
             .copied()
             .unwrap_or(0);
         handle_key(&mut app, KeyCode::Char('j'));
