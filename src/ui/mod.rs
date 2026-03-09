@@ -32,17 +32,27 @@ mod widget_snapshots;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
-use vauchi_core::ui::WorkflowEngine;
+use vauchi_core::ui::{ScreenModel, WorkflowEngine};
 
 use crate::app::{App, Screen};
 use crate::ui::widgets::screen_renderer;
 
-/// Helper: renders the current AppEngine screen if available.
-/// Navigates AppEngine to match the TUI screen if needed.
-fn render_engine_screen(f: &mut Frame, area: Rect, app: &App) -> bool {
-    if let Some(engine) = &app.app_engine {
-        let screen_model = engine.current_screen();
-        screen_renderer::render_screen(f, area, &screen_model, &app.render_state, &app.theme);
+/// Cached screen models computed once per frame to avoid redundant allocations.
+struct FrameScreenModels {
+    app: Option<ScreenModel>,
+    onboarding: Option<ScreenModel>,
+    lock: Option<ScreenModel>,
+}
+
+/// Helper: renders a pre-computed AppEngine screen model.
+fn render_cached_screen(
+    f: &mut Frame,
+    area: Rect,
+    screen_model: Option<&ScreenModel>,
+    app: &App,
+) -> bool {
+    if let Some(model) = screen_model {
+        screen_renderer::render_screen(f, area, model, &app.render_state, &app.theme);
         true
     } else {
         false
@@ -60,6 +70,13 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         }
     }
 
+    // Cache screen models once per frame to avoid redundant allocations
+    let cached = FrameScreenModels {
+        app: app.app_engine.as_ref().map(|e| e.current_screen()),
+        onboarding: app.onboarding_engine.as_ref().map(|e| e.current_screen()),
+        lock: app.lock_engine.as_ref().map(|e| e.current_screen()),
+    };
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -70,35 +87,35 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .split(f.area());
 
     // Header
-    draw_header(f, chunks[0], app);
+    draw_header(f, chunks[0], app, &cached);
 
     // Content
     match app.screen {
         Screen::Setup => setup::draw(f, chunks[1], app),
         Screen::Home => {
-            if !render_engine_screen(f, chunks[1], app) {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 home::draw(f, chunks[1], app);
             }
         }
         Screen::Contacts => {
-            if !render_engine_screen(f, chunks[1], app) {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 contacts::draw(f, chunks[1], app);
             }
         }
         Screen::ContactDetail => contacts::draw_detail(f, chunks[1], app),
         Screen::ContactVisibility => visibility::draw(f, chunks[1], app),
         Screen::Exchange => {
-            if !render_engine_screen(f, chunks[1], app) {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 exchange::draw(f, chunks[1], app);
             }
         }
         Screen::Settings => {
-            if !render_engine_screen(f, chunks[1], app) {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 settings::draw(f, chunks[1], app);
             }
         }
         Screen::Help => {
-            if !render_engine_screen(f, chunks[1], app) {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 help::draw(f, chunks[1], app);
             }
         }
@@ -119,15 +136,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Groups => groups::draw(f, chunks[1], app),
         Screen::GroupDetail => groups::draw_detail(f, chunks[1], app),
         Screen::Lock => {
-            if let Some(engine) = &app.lock_engine {
-                let screen_model = engine.current_screen();
-                screen_renderer::render_screen(
-                    f,
-                    chunks[1],
-                    &screen_model,
-                    &app.render_state,
-                    &app.theme,
-                );
+            if let Some(model) = &cached.lock {
+                screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
             } else {
                 lock::draw(f, chunks[1], app);
             }
@@ -143,15 +153,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::SetupAddFields
         | Screen::SetupSecurity
         | Screen::SetupReady => {
-            if let Some(engine) = &app.onboarding_engine {
-                let screen_model = engine.current_screen();
-                screen_renderer::render_screen(
-                    f,
-                    chunks[1],
-                    &screen_model,
-                    &app.render_state,
-                    &app.theme,
-                );
+            if let Some(model) = &cached.onboarding {
+                screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
             } else {
                 // Fallback to legacy rendering if engine not initialized
                 match app.screen {
@@ -171,24 +174,24 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 
     // Footer
-    draw_footer(f, chunks[2], app);
+    draw_footer(f, chunks[2], app, &cached);
 }
 
-fn draw_header(f: &mut Frame, area: Rect, app: &App) {
-    // Use engine title for engine-driven screens
+fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
+    // Use engine title for engine-driven screens (from cached models)
     let engine_title: Option<String> = match app.screen {
         Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help => {
-            app.app_engine.as_ref().map(|e| e.current_screen().title)
+            cached.app.as_ref().map(|m| m.title.clone())
         }
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
         | Screen::SetupSecurity
-        | Screen::SetupReady => app
-            .onboarding_engine
+        | Screen::SetupReady => cached
+            .onboarding
             .as_ref()
-            .map(|e| format!("Vauchi - {}", e.current_screen().title)),
-        Screen::Lock => app.lock_engine.as_ref().map(|e| e.current_screen().title),
+            .map(|m| format!("Vauchi - {}", m.title)),
+        Screen::Lock => cached.lock.as_ref().map(|m| m.title.clone()),
         _ => None,
     };
 
@@ -240,12 +243,11 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(header, area);
 }
 
-fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
-    // For engine-driven screens, show engine actions in footer
+fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
+    // For engine-driven screens, show engine actions in footer (from cached models)
     let engine_footer: Option<String> = match app.screen {
         Screen::Home | Screen::Contacts | Screen::Exchange | Screen::Settings | Screen::Help => {
-            app.app_engine.as_ref().map(|e| {
-                let screen = e.current_screen();
+            cached.app.as_ref().map(|screen| {
                 let actions = screen
                     .actions
                     .iter()
@@ -263,8 +265,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
         | Screen::SetupSecurity
-        | Screen::SetupReady => app.onboarding_engine.as_ref().map(|e| {
-            let screen = e.current_screen();
+        | Screen::SetupReady => cached.onboarding.as_ref().map(|screen| {
             screen
                 .actions
                 .iter()
@@ -277,8 +278,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
                 .join("  ")
                 + "  [Esc] back  [q]uit"
         }),
-        Screen::Lock => app.lock_engine.as_ref().map(|e| {
-            let screen = e.current_screen();
+        Screen::Lock => cached.lock.as_ref().map(|screen| {
             screen
                 .actions
                 .iter()
