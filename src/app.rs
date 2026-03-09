@@ -240,6 +240,8 @@ pub struct App {
     pub status_message: Option<String>,
     /// Selected contact index (for contacts list)
     pub selected_contact: usize,
+    /// Selected contact ID (for engine-driven ContactDetail screen)
+    pub selected_contact_id: Option<String>,
     /// Selected field index (for card fields)
     pub selected_field: usize,
     /// Selected field index in contact detail view
@@ -608,6 +610,7 @@ impl App {
             should_quit: false,
             status_message: None,
             selected_contact: 0,
+            selected_contact_id: None,
             selected_field: 0,
             selected_contact_field: 0,
             input_buffer: String::new(),
@@ -705,11 +708,12 @@ impl App {
         self.input_mode = InputMode::Normal;
 
         // Navigate AppEngine for engine-driven screens
-        if let Some(engine) = &mut self.app_engine {
-            if let Some(app_screen) = Self::to_app_screen(screen) {
+        let app_screen = self.to_app_screen();
+        if let Some(app_screen) = app_screen {
+            if let Some(engine) = &mut self.app_engine {
                 engine.navigate_to(app_screen);
-                self.render_state = ScreenRenderState::default();
             }
+            self.render_state = ScreenRenderState::default();
         }
 
         // Create engines for engine-backed screens
@@ -731,8 +735,8 @@ impl App {
     }
 
     /// Maps TUI Screen to core AppScreen for engine-driven screens.
-    pub fn to_app_screen(screen: Screen) -> Option<AppScreen> {
-        match screen {
+    pub fn to_app_screen(&self) -> Option<AppScreen> {
+        match self.screen {
             Screen::Home => Some(AppScreen::Home),
             Screen::Contacts => Some(AppScreen::Contacts),
             Screen::Exchange => Some(AppScreen::Exchange),
@@ -743,6 +747,13 @@ impl App {
             Screen::Devices => Some(AppScreen::DeviceLinking),
             Screen::Duress => Some(AppScreen::DuressPin),
             Screen::Emergency => Some(AppScreen::EmergencyShred),
+            Screen::ContactDetail => {
+                self.selected_contact_id
+                    .as_ref()
+                    .map(|id| AppScreen::ContactDetail {
+                        contact_id: id.clone(),
+                    })
+            }
             _ => None,
         }
     }

@@ -63,6 +63,10 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Enter => {
+            // Look up contact ID for engine-driven ContactDetail screen
+            if let Ok(Some(contact)) = app.backend.get_contact_by_index(app.selected_contact) {
+                app.selected_contact_id = Some(contact.id);
+            }
             app.goto(Screen::ContactDetail);
         }
         KeyCode::Char('d') => {

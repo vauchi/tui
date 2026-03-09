@@ -62,7 +62,7 @@ fn render_cached_screen(
 /// Draw the application.
 pub fn draw(f: &mut Frame, app: &mut App) {
     // Sync AppEngine to match the current TUI screen before rendering
-    if let Some(target) = App::to_app_screen(app.screen) {
+    if let Some(target) = app.to_app_screen() {
         if let Some(engine) = &mut app.app_engine {
             if *engine.current_app_screen() != target {
                 engine.navigate_to(target);
@@ -102,7 +102,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 contacts::draw(f, chunks[1], app);
             }
         }
-        Screen::ContactDetail => contacts::draw_detail(f, chunks[1], app),
+        Screen::ContactDetail => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                contacts::draw_detail(f, chunks[1], app);
+            }
+        }
         Screen::ContactVisibility => visibility::draw(f, chunks[1], app),
         Screen::Exchange => {
             if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
@@ -194,6 +198,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
     let engine_title: Option<String> = match app.screen {
         Screen::Home
         | Screen::Contacts
+        | Screen::ContactDetail
         | Screen::Exchange
         | Screen::Settings
         | Screen::Help
@@ -267,6 +272,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
     let engine_footer: Option<String> = match app.screen {
         Screen::Home
         | Screen::Contacts
+        | Screen::ContactDetail
         | Screen::Exchange
         | Screen::Settings
         | Screen::Help

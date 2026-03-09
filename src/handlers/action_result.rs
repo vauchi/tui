@@ -27,7 +27,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::Onboarding => {
                         app.screen = Screen::SetupWelcome;
                     }
-                    vauchi_core::ui::AppScreen::ContactDetail { .. } => {
+                    vauchi_core::ui::AppScreen::ContactDetail { contact_id } => {
+                        app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactDetail;
                     }
                     vauchi_core::ui::AppScreen::Backup => app.screen = Screen::Backup,
@@ -42,7 +43,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                 }
             }
         }
-        ActionResult::OpenContact { contact_id: _ } => {
+        ActionResult::OpenContact { contact_id } => {
+            app.selected_contact_id = Some(contact_id);
             app.screen = Screen::ContactDetail;
         }
         ActionResult::EditContact { contact_id: _ } => {

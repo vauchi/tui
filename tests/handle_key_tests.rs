@@ -485,6 +485,7 @@ fn test_handle_key_search_mode_q_does_not_quit() {
 #[test]
 fn test_handle_key_contact_detail_uppercase_v_sets_status() {
     let (mut app, _tmp) = create_test_app();
+    app.selected_contact_id = Some("dummy-contact-id".to_string());
     app.screen = Screen::ContactDetail;
     app.selected_contact = 0;
     app.selected_contact_field = 0;
@@ -508,6 +509,7 @@ fn test_handle_key_contact_detail_uppercase_v_sets_status() {
 #[test]
 fn test_handle_key_contact_detail_uppercase_r_sets_status() {
     let (mut app, _tmp) = create_test_app();
+    app.selected_contact_id = Some("dummy-contact-id".to_string());
     app.screen = Screen::ContactDetail;
     app.selected_contact = 0;
     app.selected_contact_field = 0;
@@ -531,6 +533,7 @@ fn test_handle_key_contact_detail_uppercase_r_sets_status() {
 #[test]
 fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
     let (mut app, _tmp) = create_test_app();
+    app.selected_contact_id = Some("dummy-contact-id".to_string());
     app.screen = Screen::ContactDetail;
     app.selected_contact = 0;
 
@@ -636,6 +639,7 @@ fn test_handle_key_settings_t_navigates_to_tor() {
 #[test]
 fn test_handle_key_contact_detail_c_announces_copy_result() {
     let (mut app, _tmp) = create_test_app();
+    app.selected_contact_id = Some("dummy-contact-id".to_string());
     app.screen = Screen::ContactDetail;
     app.selected_contact = 0;
     app.selected_contact_field = 0;

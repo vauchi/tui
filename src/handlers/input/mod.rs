@@ -111,6 +111,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             app.screen,
             Screen::Home
                 | Screen::Contacts
+                | Screen::ContactDetail
                 | Screen::Exchange
                 | Screen::Settings
                 | Screen::Help
@@ -176,7 +177,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
 /// (e.g., TUI-specific navigation shortcuts like 's' for Settings).
 fn handle_engine_keys(app: &mut App, key: KeyCode) {
     // Ensure AppEngine is synced to the current TUI screen
-    if let Some(target) = App::to_app_screen(app.screen) {
+    if let Some(target) = app.to_app_screen() {
         if let Some(engine) = &mut app.app_engine {
             if *engine.current_app_screen() != target {
                 engine.navigate_to(target);
@@ -207,6 +208,7 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
             match app.screen {
                 Screen::Home => handle_home_keys(app, key),
                 Screen::Contacts => handle_contacts_keys(app, key),
+                Screen::ContactDetail => handle_contact_detail_keys(app, key),
                 Screen::Exchange => handle_exchange_keys(app, key),
                 Screen::Settings => handle_settings_keys(app, key),
                 Screen::Help => handle_help_keys(app, key),
