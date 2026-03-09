@@ -754,6 +754,12 @@ impl App {
                         contact_id: id.clone(),
                     })
             }
+            Screen::Sync => Some(AppScreen::Sync),
+            Screen::TorSettings => Some(AppScreen::TorSettings),
+            Screen::Recovery => Some(AppScreen::Recovery),
+            Screen::Groups => Some(AppScreen::Groups),
+            Screen::Privacy => Some(AppScreen::Privacy),
+            Screen::Support => Some(AppScreen::Support),
             _ => None,
         }
     }

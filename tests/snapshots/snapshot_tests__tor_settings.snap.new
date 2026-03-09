@@ -1,27 +1,28 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 355
 expression: output
 ---
-Social Recovery
+Tor Privacy
 
 ────────────────────────────────────────────────────────────────────────────────
-                                 Social Recovery
+                                   Tor Privacy
 
-┌ [-] Quorum Status ───────────────────────────────────────────────────────────┐
+┌ [-] Tor Status ──────────────────────────────────────────────────────────────┐
 │                                                                              │
-│  Trusted Contacts                                                            │
-│  0 of 3                                                                      │
-│                                                                              │
-│  Quorum Met                                                                  │
+│  Status                                                                      │
+│  Disabled                                                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet                                                             │
-│                                                                              │
+┌ Tor Settings ────────────────────────────────────────────────────────────────┐
+│ [ ] Enable Tor                                                               │
+│     Route all traffic through Tor                                            │
+│ [ ] Prefer Onion Services                                                    │
+│     Use .onion addresses when available                                      │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
 
-                              [Enter] Check Status
+                                 [t] Enable Tor
 
 ────────────────────────────────────────────────────────────────────────────────
-[Enter] Check Status  [Esc] back  [q]uit
+[t] Enable Tor  [Esc] back  [q]uit

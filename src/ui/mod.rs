@@ -132,8 +132,16 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 devices::draw(f, chunks[1], app);
             }
         }
-        Screen::Recovery => recovery::draw(f, chunks[1], app),
-        Screen::Sync => sync::draw(f, chunks[1], app),
+        Screen::Recovery => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                recovery::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Sync => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                sync::draw(f, chunks[1], app);
+            }
+        }
         Screen::Delivery => {
             if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 delivery::draw(f, chunks[1], app);
@@ -144,9 +152,21 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 backup::draw(f, chunks[1], app);
             }
         }
-        Screen::TorSettings => tor::draw(f, chunks[1], app),
-        Screen::Privacy => gdpr::draw(f, chunks[1], app),
-        Screen::Support => support::draw(f, chunks[1], app),
+        Screen::TorSettings => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                tor::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Privacy => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                gdpr::draw(f, chunks[1], app);
+            }
+        }
+        Screen::Support => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                support::draw(f, chunks[1], app);
+            }
+        }
         Screen::Emergency => {
             if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
                 emergency::draw(f, chunks[1], app);
@@ -157,7 +177,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 duress::draw(f, chunks[1], app);
             }
         }
-        Screen::Groups => groups::draw(f, chunks[1], app),
+        Screen::Groups => {
+            if !render_cached_screen(f, chunks[1], cached.app.as_ref(), app) {
+                groups::draw(f, chunks[1], app);
+            }
+        }
         Screen::GroupDetail => groups::draw_detail(f, chunks[1], app),
         Screen::Lock => {
             if let Some(model) = &cached.lock {
@@ -206,7 +230,13 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::Delivery
         | Screen::Devices
         | Screen::Duress
-        | Screen::Emergency => cached.app.as_ref().map(|m| m.title.clone()),
+        | Screen::Emergency
+        | Screen::Sync
+        | Screen::TorSettings
+        | Screen::Recovery
+        | Screen::Groups
+        | Screen::Privacy
+        | Screen::Support => cached.app.as_ref().map(|m| m.title.clone()),
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
@@ -280,7 +310,13 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::Delivery
         | Screen::Devices
         | Screen::Duress
-        | Screen::Emergency => cached.app.as_ref().map(|screen| {
+        | Screen::Emergency
+        | Screen::Sync
+        | Screen::TorSettings
+        | Screen::Recovery
+        | Screen::Groups
+        | Screen::Privacy
+        | Screen::Support => cached.app.as_ref().map(|screen| {
             let actions = screen
                 .actions
                 .iter()

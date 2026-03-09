@@ -120,6 +120,12 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                 | Screen::Devices
                 | Screen::Duress
                 | Screen::Emergency
+                | Screen::Sync
+                | Screen::TorSettings
+                | Screen::Recovery
+                | Screen::Groups
+                | Screen::Privacy
+                | Screen::Support
         )
     {
         handle_engine_keys(app, key);
@@ -217,6 +223,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Devices => handle_devices_keys(app, key),
                 Screen::Duress => handle_duress_keys(app, key),
                 Screen::Emergency => handle_emergency_keys(app, key),
+                Screen::Sync => handle_sync_keys(app, key),
+                Screen::TorSettings => handle_tor_settings_keys(app, key),
+                Screen::Recovery => handle_recovery_keys(app, key),
+                Screen::Groups => handle_groups_keys(app, key),
+                Screen::Privacy => handle_privacy_keys(app, key),
+                Screen::Support => handle_support_keys(app, key),
                 _ => {}
             }
         }

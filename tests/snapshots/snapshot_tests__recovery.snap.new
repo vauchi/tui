@@ -1,27 +1,28 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 217
 expression: output
 ---
-Privacy & Data
+Social Recovery
 
 ────────────────────────────────────────────────────────────────────────────────
-                                 Privacy & Data
+                                 Social Recovery
 
-┌ [-] Data Status ─────────────────────────────────────────────────────────────┐
+┌ [-] Quorum Status ───────────────────────────────────────────────────────────┐
 │                                                                              │
-│  Deletion Status                                                             │
-│  No deletion requested                                                       │
+│  Trusted Contacts                                                            │
+│  0 of 3                                                                      │
 │                                                                              │
-│  Consent                                                                     │
+│  Quorum Met                                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  data View My Data  See what data is stored locally                          │
-│  consent Manage Consent  Review and update data consent                      │
+┌ Contacts ────────────────────────────────────────────────────────────────────┐
+│  No contacts yet                                                             │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
 
-                    [Enter] Export Data  [x] Delete All Data
+                              [Enter] Check Status
 
 ────────────────────────────────────────────────────────────────────────────────
-[Enter] Export Data  [x] Delete All Data  [Esc] back  [q]uit
+[Enter] Check Status  [Esc] back  [q]uit

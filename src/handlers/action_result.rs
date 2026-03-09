@@ -37,6 +37,12 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
                     vauchi_core::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
                     vauchi_core::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
+                    vauchi_core::ui::AppScreen::Sync => app.screen = Screen::Sync,
+                    vauchi_core::ui::AppScreen::TorSettings => app.screen = Screen::TorSettings,
+                    vauchi_core::ui::AppScreen::Recovery => app.screen = Screen::Recovery,
+                    vauchi_core::ui::AppScreen::Groups => app.screen = Screen::Groups,
+                    vauchi_core::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
+                    vauchi_core::ui::AppScreen::Support => app.screen = Screen::Support,
                     // ContactEdit has no dedicated TUI screen yet — edits happen
                     // inline via EditField / EditName dialogs triggered by actions.
                     // Preserve contact_id so fallback to ContactDetail works.
