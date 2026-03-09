@@ -193,7 +193,11 @@ fn wipe_complete_resets_to_setup_welcome() {
 fn navigate_to_syncs_home_screen() {
     let mut app = create_app_with_identity();
     // Ensure the engine navigates to Home
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Home);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -203,7 +207,11 @@ fn navigate_to_syncs_home_screen() {
 #[test]
 fn navigate_to_syncs_contacts_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Contacts);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -213,7 +221,11 @@ fn navigate_to_syncs_contacts_screen() {
 #[test]
 fn navigate_to_syncs_exchange_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Exchange);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -223,7 +235,11 @@ fn navigate_to_syncs_exchange_screen() {
 #[test]
 fn navigate_to_syncs_settings_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Settings);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -233,7 +249,11 @@ fn navigate_to_syncs_settings_screen() {
 #[test]
 fn navigate_to_syncs_help_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Help);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -243,7 +263,11 @@ fn navigate_to_syncs_help_screen() {
 #[test]
 fn navigate_to_syncs_onboarding_to_setup_welcome() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Onboarding);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -264,7 +288,11 @@ fn navigate_to_without_engine_is_noop() {
 #[test]
 fn navigate_to_syncs_contact_detail_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::ContactDetail {
             contact_id: "test-id".into(),
         });
@@ -276,7 +304,11 @@ fn navigate_to_syncs_contact_detail_screen() {
 #[test]
 fn navigate_to_syncs_backup_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Backup);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -286,7 +318,11 @@ fn navigate_to_syncs_backup_screen() {
 #[test]
 fn navigate_to_syncs_lock_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::Lock);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -296,7 +332,11 @@ fn navigate_to_syncs_lock_screen() {
 #[test]
 fn navigate_to_syncs_device_linking_to_devices_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::DeviceLinking);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -306,7 +346,11 @@ fn navigate_to_syncs_device_linking_to_devices_screen() {
 #[test]
 fn navigate_to_syncs_duress_pin_to_duress_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::DuressPin);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -316,7 +360,11 @@ fn navigate_to_syncs_duress_pin_to_duress_screen() {
 #[test]
 fn navigate_to_syncs_emergency_shred_to_emergency_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::EmergencyShred);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -326,7 +374,11 @@ fn navigate_to_syncs_emergency_shred_to_emergency_screen() {
 #[test]
 fn navigate_to_syncs_delivery_status_to_delivery_screen() {
     let mut app = create_app_with_identity();
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::DeliveryStatus);
     }
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
@@ -338,7 +390,11 @@ fn navigate_to_contact_edit_is_noop() {
     // ContactEdit has no dedicated TUI Screen — should not change screen
     let mut app = create_app_with_identity();
     let original_screen = app.screen;
-    if let Some(engine) = &mut app.app_engine {
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
         engine.navigate_to(AppScreen::ContactEdit {
             contact_id: "test-id".into(),
         });
