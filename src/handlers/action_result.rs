@@ -39,7 +39,10 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
                     // ContactEdit has no dedicated TUI screen yet — edits happen
                     // inline via EditField / EditName dialogs triggered by actions.
-                    vauchi_core::ui::AppScreen::ContactEdit { .. } => {}
+                    // Preserve contact_id so fallback to ContactDetail works.
+                    vauchi_core::ui::AppScreen::ContactEdit { contact_id } => {
+                        app.selected_contact_id = Some(contact_id.clone());
+                    }
                 }
             }
         }
@@ -47,8 +50,10 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.selected_contact_id = Some(contact_id);
             app.screen = Screen::ContactDetail;
         }
-        ActionResult::EditContact { contact_id: _ } => {
+        ActionResult::EditContact { contact_id } => {
             // ContactEdit has no dedicated TUI screen yet — route to ContactDetail
+            // but preserve contact_id so the detail view shows the right contact.
+            app.selected_contact_id = Some(contact_id);
             app.screen = Screen::ContactDetail;
         }
         ActionResult::OpenUrl { url } => {
