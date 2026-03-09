@@ -4,7 +4,7 @@
 
 //! Smoke tests for AppEngine-driven screen rendering.
 //!
-//! Verifies that all 10 engine-driven screens render correctly through the
+//! Verifies that all 16 engine-driven screens render correctly through the
 //! AppEngine → screen_renderer pipeline.
 
 use ratatui::prelude::*;
@@ -186,6 +186,80 @@ fn smoke_emergency_screen_renders_via_engine() {
     );
 }
 
+// ── Wave 6 Phase A: new engine smoke tests ───────────────────────────
+
+#[test]
+fn smoke_sync_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Sync;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Sync"),
+        "Sync screen should show title. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_tor_settings_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::TorSettings;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Tor") || output.contains("Privacy"),
+        "TorSettings screen should show Tor content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_recovery_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Recovery;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Recovery") || output.contains("Quorum"),
+        "Recovery screen should show recovery content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_groups_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Groups;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Group"),
+        "Groups screen should show group content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_privacy_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Privacy;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Privacy") || output.contains("Data"),
+        "Privacy screen should show privacy content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_support_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Support;
+    let output = render_to_string(&mut app, 80, 24);
+    assert!(
+        output.contains("Support") || output.contains("Vauchi"),
+        "Support screen should show support content. Got:\n{}",
+        output
+    );
+}
+
 #[test]
 fn smoke_all_engine_screens_no_panic() {
     let (mut app, _dir) = create_app_with_identity();
@@ -201,6 +275,12 @@ fn smoke_all_engine_screens_no_panic() {
         Screen::Devices,
         Screen::Duress,
         Screen::Emergency,
+        Screen::Sync,
+        Screen::TorSettings,
+        Screen::Recovery,
+        Screen::Groups,
+        Screen::Privacy,
+        Screen::Support,
     ] {
         app.screen = screen;
         // Should not panic

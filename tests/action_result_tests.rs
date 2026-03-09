@@ -385,6 +385,92 @@ fn navigate_to_syncs_delivery_status_to_delivery_screen() {
     assert_eq!(app.screen, Screen::Delivery);
 }
 
+// --- NavigateTo: Wave 6 Phase A screens ---
+
+#[test]
+fn navigate_to_syncs_sync_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::Sync);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Sync);
+}
+
+#[test]
+fn navigate_to_syncs_tor_settings_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::TorSettings);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::TorSettings);
+}
+
+#[test]
+fn navigate_to_syncs_recovery_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::Recovery);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Recovery);
+}
+
+#[test]
+fn navigate_to_syncs_groups_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::Groups);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Groups);
+}
+
+#[test]
+fn navigate_to_syncs_privacy_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::Privacy);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Privacy);
+}
+
+#[test]
+fn navigate_to_syncs_support_screen() {
+    let mut app = create_app_with_identity();
+    {
+        let engine = app
+            .app_engine
+            .as_mut()
+            .expect("app_engine must be initialized");
+        engine.navigate_to(AppScreen::Support);
+    }
+    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
+    assert_eq!(app.screen, Screen::Support);
+}
+
 #[test]
 fn navigate_to_contact_edit_is_noop() {
     // ContactEdit has no dedicated TUI Screen — should not change screen
