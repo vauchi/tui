@@ -4,8 +4,8 @@
 
 //! Smoke tests for AppEngine-driven screen rendering.
 //!
-//! Verifies that all 5 migrated screens (Home, Contacts, Exchange, Settings, Help)
-//! render correctly through the AppEngine → screen_renderer pipeline.
+//! Verifies that all 10 engine-driven screens render correctly through the
+//! AppEngine → screen_renderer pipeline.
 
 use ratatui::prelude::*;
 
@@ -122,7 +122,72 @@ fn smoke_help_screen_renders_via_engine() {
 }
 
 #[test]
-fn smoke_all_migrated_screens_no_panic() {
+fn smoke_backup_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Backup;
+    let output = render_to_string(&mut app, 80, 24);
+
+    assert!(
+        output.contains("Backup") || output.contains("Recovery"),
+        "Backup screen should show Backup or Recovery. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_delivery_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Delivery;
+    let output = render_to_string(&mut app, 80, 24);
+
+    assert!(
+        output.contains("Delivery") || output.contains("Delivered"),
+        "Delivery screen should show delivery status. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_devices_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Devices;
+    let output = render_to_string(&mut app, 80, 24);
+
+    assert!(
+        output.contains("Device") || output.contains("Link"),
+        "Devices screen should show device linking content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_duress_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Duress;
+    let output = render_to_string(&mut app, 80, 24);
+
+    assert!(
+        output.contains("Duress") || output.contains("PIN"),
+        "Duress screen should show Duress PIN content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_emergency_screen_renders_via_engine() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.screen = Screen::Emergency;
+    let output = render_to_string(&mut app, 80, 24);
+
+    assert!(
+        output.contains("Emergency") || output.contains("Wipe"),
+        "Emergency screen should show emergency/wipe content. Got:\n{}",
+        output
+    );
+}
+
+#[test]
+fn smoke_all_engine_screens_no_panic() {
     let (mut app, _dir) = create_app_with_identity();
 
     for screen in [
@@ -131,6 +196,11 @@ fn smoke_all_migrated_screens_no_panic() {
         Screen::Exchange,
         Screen::Settings,
         Screen::Help,
+        Screen::Backup,
+        Screen::Delivery,
+        Screen::Devices,
+        Screen::Duress,
+        Screen::Emergency,
     ] {
         app.screen = screen;
         // Should not panic
