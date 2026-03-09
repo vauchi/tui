@@ -883,7 +883,7 @@ fn action_key_hint(action_id: &str) -> &'static str {
         "cancel" | "back" => "Esc",
         "create_new" => "c",
         "delete" | "wipe" | "emergency_wipe" => "x",
-        "scan" => "s",
+        "scan" => "S",
         "enable" | "disable" | "toggle" => "t",
         _ => "Enter",
     }
