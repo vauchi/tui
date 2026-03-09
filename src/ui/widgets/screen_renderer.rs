@@ -371,14 +371,16 @@ fn render_components(
                 id,
                 label,
                 length,
+                filled,
                 masked,
                 validation_error,
-                ..
             } => {
                 let error = state
                     .validation_error_for(id)
                     .or(validation_error.as_deref());
-                render_pin_input(f, chunk, label, *length, *masked, error, is_focused, theme);
+                render_pin_input(
+                    f, chunk, label, *length, *filled, *masked, error, is_focused, theme,
+                );
             }
             Component::QrCode {
                 data, mode, label, ..
@@ -640,13 +642,15 @@ fn render_pin_input(
     area: Rect,
     label: &str,
     length: usize,
+    filled: usize,
     _masked: bool,
     error: Option<&str>,
     is_focused: bool,
     theme: &TuiTheme,
 ) {
     let dots: String = (0..length)
-        .map(|_| "● ")
+        .enumerate()
+        .map(|(i, _)| if i < filled { "● " } else { "○ " })
         .collect::<String>()
         .trim()
         .to_string();
