@@ -14,6 +14,7 @@ use vauchi_core::ui::WorkflowEngine;
 
 use crate::app::{App, InputMode, Screen};
 use crate::handlers::action_result::handle_action_result;
+use crate::ui::focus::FocusZone;
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use contacts_input::{
@@ -106,10 +107,23 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             return Action::Continue;
         }
         KeyCode::Esc => {
+            // If in a bar zone, return to content first
+            if app.focus.zone != FocusZone::Content {
+                app.focus.zone = FocusZone::Content;
+                return Action::Continue;
+            }
             app.go_back();
             return Action::Continue;
         }
         _ => {}
+    }
+
+    // Focus zone navigation — when in ActionBar or NavBar, handle arrows and Enter
+    if app.focus.zone != FocusZone::Content {
+        if let Some(action) = handle_bar_keys(app, key) {
+            return action;
+        }
+        return Action::Continue;
     }
 
     // Engine-driven screens — route through AppEngine key mapping
@@ -189,6 +203,65 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     Action::Continue
 }
 
+/// Handle keys when focus is in ActionBar or NavBar zone.
+///
+/// Returns `Some(Action)` if the key was consumed, `None` if unhandled.
+fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
+    match key {
+        // Arrow navigation within and between bars
+        KeyCode::Left | KeyCode::Char('h') => {
+            app.focus.move_left();
+            Some(Action::Continue)
+        }
+        KeyCode::Right | KeyCode::Char('l') => {
+            app.focus.move_right();
+            Some(Action::Continue)
+        }
+        KeyCode::Up | KeyCode::Char('k') => {
+            app.focus.move_up();
+            Some(Action::Continue)
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            app.focus.move_down();
+            Some(Action::Continue)
+        }
+        // Enter activates the focused item
+        KeyCode::Enter => {
+            match app.focus.zone {
+                FocusZone::NavBar => {
+                    // Navigate to the tab at the focused index
+                    let target = match app.focus.nav_index {
+                        0 => Screen::Exchange,
+                        1 => Screen::Contacts,
+                        2 => Screen::Home,
+                        3 => Screen::Settings,
+                        4 => Screen::Help,
+                        _ => return Some(Action::Continue),
+                    };
+                    // Cancel any pending state before navigating
+                    app.contact_search_mode = false;
+                    app.contact_search_query.clear();
+                    app.input_mode = InputMode::Normal;
+                    app.focus.zone = FocusZone::Content;
+                    app.goto(target);
+                    Some(Action::Continue)
+                }
+                FocusZone::ActionBar => {
+                    // Action bar Enter triggers the action at the focused index.
+                    // The action items are built from the ScreenModel in draw(),
+                    // but we can re-derive the action key and dispatch it.
+                    app.focus.zone = FocusZone::Content;
+                    // For now, action bar activation is handled by the existing
+                    // key-based shortcuts (users press the key shown in [key]).
+                    Some(Action::Continue)
+                }
+                FocusZone::Content => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 /// Handle keys for engine-driven screens via AppEngine key mapping.
 ///
 /// Falls back to legacy screen handlers for keys not consumed by the engine
@@ -215,6 +288,16 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
             // Key was handled internally (focus change, etc.)
         }
         KeyResult::Unhandled => {
+            // Tab at bottom of content → move focus to action bar
+            if key == KeyCode::Tab {
+                app.focus.move_down();
+                return;
+            }
+            // Down at bottom of content → move focus to action bar
+            if matches!(key, KeyCode::Down | KeyCode::Char('j')) {
+                app.focus.move_down();
+                return;
+            }
             // Fall back to legacy handlers for TUI-specific shortcuts
             match app.screen {
                 Screen::Home => handle_home_keys(app, key),
