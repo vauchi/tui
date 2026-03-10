@@ -4,15 +4,9 @@
 
 //! UI Rendering
 
-#[allow(dead_code)]
-mod contacts;
 mod duplicates;
 pub mod exchange;
-#[allow(dead_code)]
-mod home;
 mod lock;
-#[allow(dead_code)]
-mod settings;
 pub(crate) mod widgets;
 
 // INLINE_TEST_REQUIRED: Widgets are pub(crate) — snapshot tests must live inside the crate to access them
@@ -114,8 +108,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             }
         }
         Screen::ActionMenu => {
-            // Draw contact detail underneath, then overlay action menu
-            contacts::draw_detail(f, chunks[1], app);
+            // Draw engine-driven contact detail underneath, then overlay action menu
+            render_cached_screen(f, chunks[1], cached.app.as_ref(), app);
             draw_action_menu(f, chunks[1], app);
         }
         // SP-21 Onboarding wizard — engine-driven rendering
