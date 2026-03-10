@@ -8,6 +8,7 @@
 //! that don't belong in vauchi-core.
 
 use vauchi_core::contact_card::ContactAction;
+use vauchi_core::ui::{UserAction, WorkflowEngine};
 
 /// Execute a contact action (open URI or copy to clipboard).
 ///
@@ -88,6 +89,66 @@ pub fn action_label(action: &ContactAction) -> String {
         ContactAction::GetDirections(_) => "Get Directions".to_string(),
         ContactAction::CopyToClipboard => "Copy to Clipboard".to_string(),
     }
+}
+
+/// Dispatch the current search query to the engine for field-aware filtering.
+pub fn dispatch_search(app: &mut crate::app::App) {
+    let _ = app.app_engine.handle_action(UserAction::SearchChanged {
+        component_id: "contacts".into(),
+        query: app.contact_search_query.clone(),
+    });
+}
+
+/// Cycle through available group filters (All → group1 → group2 → ... → All).
+pub fn cycle_group_filter(app: &mut crate::app::App) {
+    let screen = app.app_engine.current_screen();
+    let group_actions: Vec<String> = screen
+        .actions
+        .iter()
+        .filter(|a| a.id.starts_with("filter_group:"))
+        .map(|a| a.id.clone())
+        .collect();
+
+    if group_actions.is_empty() {
+        app.set_status("No groups available");
+        return;
+    }
+
+    // Find current active group (Primary style = active)
+    let active = screen.actions.iter().find(|a| {
+        a.id.starts_with("filter_group:") && a.style == vauchi_core::ui::ActionStyle::Primary
+    });
+
+    let next_action = if let Some(active) = active {
+        // Find next group, or clear filter
+        let pos = group_actions.iter().position(|id| id == &active.id);
+        match pos {
+            Some(idx) if idx + 1 < group_actions.len() => group_actions[idx + 1].clone(),
+            _ => "filter_group_clear".to_string(),
+        }
+    } else {
+        // No active filter, select first group
+        group_actions[0].clone()
+    };
+
+    let result = app.app_engine.handle_action(UserAction::ActionPressed {
+        action_id: next_action.clone(),
+    });
+
+    // Show status about current filter
+    if next_action == "filter_group_clear" {
+        app.set_status("Filter: All Contacts");
+    } else if let Some(name) = screen
+        .actions
+        .iter()
+        .find(|a| a.id == next_action)
+        .map(|a| a.label.clone())
+    {
+        app.set_status(format!("Filter: {}", name));
+    }
+
+    app.selected_contact = 0;
+    drop(result);
 }
 
 fn clipboard_fallback(

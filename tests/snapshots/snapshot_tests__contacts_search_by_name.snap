@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+Contacts
+
+────────────────────────────────────────────────────────────────────────────────
+                                    Contacts
+
+┌ Contacts ────────────────────────────────────────────────────────────────────┐
+│ AN Ahmed Nikolaus  +1-203-107-1013                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+         [a] Add Contact  [Enter] Family  [Enter] Friends  [Enter] Work
+
+[a] Add Contact  [E] Family  [E] Friends  [E] Work  [?] help  [␛] back  [q] quit
+    Exchange    │  ★ Contacts   │     Home      │   Settings    │     Help

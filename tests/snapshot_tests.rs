@@ -16,7 +16,10 @@ use ratatui::Terminal;
 use tempfile::TempDir;
 
 use vauchi_core::ui::AppEngine;
-use vauchi_core::{ContactField, FieldType, MockTransport, SymmetricKey, Vauchi, VauchiConfig};
+use vauchi_core::{
+    Contact, ContactCard, ContactField, FieldType, MockTransport, SymmetricKey, Vauchi,
+    VauchiConfig,
+};
 use vauchi_tui::app::{
     AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState, DuressState,
     EditFieldState, EditNameState, EditRelayUrlState, PrivacyState, Screen, SyncState, TorState,
@@ -453,4 +456,164 @@ fn test_snapshot_duress_enabled() {
     };
     let output = render_to_string(&mut app);
     insta::assert_snapshot!("duress_enabled", output);
+}
+
+// =============================================================
+// Contacts with Seeded Data
+// =============================================================
+
+/// Seed N fake contacts into a Vauchi instance with groups.
+fn seed_contacts(vauchi: &Vauchi<MockTransport>, count: usize) {
+    // Create groups
+    let family = vauchi.create_group("Family").expect("create group");
+    let friends = vauchi.create_group("Friends").expect("create group");
+    let work = vauchi.create_group("Work").expect("create group");
+    let group_ids = [
+        family.id().to_string(),
+        friends.id().to_string(),
+        work.id().to_string(),
+    ];
+
+    let names = [
+        "Abigale Schroeder",
+        "Ahmed Nikolaus",
+        "Andreanne Doyle",
+        "Andres Raynor",
+        "Augusta Heller",
+        "Brady Koss",
+        "Carmen Gutierrez",
+        "Diana Patel",
+        "Eduardo Reyes",
+        "Fatima Okonkwo",
+        "Gerhard Mueller",
+        "Hiroshi Tanaka",
+        "Ingrid Svensson",
+        "Jorge Castillo",
+        "Keiko Watanabe",
+    ];
+
+    for (i, name) in names.iter().take(count).enumerate() {
+        let area = 200 + (i * 3) % 800;
+        let num1 = 100 + (i * 7) % 900;
+        let num2 = 1000 + (i * 13) % 9000;
+        let phone = format!("+1-{}-{}-{}", area, num1, num2);
+        let email = format!("{}@example.com", name.to_lowercase().replace(' ', "."));
+
+        let mut card = ContactCard::new(name);
+        card.add_field(ContactField::new(FieldType::Phone, "Mobile", &phone))
+            .expect("add phone");
+        card.add_field(ContactField::new(FieldType::Email, "Email", &email))
+            .expect("add email");
+
+        // Address for ~40%
+        if i % 5 < 2 {
+            card.add_field(ContactField::new(
+                FieldType::Address,
+                "Address",
+                &format!("{} Main St, Springfield", 100 + i * 10),
+            ))
+            .expect("add address");
+        }
+
+        let mut pk = [0u8; 32];
+        pk[0] = (i >> 8) as u8;
+        pk[1] = (i & 0xFF) as u8;
+        for (j, byte) in pk[2..].iter_mut().enumerate() {
+            *byte = ((i * 7 + j) & 0xFF) as u8;
+        }
+
+        let contact = Contact::from_exchange(pk, card, SymmetricKey::generate());
+        let cid = contact.id().to_string();
+        vauchi.add_contact(contact).expect("add contact");
+
+        // Assign to group: ~30% Family, ~40% Friends, ~30% Work
+        let gid = match i % 10 {
+            0..=2 => &group_ids[0],
+            3..=6 => &group_ids[1],
+            _ => &group_ids[2],
+        };
+        vauchi
+            .add_contact_to_group(gid, &cid)
+            .expect("add to group");
+    }
+}
+
+/// Create a test app with identity and seeded contacts.
+fn create_app_with_contacts(count: usize) -> (App, TempDir) {
+    ensure_locales_loaded();
+    let temp_dir = TempDir::new().expect("temp dir");
+    let mut app_engine = create_app_engine(temp_dir.path());
+    app_engine
+        .vauchi_mut()
+        .create_identity("Alice Smith")
+        .expect("create identity");
+    app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(
+            FieldType::Email,
+            "Work",
+            "alice@company.com",
+        ))
+        .expect("add email");
+
+    seed_contacts(app_engine.vauchi(), count);
+
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
+    (app, temp_dir)
+}
+
+// @scenario: contacts_management:View all contacts
+#[test]
+fn test_snapshot_contacts_with_entries() {
+    let (mut app, _tmp) = create_app_with_contacts(10);
+    app.goto(Screen::Contacts);
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("contacts_with_entries", output);
+}
+
+// @scenario: contacts_management:Search contacts by name and field
+#[test]
+fn test_snapshot_contacts_search_by_name() {
+    let (mut app, _tmp) = create_app_with_contacts(10);
+    app.goto(Screen::Contacts);
+    app.contact_search_query = "Ahmed".to_string();
+    vauchi_tui::helpers::dispatch_search(&mut app);
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("contacts_search_by_name", output);
+}
+
+// @scenario: contacts_management:Search contacts by field value
+#[test]
+fn test_snapshot_contacts_search_by_email() {
+    let (mut app, _tmp) = create_app_with_contacts(10);
+    app.goto(Screen::Contacts);
+    app.contact_search_query = "carmen".to_string();
+    vauchi_tui::helpers::dispatch_search(&mut app);
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("contacts_search_by_email", output);
+}
+
+// @scenario: contacts_management:Filter contacts by group
+#[test]
+fn test_snapshot_contacts_group_filter() {
+    let (mut app, _tmp) = create_app_with_contacts(10);
+    app.goto(Screen::Contacts);
+    // Cycle to first group (Family)
+    vauchi_tui::helpers::cycle_group_filter(&mut app);
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("contacts_group_filter_family", output);
+}
+
+// @scenario: contacts_management:Scroll through contact list
+#[test]
+fn test_snapshot_contacts_scrolled() {
+    let (mut app, _tmp) = create_app_with_contacts(15);
+    app.goto(Screen::Contacts);
+    app.selected_contact = 5;
+    let output = render_to_string(&mut app);
+    insta::assert_snapshot!("contacts_scrolled", output);
 }

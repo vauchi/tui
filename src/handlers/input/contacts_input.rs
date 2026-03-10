@@ -5,6 +5,7 @@
 //! Contact-related input handlers: contact list, detail, actions, visibility.
 
 use crossterm::event::KeyCode;
+use vauchi_core::ui::WorkflowEngine;
 
 use crate::app::{
     ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, Screen,
@@ -24,10 +25,13 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
             KeyCode::Backspace => {
                 app.contact_search_query.pop();
                 app.selected_contact = 0;
+                // Sync search to engine for field-aware filtering
+                helpers::dispatch_search(app);
             }
             KeyCode::Char(c) => {
                 app.contact_search_query.push(c);
                 app.selected_contact = 0;
+                helpers::dispatch_search(app);
             }
             _ => {}
         }
@@ -40,18 +44,24 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
             app.contact_search_mode = true;
             app.contact_search_query.clear();
             app.selected_contact = 0;
+            helpers::dispatch_search(app);
+        }
+        KeyCode::Char('g') => {
+            // Cycle through group filters
+            helpers::cycle_group_filter(app);
         }
         KeyCode::Char('j') | KeyCode::Down => {
-            let contacts = app.app_engine.vauchi().list_contacts().unwrap_or_default();
-            let filtered_count = if app.contact_search_query.is_empty() {
-                contacts.len()
-            } else {
-                let query = app.contact_search_query.to_lowercase();
-                contacts
-                    .iter()
-                    .filter(|c| c.display_name().to_lowercase().contains(&query))
-                    .count()
-            };
+            let screen = app.app_engine.current_screen();
+            let filtered_count = screen
+                .components
+                .iter()
+                .find_map(|c| match c {
+                    vauchi_core::ui::Component::ContactList { contacts, .. } => {
+                        Some(contacts.len())
+                    }
+                    _ => None,
+                })
+                .unwrap_or(0);
             if app.selected_contact < filtered_count.saturating_sub(1) {
                 app.selected_contact += 1;
             }
