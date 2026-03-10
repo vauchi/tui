@@ -237,6 +237,8 @@ pub struct App {
     pub should_quit: bool,
     /// Status message
     pub status_message: Option<String>,
+    /// When the status message was set (for auto-clear after 3 seconds).
+    pub status_message_time: Option<std::time::Instant>,
     /// Selected contact index (for contacts list)
     pub selected_contact: usize,
     /// Selected contact ID (for engine-driven ContactDetail screen)
@@ -619,6 +621,7 @@ impl App {
             input_mode: InputMode::Normal,
             should_quit: false,
             status_message: None,
+            status_message_time: None,
             selected_contact: 0,
             selected_contact_id: None,
             selected_field: 0,
@@ -737,12 +740,23 @@ impl App {
     /// Set a status message.
     pub fn set_status(&mut self, msg: impl Into<String>) {
         self.status_message = Some(msg.into());
+        self.status_message_time = Some(std::time::Instant::now());
     }
 
     /// Clear the status message.
     #[allow(dead_code)]
     pub fn clear_status(&mut self) {
         self.status_message = None;
+        self.status_message_time = None;
+    }
+
+    /// Auto-clear status message after 3 seconds.
+    pub fn tick_status(&mut self) {
+        if let Some(time) = self.status_message_time {
+            if time.elapsed() >= std::time::Duration::from_secs(3) {
+                self.clear_status();
+            }
+        }
     }
 
     /// Navigate to a screen.

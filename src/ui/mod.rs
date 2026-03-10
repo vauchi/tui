@@ -47,7 +47,7 @@ fn render_cached_screen(
 
 /// Minimum terminal size for usable rendering.
 const MIN_WIDTH: u16 = 40;
-const MIN_HEIGHT: u16 = 10;
+const MIN_HEIGHT: u16 = 12;
 
 /// Draw the application.
 pub fn draw(f: &mut Frame, app: &mut App) {
@@ -64,6 +64,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         return;
     }
 
+    // Auto-clear stale status messages
+    app.tick_status();
+
     // Sync AppEngine to match the current TUI screen before rendering
     if let Some(target) = app.to_app_screen() {
         if *app.app_engine.current_app_screen() != target {
@@ -79,6 +82,16 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     };
 
     let has_status = app.status_message.is_some();
+    let is_onboarding = matches!(
+        app.screen,
+        Screen::SetupWelcome
+            | Screen::SetupCreateIdentity
+            | Screen::SetupAddFields
+            | Screen::SetupSecurity
+            | Screen::SetupReady
+    );
+    let show_nav_bar = !is_onboarding && app.screen != Screen::Lock;
+
     let mut constraints = vec![
         Constraint::Length(3), // Header
         Constraint::Min(0),    // Content
@@ -87,7 +100,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         constraints.push(Constraint::Length(1)); // Status message
     }
     constraints.push(Constraint::Length(1)); // Action bar
-    constraints.push(Constraint::Length(1)); // Nav bar
+    if show_nav_bar {
+        constraints.push(Constraint::Length(1)); // Nav bar
+    }
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -96,7 +111,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
     // Build action items from the current screen's ScreenModel
     let action_items = build_action_items(app, &cached);
-    let nav_items = build_nav_items(app);
+    let nav_items = if show_nav_bar {
+        build_nav_items(app)
+    } else {
+        Vec::new()
+    };
 
     // Update focus manager counts each frame
     let content_count = cached.app.as_ref().map(|m| m.components.len()).unwrap_or(0);
@@ -180,8 +199,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Action bar
     draw_action_bar(f, chunks[bar_start], app, &action_items);
 
-    // Nav bar
-    draw_nav_bar(f, chunks[bar_start + 1], app, &nav_items);
+    // Nav bar (hidden during onboarding and lock screen)
+    if show_nav_bar {
+        draw_nav_bar(f, chunks[bar_start + 1], app, &nav_items);
+    }
 }
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
