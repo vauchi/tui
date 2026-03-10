@@ -80,6 +80,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     app.focus
         .set_counts(content_count, action_items.len(), nav_items.len());
 
+    // Sync content focus state so components dim when bar zones are active
+    app.render_state.content_has_focus = app.focus.zone == FocusZone::Content;
+
     // Header
     draw_header(f, chunks[0], app, &cached);
 

@@ -30,6 +30,8 @@ pub struct ScreenRenderState {
     pub component_selections: Vec<usize>,
     /// Validation errors keyed by component_id.
     pub validation_errors: Vec<(String, String)>,
+    /// Whether content zone has focus (false when ActionBar/NavBar is focused).
+    pub content_has_focus: bool,
 }
 
 impl ScreenRenderState {
@@ -256,7 +258,7 @@ fn render_components(
         .split(area);
 
     for (i, component) in components.iter().enumerate() {
-        let is_focused = i == state.focused_component;
+        let is_focused = state.content_has_focus && i == state.focused_component;
         let chunk = chunks[i];
 
         match component {
