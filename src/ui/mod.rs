@@ -61,14 +61,20 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         lock: app.lock_engine.as_ref().map(|e| e.current_screen()),
     };
 
+    let has_status = app.status_message.is_some();
+    let mut constraints = vec![
+        Constraint::Length(3), // Header
+        Constraint::Min(0),    // Content
+    ];
+    if has_status {
+        constraints.push(Constraint::Length(1)); // Status message
+    }
+    constraints.push(Constraint::Length(1)); // Action bar
+    constraints.push(Constraint::Length(1)); // Nav bar
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3), // Header
-            Constraint::Min(0),    // Content
-            Constraint::Length(1), // Action bar
-            Constraint::Length(1), // Nav bar
-        ])
+        .constraints(constraints)
         .split(f.area());
 
     // Build action items from the current screen's ScreenModel
@@ -143,11 +149,22 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         }
     }
 
+    // Status message (conditional)
+    let mut bar_start = 2;
+    if has_status {
+        if let Some(msg) = &app.status_message {
+            let status =
+                Paragraph::new(format!(" {}", msg)).style(Style::default().fg(app.theme.accent));
+            f.render_widget(status, chunks[bar_start]);
+        }
+        bar_start += 1;
+    }
+
     // Action bar
-    draw_action_bar(f, chunks[2], app, &action_items);
+    draw_action_bar(f, chunks[bar_start], app, &action_items);
 
     // Nav bar
-    draw_nav_bar(f, chunks[3], app, &nav_items);
+    draw_nav_bar(f, chunks[bar_start + 1], app, &nav_items);
 }
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
