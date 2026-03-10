@@ -99,14 +99,13 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::Emergency
         | Screen::Duress
         | Screen::Groups
-        | Screen::GroupDetail => {
+        | Screen::GroupDetail
+        | Screen::AddField
+        | Screen::EditField
+        | Screen::EditName
+        | Screen::EditRelayUrl => {
             render_cached_screen(f, chunks[1], cached.app.as_ref(), app);
         }
-        // Form dialogs — TUI-specific text input, not engine-driven
-        Screen::AddField => home::draw_add_field(f, chunks[1], app),
-        Screen::EditField => home::draw_edit_field(f, chunks[1], app),
-        Screen::EditName => settings::draw_edit_name(f, chunks[1], app),
-        Screen::EditRelayUrl => settings::draw_edit_relay_url(f, chunks[1], app),
         Screen::Lock => {
             if let Some(model) = &cached.lock {
                 screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
@@ -162,7 +161,11 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::GroupDetail
         | Screen::ContactVisibility
         | Screen::Privacy
-        | Screen::Support => cached.app.as_ref().map(|m| m.title.clone()),
+        | Screen::Support
+        | Screen::EditName
+        | Screen::EditField
+        | Screen::EditRelayUrl
+        | Screen::AddField => cached.app.as_ref().map(|m| m.title.clone()),
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
@@ -243,7 +246,11 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::GroupDetail
         | Screen::ContactVisibility
         | Screen::Privacy
-        | Screen::Support => cached.app.as_ref().map(|screen| {
+        | Screen::Support
+        | Screen::EditName
+        | Screen::EditField
+        | Screen::EditRelayUrl
+        | Screen::AddField => cached.app.as_ref().map(|screen| {
             let actions = screen
                 .actions
                 .iter()

@@ -33,12 +33,12 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
             if let Ok(fields) = app.backend.get_card_fields() {
                 if let Some(field) = fields.get(app.selected_field) {
                     app.edit_field_state = EditFieldState {
+                        field_id: field.id.clone(),
                         field_label: field.label.clone(),
                         field_type: field.field_type.clone(),
                         new_value: field.value.clone(),
                     };
                     app.goto(Screen::EditField);
-                    app.input_mode = InputMode::Editing;
                 } else {
                     // No fields, open Exchange
                     app.goto(Screen::Exchange);

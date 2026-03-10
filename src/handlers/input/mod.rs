@@ -79,6 +79,17 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
+    // Engine-driven form dialogs bypass global keys (text input uses 'q', etc.)
+    if app.app_engine.is_some()
+        && matches!(
+            app.screen,
+            Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField
+        )
+    {
+        handle_engine_keys(app, key);
+        return Action::Continue;
+    }
+
     // Contact limit editing bypasses global keys (digits are input)
     if app.screen == Screen::ContactLimit && app.contact_limit_state.editing {
         handle_contact_limit_keys(app, key);
@@ -128,6 +139,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                 | Screen::ContactVisibility
                 | Screen::Privacy
                 | Screen::Support
+                | Screen::EditName
+                | Screen::EditField
+                | Screen::EditRelayUrl
+                | Screen::AddField
         )
     {
         handle_engine_keys(app, key);
@@ -232,6 +247,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::ContactVisibility => handle_visibility_keys(app, key),
                 Screen::Privacy => handle_privacy_keys(app, key),
                 Screen::Support => handle_support_keys(app, key),
+                // Form dialogs: Esc goes back (engine handles chars/Enter via key_mapping)
+                Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField => {
+                    if key == KeyCode::Esc {
+                        app.go_back();
+                    }
+                }
                 _ => {}
             }
         }

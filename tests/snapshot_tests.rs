@@ -305,6 +305,7 @@ fn test_snapshot_edit_field_dialog() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::EditField;
     app.edit_field_state = EditFieldState {
+        field_id: "field_001".to_string(),
         field_label: "Mobile".to_string(),
         field_type: "Phone".to_string(),
         new_value: "+41 79 123 45 67".to_string(),

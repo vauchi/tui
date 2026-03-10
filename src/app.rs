@@ -5,7 +5,7 @@
 //! Application State
 
 use vauchi_core::contact_card::ContactAction;
-use vauchi_core::ui::{AppEngine, AppScreen, LockScreenEngine, OnboardingEngine};
+use vauchi_core::ui::{AppEngine, AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
 use vauchi_core::MockTransport;
 
 use crate::backend::{Backend, DeviceLinkResult, QRData};
@@ -349,6 +349,7 @@ pub enum AddFieldFocus {
 /// State for the edit field dialog.
 #[derive(Debug, Default)]
 pub struct EditFieldState {
+    pub field_id: String,
     pub field_label: String,
     pub field_type: String,
     pub new_value: String,
@@ -775,6 +776,25 @@ impl App {
             }
             Screen::Privacy => Some(AppScreen::Privacy),
             Screen::Support => Some(AppScreen::Support),
+            Screen::EditName => Some(AppScreen::FormDialog {
+                dialog_type: FormDialogType::EditName {
+                    current_name: self.edit_name_state.new_name.clone(),
+                },
+            }),
+            Screen::EditField => Some(AppScreen::FormDialog {
+                dialog_type: FormDialogType::EditField {
+                    field_id: self.edit_field_state.field_id.clone(),
+                    field_label: self.edit_field_state.field_label.clone(),
+                },
+            }),
+            Screen::EditRelayUrl => Some(AppScreen::FormDialog {
+                dialog_type: FormDialogType::EditRelayUrl {
+                    current_url: self.edit_relay_url_state.new_url.clone(),
+                },
+            }),
+            Screen::AddField => Some(AppScreen::FormDialog {
+                dialog_type: FormDialogType::AddField,
+            }),
             _ => None,
         }
     }

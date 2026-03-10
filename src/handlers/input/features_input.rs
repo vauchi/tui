@@ -25,22 +25,20 @@ pub(super) fn handle_exchange_keys(app: &mut App, key: KeyCode) {
 pub(super) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('n') | KeyCode::Enter => {
-            // Edit display name
+            // Edit display name — engine-driven via FormDialogEngine
             let current_name = app.display_name().unwrap_or("").to_string();
             app.edit_name_state = EditNameState {
                 new_name: current_name,
             };
             app.goto(Screen::EditName);
-            app.input_mode = InputMode::Editing;
         }
         KeyCode::Char('u') => {
-            // Edit relay URL
+            // Edit relay URL — engine-driven via FormDialogEngine
             let current_url = app.backend.relay_url().to_string();
             app.edit_relay_url_state = EditRelayUrlState {
                 new_url: current_url,
             };
             app.goto(Screen::EditRelayUrl);
-            app.input_mode = InputMode::Editing;
         }
         KeyCode::Char('b') => app.goto(Screen::Backup),
         KeyCode::Char('d') => app.goto(Screen::Devices),

@@ -141,8 +141,8 @@ fn test_handle_key_settings_n_opens_edit_name() {
     assert_eq!(app.screen, Screen::EditName);
     assert_eq!(
         app.input_mode,
-        InputMode::Editing,
-        "Edit name should enter editing mode"
+        InputMode::Normal,
+        "Edit name is engine-driven, stays in Normal mode"
     );
 }
 
@@ -153,7 +153,11 @@ fn test_handle_key_settings_u_opens_edit_relay_url() {
 
     handle_key(&mut app, KeyCode::Char('u'));
     assert_eq!(app.screen, Screen::EditRelayUrl);
-    assert_eq!(app.input_mode, InputMode::Editing);
+    assert_eq!(
+        app.input_mode,
+        InputMode::Normal,
+        "Edit relay URL is engine-driven, stays in Normal mode"
+    );
 }
 
 #[test]
