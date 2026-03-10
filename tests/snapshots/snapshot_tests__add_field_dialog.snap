@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 331
 expression: output
 ---
 Add Entry
@@ -13,6 +14,7 @@ Add Entry
 │  • Email  name@example.com                                                   │
 │  • Social  @handle or profile URL                                            │
 │  • Address  123 Main St, City                                                │
+│  • Website  https://example.com                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -23,5 +25,5 @@ Add Entry
 
                                   [Esc] Cancel
 
-────────────────────────────────────────────────────────────────────────────────
-[Esc] Cancel  [Esc] back  [q]uit
+[E] Cancel  [␛] back  [q] quit
+    Exchange    │   Contacts    │    ★ Home     │   Settings    │     Help

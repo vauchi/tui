@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 262
 expression: output
 ---
 Sync
@@ -21,7 +22,8 @@ Sync
 
 
 
+
                     [Enter] Sync Now  [Enter] Test Connection
 
-────────────────────────────────────────────────────────────────────────────────
-[Enter] Sync Now  [Enter] Test Connection  [Esc] back  [q]uit
+[E] Sync Now  [E] Test Connection  [␛] back  [q] quit
+    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help

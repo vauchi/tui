@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 223
+assertion_line: 236
 expression: output
 ---
 Link Device
@@ -21,8 +21,9 @@ Link Device
 │  Scan on new device                                                          │
 │                                                                              │
 │                                                                              │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
                                   [Esc] Cancel
 
-────────────────────────────────────────────────────────────────────────────────
-[Esc] Cancel  [Esc] back  [q]uit
+[E] Cancel  [␛] back  [q] quit
+    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help

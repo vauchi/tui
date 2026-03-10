@@ -13,6 +13,7 @@ use vauchi_core::api::DeviceLinkResult;
 use crate::i18n::I18n;
 use crate::sync_service::SyncResult;
 use crate::theme::{get_default_tui_theme, get_tui_theme, list_themes, TuiTheme};
+use crate::ui::focus::FocusManager;
 use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
 /// Current screen in the application.
@@ -300,6 +301,8 @@ pub struct App {
     pub lock_engine: Option<LockScreenEngine>,
     /// Render state for engine-driven screens (focus, selections)
     pub render_state: ScreenRenderState,
+    /// Focus manager for keyboard navigation across Content/ActionBar/NavBar zones.
+    pub focus: FocusManager,
     /// Duplicates detection state (SP-12a)
     pub duplicates_state: DuplicatesState,
     /// Merge preview state (SP-12a)
@@ -647,6 +650,7 @@ impl App {
             onboarding_engine,
             lock_engine,
             render_state: ScreenRenderState::default(),
+            focus: FocusManager::new(),
             duplicates_state: DuplicatesState::default(),
             merge_state: MergeState::default(),
             contact_limit_state: ContactLimitState::default(),

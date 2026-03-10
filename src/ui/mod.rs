@@ -18,6 +18,9 @@ use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
 use vauchi_core::ui::{ScreenModel, WorkflowEngine};
 
 use crate::app::{App, Screen};
+use crate::ui::focus::FocusZone;
+use crate::ui::widgets::action_bar::{ActionBarWidget, ActionItem};
+use crate::ui::widgets::nav_bar::{NavBarWidget, NavItem};
 use crate::ui::widgets::screen_renderer;
 
 /// Cached screen models computed once per frame to avoid redundant allocations.
@@ -63,9 +66,19 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .constraints([
             Constraint::Length(3), // Header
             Constraint::Min(0),    // Content
-            Constraint::Length(3), // Footer/status
+            Constraint::Length(1), // Action bar
+            Constraint::Length(1), // Nav bar
         ])
         .split(f.area());
+
+    // Build action items from the current screen's ScreenModel
+    let action_items = build_action_items(app, &cached);
+    let nav_items = build_nav_items(app);
+
+    // Update focus manager counts each frame
+    let content_count = cached.app.as_ref().map(|m| m.components.len()).unwrap_or(0);
+    app.focus
+        .set_counts(content_count, action_items.len(), nav_items.len());
 
     // Header
     draw_header(f, chunks[0], app, &cached);
@@ -127,8 +140,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         }
     }
 
-    // Footer
-    draw_footer(f, chunks[2], app, &cached);
+    // Action bar
+    draw_action_bar(f, chunks[2], app, &action_items);
+
+    // Nav bar
+    draw_nav_bar(f, chunks[3], app, &nav_items);
 }
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
@@ -219,131 +235,119 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
     f.render_widget(header, area);
 }
 
-fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
-    // For engine-driven screens, show engine actions in footer (from cached models)
-    let engine_footer: Option<String> = match app.screen {
-        Screen::Home
-        | Screen::Contacts
-        | Screen::ContactDetail
-        | Screen::Exchange
-        | Screen::Settings
-        | Screen::Help
-        | Screen::Backup
-        | Screen::Delivery
-        | Screen::Devices
-        | Screen::Duress
-        | Screen::Emergency
-        | Screen::Sync
-        | Screen::TorSettings
-        | Screen::Recovery
-        | Screen::Groups
-        | Screen::GroupDetail
-        | Screen::ContactVisibility
-        | Screen::Privacy
-        | Screen::Support
-        | Screen::EditName
-        | Screen::EditField
-        | Screen::EditRelayUrl
-        | Screen::AddField
-        | Screen::ContactDuplicates
-        | Screen::ContactMerge
-        | Screen::ContactLimit => cached.app.as_ref().map(|screen| {
-            let actions = screen
-                .actions
-                .iter()
-                .filter(|a| a.enabled)
-                .map(|a| {
-                    let key = screen_renderer::action_key_hint_pub(&a.id);
-                    format!("[{}] {}", key, a.label)
-                })
-                .collect::<Vec<_>>()
-                .join("  ");
-            format!("{}  [Esc] back  [q]uit", actions)
-        }),
+/// Build action items for the current screen from the engine ScreenModel.
+fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> {
+    let screen_model = match app.screen {
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
         | Screen::SetupSecurity
-        | Screen::SetupReady => cached.onboarding.as_ref().map(|screen| {
-            let actions = screen
-                .actions
-                .iter()
-                .filter(|a| a.enabled)
-                .map(|a| {
-                    let key = screen_renderer::action_key_hint_pub(&a.id);
-                    format!("[{}] {}", key, a.label)
-                })
-                .collect::<Vec<_>>()
-                .join("  ");
-            // Welcome screen: no "back" (first screen), show quit only
-            if app.screen == Screen::SetupWelcome {
-                format!("{}  [q]uit", actions)
-            } else {
-                format!("{}  [Esc] back  [q]uit", actions)
-            }
-        }),
-        Screen::Lock => cached.lock.as_ref().map(|screen| {
-            screen
-                .actions
-                .iter()
-                .filter(|a| a.enabled)
-                .map(|a| {
-                    let key = screen_renderer::action_key_hint_pub(&a.id);
-                    format!("[{}] {}", key, a.label)
-                })
-                .collect::<Vec<_>>()
-                .join("  ")
-        }),
-        _ => None,
+        | Screen::SetupReady => cached.onboarding.as_ref(),
+        Screen::Lock => cached.lock.as_ref(),
+        _ => cached.app.as_ref(),
     };
 
-    let help_text = engine_footer.as_deref().unwrap_or(match app.screen {
-        Screen::Home => "[c]ontacts  [s]ettings  [g]roups  e[X]change  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
-        Screen::Contacts => "[j/k] navigate  [/]search  [d]uplicates  [L]imit  [enter] view  [esc] back  [?]help",
-        Screen::ContactDetail => "[j/k] navigate  [c]opy  [o]pen  [v]isibility  [f]ingerprint  [t]rust  [h]ide  [x]delete  [esc] back",
-        Screen::ContactVisibility => "[j/k] navigate  [enter/space] toggle  [esc] back",
-        Screen::Exchange => "[r]efresh  [esc] back  [?]help",
-        Screen::Settings => "[n]ame  [u]relay  [t]or  [b]ackup  [d]evices  [r]ecovery  [e]mergency  [D]uress  [p]rivacy  [s]upport  [esc] back",
-        Screen::Help => "[esc/q] close",
-        Screen::AddField => "[tab] next  [enter] submit  [esc] cancel",
-        Screen::EditField => "[enter] save  [esc] cancel",
-        Screen::EditName => "[enter] save  [esc] cancel",
-        Screen::EditRelayUrl => "[enter] save  [esc] cancel",
-        Screen::Devices => "[j/k] navigate  [l]ink new device  [r]evoke  [esc] back  [?]help",
-        Screen::Recovery => "[c]laim  [v]ouch  [s]tatus  [esc] back  [?]help",
-        Screen::Sync => "[s]ync now  [t]est connection  [r]efresh pending  [esc] back  [?]help",
-        Screen::Delivery => "[r]etry  [c]leanup  [esc] back",
-        Screen::Backup => "[e]xport  [i]mport  [esc] back  [?]help",
-        Screen::TorSettings => "[e]nable  [d]isable  [o]nion  [n]ew circuit  [x]clear bridges  [esc] back",
-        Screen::Privacy => "[j/k] navigate  [e]xport  [d]elete  [c]ancel  [space] toggle consent  [esc] back",
-        Screen::Support => "[1] GitHub Sponsors  [2] Liberapay  [esc] back",
-        Screen::Emergency => "[c]onfigure  [s]end  [l]ocation toggle  [x]disable  [esc] back",
-        Screen::Duress => "[p]in setup  [a]lert config  [l]ocation  [x]disable  [esc] back",
-        Screen::Groups => "[j/k] navigate  [/]search  [n]ew group  [enter] view  [d]elete  [esc] back",
-        Screen::GroupDetail => "[j/k] navigate  [r]ename  [esc] back",
-        Screen::Lock => "[enter] unlock",
-        Screen::ActionMenu => "[j/k] navigate  [enter] select  [esc] cancel",
-        Screen::SetupWelcome => "[Enter] start  [i]mport backup  [q]uit",
-        Screen::SetupCreateIdentity => "[Enter] continue  [Esc] back",
-        Screen::SetupAddFields => "[a]dd field  [s/Enter] skip  [Esc] back",
-        Screen::SetupSecurity => "[Enter] continue  [Esc] back",
-        Screen::SetupReady => "[Enter] go to Home",
-        Screen::ContactDuplicates => "[j/k] navigate  [m]erge  [d]ismiss  [esc] back",
-        Screen::ContactMerge => "[y] confirm merge  [n/Esc] cancel",
-        Screen::ContactLimit => "[e/Enter] edit  [Esc] back",
-    });
-
-    let status = if let Some(msg) = &app.status_message {
-        format!("{} | {}", msg, help_text)
+    let mut items: Vec<ActionItem> = if let Some(model) = screen_model {
+        model
+            .actions
+            .iter()
+            .filter(|a| a.enabled)
+            .map(|a| {
+                let key_str = screen_renderer::action_key_hint_pub(&a.id);
+                let key = key_str.chars().next().unwrap_or('?');
+                ActionItem::new(key, &a.label)
+            })
+            .collect()
     } else {
-        help_text.to_string()
+        Vec::new()
     };
 
-    let footer = Paragraph::new(status)
-        .style(Style::default().fg(app.theme.fg_secondary))
-        .block(Block::default().borders(Borders::TOP));
+    // Add global actions (back/quit) except on Lock and first setup screen
+    match app.screen {
+        Screen::Lock => {}
+        Screen::SetupWelcome => {
+            items.push(ActionItem::new('q', "quit"));
+        }
+        Screen::SetupReady => {
+            // No back on final screen
+        }
+        _ => {
+            items.push(ActionItem::new('\u{241B}', "back")); // ␛ for Esc
+            items.push(ActionItem::new('q', "quit"));
+        }
+    }
 
-    f.render_widget(footer, area);
+    items
+}
+
+/// Build navigation items for the persistent bottom nav bar.
+fn build_nav_items(app: &App) -> Vec<NavItem> {
+    let active_tab = match app.screen {
+        Screen::Exchange => 0,
+        Screen::Contacts
+        | Screen::ContactDetail
+        | Screen::ContactVisibility
+        | Screen::ContactDuplicates
+        | Screen::ContactMerge
+        | Screen::ContactLimit => 1,
+        Screen::Home => 2,
+        Screen::Settings
+        | Screen::Devices
+        | Screen::Recovery
+        | Screen::Sync
+        | Screen::Delivery
+        | Screen::Backup
+        | Screen::TorSettings
+        | Screen::Privacy
+        | Screen::Support
+        | Screen::Emergency
+        | Screen::Duress => 3,
+        Screen::Help => 4,
+        _ => 2, // Default to Home
+    };
+
+    vec![
+        NavItem {
+            label: "Exchange",
+            active: active_tab == 0,
+        },
+        NavItem {
+            label: "Contacts",
+            active: active_tab == 1,
+        },
+        NavItem {
+            label: "Home",
+            active: active_tab == 2,
+        },
+        NavItem {
+            label: "Settings",
+            active: active_tab == 3,
+        },
+        NavItem {
+            label: "Help",
+            active: active_tab == 4,
+        },
+    ]
+}
+
+/// Render the action bar using ActionBarWidget.
+fn draw_action_bar(f: &mut Frame, area: Rect, app: &App, items: &[ActionItem]) {
+    let widget = ActionBarWidget {
+        items,
+        focused_index: app.focus.focused_in(FocusZone::ActionBar),
+        theme: &app.theme,
+    };
+    widget.render(f, area);
+}
+
+/// Render the nav bar using NavBarWidget.
+fn draw_nav_bar(f: &mut Frame, area: Rect, app: &App, items: &[NavItem]) {
+    let widget = NavBarWidget {
+        items,
+        focused_index: app.focus.focused_in(FocusZone::NavBar),
+        theme: &app.theme,
+    };
+    widget.render(f, area);
 }
 
 /// Draw the action menu popup centered in the given area.

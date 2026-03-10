@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 394
+assertion_line: 407
 expression: output
 ---
 Share Your Code
@@ -21,8 +21,9 @@ Share Your Code
 │  Alice Smith                                                                 │
 │                                                                              │
 │                                                                              │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
                              [Enter] Scan Their Code
 
-────────────────────────────────────────────────────────────────────────────────
-[Enter] Scan Their Code  [Esc] back  [q]uit
+[E] Scan Their Code  [␛] back  [q] quit
+   ★ Exchange   │   Contacts    │     Home      │   Settings    │     Help

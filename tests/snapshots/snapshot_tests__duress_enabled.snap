@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 422
+assertion_line: 455
 expression: output
 ---
 Duress PIN
@@ -22,7 +22,8 @@ Duress PIN
 
 
 
+
                                [Enter] Set Up PIN
 
-────────────────────────────────────────────────────────────────────────────────
-[Enter] Set Up PIN  [Esc] back  [q]uit
+[E] Set Up PIN  [␛] back  [q] quit
+    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help
