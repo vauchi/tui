@@ -17,14 +17,10 @@ use crate::handlers::action_result::handle_action_result;
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use contacts_input::{
-    handle_action_menu_keys, handle_contact_detail_keys, handle_contact_limit_keys,
-    handle_contacts_keys, handle_duplicates_keys, handle_group_detail_keys, handle_groups_keys,
-    handle_merge_keys, handle_visibility_keys,
+    handle_action_menu_keys, handle_contact_detail_keys, handle_contacts_keys,
+    handle_group_detail_keys, handle_groups_keys, handle_visibility_keys,
 };
-use editing::{
-    handle_add_field_keys, handle_edit_field_keys, handle_edit_name_keys,
-    handle_edit_relay_url_keys, handle_editing_mode,
-};
+use editing::handle_editing_mode;
 use features_input::{
     handle_backup_keys, handle_delivery_keys, handle_devices_keys, handle_duress_keys,
     handle_emergency_keys, handle_exchange_keys, handle_lock_keys, handle_privacy_keys,
@@ -69,7 +65,9 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                 | Screen::SetupReady
         )
     {
-        navigation::handle_onboarding_engine_keys(app, key);
+        if let Some(action) = navigation::handle_onboarding_engine_keys(app, key) {
+            return action;
+        }
         return Action::Continue;
     }
 
@@ -80,19 +78,17 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Engine-driven form dialogs bypass global keys (text input uses 'q', etc.)
-    if app.app_engine.is_some()
-        && matches!(
-            app.screen,
-            Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField
-        )
-    {
+    if matches!(
+        app.screen,
+        Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField
+    ) {
         handle_engine_keys(app, key);
         return Action::Continue;
     }
 
-    // Contact limit editing bypasses global keys (digits are input)
-    if app.screen == Screen::ContactLimit && app.contact_limit_state.editing {
-        handle_contact_limit_keys(app, key);
+    // Engine-driven contact limit bypasses global keys when editing (digits are input)
+    if app.screen == Screen::ContactLimit {
+        handle_engine_keys(app, key);
         return Action::Continue;
     }
 
@@ -117,34 +113,34 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Engine-driven screens — route through AppEngine key mapping
-    if app.app_engine.is_some()
-        && matches!(
-            app.screen,
-            Screen::Home
-                | Screen::Contacts
-                | Screen::ContactDetail
-                | Screen::Exchange
-                | Screen::Settings
-                | Screen::Help
-                | Screen::Backup
-                | Screen::Delivery
-                | Screen::Devices
-                | Screen::Duress
-                | Screen::Emergency
-                | Screen::Sync
-                | Screen::TorSettings
-                | Screen::Recovery
-                | Screen::Groups
-                | Screen::GroupDetail
-                | Screen::ContactVisibility
-                | Screen::Privacy
-                | Screen::Support
-                | Screen::EditName
-                | Screen::EditField
-                | Screen::EditRelayUrl
-                | Screen::AddField
-        )
-    {
+    if matches!(
+        app.screen,
+        Screen::Home
+            | Screen::Contacts
+            | Screen::ContactDetail
+            | Screen::Exchange
+            | Screen::Settings
+            | Screen::Help
+            | Screen::Backup
+            | Screen::Delivery
+            | Screen::Devices
+            | Screen::Duress
+            | Screen::Emergency
+            | Screen::Sync
+            | Screen::TorSettings
+            | Screen::Recovery
+            | Screen::Groups
+            | Screen::GroupDetail
+            | Screen::ContactVisibility
+            | Screen::Privacy
+            | Screen::Support
+            | Screen::EditName
+            | Screen::EditField
+            | Screen::EditRelayUrl
+            | Screen::AddField
+            | Screen::ContactDuplicates
+            | Screen::ContactMerge
+    ) {
         handle_engine_keys(app, key);
         return Action::Continue;
     }
@@ -158,10 +154,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Exchange => handle_exchange_keys(app, key),
         Screen::Settings => handle_settings_keys(app, key),
         Screen::Help => handle_help_keys(app, key),
-        Screen::AddField => handle_add_field_keys(app, key),
-        Screen::EditField => handle_edit_field_keys(app, key),
-        Screen::EditName => handle_edit_name_keys(app, key),
-        Screen::EditRelayUrl => handle_edit_relay_url_keys(app, key),
+        // Form dialogs: handled by engine guard above when app_engine is present
+        Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl => {
+            unreachable!("Form dialogs handled by engine guard")
+        }
         Screen::Devices => handle_devices_keys(app, key),
         Screen::Recovery => handle_recovery_keys(app, key),
         Screen::Sync => handle_sync_keys(app, key),
@@ -184,10 +180,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::SetupAddFields => handle_setup_add_fields_keys(app, key),
         Screen::SetupSecurity => handle_setup_security_keys(app, key),
         Screen::SetupReady => handle_setup_ready_keys(app, key),
-        // SP-12a Duplicates / Merge / Limit
-        Screen::ContactDuplicates => handle_duplicates_keys(app, key),
-        Screen::ContactMerge => handle_merge_keys(app, key),
-        Screen::ContactLimit => handle_contact_limit_keys(app, key),
+        // SP-12a screens: handled by engine guard above
+        Screen::ContactDuplicates | Screen::ContactMerge | Screen::ContactLimit => {
+            unreachable!("SP-12a screens handled by engine guard")
+        }
     }
 
     Action::Continue
@@ -200,27 +196,20 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
 fn handle_engine_keys(app: &mut App, key: KeyCode) {
     // Ensure AppEngine is synced to the current TUI screen
     if let Some(target) = app.to_app_screen() {
-        if let Some(engine) = &mut app.app_engine {
-            if *engine.current_app_screen() != target {
-                engine.navigate_to(target);
-            }
+        if *app.app_engine.current_app_screen() != target {
+            app.app_engine.navigate_to(target);
         }
     }
 
     // Get the current screen model from AppEngine
-    let screen_model = match &app.app_engine {
-        Some(engine) => engine.current_screen(),
-        None => return,
-    };
+    let screen_model = app.app_engine.current_screen();
 
     // Map the key to a UserAction via the key_mapping module
     match key_mapping::map_key(key, &screen_model, &mut app.render_state) {
         KeyResult::Action(action) => {
             // Forward the action to AppEngine
-            if let Some(engine) = &mut app.app_engine {
-                let result = engine.handle_action(action);
-                handle_action_result(app, result);
-            }
+            let result = app.app_engine.handle_action(action);
+            handle_action_result(app, result);
         }
         KeyResult::Consumed => {
             // Key was handled internally (focus change, etc.)
@@ -249,6 +238,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Support => handle_support_keys(app, key),
                 // Form dialogs: Esc goes back (engine handles chars/Enter via key_mapping)
                 Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField => {
+                    if key == KeyCode::Esc {
+                        app.go_back();
+                    }
+                }
+                // SP-12a screens: Esc goes back, engine handles other actions
+                Screen::ContactDuplicates | Screen::ContactMerge | Screen::ContactLimit => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }

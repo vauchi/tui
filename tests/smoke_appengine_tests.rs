@@ -9,16 +9,34 @@
 
 use ratatui::prelude::*;
 
+use vauchi_core::ui::AppEngine;
+use vauchi_core::{MockTransport, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, Screen};
-use vauchi_tui::backend::Backend;
 use vauchi_tui::ui;
+
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+    let key = SymmetricKey::generate();
+    let config = VauchiConfig {
+        storage_path: data_dir.join("vauchi.db"),
+        storage_key: Some(key),
+        ..Default::default()
+    };
+    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    AppEngine::new(vauchi)
+}
 
 fn create_app_with_identity() -> (App, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
-    let mut backend = Backend::new(dir.path()).unwrap();
-    backend.create_identity("Smoke Tester").unwrap();
-    let backend = Backend::new(dir.path()).unwrap();
-    let app = App::new(backend);
+    let mut app_engine = create_app_engine(dir.path());
+    app_engine
+        .vauchi_mut()
+        .create_identity("Smoke Tester")
+        .expect("create identity");
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        dir.path().to_path_buf(),
+    );
     (app, dir)
 }
 
@@ -49,10 +67,10 @@ fn smoke_home_screen_renders_via_engine() {
         "Home screen should show title. Got:\n{}",
         output
     );
-    // Should show "Add Contact" action from engine
+    // Should show "Add Entry" action from engine
     assert!(
-        output.contains("Add Contact"),
-        "Home screen should show Add Contact action. Got:\n{}",
+        output.contains("Add Entry"),
+        "Home screen should show Add Entry action. Got:\n{}",
         output
     );
 }

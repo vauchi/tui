@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 154
+assertion_line: 186
 expression: output
 ---
 Home
@@ -9,7 +9,7 @@ Home
                                       Home
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ setup Complete your setup — 1 of 6 steps done                                │
+│ setup Complete your setup — 2 of 6 steps done                                │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
 │  No contacts yet                                                             │
@@ -22,7 +22,7 @@ Home
 
 
 
-                                 [a] Add Contact
+                                  [a] Add Entry
 
 ────────────────────────────────────────────────────────────────────────────────
-[a] Add Contact  [Esc] back  [q]uit
+[a] Add Entry  [Esc] back  [q]uit

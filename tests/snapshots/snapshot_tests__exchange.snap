@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 374
+assertion_line: 394
 expression: output
 ---
 Share Your Code
@@ -17,7 +17,7 @@ Share Your Code
 │  │  ▀▀▀▀  ▀▀▀▀ │                                                             │
 │  └──────────────┘                                                            │
 │                                                                              │
-│                                                                              │
+│  [PUBLIC_ID]...                                 │
 │  Alice Smith                                                                 │
 │                                                                              │
 │                                                                              │

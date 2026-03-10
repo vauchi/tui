@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 337
 expression: output
 ---
 Edit Relay URL
@@ -9,8 +8,8 @@ Edit Relay URL
                                  Edit Relay URL
 
 Relay URL
-┌──────────────────────────────────────────────────────────────────────────────┐
-│wss://relay.vauchi.app|                                                       │
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│wss://relay.vauchi.app█                                                       │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

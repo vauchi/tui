@@ -15,11 +15,12 @@ use ratatui::buffer::Buffer;
 use ratatui::Terminal;
 use tempfile::TempDir;
 
+use vauchi_core::ui::AppEngine;
+use vauchi_core::{ContactField, FieldType, MockTransport, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{
     AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState, DuressState,
     EditFieldState, EditNameState, EditRelayUrlState, PrivacyState, Screen, SyncState, TorState,
 };
-use vauchi_tui::backend::Backend;
 
 /// Fixed terminal dimensions for consistent snapshots.
 const WIDTH: u16 = 80;
@@ -47,37 +48,68 @@ fn ensure_locales_loaded() {
     });
 }
 
-/// Create a test backend with an identity and some card fields.
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+    let key = SymmetricKey::generate();
+    let config = VauchiConfig {
+        storage_path: data_dir.join("vauchi.db"),
+        storage_key: Some(key),
+        ..Default::default()
+    };
+    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    AppEngine::new(vauchi)
+}
+
+/// Create a test app with an identity and some card fields.
 fn create_app_with_identity() -> (App, TempDir) {
     ensure_locales_loaded();
     let temp_dir = TempDir::new().expect("temp dir");
-    let mut backend = Backend::new(temp_dir.path()).expect("backend");
-    backend
+    let mut app_engine = create_app_engine(temp_dir.path());
+    app_engine
+        .vauchi_mut()
         .create_identity("Alice Smith")
         .expect("create identity");
-    backend
-        .add_field(vauchi_core::FieldType::Email, "Work", "alice@company.com")
+    app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(
+            FieldType::Email,
+            "Work",
+            "alice@company.com",
+        ))
         .expect("add email");
-    backend
-        .add_field(vauchi_core::FieldType::Phone, "Mobile", "+41 79 123 45 67")
+    app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(
+            FieldType::Phone,
+            "Mobile",
+            "+41 79 123 45 67",
+        ))
         .expect("add phone");
-    backend
-        .add_field(
-            vauchi_core::FieldType::Website,
+    app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(
+            FieldType::Website,
             "Blog",
             "https://alice.example.com",
-        )
+        ))
         .expect("add website");
-    let app = App::new(backend);
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
     (app, temp_dir)
 }
 
-/// Create a test backend without an identity (setup state).
+/// Create a test app without an identity (setup state).
 fn create_app_without_identity() -> (App, TempDir) {
     ensure_locales_loaded();
     let temp_dir = TempDir::new().expect("temp dir");
-    let backend = Backend::new(temp_dir.path()).expect("backend");
-    let app = App::new(backend);
+    let app_engine = create_app_engine(temp_dir.path());
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
     (app, temp_dir)
 }
 
@@ -95,8 +127,8 @@ fn render_to_string(app: &mut App) -> String {
 
 /// Replace hex-based IDs and keys with stable placeholders.
 fn redact_dynamic_values(s: &str) -> String {
-    // Replace truncated public IDs: 16 hex chars followed by "..."
-    let re_public_id = regex::Regex::new(r"[0-9a-f]{16}\.\.\.").unwrap();
+    // Replace public IDs: 16+ hex chars (optionally followed by "...")
+    let re_public_id = regex::Regex::new(r"[0-9a-f]{16,}(\.\.\.)?").unwrap();
     let s = re_public_id.replace_all(s, "[PUBLIC_ID]...");
     // Replace truncated device keys: 8 hex chars followed by "..."  e.g. "(83c49a52...)"
     let re_device_key = regex::Regex::new(r"\([0-9a-f]{8}\.\.\.\)").unwrap();

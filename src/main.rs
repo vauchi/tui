@@ -7,10 +7,10 @@
 //! Interactive terminal application for Vauchi using Ratatui.
 
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
@@ -18,12 +18,31 @@ use crossterm::{
 };
 use ratatui::prelude::*;
 
+use vauchi_core::crypto::SymmetricKey;
+#[cfg(feature = "secure-storage")]
+use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
+use vauchi_core::ui::AppEngine;
+use vauchi_core::{MockTransport, Vauchi, VauchiConfig};
+
+#[cfg(not(feature = "secure-storage"))]
+use vauchi_core::storage::secure::{FileKeyStorage, SecureStorage};
+
 use vauchi_tui::app::App;
-use vauchi_tui::backend::Backend;
 use vauchi_tui::handlers;
 use vauchi_tui::ui;
 
+/// Default relay URL.
+const DEFAULT_RELAY_URL: &str = "wss://relay.vauchi.app";
+
 fn main() -> Result<()> {
+    // Install panic hook that restores the terminal before printing the panic.
+    // Without this, a panic leaves the terminal in raw/alternate-screen mode.
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let _ = restore_terminal();
+        original_hook(panic_info);
+    }));
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -31,24 +50,41 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Resolve data directory (VAUCHI_DATA_DIR env var overrides default)
-    let data_dir = std::env::var("VAUCHI_DATA_DIR")
-        .ok()
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            dirs::data_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join("vauchi")
-        });
+    // Run everything inside a closure so errors trigger cleanup
+    let res = (|| -> Result<()> {
+        // Resolve data directory (VAUCHI_DATA_DIR env var overrides default)
+        let data_dir = std::env::var("VAUCHI_DATA_DIR")
+            .ok()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                dirs::data_dir()
+                    .unwrap_or_else(|| PathBuf::from("."))
+                    .join("vauchi")
+            });
 
-    // Create app state
-    let vauchi_backend = Backend::new(&data_dir)?;
-    let mut app = App::new(vauchi_backend);
+        // Ensure data directory exists
+        std::fs::create_dir_all(&data_dir).context("Failed to create data directory")?;
 
-    // Run the app
-    let res = run_app(&mut terminal, &mut app);
+        // Create Vauchi instance and AppEngine
+        let storage_key = load_or_create_storage_key(&data_dir)?;
+        let vauchi_config = VauchiConfig {
+            storage_path: data_dir.join("vauchi.db"),
+            storage_key: Some(storage_key),
+            ..Default::default()
+        };
+        let vauchi: Vauchi<MockTransport> = Vauchi::new(vauchi_config)?;
+        let app_engine = AppEngine::new(vauchi);
 
-    // Restore terminal
+        // Resolve relay URL: config file → env var → default
+        let relay_url = resolve_relay_url(&data_dir);
+
+        let mut app = App::new(app_engine, relay_url, data_dir);
+
+        // Run the app
+        run_app(&mut terminal, &mut app)
+    })();
+
+    // Restore terminal (always runs, even after errors)
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -59,10 +95,195 @@ fn main() -> Result<()> {
 
     // Handle any errors
     if let Err(err) = res {
-        eprintln!("Error: {err:?}");
+        let msg = format!("{err:?}");
+        eprintln!("Error: {msg}");
+        if msg.contains("ecryption") || msg.contains("corrupted") || msg.contains("wrong key") {
+            let data_dir = std::env::var("VAUCHI_DATA_DIR")
+                .ok()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| {
+                    dirs::data_dir()
+                        .unwrap_or_else(|| PathBuf::from("."))
+                        .join("vauchi")
+                });
+            eprintln!();
+            eprintln!("The storage appears corrupted or was encrypted with a different key.");
+            eprintln!("To start fresh, delete the data directory:");
+            eprintln!();
+            eprintln!("  rm -rf {}", data_dir.display());
+        }
     }
 
     Ok(())
+}
+
+/// Resolve relay URL with fallback hierarchy:
+/// 1. User-configured URL (stored in config file)
+/// 2. VAUCHI_RELAY_URL environment variable
+/// 3. Default: wss://relay.vauchi.app
+fn resolve_relay_url(data_dir: &Path) -> String {
+    let relay_config_path = data_dir.join("relay_url.txt");
+    std::fs::read_to_string(&relay_config_path)
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .or_else(|| {
+            std::env::var("VAUCHI_RELAY_URL")
+                .ok()
+                .filter(|s| !s.is_empty())
+        })
+        .unwrap_or_else(|| DEFAULT_RELAY_URL.to_string())
+}
+
+/// Derives a per-data-dir keychain key name using FNV-1a hash.
+///
+/// Ensures that TUI instances with different `--data-dir` values get
+/// separate OS keychain entries, preventing key collisions (T-M4).
+#[cfg(feature = "secure-storage")]
+fn keychain_key_name(data_dir: &Path) -> String {
+    let path_str = data_dir.to_string_lossy();
+    // FNV-1a hash — stable, well-defined algorithm (matches CLI implementation)
+    let mut hash: u64 = 0xcbf29ce484222325; // FNV offset basis
+    for byte in path_str.as_bytes() {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(0x100000001b3); // FNV prime
+    }
+    format!("storage_key_{:016x}", hash)
+}
+
+/// Loads or generates a per-installation random fallback key from `data_dir/.fallback-key`.
+///
+/// Used only when the `secure-storage` feature is disabled. Each installation
+/// gets a unique random key instead of a hardcoded constant.
+#[cfg(not(feature = "secure-storage"))]
+fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
+    let key_path = data_dir.join(".fallback-key");
+
+    if key_path.exists() {
+        let bytes = std::fs::read(&key_path).context("Failed to read fallback key")?;
+        if bytes.len() != 32 {
+            anyhow::bail!(
+                "Invalid fallback key length ({}), expected 32. Delete {} to regenerate.",
+                bytes.len(),
+                key_path.display()
+            );
+        }
+        let mut arr = [0u8; 32];
+        arr.copy_from_slice(&bytes);
+        return Ok(SymmetricKey::from_bytes(arr));
+    }
+
+    // Generate a new random key
+    let key = SymmetricKey::generate();
+
+    std::fs::create_dir_all(data_dir).context("Failed to create data directory")?;
+    std::fs::write(&key_path, key.as_bytes()).context("Failed to write fallback key")?;
+
+    // Set restrictive permissions on Unix
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&key_path, std::fs::Permissions::from_mode(0o600))
+            .context("Failed to set fallback key permissions")?;
+    }
+
+    Ok(key)
+}
+
+/// Loads or creates the storage encryption key using SecureStorage.
+///
+/// When the `secure-storage` feature is enabled, uses the OS keychain
+/// with a per-data-dir key name (FNV-1a hash of the path) to prevent
+/// collisions between TUI instances with different `--data-dir` values.
+/// Migrates from the legacy fixed `"storage_key"` entry if present.
+///
+/// Otherwise, falls back to encrypted file storage.
+#[allow(unused_variables)]
+fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
+    /// Key name for non-keychain (file-based) storage.
+    const KEY_NAME: &str = "storage_key";
+
+    /// Legacy fixed keychain key name (pre per-data-dir fix).
+    #[cfg(feature = "secure-storage")]
+    const LEGACY_KEY_NAME: &str = "storage_key";
+
+    #[cfg(feature = "secure-storage")]
+    {
+        let storage = PlatformKeyring::new("vauchi-tui");
+        let key_name = keychain_key_name(data_dir);
+
+        match storage.load_key(&key_name) {
+            Ok(Some(bytes)) if bytes.len() == 32 => {
+                let mut arr = [0u8; 32];
+                arr.copy_from_slice(&bytes);
+                Ok(SymmetricKey::from_bytes(arr))
+            }
+            Ok(Some(_)) => {
+                anyhow::bail!("Invalid storage key length in keychain");
+            }
+            Ok(None) => {
+                // Try migrating from the old fixed key name
+                if let Ok(Some(legacy_bytes)) = storage.load_key(LEGACY_KEY_NAME) {
+                    if legacy_bytes.len() == 32 {
+                        // Migrate: save under new per-dir name, delete legacy entry
+                        storage.save_key(&key_name, &legacy_bytes).map_err(|e| {
+                            anyhow::anyhow!("Failed to migrate keychain key: {}", e)
+                        })?;
+                        let _ = storage.delete_key(LEGACY_KEY_NAME);
+                        let mut arr = [0u8; 32];
+                        arr.copy_from_slice(&legacy_bytes);
+                        return Ok(SymmetricKey::from_bytes(arr));
+                    }
+                }
+
+                // No existing key — generate a new one
+                let key = SymmetricKey::generate();
+                storage
+                    .save_key(&key_name, key.as_bytes())
+                    .map_err(|e| anyhow::anyhow!("Failed to save key to keychain: {}", e))?;
+                Ok(key)
+            }
+            Err(e) => {
+                anyhow::bail!("Keychain error: {}", e);
+            }
+        }
+    }
+
+    #[cfg(not(feature = "secure-storage"))]
+    {
+        let fallback_key = load_or_generate_fallback_key(data_dir)?;
+
+        let key_dir = data_dir.join("keys");
+        let storage = FileKeyStorage::new(key_dir, fallback_key);
+
+        match storage.load_key(KEY_NAME) {
+            Ok(Some(bytes)) if bytes.len() == 32 => {
+                let mut arr = [0u8; 32];
+                arr.copy_from_slice(&bytes);
+                Ok(SymmetricKey::from_bytes(arr))
+            }
+            Ok(Some(_)) => {
+                anyhow::bail!("Invalid storage key length");
+            }
+            Ok(None) => {
+                // Generate and save new key
+                let key = SymmetricKey::generate();
+                storage
+                    .save_key(KEY_NAME, key.as_bytes())
+                    .map_err(|e| anyhow::anyhow!("Failed to save storage key: {}", e))?;
+                Ok(key)
+            }
+            Err(e) => {
+                anyhow::bail!("Storage error: {}", e);
+            }
+        }
+    }
+}
+
+/// Restore terminal to normal mode. Called from panic hook and normal exit.
+fn restore_terminal() {
+    let _ = disable_raw_mode();
+    let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
 }
 
 fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {

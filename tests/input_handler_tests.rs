@@ -12,8 +12,9 @@ use tempfile::TempDir;
 
 use crossterm::event::KeyCode;
 
+use vauchi_core::ui::AppEngine;
+use vauchi_core::{ContactField, FieldType, MockTransport, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, EmergencyFocus, EmergencyState, InputMode, Screen};
-use vauchi_tui::backend::Backend;
 use vauchi_tui::handlers::{handle_key, Action};
 
 static INIT_LOCALES: Once = Once::new();
@@ -34,22 +35,42 @@ fn ensure_locales_loaded() {
     });
 }
 
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+    let key = SymmetricKey::generate();
+    let config = VauchiConfig {
+        storage_path: data_dir.join("vauchi.db"),
+        storage_key: Some(key),
+        ..Default::default()
+    };
+    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    AppEngine::new(vauchi)
+}
+
 fn create_app_with_identity() -> (App, TempDir) {
     ensure_locales_loaded();
     let temp_dir = TempDir::new().expect("temp dir");
-    let mut backend = Backend::new(temp_dir.path()).expect("backend");
-    backend
+    let mut app_engine = create_app_engine(temp_dir.path());
+    app_engine
+        .vauchi_mut()
         .create_identity("Alice Smith")
         .expect("create identity");
-    let app = App::new(backend);
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
     (app, temp_dir)
 }
 
 fn create_app_without_identity() -> (App, TempDir) {
     ensure_locales_loaded();
     let temp_dir = TempDir::new().expect("temp dir");
-    let backend = Backend::new(temp_dir.path()).expect("backend");
-    let app = App::new(backend);
+    let app_engine = create_app_engine(temp_dir.path());
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
     (app, temp_dir)
 }
 
@@ -562,7 +583,10 @@ fn test_lock_screen_empty_enter_does_nothing() {
 fn test_lock_screen_wrong_pin_increments_attempts() {
     let (mut app, _dir) = create_app_with_identity();
     // Set up an app password
-    app.backend.setup_app_password("correctpin").unwrap();
+    app.app_engine
+        .vauchi_mut()
+        .setup_app_password("correctpin")
+        .unwrap();
     app.goto(Screen::Lock);
     // Enter wrong PIN
     handle_key(&mut app, KeyCode::Char('w'));
@@ -580,7 +604,10 @@ fn test_lock_screen_wrong_pin_increments_attempts() {
 #[test]
 fn test_lock_screen_correct_pin_unlocks() {
     let (mut app, _dir) = create_app_with_identity();
-    app.backend.setup_app_password("mypin").unwrap();
+    app.app_engine
+        .vauchi_mut()
+        .setup_app_password("mypin")
+        .unwrap();
     app.goto(Screen::Lock);
     for c in "mypin".chars() {
         handle_key(&mut app, KeyCode::Char(c));
@@ -627,7 +654,8 @@ fn test_emergency_send_enters_confirm_mode() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Emergency);
     // Configure emergency broadcast
-    app.backend
+    app.app_engine
+        .vauchi_mut()
         .configure_emergency_broadcast(vec!["alice".to_string()], "Help me!".to_string(), false)
         .unwrap();
     app.emergency_state.configured = true;
@@ -669,7 +697,8 @@ fn test_emergency_confirm_esc_cancels() {
 fn test_emergency_rate_limit_blocks_rapid_resend() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Emergency);
-    app.backend
+    app.app_engine
+        .vauchi_mut()
         .configure_emergency_broadcast(vec!["alice".to_string()], "Help me!".to_string(), false)
         .unwrap();
     app.emergency_state.configured = true;
@@ -693,7 +722,8 @@ fn test_emergency_rate_limit_blocks_rapid_resend() {
 fn test_emergency_rate_limit_allows_after_cooldown() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Emergency);
-    app.backend
+    app.app_engine
+        .vauchi_mut()
         .configure_emergency_broadcast(vec!["alice".to_string()], "Help me!".to_string(), false)
         .unwrap();
     app.emergency_state.configured = true;
@@ -722,80 +752,6 @@ fn test_emergency_state_defaults_include_last_broadcast() {
 // ============================================================================
 // Contact Groups Tests (@groups feature from contacts_management.feature)
 // ============================================================================
-
-/// @scenario: Create a contact group
-#[test]
-fn test_create_group_adds_group_to_list() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Groups);
-
-    // Backend method should create a group
-    let group = app.backend.create_group("Family").expect("create group");
-    assert_eq!(group.name, "Family");
-    assert_eq!(group.contact_count, 0);
-
-    // List should contain the new group
-    let groups = app.backend.list_groups().expect("list groups");
-    assert_eq!(groups.len(), 1);
-    assert_eq!(groups[0].name, "Family");
-}
-
-/// @scenario: Delete a group
-#[test]
-fn test_delete_group() {
-    let (app, _dir) = create_app_with_identity();
-
-    // Create a group
-    let group = app
-        .backend
-        .create_group("Old Friends")
-        .expect("create group");
-
-    let groups = app.backend.list_groups().expect("list groups");
-    assert_eq!(groups.len(), 1);
-
-    // Delete the group
-    app.backend.delete_group(&group.id).expect("delete group");
-
-    // Verify group is deleted
-    let groups = app.backend.list_groups().expect("list groups");
-    assert_eq!(groups.len(), 0);
-}
-
-/// @scenario: Rename a group
-#[test]
-fn test_rename_group() {
-    let (app, _dir) = create_app_with_identity();
-
-    // Create a group
-    let group = app.backend.create_group("Work").expect("create group");
-
-    assert_eq!(group.name, "Work");
-
-    // Rename the group
-    app.backend
-        .rename_group(&group.id, "Office")
-        .expect("rename group");
-
-    // Verify group is renamed
-    let updated_group = app.backend.get_group(&group.id).expect("get group");
-    assert_eq!(updated_group.name, "Office");
-}
-
-/// @scenario: Multiple groups can be created
-#[test]
-fn test_multiple_groups() {
-    let (app, _dir) = create_app_with_identity();
-
-    app.backend.create_group("Friends").expect("create friends");
-    app.backend
-        .create_group("Colleagues")
-        .expect("create colleagues");
-    app.backend.create_group("Family").expect("create family");
-
-    let groups = app.backend.list_groups().expect("list groups");
-    assert_eq!(groups.len(), 3);
-}
 
 /// Test go_back from Groups screen returns to Home
 #[test]
@@ -849,12 +805,9 @@ fn test_home_field_delete_status_includes_label() {
     app.goto(Screen::Home);
 
     // Add a field
-    app.backend
-        .add_field(
-            vauchi_core::contact_card::FieldType::Phone,
-            "Mobile",
-            "+1234567890",
-        )
+    app.app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(FieldType::Phone, "Mobile", "+1234567890"))
         .expect("add field");
     app.selected_field = 0;
 

@@ -10,19 +10,37 @@
 use crossterm::event::KeyCode;
 use tempfile::TempDir;
 
+use vauchi_core::ui::AppEngine;
+use vauchi_core::{ContactField, FieldType, MockTransport, SymmetricKey, Vauchi, VauchiConfig};
+
 use vauchi_tui::app::{App, InputMode, Screen};
-use vauchi_tui::backend::Backend;
 use vauchi_tui::handlers::{handle_key, Action};
+
+/// Create AppEngine for a test data dir.
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+    let key = SymmetricKey::generate();
+    let config = VauchiConfig {
+        storage_path: data_dir.join("vauchi.db"),
+        storage_key: Some(key),
+        ..Default::default()
+    };
+    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    AppEngine::new(vauchi)
+}
 
 /// Create a test App with an initialized identity.
 fn create_test_app() -> (App, TempDir) {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let backend = Backend::new(temp_dir.path()).expect("Failed to create backend");
-    let mut app = App::new(backend);
-    // App starts on Setup screen — create identity to get to Home
-    app.backend
+    let mut app_engine = create_app_engine(temp_dir.path());
+    app_engine
+        .vauchi_mut()
         .create_identity("Test User")
         .expect("Failed to create identity");
+    let mut app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
     app.screen = Screen::Home;
     (app, temp_dir)
 }
@@ -30,8 +48,12 @@ fn create_test_app() -> (App, TempDir) {
 /// Create a test App without an identity (stays on Setup screen).
 fn create_test_app_no_identity() -> (App, TempDir) {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let backend = Backend::new(temp_dir.path()).expect("Failed to create backend");
-    let app = App::new(backend);
+    let app_engine = create_app_engine(temp_dir.path());
+    let app = App::new(
+        app_engine,
+        "wss://relay.vauchi.app".to_string(),
+        temp_dir.path().to_path_buf(),
+    );
     (app, temp_dir)
 }
 
@@ -201,19 +223,13 @@ fn test_handle_key_help_enter_selects_faq_item() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Help;
 
-    if app.app_engine.is_some() {
-        // Engine-driven: Enter selects a FAQ item (opens URL), stays on Help
-        handle_key(&mut app, KeyCode::Enter);
-        assert_eq!(
-            app.screen,
-            Screen::Help,
-            "Enter on Help should stay on Help (opens FAQ URL)"
-        );
-    } else {
-        // Legacy: Enter goes back
-        handle_key(&mut app, KeyCode::Enter);
-        assert_eq!(app.screen, Screen::Home);
-    }
+    // Engine-driven: Enter selects a FAQ item (opens URL), stays on Help
+    handle_key(&mut app, KeyCode::Enter);
+    assert_eq!(
+        app.screen,
+        Screen::Help,
+        "Enter on Help should stay on Help (opens FAQ URL)"
+    );
 }
 
 // ============================================================================
@@ -378,38 +394,25 @@ fn test_handle_key_home_j_increments_selected_field() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Home;
     // Add two fields so navigation works
-    app.backend
-        .add_field(
-            vauchi_core::contact_card::FieldType::Email,
-            "Work",
-            "a@b.com",
-        )
+    app.app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(FieldType::Email, "Work", "a@b.com"))
         .unwrap();
-    app.backend
-        .add_field(
-            vauchi_core::contact_card::FieldType::Phone,
-            "Mobile",
-            "+1234567890",
-        )
+    app.app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(FieldType::Phone, "Mobile", "+1234567890"))
         .unwrap();
 
-    if app.app_engine.is_some() {
-        // Engine-driven: j navigates within the focused component's selections
-        let _initial = app
-            .render_state
-            .component_selections
-            .first()
-            .copied()
-            .unwrap_or(0);
-        handle_key(&mut app, KeyCode::Char('j'));
-        // Ensure key was consumed (engine handles focus/component navigation)
-        assert_eq!(app.screen, Screen::Home, "should stay on Home");
-    } else {
-        // Legacy: j increments selected_field
-        app.selected_field = 0;
-        handle_key(&mut app, KeyCode::Char('j'));
-        assert_eq!(app.selected_field, 1, "j should move selection down");
-    }
+    // Engine-driven: j navigates within the focused component's selections
+    let _initial = app
+        .render_state
+        .component_selections
+        .first()
+        .copied()
+        .unwrap_or(0);
+    handle_key(&mut app, KeyCode::Char('j'));
+    // Ensure key was consumed (engine handles focus/component navigation)
+    assert_eq!(app.screen, Screen::Home, "should stay on Home");
 }
 
 #[test]
@@ -417,16 +420,9 @@ fn test_handle_key_home_k_decrements_selected_field() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Home;
 
-    if app.app_engine.is_some() {
-        // Engine-driven: k navigates within focused component
-        handle_key(&mut app, KeyCode::Char('k'));
-        assert_eq!(app.screen, Screen::Home, "should stay on Home");
-    } else {
-        // Legacy: k decrements selected_field
-        app.selected_field = 1;
-        handle_key(&mut app, KeyCode::Char('k'));
-        assert_eq!(app.selected_field, 0, "k should move selection up");
-    }
+    // Engine-driven: k navigates within focused component
+    handle_key(&mut app, KeyCode::Char('k'));
+    assert_eq!(app.screen, Screen::Home, "should stay on Home");
 }
 
 #[test]
@@ -643,12 +639,13 @@ fn test_handle_key_home_delete_announces_field_label() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Home;
     // Add a field, then delete it
-    app.backend
-        .add_field(
-            vauchi_core::contact_card::FieldType::Email,
+    app.app_engine
+        .vauchi()
+        .add_own_field(ContactField::new(
+            FieldType::Email,
             "Work Email",
             "test@example.com",
-        )
+        ))
         .unwrap();
     app.selected_field = 0;
 

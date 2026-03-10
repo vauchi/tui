@@ -67,12 +67,12 @@ impl<'a> TextInputWidget<'a> {
         // Input field with cursor
         let display_value = if self.value.is_empty() {
             if self.focused {
-                "|".to_string()
+                "█".to_string()
             } else {
                 self.placeholder.unwrap_or("").to_string()
             }
         } else if self.focused {
-            format!("{}|", self.value)
+            format!("{}█", self.value)
         } else {
             self.value.to_string()
         };
@@ -93,8 +93,18 @@ impl<'a> TextInputWidget<'a> {
             Style::default().fg(self.theme.fg)
         };
 
+        // Show a "type here" hint for unfocused empty inputs
+        let block_title = if self.focused {
+            " ✎ editing "
+        } else if self.value.is_empty() {
+            " ⌨ type here "
+        } else {
+            ""
+        };
+
         let input_para = Paragraph::new(display_value).style(text_style).block(
             Block::default()
+                .title(block_title)
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(border_color)),
         );

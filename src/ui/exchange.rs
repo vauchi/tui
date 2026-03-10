@@ -27,7 +27,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
 
     // Ensure we have a QR code generated
     if app.current_qr.is_none() {
-        if let Ok(qr_data) = app.backend.generate_exchange_qr() {
+        if let Ok(qr_data) = app.generate_exchange_qr() {
             app.current_qr = Some(qr_data);
         }
     }
@@ -95,7 +95,7 @@ pub fn draw(f: &mut Frame, area: Rect, app: &mut App) {
 
 /// Regenerate the exchange QR code.
 pub fn regenerate_qr(app: &mut App) {
-    if let Ok(qr_data) = app.backend.generate_exchange_qr() {
+    if let Ok(qr_data) = app.generate_exchange_qr() {
         app.current_qr = Some(qr_data);
         app.set_status(app.i18n.t("exchange.refreshed"));
     }

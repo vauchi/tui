@@ -4,7 +4,6 @@
 
 //! UI Rendering
 
-mod duplicates;
 pub mod exchange;
 mod lock;
 pub(crate) mod widgets;
@@ -46,16 +45,14 @@ fn render_cached_screen(
 pub fn draw(f: &mut Frame, app: &mut App) {
     // Sync AppEngine to match the current TUI screen before rendering
     if let Some(target) = app.to_app_screen() {
-        if let Some(engine) = &mut app.app_engine {
-            if *engine.current_app_screen() != target {
-                engine.navigate_to(target);
-            }
+        if *app.app_engine.current_app_screen() != target {
+            app.app_engine.navigate_to(target);
         }
     }
 
     // Cache screen models once per frame to avoid redundant allocations
     let cached = FrameScreenModels {
-        app: app.app_engine.as_ref().map(|e| e.current_screen()),
+        app: Some(app.app_engine.current_screen()),
         onboarding: app.onboarding_engine.as_ref().map(|e| e.current_screen()),
         lock: app.lock_engine.as_ref().map(|e| e.current_screen()),
     };
@@ -97,7 +94,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::AddField
         | Screen::EditField
         | Screen::EditName
-        | Screen::EditRelayUrl => {
+        | Screen::EditRelayUrl
+        | Screen::ContactDuplicates
+        | Screen::ContactMerge
+        | Screen::ContactLimit => {
             render_cached_screen(f, chunks[1], cached.app.as_ref(), app);
         }
         Screen::Lock => {
@@ -124,10 +124,6 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 unreachable!("OnboardingEngine always initialized for setup screens");
             }
         }
-        // SP-12a Duplicates / Merge / Limit
-        Screen::ContactDuplicates => duplicates::draw_duplicates(f, chunks[1], app),
-        Screen::ContactMerge => duplicates::draw_merge(f, chunks[1], app),
-        Screen::ContactLimit => duplicates::draw_limit(f, chunks[1], app),
     }
 
     // Footer
@@ -159,7 +155,10 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::EditName
         | Screen::EditField
         | Screen::EditRelayUrl
-        | Screen::AddField => cached.app.as_ref().map(|m| m.title.clone()),
+        | Screen::AddField
+        | Screen::ContactDuplicates
+        | Screen::ContactMerge
+        | Screen::ContactLimit => cached.app.as_ref().map(|m| m.title.clone()),
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
         | Screen::SetupAddFields
@@ -244,7 +243,10 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::EditName
         | Screen::EditField
         | Screen::EditRelayUrl
-        | Screen::AddField => cached.app.as_ref().map(|screen| {
+        | Screen::AddField
+        | Screen::ContactDuplicates
+        | Screen::ContactMerge
+        | Screen::ContactLimit => cached.app.as_ref().map(|screen| {
             let actions = screen
                 .actions
                 .iter()
@@ -262,7 +264,7 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         | Screen::SetupAddFields
         | Screen::SetupSecurity
         | Screen::SetupReady => cached.onboarding.as_ref().map(|screen| {
-            screen
+            let actions = screen
                 .actions
                 .iter()
                 .filter(|a| a.enabled)
@@ -271,8 +273,13 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
                     format!("[{}] {}", key, a.label)
                 })
                 .collect::<Vec<_>>()
-                .join("  ")
-                + "  [Esc] back  [q]uit"
+                .join("  ");
+            // Welcome screen: no "back" (first screen), show quit only
+            if app.screen == Screen::SetupWelcome {
+                format!("{}  [q]uit", actions)
+            } else {
+                format!("{}  [Esc] back  [q]uit", actions)
+            }
         }),
         Screen::Lock => cached.lock.as_ref().map(|screen| {
             screen

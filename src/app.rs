@@ -8,8 +8,10 @@ use vauchi_core::contact_card::ContactAction;
 use vauchi_core::ui::{AppEngine, AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
 use vauchi_core::MockTransport;
 
-use crate::backend::{Backend, DeviceLinkResult, QRData};
+use vauchi_core::api::DeviceLinkResult;
+
 use crate::i18n::I18n;
+use crate::sync_service::SyncResult;
 use crate::theme::{get_default_tui_theme, get_tui_theme, list_themes, TuiTheme};
 use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
@@ -226,8 +228,6 @@ pub struct LockState {
 /// Application state.
 #[allow(dead_code)]
 pub struct App {
-    /// Vauchi backend
-    pub backend: Backend,
     /// Current screen
     pub screen: Screen,
     /// Input mode
@@ -269,7 +269,7 @@ pub struct App {
     /// Contact search mode active
     pub contact_search_mode: bool,
     /// Current exchange QR data (for expiration tracking)
-    pub current_qr: Option<QRData>,
+    pub current_qr: Option<vauchi_core::api::ExchangeQrData>,
     /// Sync state
     pub sync_state: SyncState,
     /// Delivery state
@@ -291,8 +291,9 @@ pub struct App {
     /// Onboarding wizard state (SP-21)
     pub onboarding_state: OnboardingState,
     // ── Core-driven workflow engines ──
-    /// Unified AppEngine orchestrator (core-driven navigation + rendering)
-    pub app_engine: Option<AppEngine<MockTransport>>,
+    /// Unified AppEngine orchestrator — single owner of Vauchi<T>.
+    /// All identity/contact/card operations go through this.
+    pub app_engine: AppEngine<MockTransport>,
     /// Onboarding engine (core-driven state machine)
     pub onboarding_engine: Option<OnboardingEngine>,
     /// Lock screen engine (core-driven state machine)
@@ -313,6 +314,10 @@ pub struct App {
     pub theme_index: usize,
     /// Available theme IDs for cycling
     pub theme_ids: Vec<String>,
+    /// Relay server URL (loaded from config/env/default at startup)
+    pub relay_url: String,
+    /// Data directory path (TUI storage location)
+    pub data_dir: std::path::PathBuf,
 }
 
 /// State for the add field dialog.
@@ -561,31 +566,33 @@ fn detect_locale() -> I18n {
 
 impl App {
     /// Create a new application.
-    pub fn new(backend: Backend) -> Self {
-        // Start on Lock screen if password is configured, Setup if no identity, else Home
-        let initial_screen = if !backend.has_identity() {
+    ///
+    /// AppEngine owns the single Vauchi<T> instance — all identity/contact/card
+    /// operations go through it. Relay sync uses the standalone sync_service module.
+    pub fn new(
+        app_engine: AppEngine<MockTransport>,
+        relay_url: String,
+        data_dir: std::path::PathBuf,
+    ) -> Self {
+        // Determine initial screen from AppEngine's Vauchi state
+        let has_identity = app_engine.vauchi().has_identity();
+        let initial_screen = if !has_identity {
             Screen::SetupWelcome
-        } else if backend.is_password_enabled().unwrap_or(false) {
+        } else if app_engine.vauchi().is_password_enabled().unwrap_or(false) {
             Screen::Lock
         } else {
             Screen::Home
         };
 
-        // Create AppEngine for engine-driven screens
-        let app_engine = backend.create_vauchi().ok().map(|vauchi| {
-            let mut engine = AppEngine::new(vauchi);
-            // Sync AppEngine to match Backend state — Vauchi doesn't auto-load
-            // identity from storage, so AppEngine defaults to Onboarding.
-            // Navigate to the correct screen based on Backend's identity state.
-            if backend.has_identity() {
-                let target = match initial_screen {
-                    Screen::Lock => AppScreen::Lock,
-                    _ => AppScreen::Home,
-                };
-                engine.navigate_to(target);
-            }
-            engine
-        });
+        // Navigate AppEngine to the correct initial screen
+        let mut app_engine = app_engine;
+        if has_identity {
+            let target = match initial_screen {
+                Screen::Lock => AppScreen::Lock,
+                _ => AppScreen::Home,
+            };
+            app_engine.navigate_to(target);
+        }
 
         // Create engines for initial screen
         let onboarding_engine = if initial_screen == Screen::SetupWelcome {
@@ -605,7 +612,6 @@ impl App {
         let (theme, theme_index) = load_saved_theme(&theme_ids);
 
         App {
-            backend,
             screen: initial_screen,
             input_mode: InputMode::Normal,
             should_quit: false,
@@ -648,13 +654,47 @@ impl App {
             theme,
             theme_index,
             theme_ids,
+            relay_url,
+            data_dir,
         }
     }
 
-    /// Returns the user's display name.
-    /// Currently reads from Backend; will migrate to AppEngine in future.
+    /// Performs a full sync with the relay server via WebSocket.
+    pub fn sync(&self) -> SyncResult {
+        let vauchi = self.app_engine.vauchi();
+        let identity = match vauchi.identity() {
+            Some(id) => id,
+            None => {
+                return SyncResult {
+                    contacts_added: 0,
+                    cards_updated: 0,
+                    updates_sent: 0,
+                    success: false,
+                    error: Some("No identity".into()),
+                }
+            }
+        };
+        crate::sync_service::sync(identity, vauchi.storage(), &self.relay_url)
+    }
+
+    /// Tests the relay connection.
+    pub fn test_relay_connection(&self) -> anyhow::Result<bool> {
+        crate::sync_service::test_relay_connection(&self.relay_url)
+    }
+
+    /// Generates exchange QR data via Vauchi API.
+    pub fn generate_exchange_qr(
+        &self,
+    ) -> vauchi_core::api::VauchiResult<vauchi_core::api::ExchangeQrData> {
+        self.app_engine.vauchi().generate_exchange_qr()
+    }
+
+    /// Returns the user's display name from the single Vauchi instance.
     pub fn display_name(&self) -> Option<&str> {
-        self.backend.display_name()
+        self.app_engine
+            .vauchi()
+            .identity()
+            .map(|i| i.display_name())
     }
 
     /// Cycle to the next theme.
@@ -685,11 +725,9 @@ impl App {
         }
     }
 
-    /// Invalidates all cached AppEngine screens after a Backend mutation.
+    /// Invalidates all cached AppEngine screens after a mutation.
     pub fn invalidate_engines(&mut self) {
-        if let Some(engine) = &mut self.app_engine {
-            engine.invalidate_all();
-        }
+        self.app_engine.invalidate_all();
     }
 
     /// Set a status message.
@@ -709,11 +747,8 @@ impl App {
         self.input_mode = InputMode::Normal;
 
         // Navigate AppEngine for engine-driven screens
-        let app_screen = self.to_app_screen();
-        if let Some(app_screen) = app_screen {
-            if let Some(engine) = &mut self.app_engine {
-                engine.navigate_to(app_screen);
-            }
+        if let Some(app_screen) = self.to_app_screen() {
+            self.app_engine.navigate_to(app_screen);
             self.render_state = ScreenRenderState::default();
         }
 
@@ -795,6 +830,17 @@ impl App {
             Screen::AddField => Some(AppScreen::FormDialog {
                 dialog_type: FormDialogType::AddField,
             }),
+            Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
+            Screen::ContactMerge => {
+                let s = &self.merge_state;
+                Some(AppScreen::ContactMerge {
+                    primary_name: s.primary_name.clone(),
+                    primary_fields: s.primary_fields.clone(),
+                    secondary_name: s.secondary_name.clone(),
+                    secondary_fields: s.secondary_fields.clone(),
+                })
+            }
+            Screen::ContactLimit => Some(AppScreen::ContactLimit),
             _ => None,
         }
     }
@@ -864,7 +910,7 @@ impl App {
             }
             // From Backup, go back to onboarding/setup if no identity, otherwise Home
             Screen::Backup => {
-                if self.backend.has_identity() {
+                if self.app_engine.vauchi().has_identity() {
                     self.screen = Screen::Home;
                 } else {
                     self.screen = Screen::SetupWelcome;

@@ -1,28 +1,27 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 299
 expression: output
 ---
-Add Field
+Add Entry
 
 ────────────────────────────────────────────────────────────────────────────────
-                                    Add Field
+                                    Add Entry
+                            What type of information?
 
-Label
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│|                                                                             │
+│  • Phone  +1 555 123 4567                                                    │
+│  • Email  name@example.com                                                   │
+│  • Social  @handle or profile URL                                            │
+│  • Address  123 Main St, City                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-Value
-┌──────────────────────────────────────────────────────────────────────────────┐
-│Enter value                                                                   │
-└──────────────────────────────────────────────────────────────────────────────┘
 
 
 
 
 
-                           [Enter] Save  [Esc] Cancel
+
+                                  [Esc] Cancel
 
 ────────────────────────────────────────────────────────────────────────────────
-[Enter] Save  [Esc] Cancel  [Esc] back  [q]uit
+[Esc] Cancel  [Esc] back  [q]uit

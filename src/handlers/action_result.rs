@@ -17,8 +17,10 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::NavigateTo(_) => {
             // AppEngine already updated its internal screen; TUI re-renders on next draw.
             // Sync TUI screen from AppEngine's current screen.
-            if let Some(engine) = &app.app_engine {
-                match engine.current_app_screen() {
+            // Reset render state for the new screen (fresh focus/selection).
+            {
+                app.render_state = Default::default();
+                match app.app_engine.current_app_screen() {
                     vauchi_core::ui::AppScreen::Home => app.screen = Screen::Home,
                     vauchi_core::ui::AppScreen::Contacts => app.screen = Screen::Contacts,
                     vauchi_core::ui::AppScreen::Exchange => app.screen = Screen::Exchange,
@@ -60,6 +62,15 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     // Preserve contact_id so fallback to ContactDetail works.
                     vauchi_core::ui::AppScreen::ContactEdit { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
+                    }
+                    vauchi_core::ui::AppScreen::ContactDuplicates => {
+                        app.screen = Screen::ContactDuplicates;
+                    }
+                    vauchi_core::ui::AppScreen::ContactMerge { .. } => {
+                        app.screen = Screen::ContactMerge;
+                    }
+                    vauchi_core::ui::AppScreen::ContactLimit => {
+                        app.screen = Screen::ContactLimit;
                     }
                 }
             }
@@ -104,7 +115,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.onboarding_engine = Some(vauchi_core::ui::OnboardingEngine::new());
             app.render_state = Default::default();
             app.invalidate_engines();
-            app.app_engine = None;
+            // AppEngine's Vauchi data was wiped — navigate to Onboarding
+            app.app_engine
+                .navigate_to(vauchi_core::ui::AppScreen::Onboarding);
         }
     }
 }

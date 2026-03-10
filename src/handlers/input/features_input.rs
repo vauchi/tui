@@ -34,7 +34,7 @@ pub(super) fn handle_settings_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('u') => {
             // Edit relay URL — engine-driven via FormDialogEngine
-            let current_url = app.backend.relay_url().to_string();
+            let current_url = app.relay_url.clone();
             app.edit_relay_url_state = EditRelayUrlState {
                 new_url: current_url,
             };
@@ -89,7 +89,7 @@ pub(super) fn handle_devices_keys(app: &mut App, key: KeyCode) {
         match key {
             KeyCode::Char('y') => {
                 app.revoke_confirm = false;
-                match app.backend.revoke_device(app.selected_device) {
+                match app.app_engine.vauchi().revoke_device(app.selected_device) {
                     Ok(name) => app.set_status(format!("Device '{}' revoked", name)),
                     Err(e) => app.set_status(format!("Revoke failed: {}", e)),
                 }
@@ -112,7 +112,7 @@ pub(super) fn handle_devices_keys(app: &mut App, key: KeyCode) {
 
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
-            if let Ok(devices) = app.backend.list_devices() {
+            if let Ok(devices) = app.app_engine.vauchi().list_devices() {
                 if app.selected_device < devices.len().saturating_sub(1) {
                     app.selected_device += 1;
                 }
@@ -123,7 +123,7 @@ pub(super) fn handle_devices_keys(app: &mut App, key: KeyCode) {
                 app.selected_device -= 1;
             }
         }
-        KeyCode::Char('l') => match app.backend.generate_device_link() {
+        KeyCode::Char('l') => match app.app_engine.vauchi().generate_device_link() {
             Ok(result) => {
                 app.device_link_result = Some(result);
             }
@@ -131,7 +131,7 @@ pub(super) fn handle_devices_keys(app: &mut App, key: KeyCode) {
         },
         KeyCode::Char('r') => {
             // Check if selected device is current or already revoked
-            if let Ok(devices) = app.backend.list_devices() {
+            if let Ok(devices) = app.app_engine.vauchi().list_devices() {
                 if let Some(device) = devices.get(app.selected_device) {
                     if device.is_current {
                         app.set_status("Cannot revoke the current device");
@@ -155,11 +155,11 @@ pub(super) fn handle_recovery_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('v') => {
             app.set_status("Vouch: use CLI 'vauchi recovery vouch <claim>'");
         }
-        KeyCode::Char('s') => match app.backend.get_recovery_status() {
-            Ok(status) => {
+        KeyCode::Char('s') => match app.app_engine.vauchi().get_recovery_readiness() {
+            Ok(readiness) => {
                 let msg = format!(
-                    "Recovery: {}/{} vouchers",
-                    status.voucher_count, status.required_vouchers
+                    "Recovery: {}/{} trusted contacts",
+                    readiness.trusted_count, readiness.threshold
                 );
                 app.set_status(msg);
             }
@@ -199,8 +199,8 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
             app.sync_state.is_syncing = true;
             app.sync_state.sync_log.push("Starting sync...".to_string());
 
-            // Perform sync
-            let result = app.backend.sync();
+            // Perform sync (Backend-specific async WebSocket operation)
+            let result = app.sync();
 
             // Update state based on result
             app.sync_state.is_syncing = false;
@@ -218,29 +218,33 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
                 app.set_status(format!("Sync complete: {}", summary));
 
                 // Update pending count
-                app.sync_state.pending_updates = app.backend.pending_update_count().unwrap_or(0);
+                app.sync_state.pending_updates =
+                    app.app_engine.vauchi().pending_update_count().unwrap_or(0);
 
                 // Check for aha moments based on sync results
                 if result.contacts_added > 0 {
-                    if let Some(moment) = app
-                        .backend
-                        .check_aha_moment(AhaMomentType::FirstContactAdded)
+                    if let Ok(Some(moment)) = app
+                        .app_engine
+                        .vauchi()
+                        .try_trigger_aha_moment(AhaMomentType::FirstContactAdded)
                     {
                         app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
                     }
                 }
                 if result.cards_updated > 0 {
-                    if let Some(moment) = app
-                        .backend
-                        .check_aha_moment(AhaMomentType::FirstUpdateReceived)
+                    if let Ok(Some(moment)) = app
+                        .app_engine
+                        .vauchi()
+                        .try_trigger_aha_moment(AhaMomentType::FirstUpdateReceived)
                     {
                         app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
                     }
                 }
                 if result.updates_sent > 0 {
-                    if let Some(moment) = app
-                        .backend
-                        .check_aha_moment(AhaMomentType::FirstOutboundDelivered)
+                    if let Ok(Some(moment)) = app
+                        .app_engine
+                        .vauchi()
+                        .try_trigger_aha_moment(AhaMomentType::FirstOutboundDelivered)
                     {
                         app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
                     }
@@ -256,9 +260,9 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('t') => {
-            // Test relay connection
+            // Test relay connection (Backend-specific async WebSocket operation)
             app.set_status("Testing relay connection...");
-            match app.backend.test_relay_connection() {
+            match app.test_relay_connection() {
                 Ok(true) => {
                     app.sync_state.connected = true;
                     app.sync_state
@@ -277,7 +281,8 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('r') => {
             // Refresh pending update count
-            app.sync_state.pending_updates = app.backend.pending_update_count().unwrap_or(0);
+            app.sync_state.pending_updates =
+                app.app_engine.vauchi().pending_update_count().unwrap_or(0);
             app.set_status(format!(
                 "{} pending updates",
                 app.sync_state.pending_updates
@@ -287,19 +292,13 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-/// Refresh the Tor state from backend storage.
+/// Refresh the Tor state from Vauchi config.
 fn refresh_tor_state(app: &mut App) {
-    match app.backend.load_tor_config() {
-        Ok(config) => {
-            app.tor_state.enabled = config.enabled;
-            app.tor_state.prefer_onion = config.prefer_onion;
-            app.tor_state.circuit_rotation_secs = config.circuit_rotation_secs;
-            app.tor_state.bridge_count = config.bridges.len();
-        }
-        Err(_) => {
-            // Leave defaults (all disabled)
-        }
-    }
+    let config = &app.app_engine.vauchi().config().tor;
+    app.tor_state.enabled = config.enabled;
+    app.tor_state.prefer_onion = config.prefer_onion;
+    app.tor_state.circuit_rotation_secs = config.circuit_rotation_secs;
+    app.tor_state.bridge_count = config.bridges.len();
 }
 
 pub(super) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
@@ -310,7 +309,7 @@ pub(super) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
                 app.set_status("Tor mode is already enabled");
                 return;
             }
-            match app.backend.enable_tor() {
+            match app.app_engine.vauchi_mut().enable_tor() {
                 Ok(()) => {
                     app.set_status("Tor mode enabled");
                     refresh_tor_state(app);
@@ -324,7 +323,7 @@ pub(super) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
                 app.set_status("Tor mode is already disabled");
                 return;
             }
-            match app.backend.disable_tor() {
+            match app.app_engine.vauchi_mut().disable_tor() {
                 Ok(()) => {
                     app.set_status("Tor mode disabled");
                     refresh_tor_state(app);
@@ -334,7 +333,7 @@ pub(super) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('o') => {
             // Toggle .onion preference
-            match app.backend.toggle_prefer_onion() {
+            match app.app_engine.vauchi_mut().toggle_prefer_onion() {
                 Ok(prefer_onion) => {
                     let msg = if prefer_onion {
                         ".onion addresses will be preferred"
@@ -357,7 +356,7 @@ pub(super) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('x') => {
             // Clear bridges
-            match app.backend.clear_tor_bridges() {
+            match app.app_engine.vauchi_mut().clear_tor_bridges() {
                 Ok(0) => app.set_status("No bridges to clear"),
                 Ok(count) => {
                     app.set_status(format!("Cleared {} bridge(s)", count));
@@ -387,42 +386,59 @@ pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('e') => {
             // Export GDPR data
-            match app.backend.export_gdpr_data() {
-                Ok(json) => {
-                    let path = app.backend.data_dir().join("gdpr_export.json");
-                    match std::fs::write(&path, &json) {
-                        Ok(_) => app.set_status(format!("Data exported to {:?}", path)),
-                        Err(e) => app.set_status(format!("Export failed: {}", e)),
+            let storage = app.app_engine.vauchi().storage();
+            match vauchi_core::api::export_all_data(storage) {
+                Ok(export) => match serde_json::to_string_pretty(&export) {
+                    Ok(json) => {
+                        let path = app.data_dir.join("gdpr_export.json");
+                        match std::fs::write(&path, &json) {
+                            Ok(_) => app.set_status(format!("Data exported to {:?}", path)),
+                            Err(e) => app.set_status(format!("Export failed: {}", e)),
+                        }
                     }
-                }
+                    Err(e) => app.set_status(format!("Export failed: {}", e)),
+                },
                 Err(e) => app.set_status(format!("Export failed: {}", e)),
             }
         }
         KeyCode::Char('d') => {
             // Schedule account deletion
-            match app.backend.schedule_deletion() {
+            let storage = app.app_engine.vauchi().storage();
+            match vauchi_core::api::DeletionManager::new(storage).schedule_deletion() {
                 Ok(_) => app.set_status("Account deletion scheduled (7 day grace period)"),
                 Err(e) => app.set_status(format!("Schedule failed: {}", e)),
             }
         }
         KeyCode::Char('c') => {
             // Cancel scheduled deletion
-            match app.backend.cancel_deletion() {
+            let storage = app.app_engine.vauchi().storage();
+            match vauchi_core::api::DeletionManager::new(storage).cancel_deletion() {
                 Ok(_) => app.set_status("Account deletion cancelled"),
                 Err(e) => app.set_status(format!("Cancel failed: {}", e)),
             }
         }
         KeyCode::Char('x') => {
             // Execute scheduled deletion (after grace period)
-            match app.backend.execute_deletion() {
-                Ok(summary) => app.set_status(format!("DELETED: {}", summary)),
-                Err(e) => app.set_status(format!("Execute failed: {}", e)),
+            let has_identity = app.app_engine.vauchi().identity().is_some();
+            if has_identity {
+                let vauchi = app.app_engine.vauchi();
+                let storage = vauchi.storage();
+                let identity = vauchi.identity().unwrap();
+                match vauchi_core::api::DeletionManager::new(storage).execute_deletion(identity) {
+                    Ok(result) => {
+                        let count = result.revocations.len();
+                        app.set_status(format!("DELETED: {} revocation(s) generated", count))
+                    }
+                    Err(e) => app.set_status(format!("Execute failed: {}", e)),
+                }
+            } else {
+                app.set_status("Execute failed: no identity loaded");
             }
         }
         KeyCode::Char('!') => {
             // Emergency panic shred
-            match app.backend.panic_shred() {
-                Ok(summary) => app.set_status(format!("PANIC SHRED: {}", summary)),
+            match app.app_engine.vauchi_mut().perform_emergency_wipe(true) {
+                Ok(()) => app.set_status("PANIC SHRED: All data wiped"),
                 Err(e) => app.set_status(format!("Panic shred failed: {}", e)),
             }
         }
@@ -438,7 +454,11 @@ pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
                 };
 
                 // Check current state and toggle
-                let records = app.backend.consent_records().unwrap_or_default();
+                let records = app
+                    .app_engine
+                    .vauchi()
+                    .export_consent_log()
+                    .unwrap_or_default();
                 let currently_granted = records
                     .iter()
                     .rfind(|r| r.consent_type == consent_type)
@@ -446,9 +466,9 @@ pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
                     .unwrap_or(false);
 
                 let result = if currently_granted {
-                    app.backend.revoke_consent(consent_type)
+                    app.app_engine.vauchi().revoke_consent(consent_type)
                 } else {
-                    app.backend.grant_consent(consent_type)
+                    app.app_engine.vauchi().grant_consent(consent_type)
                 };
 
                 match result {
@@ -523,7 +543,11 @@ pub(super) fn handle_backup_keys(app: &mut App, key: KeyCode) {
                 match validate_password(&app.backup_state.password) {
                     Ok(_) => {
                         // Password is strong enough, proceed with export
-                        match app.backend.export_backup(&app.backup_state.password) {
+                        match app
+                            .app_engine
+                            .vauchi()
+                            .export_backup(&app.backup_state.password)
+                        {
                             Ok(data) => {
                                 app.set_status(format!(
                                     "Backup: {}...",
@@ -563,7 +587,8 @@ pub(super) fn handle_backup_keys(app: &mut App, key: KeyCode) {
                 if !app.backup_state.backup_data.is_empty() && !app.backup_state.password.is_empty()
                 {
                     match app
-                        .backend
+                        .app_engine
+                        .vauchi_mut()
                         .import_backup(&app.backup_state.backup_data, &app.backup_state.password)
                     {
                         Ok(()) => {
@@ -588,7 +613,7 @@ pub(super) fn handle_backup_keys(app: &mut App, key: KeyCode) {
 
 fn refresh_emergency_state(app: &mut App) {
     let last_broadcast = app.emergency_state.last_broadcast_time;
-    match app.backend.get_emergency_config() {
+    match app.app_engine.vauchi().load_emergency_config() {
         Ok(Some(config)) => {
             app.emergency_state = EmergencyState {
                 configured: true,
@@ -651,7 +676,7 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
                         .map(|s| s.trim().to_string())
                         .filter(|s| !s.is_empty())
                         .collect();
-                    let _ = app.backend.configure_emergency_broadcast(
+                    let _ = app.app_engine.vauchi_mut().configure_emergency_broadcast(
                         ids,
                         app.emergency_state.message_input.clone(),
                         app.emergency_state.include_location,
@@ -669,7 +694,7 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
             KeyCode::Char('x') => {
                 // Disable emergency broadcast
                 if app.emergency_state.configured {
-                    match app.backend.disable_emergency_broadcast() {
+                    match app.app_engine.vauchi_mut().delete_emergency_config() {
                         Ok(()) => {
                             app.emergency_state = EmergencyState::default();
                             app.set_status("Emergency broadcast disabled");
@@ -683,8 +708,8 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
         EmergencyFocus::Confirm => match key {
             KeyCode::Char('y') | KeyCode::Enter => {
                 // Confirmed: send broadcast
-                match app.backend.send_emergency_broadcast() {
-                    Ok((sent, total)) => {
+                match app.app_engine.vauchi_mut().send_emergency_broadcast() {
+                    Ok(result) => {
                         let now = std::time::SystemTime::now()
                             .duration_since(std::time::UNIX_EPOCH)
                             .map(|d| d.as_secs())
@@ -692,7 +717,7 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
                         app.emergency_state.last_broadcast_time = Some(now);
                         app.set_status(format!(
                             "Emergency broadcast sent: {}/{} contacts reached",
-                            sent, total
+                            result.sent, result.total
                         ));
                     }
                     Err(e) => app.set_status(format!("Broadcast failed: {}", e)),
@@ -747,7 +772,7 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
                         vauchi_core::api::MAX_TRUSTED_CONTACTS
                     ));
                 } else {
-                    match app.backend.configure_emergency_broadcast(
+                    match app.app_engine.vauchi_mut().configure_emergency_broadcast(
                         ids.clone(),
                         app.emergency_state.message_input.clone(),
                         app.emergency_state.include_location,
@@ -776,11 +801,15 @@ pub(super) fn handle_emergency_keys(app: &mut App, key: KeyCode) {
 }
 
 fn refresh_duress_state(app: &mut App) {
-    let password_enabled = app.backend.is_password_enabled().unwrap_or(false);
-    let enabled = app.backend.is_duress_enabled().unwrap_or(false);
+    let password_enabled = app
+        .app_engine
+        .vauchi()
+        .is_password_enabled()
+        .unwrap_or(false);
+    let enabled = app.app_engine.vauchi().is_duress_enabled().unwrap_or(false);
 
     let (contact_ids_input, message_input, include_location, alert_contact_count) =
-        match app.backend.load_duress_settings() {
+        match app.app_engine.vauchi().load_duress_settings() {
             Ok(Some(settings)) => (
                 settings.alert_contact_ids.join(", "),
                 settings.alert_message,
@@ -832,7 +861,7 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
                         alert_message: app.duress_state.message_input.clone(),
                         include_location: app.duress_state.include_location,
                     };
-                    let _ = app.backend.save_duress_settings(&settings);
+                    let _ = app.app_engine.vauchi().save_duress_settings(&settings);
                     app.invalidate_engines();
                 }
                 app.set_status(format!(
@@ -846,9 +875,9 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
             }
             KeyCode::Char('x') if app.duress_state.enabled => {
                 // Disable duress mode
-                match app.backend.disable_duress() {
+                match app.app_engine.vauchi_mut().disable_duress() {
                     Ok(()) => {
-                        let _ = app.backend.delete_duress_settings();
+                        let _ = app.app_engine.vauchi().delete_duress_settings();
                         app.invalidate_engines();
                         refresh_duress_state(app);
                         app.set_status("Duress mode disabled");
@@ -870,7 +899,7 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
                 if pin.is_empty() {
                     app.set_status("PIN cannot be empty");
                 } else {
-                    match app.backend.setup_duress_password(&pin) {
+                    match app.app_engine.vauchi_mut().setup_duress_password(&pin) {
                         Ok(()) => {
                             app.duress_state.enabled = true;
                             app.duress_state.pin_input.clear();
@@ -937,7 +966,7 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
                         alert_message: app.duress_state.message_input.clone(),
                         include_location: app.duress_state.include_location,
                     };
-                    match app.backend.save_duress_settings(&settings) {
+                    match app.app_engine.vauchi().save_duress_settings(&settings) {
                         Ok(()) => {
                             app.invalidate_engines();
                             app.duress_state.alert_contact_count = ids.len();
@@ -968,8 +997,8 @@ pub(super) fn handle_duress_keys(app: &mut App, key: KeyCode) {
 /// and Enter are processed. Esc stays on the lock screen (no escape).
 /// 'q' does NOT quit — it's a PIN character.
 pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
-    use crate::backend::AuthResult;
     use crate::ui::widgets::key_mapping::{self, KeyResult};
+    use vauchi_core::api::AuthMode;
     use vauchi_core::ui::{ActionResult, WorkflowEngine};
 
     // Try engine-driven handling first
@@ -983,7 +1012,7 @@ pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
                 match &action {
                     vauchi_core::ui::UserAction::TextChanged {
                         component_id,
-                        value,
+                        value: _,
                     } if component_id == "pin" => {
                         // PinInput sends single chars — accumulate in lock_state
                         match key {
@@ -1013,33 +1042,30 @@ pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
                 let result = engine.handle_action(action);
                 match result {
                     ActionResult::Complete => {
-                        // Engine says PIN was submitted — verify against backend
+                        // Engine says PIN was submitted — verify via Vauchi API
                         let pin = &app.lock_state.pin_input;
                         if pin.is_empty() {
                             return;
                         }
-                        match app.backend.authenticate(pin) {
-                            Ok(AuthResult::Normal) => {
+                        match app.app_engine.vauchi_mut().authenticate(pin) {
+                            Ok(AuthMode::Normal) => {
                                 app.lock_state = LockState::default();
                                 app.lock_engine = None;
                                 app.goto(Screen::Home);
                             }
-                            Ok(AuthResult::Duress) => {
+                            Ok(AuthMode::Duress) => {
                                 app.lock_state = LockState::default();
                                 app.lock_engine = None;
                                 app.goto(Screen::Home);
                             }
-                            Ok(AuthResult::Invalid) => {
+                            Ok(AuthMode::Unauthenticated) | Err(_) => {
+                                // Invalid PIN or error
                                 app.lock_state.pin_input.clear();
                                 app.lock_state.attempts += 1;
                                 app.lock_state.error = true;
                                 if let Some(engine) = app.lock_engine.as_mut() {
                                     engine.record_failed_attempt();
                                 }
-                            }
-                            Err(_) => {
-                                app.lock_state.pin_input.clear();
-                                app.lock_state.error = true;
                             }
                         }
                     }
@@ -1068,22 +1094,22 @@ pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
                 if app.lock_state.pin_input.is_empty() {
                     return;
                 }
-                match app.backend.authenticate(&app.lock_state.pin_input) {
-                    Ok(AuthResult::Normal) => {
+                match app
+                    .app_engine
+                    .vauchi_mut()
+                    .authenticate(&app.lock_state.pin_input)
+                {
+                    Ok(AuthMode::Normal) => {
                         app.lock_state = LockState::default();
                         app.goto(Screen::Home);
                     }
-                    Ok(AuthResult::Duress) => {
+                    Ok(AuthMode::Duress) => {
                         app.lock_state = LockState::default();
                         app.goto(Screen::Home);
                     }
-                    Ok(AuthResult::Invalid) => {
+                    Ok(AuthMode::Unauthenticated) | Err(_) => {
                         app.lock_state.pin_input.clear();
                         app.lock_state.attempts += 1;
-                        app.lock_state.error = true;
-                    }
-                    Err(_) => {
-                        app.lock_state.pin_input.clear();
                         app.lock_state.error = true;
                     }
                 }

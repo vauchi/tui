@@ -5,19 +5,34 @@
 //! Tests for `handle_action_result` — verifies that each `ActionResult` variant
 //! produces the correct TUI state change.
 
-use vauchi_core::ui::{ActionResult, AppScreen, ScreenModel};
+use vauchi_core::ui::{ActionResult, AppEngine, AppScreen, ScreenModel};
+use vauchi_core::{MockTransport, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, Screen};
-use vauchi_tui::backend::Backend;
 use vauchi_tui::handlers::action_result::handle_action_result;
+
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+    let key = SymmetricKey::generate();
+    let config = VauchiConfig {
+        storage_path: data_dir.join("vauchi.db"),
+        storage_key: Some(key),
+        ..Default::default()
+    };
+    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    AppEngine::new(vauchi)
+}
 
 /// Create an App with an identity (and thus an AppEngine).
 fn create_app_with_identity() -> App {
     let dir = tempfile::tempdir().unwrap();
-    let mut backend = Backend::new(dir.path()).unwrap();
-    backend.create_identity("Test User").unwrap();
-    let path = dir.keep();
-    let backend = Backend::new(&path).unwrap();
-    App::new(backend)
+    let path = dir.path().to_path_buf();
+    let mut app_engine = create_app_engine(&path);
+    app_engine
+        .vauchi_mut()
+        .create_identity("Test User")
+        .expect("create identity");
+    // Keep the tempdir alive by leaking it (tests are short-lived)
+    let _keep = dir.keep();
+    App::new(app_engine, "wss://relay.vauchi.app".to_string(), path)
 }
 
 /// Create a minimal ScreenModel for variants that require one.
@@ -193,13 +208,7 @@ fn wipe_complete_resets_to_setup_welcome() {
 fn navigate_to_syncs_home_screen() {
     let mut app = create_app_with_identity();
     // Ensure the engine navigates to Home
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Home);
-    }
+    app.app_engine.navigate_to(AppScreen::Home);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Home);
 }
@@ -207,13 +216,7 @@ fn navigate_to_syncs_home_screen() {
 #[test]
 fn navigate_to_syncs_contacts_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Contacts);
-    }
+    app.app_engine.navigate_to(AppScreen::Contacts);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Contacts);
 }
@@ -221,13 +224,7 @@ fn navigate_to_syncs_contacts_screen() {
 #[test]
 fn navigate_to_syncs_exchange_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Exchange);
-    }
+    app.app_engine.navigate_to(AppScreen::Exchange);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Exchange);
 }
@@ -235,13 +232,7 @@ fn navigate_to_syncs_exchange_screen() {
 #[test]
 fn navigate_to_syncs_settings_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Settings);
-    }
+    app.app_engine.navigate_to(AppScreen::Settings);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Settings);
 }
@@ -249,13 +240,7 @@ fn navigate_to_syncs_settings_screen() {
 #[test]
 fn navigate_to_syncs_help_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Help);
-    }
+    app.app_engine.navigate_to(AppScreen::Help);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Help);
 }
@@ -263,24 +248,9 @@ fn navigate_to_syncs_help_screen() {
 #[test]
 fn navigate_to_syncs_onboarding_to_setup_welcome() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Onboarding);
-    }
+    app.app_engine.navigate_to(AppScreen::Onboarding);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::SetupWelcome);
-}
-
-#[test]
-fn navigate_to_without_engine_is_noop() {
-    let mut app = create_app_with_identity();
-    app.app_engine = None;
-    let original_screen = app.screen;
-    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.screen, original_screen);
 }
 
 // --- NavigateTo: previously missing mappings (C-2 fix) ---
@@ -288,15 +258,9 @@ fn navigate_to_without_engine_is_noop() {
 #[test]
 fn navigate_to_syncs_contact_detail_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::ContactDetail {
-            contact_id: "test-id".into(),
-        });
-    }
+    app.app_engine.navigate_to(AppScreen::ContactDetail {
+        contact_id: "test-id".into(),
+    });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::ContactDetail);
 }
@@ -304,13 +268,7 @@ fn navigate_to_syncs_contact_detail_screen() {
 #[test]
 fn navigate_to_syncs_backup_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Backup);
-    }
+    app.app_engine.navigate_to(AppScreen::Backup);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Backup);
 }
@@ -318,13 +276,7 @@ fn navigate_to_syncs_backup_screen() {
 #[test]
 fn navigate_to_syncs_lock_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Lock);
-    }
+    app.app_engine.navigate_to(AppScreen::Lock);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Lock);
 }
@@ -332,13 +284,7 @@ fn navigate_to_syncs_lock_screen() {
 #[test]
 fn navigate_to_syncs_device_linking_to_devices_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::DeviceLinking);
-    }
+    app.app_engine.navigate_to(AppScreen::DeviceLinking);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Devices);
 }
@@ -346,13 +292,7 @@ fn navigate_to_syncs_device_linking_to_devices_screen() {
 #[test]
 fn navigate_to_syncs_duress_pin_to_duress_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::DuressPin);
-    }
+    app.app_engine.navigate_to(AppScreen::DuressPin);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Duress);
 }
@@ -360,13 +300,7 @@ fn navigate_to_syncs_duress_pin_to_duress_screen() {
 #[test]
 fn navigate_to_syncs_emergency_shred_to_emergency_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::EmergencyShred);
-    }
+    app.app_engine.navigate_to(AppScreen::EmergencyShred);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Emergency);
 }
@@ -374,13 +308,7 @@ fn navigate_to_syncs_emergency_shred_to_emergency_screen() {
 #[test]
 fn navigate_to_syncs_delivery_status_to_delivery_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::DeliveryStatus);
-    }
+    app.app_engine.navigate_to(AppScreen::DeliveryStatus);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Delivery);
 }
@@ -390,13 +318,7 @@ fn navigate_to_syncs_delivery_status_to_delivery_screen() {
 #[test]
 fn navigate_to_syncs_sync_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Sync);
-    }
+    app.app_engine.navigate_to(AppScreen::Sync);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Sync);
 }
@@ -404,13 +326,7 @@ fn navigate_to_syncs_sync_screen() {
 #[test]
 fn navigate_to_syncs_tor_settings_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::TorSettings);
-    }
+    app.app_engine.navigate_to(AppScreen::TorSettings);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::TorSettings);
 }
@@ -418,13 +334,7 @@ fn navigate_to_syncs_tor_settings_screen() {
 #[test]
 fn navigate_to_syncs_recovery_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Recovery);
-    }
+    app.app_engine.navigate_to(AppScreen::Recovery);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Recovery);
 }
@@ -432,13 +342,7 @@ fn navigate_to_syncs_recovery_screen() {
 #[test]
 fn navigate_to_syncs_groups_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Groups);
-    }
+    app.app_engine.navigate_to(AppScreen::Groups);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Groups);
 }
@@ -446,13 +350,7 @@ fn navigate_to_syncs_groups_screen() {
 #[test]
 fn navigate_to_syncs_privacy_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Privacy);
-    }
+    app.app_engine.navigate_to(AppScreen::Privacy);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Privacy);
 }
@@ -460,13 +358,7 @@ fn navigate_to_syncs_privacy_screen() {
 #[test]
 fn navigate_to_syncs_support_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::Support);
-    }
+    app.app_engine.navigate_to(AppScreen::Support);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Support);
 }
@@ -474,15 +366,9 @@ fn navigate_to_syncs_support_screen() {
 #[test]
 fn navigate_to_syncs_group_detail_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::GroupDetail {
-            group_id: "g1".into(),
-        });
-    }
+    app.app_engine.navigate_to(AppScreen::GroupDetail {
+        group_id: "g1".into(),
+    });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::GroupDetail);
     assert_eq!(
@@ -495,15 +381,9 @@ fn navigate_to_syncs_group_detail_screen() {
 #[test]
 fn navigate_to_syncs_contact_visibility_screen() {
     let mut app = create_app_with_identity();
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::ContactVisibility {
-            contact_id: "c1".into(),
-        });
-    }
+    app.app_engine.navigate_to(AppScreen::ContactVisibility {
+        contact_id: "c1".into(),
+    });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::ContactVisibility);
     assert_eq!(
@@ -518,15 +398,9 @@ fn navigate_to_contact_edit_is_noop() {
     // ContactEdit has no dedicated TUI Screen — should not change screen
     let mut app = create_app_with_identity();
     let original_screen = app.screen;
-    {
-        let engine = app
-            .app_engine
-            .as_mut()
-            .expect("app_engine must be initialized");
-        engine.navigate_to(AppScreen::ContactEdit {
-            contact_id: "test-id".into(),
-        });
-    }
+    app.app_engine.navigate_to(AppScreen::ContactEdit {
+        contact_id: "test-id".into(),
+    });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, original_screen);
 }

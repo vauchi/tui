@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 326
 expression: output
 ---
 Edit Display Name
@@ -9,8 +8,8 @@ Edit Display Name
                                 Edit Display Name
 
 Display Name
-┌──────────────────────────────────────────────────────────────────────────────┐
-│Alice Smith|                                                                  │
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│Alice Smith█                                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

@@ -21,6 +21,43 @@ pub enum KeyResult {
     Unhandled,
 }
 
+/// Returns true if the component is interactive (can receive focus and key input).
+fn is_focusable(component: &Component) -> bool {
+    !matches!(
+        component,
+        Component::Text { .. }
+            | Component::InfoPanel { .. }
+            | Component::StatusIndicator { .. }
+            | Component::QrCode { .. }
+            | Component::Divider
+    )
+}
+
+/// Find the next focusable component index in the given direction.
+/// Returns `None` if no focusable component exists.
+fn find_focusable(components: &[Component], from: usize, forward: bool) -> Option<usize> {
+    let len = components.len();
+    if len == 0 {
+        return None;
+    }
+    for offset in 1..=len {
+        let idx = if forward {
+            (from + offset) % len
+        } else {
+            (from + len - offset) % len
+        };
+        if is_focusable(&components[idx]) {
+            return Some(idx);
+        }
+    }
+    None
+}
+
+/// Find the first focusable component index.
+fn find_first_focusable(components: &[Component]) -> Option<usize> {
+    components.iter().position(|c| is_focusable(c))
+}
+
 /// Map a key press to a `UserAction` or internal navigation update.
 ///
 /// Returns `KeyResult::Action` when the key maps to a `UserAction`,
@@ -29,21 +66,26 @@ pub enum KeyResult {
 pub fn map_key(key: KeyCode, screen: &ScreenModel, state: &mut ScreenRenderState) -> KeyResult {
     state.ensure_capacity(screen.components.len());
 
+    // Auto-focus first interactive component if current focus is non-interactive
+    if let Some(current) = screen.components.get(state.focused_component) {
+        if !is_focusable(current) {
+            if let Some(idx) = find_first_focusable(&screen.components) {
+                state.focused_component = idx;
+            }
+        }
+    }
+
     match key {
-        // Navigate focus between components
+        // Navigate focus between interactive components
         KeyCode::Tab => {
-            if !screen.components.is_empty() {
-                state.focused_component = (state.focused_component + 1) % screen.components.len();
+            if let Some(idx) = find_focusable(&screen.components, state.focused_component, true) {
+                state.focused_component = idx;
             }
             KeyResult::Consumed
         }
         KeyCode::BackTab => {
-            if !screen.components.is_empty() {
-                state.focused_component = if state.focused_component == 0 {
-                    screen.components.len() - 1
-                } else {
-                    state.focused_component - 1
-                };
+            if let Some(idx) = find_focusable(&screen.components, state.focused_component, false) {
+                state.focused_component = idx;
             }
             KeyResult::Consumed
         }
@@ -52,10 +94,36 @@ pub fn map_key(key: KeyCode, screen: &ScreenModel, state: &mut ScreenRenderState
         _ => {
             if let Some(component) = screen.components.get(state.focused_component) {
                 let result = map_component_key(key, component, state);
-                if matches!(result, KeyResult::Unhandled) {
-                    map_action_key(key, screen)
-                } else {
-                    result
+                match result {
+                    KeyResult::Unhandled => {
+                        // Up/Down arrows navigate between focusable components
+                        // when the focused component doesn't consume them
+                        match key {
+                            KeyCode::Up => {
+                                if let Some(idx) = find_focusable(
+                                    &screen.components,
+                                    state.focused_component,
+                                    false,
+                                ) {
+                                    state.focused_component = idx;
+                                    return KeyResult::Consumed;
+                                }
+                            }
+                            KeyCode::Down => {
+                                if let Some(idx) = find_focusable(
+                                    &screen.components,
+                                    state.focused_component,
+                                    true,
+                                ) {
+                                    state.focused_component = idx;
+                                    return KeyResult::Consumed;
+                                }
+                            }
+                            _ => {}
+                        }
+                        map_action_key(key, screen)
+                    }
+                    other => other,
                 }
             } else {
                 map_action_key(key, screen)
@@ -88,6 +156,9 @@ fn map_component_key(
                     value: new_value,
                 })
             }
+            KeyCode::Enter if !value.is_empty() => KeyResult::Action(UserAction::ActionPressed {
+                action_id: format!("submit_{id}"),
+            }),
             _ => KeyResult::Unhandled,
         },
 
@@ -398,6 +469,20 @@ fn map_action_key(key: KeyCode, screen: &ScreenModel) -> KeyResult {
                 KeyResult::Unhandled
             }
         }
+        KeyCode::Char('h') => {
+            let action = screen
+                .actions
+                .iter()
+                .find(|a| a.enabled && a.id == "have_identity");
+
+            if let Some(action) = action {
+                KeyResult::Action(UserAction::ActionPressed {
+                    action_id: action.id.clone(),
+                })
+            } else {
+                KeyResult::Unhandled
+            }
+        }
         _ => KeyResult::Unhandled,
     }
 }
@@ -427,23 +512,21 @@ mod tests {
         }
     }
 
+    fn make_text_input(id: &str) -> Component {
+        Component::TextInput {
+            id: id.into(),
+            label: id.into(),
+            value: String::new(),
+            placeholder: None,
+            max_length: None,
+            validation_error: None,
+            input_type: InputType::Text,
+        }
+    }
+
     #[test]
     fn test_key_mapping_tab_cycles_focus() {
-        let screen = make_screen(
-            vec![
-                Component::Text {
-                    id: "t1".into(),
-                    content: "Hello".into(),
-                    style: TextStyle::Body,
-                },
-                Component::Text {
-                    id: "t2".into(),
-                    content: "World".into(),
-                    style: TextStyle::Body,
-                },
-            ],
-            vec![],
-        );
+        let screen = make_screen(vec![make_text_input("a"), make_text_input("b")], vec![]);
 
         let mut state = ScreenRenderState::default();
         assert_eq!(state.focused_component, 0);
@@ -461,21 +544,9 @@ mod tests {
     fn test_key_mapping_backtab_cycles_focus_backwards() {
         let screen = make_screen(
             vec![
-                Component::Text {
-                    id: "t1".into(),
-                    content: "A".into(),
-                    style: TextStyle::Body,
-                },
-                Component::Text {
-                    id: "t2".into(),
-                    content: "B".into(),
-                    style: TextStyle::Body,
-                },
-                Component::Text {
-                    id: "t3".into(),
-                    content: "C".into(),
-                    style: TextStyle::Body,
-                },
+                make_text_input("a"),
+                make_text_input("b"),
+                make_text_input("c"),
             ],
             vec![],
         );
@@ -486,6 +557,99 @@ mod tests {
         let result = map_key(KeyCode::BackTab, &screen, &mut state);
         assert!(matches!(result, KeyResult::Consumed));
         assert_eq!(state.focused_component, 2); // wraps to end
+    }
+
+    #[test]
+    fn test_key_mapping_tab_skips_non_interactive_components() {
+        let screen = make_screen(
+            vec![
+                Component::Text {
+                    id: "label".into(),
+                    content: "Label".into(),
+                    style: TextStyle::Body,
+                },
+                make_text_input("input1"),
+                Component::Text {
+                    id: "info".into(),
+                    content: "Info".into(),
+                    style: TextStyle::Body,
+                },
+                make_text_input("input2"),
+            ],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        // Auto-focus should jump to index 1 (first TextInput)
+        let result = map_key(KeyCode::Tab, &screen, &mut state);
+        assert!(matches!(result, KeyResult::Consumed));
+        // After auto-focus to 1, Tab goes to next focusable: index 3
+        assert_eq!(state.focused_component, 3);
+
+        let result = map_key(KeyCode::Tab, &screen, &mut state);
+        assert!(matches!(result, KeyResult::Consumed));
+        assert_eq!(state.focused_component, 1); // wraps back to first focusable
+    }
+
+    #[test]
+    fn test_key_mapping_auto_focus_first_interactive() {
+        let screen = make_screen(
+            vec![
+                Component::Text {
+                    id: "title".into(),
+                    content: "Title".into(),
+                    style: TextStyle::Body,
+                },
+                make_text_input("name"),
+            ],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        assert_eq!(state.focused_component, 0);
+
+        // Typing 'x' should go to the TextInput (auto-focused to index 1)
+        let result = map_key(KeyCode::Char('x'), &screen, &mut state);
+        assert_eq!(state.focused_component, 1);
+        match result {
+            KeyResult::Action(UserAction::TextChanged {
+                component_id,
+                value,
+            }) => {
+                assert_eq!(component_id, "name");
+                assert_eq!(value, "x");
+            }
+            other => panic!("Expected TextChanged, got {}", key_result_debug(&other)),
+        }
+    }
+
+    #[test]
+    fn test_key_mapping_arrow_navigates_between_focusable() {
+        let screen = make_screen(
+            vec![
+                make_text_input("a"),
+                Component::Text {
+                    id: "sep".into(),
+                    content: "---".into(),
+                    style: TextStyle::Body,
+                },
+                make_text_input("b"),
+            ],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        assert_eq!(state.focused_component, 0);
+
+        // Down arrow: TextInput doesn't consume Down, so it navigates to next focusable
+        let result = map_key(KeyCode::Down, &screen, &mut state);
+        assert!(matches!(result, KeyResult::Consumed));
+        assert_eq!(state.focused_component, 2); // skips Text at index 1
+
+        // Up arrow: back to index 0
+        let result = map_key(KeyCode::Up, &screen, &mut state);
+        assert!(matches!(result, KeyResult::Consumed));
+        assert_eq!(state.focused_component, 0);
     }
 
     #[test]

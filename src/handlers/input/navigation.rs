@@ -10,8 +10,10 @@ use crate::app::{
     App, BackupFocus, BackupMode, EditFieldState, InputMode, OnboardingState, Screen,
 };
 use crate::ui::widgets::key_mapping::{self, KeyResult};
+
+use super::Action;
 use vauchi_core::aha_moments::AhaMomentType;
-use vauchi_core::ui::{ActionResult, WorkflowEngine};
+use vauchi_core::ui::{ActionResult, AppScreen, WorkflowEngine};
 
 pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
     match key {
@@ -30,13 +32,13 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('e') | KeyCode::Enter => {
             // Edit selected field
-            if let Ok(fields) = app.backend.get_card_fields() {
-                if let Some(field) = fields.get(app.selected_field) {
+            if let Ok(Some(card)) = app.app_engine.vauchi().own_card() {
+                if let Some(field) = card.fields().get(app.selected_field) {
                     app.edit_field_state = EditFieldState {
-                        field_id: field.id.clone(),
-                        field_label: field.label.clone(),
-                        field_type: field.field_type.clone(),
-                        new_value: field.value.clone(),
+                        field_id: field.id().to_string(),
+                        field_label: field.label().to_string(),
+                        field_type: format!("{:?}", field.field_type()),
+                        new_value: field.value().to_string(),
                     };
                     app.goto(Screen::EditField);
                 } else {
@@ -46,8 +48,15 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('j') | KeyCode::Down => {
-            let fields = app.backend.get_card_fields().unwrap_or_default();
-            if app.selected_field < fields.len().saturating_sub(1) {
+            let field_count = app
+                .app_engine
+                .vauchi()
+                .own_card()
+                .ok()
+                .flatten()
+                .map(|c| c.fields().len())
+                .unwrap_or(0);
+            if app.selected_field < field_count.saturating_sub(1) {
                 app.selected_field += 1;
             }
         }
@@ -58,10 +67,16 @@ pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('x') | KeyCode::Delete => {
             // Delete selected field
-            if let Ok(fields) = app.backend.get_card_fields() {
-                if let Some(field) = fields.get(app.selected_field) {
-                    let label = field.label.clone();
-                    if app.backend.remove_field(&field.id).is_ok() {
+            if let Ok(Some(card)) = app.app_engine.vauchi().own_card() {
+                if let Some(field) = card.fields().get(app.selected_field) {
+                    let label = field.label().to_string();
+                    let field_id = field.id().to_string();
+                    if app
+                        .app_engine
+                        .vauchi()
+                        .remove_own_field_by_id(&field_id)
+                        .is_ok()
+                    {
                         app.invalidate_engines();
                         app.set_status(format!("Field removed: {}", label));
                         if app.selected_field > 0 {
@@ -89,16 +104,24 @@ pub(super) fn handle_help_keys(app: &mut App, key: KeyCode) {
 
 /// Handle keys for all onboarding screens (engine-driven).
 /// Falls back to legacy handlers when engine is not available.
-pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) {
-    // Handle Esc globally for onboarding: go back in engine or exit onboarding
+///
+/// Returns `Some(Action::Quit)` when the user presses 'q' on the welcome
+/// screen (which has no "back" destination). Returns `None` otherwise.
+pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Option<Action> {
+    // Welcome screen: 'q' quits (no back to go to)
+    if app.screen == Screen::SetupWelcome && key == KeyCode::Char('q') {
+        return Some(Action::Quit);
+    }
+
+    // Handle Esc for onboarding: go back (no-op on welcome screen)
     if key == KeyCode::Esc {
         app.go_back();
-        return;
+        return None;
     }
 
     let engine = match app.onboarding_engine.as_mut() {
         Some(e) => e,
-        None => return,
+        None => return None,
     };
 
     let screen = engine.current_screen();
@@ -129,6 +152,7 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) {
             }
         }
     }
+    None
 }
 
 /// Handle ActionResult from the onboarding engine.
@@ -144,13 +168,21 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
                 let data = engine.data();
                 let name = data.display_name.clone();
                 if !name.is_empty() && !app.onboarding_state.identity_created {
-                    match app.backend.create_identity(&name) {
+                    // Create identity via AppEngine's Vauchi (single source of truth)
+                    let identity_result = app
+                        .app_engine
+                        .vauchi_mut()
+                        .create_identity(&name)
+                        .map_err(|e| e.to_string());
+                    match identity_result {
                         Ok(()) => {
-                            app.invalidate_engines();
                             app.onboarding_state.identity_created = true;
-                            if let Some(moment) = app
-                                .backend
-                                .check_aha_moment(AhaMomentType::CardCreationComplete)
+                            // Navigate AppEngine to Home
+                            app.app_engine.navigate_to(AppScreen::Home);
+                            if let Ok(Some(moment)) = app
+                                .app_engine
+                                .vauchi()
+                                .try_trigger_aha_moment(AhaMomentType::CardCreationComplete)
                             {
                                 app.set_status(format!(
                                     "★ {} — {}",
@@ -160,7 +192,7 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
                             }
                         }
                         Err(e) => {
-                            app.set_status(format!("Failed to create identity: {}", e));
+                            app.set_status(format!("Failed to create identity: {e}"));
                             return;
                         }
                     }
@@ -204,8 +236,11 @@ fn sync_onboarding_screen(app: &mut App) {
             "ready" => Screen::SetupReady,
             _ => Screen::SetupWelcome,
         };
+        // Only reset render state when navigating to a different screen
+        if app.screen != tui_screen {
+            app.render_state = crate::ui::widgets::screen_renderer::ScreenRenderState::default();
+        }
         app.screen = tui_screen;
-        app.render_state = crate::ui::widgets::screen_renderer::ScreenRenderState::default();
     }
 }
 
@@ -245,13 +280,14 @@ pub(super) fn handle_setup_create_identity_keys(app: &mut App, key: KeyCode) {
                 app.set_status("Please enter your name");
                 return;
             }
-            match app.backend.create_identity(&name) {
+            match app.app_engine.vauchi_mut().create_identity(&name) {
                 Ok(()) => {
                     app.invalidate_engines();
                     app.onboarding_state.identity_created = true;
-                    if let Some(moment) = app
-                        .backend
-                        .check_aha_moment(AhaMomentType::CardCreationComplete)
+                    if let Ok(Some(moment)) = app
+                        .app_engine
+                        .vauchi()
+                        .try_trigger_aha_moment(AhaMomentType::CardCreationComplete)
                     {
                         app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
                     }
