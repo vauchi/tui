@@ -33,8 +33,8 @@ use features_input::{
 };
 use navigation::{
     handle_help_keys, handle_home_keys, handle_setup_add_fields_keys,
-    handle_setup_create_identity_keys, handle_setup_keys, handle_setup_ready_keys,
-    handle_setup_security_keys, handle_setup_welcome_keys,
+    handle_setup_create_identity_keys, handle_setup_ready_keys, handle_setup_security_keys,
+    handle_setup_welcome_keys,
 };
 
 /// Action to take after handling input.
@@ -136,7 +136,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
 
     // Screen-specific keys
     match app.screen {
-        Screen::Setup => handle_setup_keys(app, key),
         Screen::Home => handle_home_keys(app, key),
         Screen::Contacts => handle_contacts_keys(app, key),
         Screen::ContactDetail => handle_contact_detail_keys(app, key),

@@ -13,7 +13,6 @@ mod home;
 mod lock;
 #[allow(dead_code)]
 mod settings;
-mod setup;
 pub(crate) mod widgets;
 
 // INLINE_TEST_REQUIRED: Widgets are pub(crate) — snapshot tests must live inside the crate to access them
@@ -81,7 +80,6 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
     // Content
     match app.screen {
-        Screen::Setup => setup::draw(f, chunks[1], app),
         // Engine-driven screens — rendered via AppEngine ScreenModel
         Screen::Home
         | Screen::Contacts
@@ -178,7 +176,6 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
     };
 
     let title = engine_title.as_deref().unwrap_or(match app.screen {
-        Screen::Setup => "Vauchi - Setup",
         Screen::Home => "Vauchi",
         Screen::Contacts => "Contacts",
         Screen::ContactDetail => "Contact Details",
@@ -292,7 +289,6 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
     };
 
     let help_text = engine_footer.as_deref().unwrap_or(match app.screen {
-        Screen::Setup => "[c]reate new identity  [i]mport backup  [q]uit",
         Screen::Home => "[c]ontacts  [s]ettings  [g]roups  e[X]change  [a]dd  [e]dit  [x]del  [?]help  [q]uit",
         Screen::Contacts => "[j/k] navigate  [/]search  [d]uplicates  [L]imit  [enter] view  [esc] back  [?]help",
         Screen::ContactDetail => "[j/k] navigate  [c]opy  [o]pen  [v]isibility  [f]ingerprint  [t]rust  [h]ide  [x]delete  [esc] back",

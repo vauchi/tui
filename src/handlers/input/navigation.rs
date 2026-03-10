@@ -13,39 +13,6 @@ use crate::ui::widgets::key_mapping::{self, KeyResult};
 use vauchi_core::aha_moments::AhaMomentType;
 use vauchi_core::ui::{ActionResult, WorkflowEngine};
 
-pub(super) fn handle_setup_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('c') => {
-            // Create a new identity with a default name
-            // User can change it later in settings
-            if let Err(e) = app.backend.create_identity("New User") {
-                app.set_status(format!("Failed to create identity: {}", e));
-            } else {
-                app.invalidate_engines();
-                if let Some(moment) = app
-                    .backend
-                    .check_aha_moment(AhaMomentType::CardCreationComplete)
-                {
-                    app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                } else {
-                    app.set_status("Identity created! You can edit your name in Settings.");
-                }
-                app.goto(Screen::Home);
-            }
-        }
-        KeyCode::Char('i') => {
-            // Go to backup import
-            app.backup_state.mode = BackupMode::Import;
-            app.backup_state.backup_data.clear();
-            app.backup_state.password.clear();
-            app.backup_state.focus = BackupFocus::Data;
-            app.input_mode = InputMode::Editing;
-            app.goto(Screen::Backup);
-        }
-        _ => {}
-    }
-}
-
 pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('c') => app.goto(Screen::Contacts),

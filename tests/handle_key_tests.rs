@@ -270,27 +270,6 @@ fn test_handle_key_editing_enter_returns_to_normal() {
 // Setup Screen
 // ============================================================================
 
-// @scenario: identity_management:Create new identity via legacy setup screen
-#[test]
-fn test_handle_key_setup_c_creates_identity_and_goes_home() {
-    let (mut app, _tmp) = create_test_app_no_identity();
-
-    // Test legacy Setup screen (not engine-driven)
-    app.onboarding_engine = None; // Disable engine for legacy test
-    app.screen = Screen::Setup;
-    app.input_mode = InputMode::Normal;
-    handle_key(&mut app, KeyCode::Char('c'));
-    assert_eq!(
-        app.screen,
-        Screen::Home,
-        "c on Setup should create identity and go to Home"
-    );
-    assert!(
-        app.backend.has_identity(),
-        "Identity should exist after creation"
-    );
-}
-
 // @scenario: identity_management:Engine-driven onboarding starts at identity check
 #[test]
 fn test_handle_key_engine_onboarding_enter_advances() {

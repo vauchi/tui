@@ -21,11 +21,10 @@ use vauchi_tui::app::{
 // Screen Enum Tests
 // ============================================================================
 
-/// Test: All screen variants exist (including TorSettings, Privacy, Setup)
+/// Test: All screen variants exist (including TorSettings, Privacy)
 #[test]
 fn test_screen_variants_exist() {
     let screens = [
-        Screen::Setup,
         Screen::Home,
         Screen::Contacts,
         Screen::ContactDetail,
@@ -63,8 +62,8 @@ fn test_screen_variants_exist() {
         Screen::ContactLimit,
     ];
 
-    // Verify we have all 34 screen variants
-    assert_eq!(screens.len(), 34);
+    // Verify we have all 33 screen variants (Setup removed — superseded by SetupWelcome)
+    assert_eq!(screens.len(), 33);
 }
 
 /// Test: Screen Home is the initial screen variant

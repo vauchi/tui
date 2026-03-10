@@ -16,8 +16,6 @@ use crate::ui::widgets::screen_renderer::ScreenRenderState;
 /// Current screen in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
-    /// Setup screen (shown when no identity exists)
-    Setup,
     /// Home screen with contact card
     Home,
     /// Contact list
@@ -784,8 +782,8 @@ impl App {
     /// Go back to the previous screen.
     pub fn go_back(&mut self) {
         match self.screen {
-            // Can't go back from Setup / onboarding until identity is configured
-            Screen::Setup | Screen::SetupWelcome => {
+            // Can't go back from onboarding until identity is configured
+            Screen::SetupWelcome => {
                 // Stay on setup screen
             }
             Screen::SetupCreateIdentity => {
