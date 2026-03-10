@@ -12,7 +12,7 @@ Home
 │ setup Complete your setup — 2 of 6 steps done                                │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet                                                             │
+│  No contacts yet. Use Exchange to add one.                                   │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -25,5 +25,5 @@ Home
 
                                   [a] Add Entry
 
-[a] Add Entry  [␛] back  [q] quit
+[a] Add Entry  [?] help  [␛] back  [q] quit
     Exchange    │   Contacts    │    ★ Home     │   Settings    │     Help

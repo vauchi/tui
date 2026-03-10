@@ -256,7 +256,10 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
                 app.sync_state
                     .sync_log
                     .push(format!("Sync failed: {}", error_msg));
-                app.set_status(format!("Sync failed: {}", error_msg));
+                app.set_status(format!(
+                    "Sync failed: {}. Changes saved locally and will sync when connected.",
+                    error_msg
+                ));
             }
         }
         KeyCode::Char('t') => {
@@ -275,7 +278,9 @@ pub(super) fn handle_sync_keys(app: &mut App, key: KeyCode) {
                     app.sync_state
                         .sync_log
                         .push("Relay connection test: FAILED".to_string());
-                    app.set_status("Relay connection failed");
+                    app.set_status(
+                        "Relay connection failed. Check your network or relay URL in Settings.",
+                    );
                 }
             }
         }

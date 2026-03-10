@@ -9,7 +9,7 @@ Contacts
                                     Contacts
 
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet                                                             │
+│  No contacts yet. Use Exchange to add one.                                   │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -25,5 +25,5 @@ Contacts
 
                                  [a] Add Contact
 
-[a] Add Contact  [␛] back  [q] quit
+[a] Add Contact  [?] help  [␛] back  [q] quit
     Exchange    │  ★ Contacts   │     Home      │   Settings    │     Help

@@ -338,6 +338,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
             // No back on final screen
         }
         _ => {
+            items.push(ActionItem::new('?', "help"));
             items.push(ActionItem::new('\u{241B}', "back")); // ␛ for Esc
             items.push(ActionItem::new('q', "quit"));
         }
@@ -460,7 +461,7 @@ fn draw_action_menu(f: &mut Frame, area: Rect, app: &App) {
 
     let list = List::new(items).block(
         Block::default()
-            .title(" Actions ")
+            .title(" Actions [Esc] dismiss ")
             .borders(Borders::ALL)
             .border_style(Style::default().fg(app.theme.accent))
             .style(Style::default().bg(app.theme.bg)),

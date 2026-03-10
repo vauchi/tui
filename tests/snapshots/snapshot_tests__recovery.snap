@@ -16,7 +16,7 @@ Social Recovery
 │  Quorum Met                                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet                                                             │
+│  No contacts yet. Use Exchange to add one.                                   │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -25,5 +25,5 @@ Social Recovery
 
                               [Enter] Check Status
 
-[E] Check Status  [␛] back  [q] quit
+[E] Check Status  [?] help  [␛] back  [q] quit
     Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help

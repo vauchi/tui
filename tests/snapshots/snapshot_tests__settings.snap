@@ -25,5 +25,5 @@ Settings
 ┌ Danger Zone ─────────────────────────────────────────────────────────────────┐
 │  Emergency Wipe  Wipe All Data                                               │
 └──────────────────────────────────────────────────────────────────────────────┘
-[␛] back  [q] quit
+[?] help  [␛] back  [q] quit
     Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help

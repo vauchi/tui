@@ -25,5 +25,5 @@ Backup & Recovery
 
                   [Enter] Create Backup  [Enter] Restore Backup
 
-[E] Create Backup  [E] Restore Backup  [␛] back  [q] quit
+[E] Create Backup  [E] Restore Backup  [?] help  [␛] back  [q] quit
     Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help

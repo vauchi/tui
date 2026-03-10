@@ -469,7 +469,7 @@ fn render_contact_list(
         .collect();
 
     if items.is_empty() {
-        let empty = Paragraph::new("  No contacts yet")
+        let empty = Paragraph::new("  No contacts yet. Use Exchange to add one.")
             .style(Style::default().fg(theme.fg_secondary))
             .block(
                 Block::default()
