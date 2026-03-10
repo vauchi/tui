@@ -45,8 +45,25 @@ fn render_cached_screen(
     }
 }
 
+/// Minimum terminal size for usable rendering.
+const MIN_WIDTH: u16 = 40;
+const MIN_HEIGHT: u16 = 10;
+
 /// Draw the application.
 pub fn draw(f: &mut Frame, app: &mut App) {
+    let area = f.area();
+    if area.width < MIN_WIDTH || area.height < MIN_HEIGHT {
+        let msg = format!(
+            "Terminal too small ({}x{}). Need {}x{}.",
+            area.width, area.height, MIN_WIDTH, MIN_HEIGHT
+        );
+        let paragraph = Paragraph::new(msg)
+            .style(Style::default().fg(app.theme.fg_secondary))
+            .alignment(Alignment::Center);
+        f.render_widget(paragraph, area);
+        return;
+    }
+
     // Sync AppEngine to match the current TUI screen before rendering
     if let Some(target) = app.to_app_screen() {
         if *app.app_engine.current_app_screen() != target {
