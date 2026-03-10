@@ -49,6 +49,14 @@ pub fn handle_key(app: &mut App, key: KeyCode) -> Action {
 }
 
 fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
+    // Alert modal captures all input — dismiss on Esc/Enter
+    if app.alert_message.is_some() {
+        if matches!(key, KeyCode::Esc | KeyCode::Enter) {
+            app.alert_message = None;
+        }
+        return Action::Continue;
+    }
+
     // Lock screen bypasses ALL global keys — PIN chars include 'q', Esc, etc.
     if app.screen == Screen::Lock {
         handle_lock_keys(app, key);
@@ -145,6 +153,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::Recovery
             | Screen::Groups
             | Screen::GroupDetail
+            | Screen::ContactEdit
             | Screen::ContactVisibility
             | Screen::Privacy
             | Screen::Support
@@ -194,9 +203,12 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::SetupAddFields => handle_setup_add_fields_keys(app, key),
         Screen::SetupSecurity => handle_setup_security_keys(app, key),
         Screen::SetupReady => handle_setup_ready_keys(app, key),
-        // SP-12a screens: handled by engine guard above
-        Screen::ContactDuplicates | Screen::ContactMerge | Screen::ContactLimit => {
-            unreachable!("SP-12a screens handled by engine guard")
+        // Engine-only screens: handled by engine guard above
+        Screen::ContactEdit
+        | Screen::ContactDuplicates
+        | Screen::ContactMerge
+        | Screen::ContactLimit => {
+            unreachable!("Engine-only screens handled by engine guard")
         }
     }
 
@@ -325,8 +337,11 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                         app.go_back();
                     }
                 }
-                // SP-12a screens: Esc goes back, engine handles other actions
-                Screen::ContactDuplicates | Screen::ContactMerge | Screen::ContactLimit => {
+                // ContactEdit + SP-12a screens: Esc goes back, engine handles other actions
+                Screen::ContactEdit
+                | Screen::ContactDuplicates
+                | Screen::ContactMerge
+                | Screen::ContactLimit => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }

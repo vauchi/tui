@@ -57,11 +57,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         // Form dialogs stay on their current TUI screen (AddField, EditField, etc.)
                         // The engine handles state; TUI screen doesn't change.
                     }
-                    // ContactEdit has no dedicated TUI screen yet — edits happen
-                    // inline via EditField / EditName dialogs triggered by actions.
-                    // Preserve contact_id so fallback to ContactDetail works.
                     vauchi_core::ui::AppScreen::ContactEdit { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
+                        app.screen = Screen::ContactEdit;
                     }
                     vauchi_core::ui::AppScreen::ContactDuplicates => {
                         app.screen = Screen::ContactDuplicates;
@@ -80,16 +78,25 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.screen = Screen::ContactDetail;
         }
         ActionResult::EditContact { contact_id } => {
-            // ContactEdit has no dedicated TUI screen yet — route to ContactDetail
-            // but preserve contact_id so the detail view shows the right contact.
             app.selected_contact_id = Some(contact_id);
-            app.screen = Screen::ContactDetail;
+            app.screen = Screen::ContactEdit;
+            app.render_state = Default::default();
         }
         ActionResult::OpenUrl { url } => {
-            app.set_status(format!("URL: {url}"));
+            // Attempt to open in system browser; show URL as status fallback
+            match std::process::Command::new("xdg-open")
+                .arg(&url)
+                .stdin(std::process::Stdio::null())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn()
+            {
+                Ok(_) => app.set_status(format!("Opened: {url}")),
+                Err(_) => app.set_status(format!("URL: {url}")),
+            }
         }
-        ActionResult::ShowAlert { title: _, message } => {
-            app.set_status(message);
+        ActionResult::ShowAlert { title, message } => {
+            app.alert_message = Some((title, message));
         }
         ActionResult::ValidationError {
             component_id,

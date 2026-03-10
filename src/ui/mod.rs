@@ -134,6 +134,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Home
         | Screen::Contacts
         | Screen::ContactDetail
+        | Screen::ContactEdit
         | Screen::ContactVisibility
         | Screen::Exchange
         | Screen::Settings
@@ -203,6 +204,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if show_nav_bar {
         draw_nav_bar(f, chunks[bar_start + 1], app, &nav_items);
     }
+
+    // Alert modal overlay (requires user dismissal with Esc/Enter)
+    if let Some((title, message)) = &app.alert_message {
+        draw_alert_modal(f, area, app, title, message);
+    }
 }
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
@@ -211,6 +217,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         Screen::Home
         | Screen::Contacts
         | Screen::ContactDetail
+        | Screen::ContactEdit
         | Screen::Exchange
         | Screen::Settings
         | Screen::Help
@@ -250,6 +257,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
         Screen::Home => "Vauchi",
         Screen::Contacts => "Contacts",
         Screen::ContactDetail => "Contact Details",
+        Screen::ContactEdit => "Edit Contact",
         Screen::ContactVisibility => "Visibility Settings",
         Screen::Exchange => "Exchange",
         Screen::Settings => "Settings",
@@ -344,6 +352,7 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         Screen::Exchange => 0,
         Screen::Contacts
         | Screen::ContactDetail
+        | Screen::ContactEdit
         | Screen::ContactVisibility
         | Screen::ContactDuplicates
         | Screen::ContactMerge
@@ -458,4 +467,31 @@ fn draw_action_menu(f: &mut Frame, area: Rect, app: &App) {
     );
 
     f.render_widget(list, popup_area);
+}
+
+/// Draw a modal alert dialog centered on screen. Dismissed by Esc/Enter.
+fn draw_alert_modal(f: &mut Frame, area: Rect, app: &App, title: &str, message: &str) {
+    let lines: Vec<&str> = message.lines().collect();
+    let max_line_len = lines.iter().map(|l| l.len()).max().unwrap_or(20);
+    let popup_width = ((max_line_len + 6) as u16).clamp(30, area.width.saturating_sub(4));
+    let popup_height = ((lines.len() + 4) as u16).clamp(5, area.height.saturating_sub(2));
+
+    let x = area.x + (area.width.saturating_sub(popup_width)) / 2;
+    let y = area.y + (area.height.saturating_sub(popup_height)) / 2;
+    let popup_area = Rect::new(x, y, popup_width, popup_height);
+
+    f.render_widget(Clear, popup_area);
+
+    let text = format!("{message}\n\n[Esc/Enter] Dismiss");
+    let paragraph = Paragraph::new(text)
+        .style(Style::default().fg(app.theme.fg).bg(app.theme.bg))
+        .block(
+            Block::default()
+                .title(format!(" {} ", title))
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(app.theme.accent)),
+        )
+        .wrap(ratatui::widgets::Wrap { trim: true });
+
+    f.render_widget(paragraph, popup_area);
 }

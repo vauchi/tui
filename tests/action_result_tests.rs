@@ -104,14 +104,15 @@ fn open_url_sets_status_with_url() {
             url: "https://example.com".into(),
         },
     );
-    assert_eq!(
-        app.status_message.as_deref(),
-        Some("URL: https://example.com")
+    let msg = app.status_message.as_deref().unwrap();
+    assert!(
+        msg == "Opened: https://example.com" || msg == "URL: https://example.com",
+        "Unexpected status: {msg}"
     );
 }
 
 #[test]
-fn show_alert_sets_status_with_message() {
+fn show_alert_sets_modal_alert() {
     let mut app = create_app_with_identity();
     handle_action_result(
         &mut app,
@@ -120,7 +121,14 @@ fn show_alert_sets_status_with_message() {
             message: "Something happened".into(),
         },
     );
-    assert_eq!(app.status_message.as_deref(), Some("Something happened"));
+    assert_eq!(
+        app.alert_message,
+        Some(("Warning".into(), "Something happened".into()))
+    );
+    assert!(
+        app.status_message.is_none(),
+        "Should use alert_message, not status_message"
+    );
 }
 
 #[test]
@@ -394,13 +402,29 @@ fn navigate_to_syncs_contact_visibility_screen() {
 }
 
 #[test]
-fn navigate_to_contact_edit_is_noop() {
-    // ContactEdit has no dedicated TUI Screen — should not change screen
+fn navigate_to_contact_edit_sets_edit_screen() {
     let mut app = create_app_with_identity();
-    let original_screen = app.screen;
     app.app_engine.navigate_to(AppScreen::ContactEdit {
         contact_id: "test-id".into(),
     });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.screen, original_screen);
+    assert_eq!(app.screen, Screen::ContactEdit);
+    assert_eq!(
+        app.selected_contact_id.as_deref(),
+        Some("test-id"),
+        "selected_contact_id should be set"
+    );
+}
+
+#[test]
+fn edit_contact_result_routes_to_contact_edit_screen() {
+    let mut app = create_app_with_identity();
+    handle_action_result(
+        &mut app,
+        ActionResult::EditContact {
+            contact_id: "abc".into(),
+        },
+    );
+    assert_eq!(app.screen, Screen::ContactEdit);
+    assert_eq!(app.selected_contact_id.as_deref(), Some("abc"));
 }

@@ -25,6 +25,8 @@ pub enum Screen {
     Contacts,
     /// Contact detail view
     ContactDetail,
+    /// Contact edit form (3-step: fields → visibility → preview)
+    ContactEdit,
     /// Contact visibility settings
     ContactVisibility,
     /// QR exchange screen
@@ -239,6 +241,8 @@ pub struct App {
     pub status_message: Option<String>,
     /// When the status message was set (for auto-clear after 3 seconds).
     pub status_message_time: Option<std::time::Instant>,
+    /// Modal alert message (title, body) — requires user dismissal.
+    pub alert_message: Option<(String, String)>,
     /// Selected contact index (for contacts list)
     pub selected_contact: usize,
     /// Selected contact ID (for engine-driven ContactDetail screen)
@@ -622,6 +626,7 @@ impl App {
             should_quit: false,
             status_message: None,
             status_message_time: None,
+            alert_message: None,
             selected_contact: 0,
             selected_contact_id: None,
             selected_field: 0,
@@ -808,6 +813,13 @@ impl App {
                         contact_id: id.clone(),
                     })
             }
+            Screen::ContactEdit => {
+                self.selected_contact_id
+                    .as_ref()
+                    .map(|id| AppScreen::ContactEdit {
+                        contact_id: id.clone(),
+                    })
+            }
             Screen::Sync => Some(AppScreen::Sync),
             Screen::TorSettings => Some(AppScreen::TorSettings),
             Screen::Recovery => Some(AppScreen::Recovery),
@@ -937,6 +949,11 @@ impl App {
             Screen::ContactDetail => {
                 self.selected_contact_id = None;
                 self.screen = Screen::Contacts;
+            }
+            Screen::ContactEdit => {
+                // Back from edit goes to detail
+                self.screen = Screen::ContactDetail;
+                self.render_state = Default::default();
             }
             Screen::ContactVisibility => {
                 self.screen = Screen::ContactDetail;
