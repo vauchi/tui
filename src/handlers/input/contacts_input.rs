@@ -154,7 +154,7 @@ pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
             app.groups_state.group_name_input.clear();
         }
         KeyCode::Char('j') | KeyCode::Down => {
-            if let Ok(groups) = app.app_engine.vauchi().list_labels() {
+            if let Ok(groups) = app.app_engine.vauchi().list_groups() {
                 let filtered_count = if app.groups_state.group_search_query.is_empty() {
                     groups.len()
                 } else {
@@ -213,9 +213,9 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
 
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
-            if let Ok(groups) = app.app_engine.vauchi().list_labels() {
+            if let Ok(groups) = app.app_engine.vauchi().list_groups() {
                 if let Some(group) = groups.get(app.groups_state.selected_group) {
-                    if let Ok(contacts) = app.app_engine.vauchi().get_label_members(group.id()) {
+                    if let Ok(contacts) = app.app_engine.vauchi().get_group_members(group.id()) {
                         if app.groups_state.selected_contact_in_group
                             < contacts.len().saturating_sub(1)
                         {
@@ -233,7 +233,7 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('r') => {
             // Start renaming
             app.groups_state.edit_mode = true;
-            if let Ok(groups) = app.app_engine.vauchi().list_labels() {
+            if let Ok(groups) = app.app_engine.vauchi().list_groups() {
                 if let Some(group) = groups.get(app.groups_state.selected_group) {
                     app.groups_state.group_name_input = group.name().to_string();
                 }
