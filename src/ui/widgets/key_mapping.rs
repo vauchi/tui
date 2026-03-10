@@ -55,7 +55,7 @@ fn find_focusable(components: &[Component], from: usize, forward: bool) -> Optio
 
 /// Find the first focusable component index.
 fn find_first_focusable(components: &[Component]) -> Option<usize> {
-    components.iter().position(|c| is_focusable(c))
+    components.iter().position(is_focusable)
 }
 
 /// Map a key press to a `UserAction` or internal navigation update.

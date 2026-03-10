@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     // Without this, a panic leaves the terminal in raw/alternate-screen mode.
     let original_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
-        let _ = restore_terminal();
+        restore_terminal();
         original_hook(panic_info);
     }));
 

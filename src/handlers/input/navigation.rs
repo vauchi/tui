@@ -119,10 +119,7 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Opti
         return None;
     }
 
-    let engine = match app.onboarding_engine.as_mut() {
-        Some(e) => e,
-        None => return None,
-    };
+    let engine = app.onboarding_engine.as_mut()?;
 
     let screen = engine.current_screen();
     let key_result = key_mapping::map_key(key, &screen, &mut app.render_state);
