@@ -6,11 +6,12 @@
 //!
 //! Interactive terminal application for Vauchi using Ratatui.
 
-use std::io;
+use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use anyhow::{Context, Result};
+use clap::Parser;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
@@ -34,7 +35,40 @@ use vauchi_tui::ui;
 /// Default relay URL.
 const DEFAULT_RELAY_URL: &str = "wss://relay.vauchi.app";
 
+/// Vauchi — privacy-focused contact card exchange.
+///
+/// Interactive terminal application for managing encrypted contact cards.
+/// Data is end-to-end encrypted and stored locally.
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Data directory path [env: VAUCHI_DATA_DIR]
+    #[arg(long, value_name = "PATH")]
+    data_dir: Option<PathBuf>,
+
+    /// Relay server URL [env: VAUCHI_RELAY_URL]
+    #[arg(long, value_name = "URL")]
+    relay_url: Option<String>,
+
+    /// Seed demo data on first run
+    #[arg(long)]
+    seed: bool,
+
+    /// Validate data integrity and exit
+    #[arg(long)]
+    check: bool,
+}
+
 fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    // Require an interactive terminal for TUI mode
+    if !cli.check && !io::stdin().is_terminal() {
+        eprintln!("vauchi-tui requires an interactive terminal.");
+        eprintln!("Run with --help for usage information.");
+        std::process::exit(1);
+    }
+
     // Install panic hook that restores the terminal before printing the panic.
     // Without this, a panic leaves the terminal in raw/alternate-screen mode.
     let original_hook = std::panic::take_hook();
@@ -43,16 +77,25 @@ fn main() -> Result<()> {
         original_hook(panic_info);
     }));
 
-    // Initialize data before entering alternate screen (so eprintln output is visible)
-    let data_dir = std::env::var("VAUCHI_DATA_DIR")
-        .ok()
-        .map(PathBuf::from)
+    // Resolve data directory: CLI flag > env var > platform default
+    let data_dir = cli
+        .data_dir
+        .or_else(|| std::env::var("VAUCHI_DATA_DIR").ok().map(PathBuf::from))
         .unwrap_or_else(|| {
             dirs::data_dir()
                 .unwrap_or_else(|| PathBuf::from("."))
                 .join("vauchi")
         });
+    let data_dir_is_new = !data_dir.exists();
     std::fs::create_dir_all(&data_dir).context("Failed to create data directory")?;
+
+    // Restrict data directory to owner-only (0700) on creation.
+    // Prevents other users from reading database, keys, or WAL files.
+    #[cfg(unix)]
+    if data_dir_is_new {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&data_dir, std::fs::Permissions::from_mode(0o700));
+    }
 
     let storage_key = load_or_create_storage_key(&data_dir)?;
     let vauchi_config = VauchiConfig {
@@ -62,13 +105,49 @@ fn main() -> Result<()> {
     };
     let mut vauchi: Vauchi<MockTransport> = Vauchi::new(vauchi_config)?;
 
-    // Seed with demo data if VAUCHI_SEED=1 and no identity exists yet
-    if std::env::var("VAUCHI_SEED").is_ok() && !vauchi.has_identity() {
+    // --check: validate data integrity and exit
+    if cli.check {
+        println!("Data directory: {}", data_dir.display());
+        println!("Database: OK (opened successfully)");
+        println!(
+            "Identity: {}",
+            if vauchi.has_identity() {
+                "present"
+            } else {
+                "none"
+            }
+        );
+        return Ok(());
+    }
+
+    // Seed with demo data if --seed or VAUCHI_SEED=1 and no identity exists yet
+    if (cli.seed || std::env::var("VAUCHI_SEED").is_ok()) && !vauchi.has_identity() {
         seed_demo_data(&mut vauchi);
     }
 
+    // Acquire an exclusive lock to prevent concurrent instances on the same data.
+    // Uses flock on a dedicated lock file — the OS auto-releases on crash.
+    let lock_path = data_dir.join(".vauchi.lock");
+    let lock_file = std::fs::File::create(&lock_path).context("Failed to create lock file")?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::io::AsRawFd;
+        let fd = lock_file.as_raw_fd();
+        // Try non-blocking exclusive lock
+        let ret = unsafe { libc::flock(fd, libc::LOCK_EX | libc::LOCK_NB) };
+        if ret != 0 {
+            eprintln!("Another vauchi-tui instance is already running on this data directory.");
+            eprintln!("Data dir: {}", data_dir.display());
+            std::process::exit(1);
+        }
+    }
+    // Keep lock_file alive for the duration of the process (dropped on exit/crash)
+    let _lock = lock_file;
+
+    let relay_url = cli
+        .relay_url
+        .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let app_engine = AppEngine::new(vauchi);
-    let relay_url = resolve_relay_url(&data_dir);
 
     // Setup terminal (after init — no stray eprintln output in alternate screen)
     enable_raw_mode()?;
@@ -365,8 +444,19 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
     loop {
         terminal.draw(|f| ui::draw(f, app))?;
 
-        // Poll for events with timeout for async updates
-        if event::poll(Duration::from_millis(100))? {
+        // Use short poll timeout when status message is flashing (500ms window),
+        // otherwise use longer timeout to minimize idle CPU usage.
+        let has_active_flash = app
+            .status_message_time
+            .map(|t| t.elapsed() < Duration::from_millis(600))
+            .unwrap_or(false);
+        let poll_timeout = if has_active_flash {
+            Duration::from_millis(100)
+        } else {
+            Duration::from_secs(1)
+        };
+
+        if event::poll(poll_timeout)? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match handlers::handle_key(app, key.code) {
