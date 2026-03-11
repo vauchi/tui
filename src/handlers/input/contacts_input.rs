@@ -254,6 +254,28 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
 }
 
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
+    // Handle delete confirmation overlay
+    if app.contact_delete_confirm {
+        match key {
+            KeyCode::Char('y') | KeyCode::Enter => {
+                app.contact_delete_confirm = false;
+                if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
+                    if let Some(contact) = contacts.get(app.selected_contact) {
+                        if app.app_engine.vauchi().remove_contact(contact.id()).is_ok() {
+                            app.invalidate_engines();
+                            app.set_status("Contact removed");
+                            app.go_back();
+                        }
+                    }
+                }
+            }
+            _ => {
+                app.contact_delete_confirm = false;
+            }
+        }
+        return;
+    }
+
     // Resolve the correct contact index from selected_contact_id if available.
     // The engine path sets selected_contact_id (String), but all legacy operations
     // below use selected_contact (usize index). Sync the index to prevent operating
@@ -480,16 +502,8 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('x') | KeyCode::Delete => {
-            // Delete contact
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if app.app_engine.vauchi().remove_contact(contact.id()).is_ok() {
-                        app.invalidate_engines();
-                        app.set_status("Contact removed");
-                        app.go_back();
-                    }
-                }
-            }
+            // Show delete confirmation
+            app.contact_delete_confirm = true;
         }
         _ => {}
     }

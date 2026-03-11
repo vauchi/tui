@@ -202,6 +202,23 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_nav_bar(f, chunks[bar_start + 1], app, &nav_items);
     }
 
+    // Contact delete confirmation overlay
+    if app.contact_delete_confirm && app.screen == Screen::ContactDetail {
+        let popup_width = 50u16.min(area.width.saturating_sub(4));
+        let popup_height = 7u16.min(area.height.saturating_sub(2));
+        let x = area.x + (area.width.saturating_sub(popup_width)) / 2;
+        let y = area.y + (area.height.saturating_sub(popup_height)) / 2;
+        let dialog_area = Rect::new(x, y, popup_width, popup_height);
+        f.render_widget(Clear, dialog_area);
+        screen_renderer::render_delete_confirmation(
+            f,
+            dialog_area,
+            "Delete Contact",
+            "Are you sure? This cannot be undone.",
+            &app.theme,
+        );
+    }
+
     // Alert modal overlay (requires user dismissal with Esc/Enter)
     if let Some((title, message)) = &app.alert_message {
         draw_alert_modal(f, area, app, title, message);

@@ -277,6 +277,8 @@ pub struct App {
     pub contact_search_query: String,
     /// Contact search mode active
     pub contact_search_mode: bool,
+    /// Whether a contact delete confirmation is pending
+    pub contact_delete_confirm: bool,
     /// Current exchange QR data (for expiration tracking)
     pub current_qr: Option<vauchi_core::api::ExchangeQrData>,
     /// Sync state
@@ -645,6 +647,7 @@ impl App {
             revoke_confirm: false,
             contact_search_query: String::new(),
             contact_search_mode: false,
+            contact_delete_confirm: false,
             current_qr: None,
             sync_state: SyncState::default(),
             delivery_state: DeliveryState::default(),
@@ -964,6 +967,7 @@ impl App {
             }
             Screen::ContactDetail => {
                 self.selected_contact_id = None;
+                self.contact_delete_confirm = false;
                 self.screen = Screen::Contacts;
             }
             Screen::ContactEdit => {

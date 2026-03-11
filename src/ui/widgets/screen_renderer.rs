@@ -829,6 +829,17 @@ fn render_confirmation_dialog(
     f.render_widget(para, area);
 }
 
+/// Public wrapper for rendering a destructive confirmation dialog overlay.
+pub fn render_delete_confirmation(
+    f: &mut Frame,
+    area: Rect,
+    title: &str,
+    message: &str,
+    theme: &TuiTheme,
+) {
+    render_confirmation_dialog(f, area, title, message, "Delete", true, theme);
+}
+
 /// Render action hints at the bottom of the screen.
 fn render_action_hints(
     f: &mut Frame,

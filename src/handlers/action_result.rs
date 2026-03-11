@@ -18,6 +18,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             // AppEngine already updated its internal screen; TUI re-renders on next draw.
             // Sync TUI screen from AppEngine's current screen.
             // Reset render state for the new screen (fresh focus/selection).
+
+            // Show success feedback when navigating back from form dialogs
+            let from_screen = app.screen;
             {
                 app.render_state = Default::default();
                 match app.app_engine.current_app_screen() {
@@ -74,6 +77,14 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.screen = Screen::MyInfoEntryDetail;
                     }
                 }
+            }
+            // Show success feedback when completing a form dialog
+            match from_screen {
+                Screen::AddField => app.set_status("Entry added"),
+                Screen::EditField => app.set_status("Entry updated"),
+                Screen::EditName => app.set_status("Name updated"),
+                Screen::EditRelayUrl => app.set_status("Relay URL updated"),
+                _ => {}
             }
         }
         ActionResult::OpenContact { contact_id } => {
