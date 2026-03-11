@@ -18,6 +18,9 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         match key {
             KeyCode::Esc => {
                 app.contact_search_mode = false;
+                app.contact_search_query.clear();
+                app.selected_contact = 0;
+                helpers::dispatch_search(app);
             }
             KeyCode::Enter => {
                 app.contact_search_mode = false;

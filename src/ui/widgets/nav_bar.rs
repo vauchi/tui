@@ -57,10 +57,11 @@ impl<'a> NavBarWidget<'a> {
                 Style::default().fg(self.theme.fg_secondary)
             };
 
+            let num = i + 1;
             let label = if item.active && !is_focused {
-                format!("★ {}", item.label)
+                format!("{} ★ {}", num, item.label)
             } else {
-                item.label.to_string()
+                format!("{} {}", num, item.label)
             };
 
             // Pad label to fill cell (minus separator)

@@ -99,8 +99,11 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                     app.set_status("Changes discarded");
                     app.go_back();
                 }
-                _ => {
+                KeyCode::Esc | KeyCode::Char('n') => {
                     app.form_discard_confirm = false;
+                }
+                _ => {
+                    // Ignore other keys while dialog is open
                 }
             }
             return Action::Continue;

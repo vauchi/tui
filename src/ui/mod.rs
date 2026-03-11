@@ -46,8 +46,8 @@ fn render_cached_screen(
 }
 
 /// Minimum terminal size for usable rendering.
-const MIN_WIDTH: u16 = 40;
-const MIN_HEIGHT: u16 = 12;
+const MIN_WIDTH: u16 = 60;
+const MIN_HEIGHT: u16 = 16;
 
 /// Draw the application.
 pub fn draw(f: &mut Frame, app: &mut App) {
@@ -81,7 +81,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         lock: app.lock_engine.as_ref().map(|e| e.current_screen()),
     };
 
-    let has_status = app.status_message.is_some();
+    let has_search = app.screen == Screen::Contacts && !app.contact_search_query.is_empty();
+    let has_status = app.status_message.is_some() || has_search;
     let is_onboarding = matches!(
         app.screen,
         Screen::SetupWelcome
@@ -183,7 +184,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         }
     }
 
-    // Status message (conditional)
+    // Status message or search indicator (conditional)
     let mut bar_start = 1;
     if has_status {
         if let Some(msg) = &app.status_message {
@@ -201,6 +202,18 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 Style::default().fg(app.theme.accent)
             };
             let status = Paragraph::new(format!(" {}", msg)).style(style);
+            f.render_widget(status, chunks[bar_start]);
+        } else if has_search {
+            let search_style = if app.contact_search_mode {
+                Style::default()
+                    .fg(app.theme.bg)
+                    .bg(app.theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(app.theme.accent)
+            };
+            let indicator = format!(" Search: {}  [Esc] clear", app.contact_search_query);
+            let status = Paragraph::new(indicator).style(search_style);
             f.render_widget(status, chunks[bar_start]);
         }
         bar_start += 1;
@@ -267,15 +280,18 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
     };
 
     let mut items: Vec<ActionItem> = if let Some(model) = screen_model {
-        // Add component-level hints (e.g., Space for toggle lists)
-        let has_toggle_list = model
+        // Add Space hint based on focused component type
+        let focused = app.render_state.focused_component;
+        let focused_is_toggle = model
             .components
-            .iter()
-            .any(|c| matches!(c, vauchi_core::ui::Component::ToggleList { .. }));
-        let has_field_list = model
+            .get(focused)
+            .map(|c| matches!(c, vauchi_core::ui::Component::ToggleList { .. }))
+            .unwrap_or(false);
+        let focused_is_field = model
             .components
-            .iter()
-            .any(|c| matches!(c, vauchi_core::ui::Component::FieldList { .. }));
+            .get(focused)
+            .map(|c| matches!(c, vauchi_core::ui::Component::FieldList { .. }))
+            .unwrap_or(false);
 
         let mut action_items: Vec<ActionItem> = Vec::new();
 
@@ -288,18 +304,40 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
             action_items.push(ActionItem::new("EDIT", "").with_active(true));
         }
 
-        if has_toggle_list {
+        if focused_is_toggle {
             action_items.push(ActionItem::new("Space", "select"));
-        }
-        if has_field_list {
+        } else if focused_is_field {
             action_items.push(ActionItem::new("Space", "toggle"));
         }
 
-        action_items.extend(model.actions.iter().filter(|a| a.enabled).map(|a| {
-            let key_str = screen_renderer::action_key_hint_pub(&a.id);
-            let is_primary = a.style == vauchi_core::ui::ActionStyle::Primary;
-            ActionItem::new(key_str, &a.label).with_active(is_primary)
-        }));
+        // Collapse group filter actions into a single [g] item
+        let mut group_filter_shown = false;
+        for a in model.actions.iter().filter(|a| a.enabled) {
+            if a.id.starts_with("filter_group") {
+                if !group_filter_shown {
+                    // Find the active group name (Primary style = active filter)
+                    let active_group = model
+                        .actions
+                        .iter()
+                        .find(|ga| {
+                            ga.id.starts_with("filter_group:")
+                                && ga.style == vauchi_core::ui::ActionStyle::Primary
+                        })
+                        .map(|ga| ga.label.as_str());
+                    let label = match active_group {
+                        Some(name) => format!("Group: {}", name),
+                        None => "Groups".to_string(),
+                    };
+                    action_items
+                        .push(ActionItem::new("g", &label).with_active(active_group.is_some()));
+                    group_filter_shown = true;
+                }
+            } else {
+                let key_str = screen_renderer::action_key_hint_pub(&a.id);
+                let is_primary = a.style == vauchi_core::ui::ActionStyle::Primary;
+                action_items.push(ActionItem::new(key_str, &a.label).with_active(is_primary));
+            }
+        }
 
         action_items
     } else {

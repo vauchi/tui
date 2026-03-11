@@ -774,6 +774,11 @@ impl App {
 
     /// Navigate to a screen.
     pub fn goto(&mut self, screen: Screen) {
+        // Clear contact search when leaving Contacts screen
+        if self.screen == Screen::Contacts && screen != Screen::Contacts {
+            self.contact_search_mode = false;
+            self.contact_search_query.clear();
+        }
         self.screen = screen;
         self.input_mode = InputMode::Normal;
         self.sync_nav_index();

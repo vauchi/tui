@@ -11,9 +11,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::{
-    ActionStyle, Component, QrMode, ScreenModel, SettingsItemKind, Status, TextStyle,
-};
+use vauchi_core::ui::{Component, QrMode, ScreenModel, SettingsItemKind, Status, TextStyle};
 
 use super::card_preview::CardPreviewWidget;
 use super::field_list::FieldListWidget;
@@ -28,6 +26,8 @@ pub struct ScreenRenderState {
     pub focused_component: usize,
     /// Per-component selection index (e.g., which item is highlighted in a list).
     pub component_selections: Vec<usize>,
+    /// Per-component scroll offset for lists longer than the visible area.
+    pub scroll_offsets: Vec<usize>,
     /// Validation errors keyed by component_id.
     pub validation_errors: Vec<(String, String)>,
     /// Whether content zone has focus (false when ActionBar/NavBar is focused).
@@ -35,10 +35,30 @@ pub struct ScreenRenderState {
 }
 
 impl ScreenRenderState {
-    /// Ensure the selections vector has enough entries for the given component count.
+    /// Ensure the selections and scroll vectors have enough entries for the given component count.
     pub fn ensure_capacity(&mut self, component_count: usize) {
         while self.component_selections.len() < component_count {
             self.component_selections.push(0);
+        }
+        while self.scroll_offsets.len() < component_count {
+            self.scroll_offsets.push(0);
+        }
+    }
+
+    /// Get the scroll offset for a given component.
+    pub fn scroll_for(&self, index: usize) -> usize {
+        self.scroll_offsets.get(index).copied().unwrap_or(0)
+    }
+
+    /// Adjust scroll offset to keep the selection visible within `visible_count` items.
+    pub fn ensure_visible(&mut self, component_idx: usize, visible_count: usize) {
+        self.ensure_capacity(component_idx + 1);
+        let sel = self.selection_for(component_idx);
+        let scroll = self.scroll_offsets[component_idx];
+        if sel < scroll {
+            self.scroll_offsets[component_idx] = sel;
+        } else if sel >= scroll + visible_count {
+            self.scroll_offsets[component_idx] = sel - visible_count + 1;
         }
     }
 
@@ -91,7 +111,6 @@ pub fn render_screen(
     // Calculate layout heights
     let has_progress = screen.progress.is_some();
     let has_subtitle = screen.subtitle.is_some();
-    let has_actions = !screen.actions.is_empty();
 
     let mut constraints = Vec::new();
 
@@ -106,10 +125,7 @@ pub fn render_screen(
     // Components area (flexible)
     constraints.push(Constraint::Min(5));
 
-    // Action hints
-    if has_actions {
-        constraints.push(Constraint::Length(2));
-    }
+    // (Action hints removed — shown in the persistent action bar instead)
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -136,12 +152,8 @@ pub fn render_screen(
 
     // Components
     render_components(f, chunks[chunk_idx], &screen.components, state, theme);
-    chunk_idx += 1;
 
-    // Action hints
-    if has_actions && chunk_idx < chunks.len() {
-        render_action_hints(f, chunks[chunk_idx], &screen.actions, theme);
-    }
+    // (Action hints removed — shown in the persistent action bar instead)
 }
 
 /// Render the step progress indicator.
@@ -431,7 +443,7 @@ fn render_text(f: &mut Frame, area: Rect, content: &str, style: &TextStyle, them
     f.render_widget(para, area);
 }
 
-/// Render a contact list component.
+/// Render a contact list component with scrolling and selection indicator.
 #[allow(clippy::too_many_arguments)]
 fn render_contact_list(
     f: &mut Frame,
@@ -445,18 +457,52 @@ fn render_contact_list(
 ) {
     use ratatui::widgets::{List, ListItem};
 
-    let selected = state.selection_for(component_idx);
+    if contacts.is_empty() {
+        let empty = Paragraph::new("  No contacts yet. Use Exchange to add one.")
+            .style(Style::default().fg(theme.fg_secondary))
+            .block(
+                Block::default()
+                    .title(" Contacts ")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(theme.border)),
+            );
+        f.render_widget(empty, area);
+        return;
+    }
 
-    let items: Vec<ListItem> = contacts
+    let selected = state.selection_for(component_idx);
+    // Visible rows = area height minus 2 for borders
+    let visible_count = area.height.saturating_sub(2) as usize;
+    // Use stored scroll, but clamp so selection is always visible
+    let scroll = {
+        let s = state.scroll_for(component_idx);
+        if selected < s {
+            selected
+        } else if visible_count > 0 && selected >= s + visible_count {
+            selected.saturating_sub(visible_count - 1)
+        } else {
+            s
+        }
+    };
+
+    let total = contacts.len();
+    let end = (scroll + visible_count).min(total);
+
+    let items: Vec<ListItem> = contacts[scroll..end]
         .iter()
         .enumerate()
-        .map(|(i, contact)| {
+        .map(|(vi, contact)| {
+            let actual_idx = scroll + vi;
+            let prefix = if actual_idx == selected { "▸" } else { " " };
             let line = if let Some(sub) = &contact.subtitle {
-                format!(" {} {}  {}", contact.avatar_initials, contact.name, sub)
+                format!(
+                    "{} {} {}  {}",
+                    prefix, contact.avatar_initials, contact.name, sub
+                )
             } else {
-                format!(" {} {}", contact.avatar_initials, contact.name)
+                format!("{} {} {}", prefix, contact.avatar_initials, contact.name)
             };
-            let style = if i == selected && is_focused {
+            let style = if actual_idx == selected && is_focused {
                 Style::default()
                     .fg(theme.bg)
                     .bg(theme.accent)
@@ -468,30 +514,26 @@ fn render_contact_list(
         })
         .collect();
 
-    if items.is_empty() {
-        let empty = Paragraph::new("  No contacts yet. Use Exchange to add one.")
-            .style(Style::default().fg(theme.fg_secondary))
-            .block(
-                Block::default()
-                    .title(" Contacts ")
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(theme.border)),
-            );
-        f.render_widget(empty, area);
+    let border_color = if is_focused {
+        theme.accent
     } else {
-        let border_color = if is_focused {
-            theme.accent
-        } else {
-            theme.border
-        };
-        let list = List::new(items).block(
-            Block::default()
-                .title(" Contacts ")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(border_color)),
-        );
-        f.render_widget(list, area);
-    }
+        theme.border
+    };
+
+    // Title with count and scroll indicator
+    let title = if total > visible_count {
+        format!(" Contacts ({}) ↕ ", total)
+    } else {
+        format!(" Contacts ({}) ", total)
+    };
+
+    let list = List::new(items).block(
+        Block::default()
+            .title(title)
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color)),
+    );
+    f.render_widget(list, area);
 }
 
 /// Render a settings group component.
@@ -523,7 +565,12 @@ fn render_settings_group(
                 SettingsItemKind::Destructive { label } => label.clone(),
             };
 
-            let text = format!("  {}  {}", item.label, right);
+            let prefix = if i == selected && is_focused {
+                "▸"
+            } else {
+                " "
+            };
+            let text = format!(" {} {}  {}", prefix, item.label, right);
             let style = if i == selected && is_focused {
                 Style::default()
                     .fg(theme.bg)
@@ -577,7 +624,12 @@ fn render_action_list(
                 .as_ref()
                 .map(|d| format!("  {}", d))
                 .unwrap_or_default();
-            let text = format!("  {} {}{}", icon, item.label, detail);
+            let prefix = if i == selected && is_focused {
+                "▸"
+            } else {
+                " "
+            };
+            let text = format!(" {} {} {}{}", prefix, icon, item.label, detail);
             let style = if i == selected && is_focused {
                 Style::default()
                     .fg(theme.bg)
@@ -849,43 +901,6 @@ pub fn render_discard_confirmation(
     theme: &TuiTheme,
 ) {
     render_confirmation_dialog(f, area, title, message, "Discard", false, theme);
-}
-
-/// Render action hints at the bottom of the screen.
-fn render_action_hints(
-    f: &mut Frame,
-    area: Rect,
-    actions: &[vauchi_core::ui::ScreenAction],
-    theme: &TuiTheme,
-) {
-    let hints: Vec<Span> = actions
-        .iter()
-        .filter(|a| a.enabled)
-        .enumerate()
-        .flat_map(|(i, action)| {
-            let key_hint = action_key_hint(&action.id);
-            let style = match action.style {
-                ActionStyle::Primary => Style::default()
-                    .fg(theme.accent)
-                    .add_modifier(Modifier::BOLD),
-                ActionStyle::Secondary => Style::default().fg(theme.fg_secondary),
-                ActionStyle::Destructive => Style::default().fg(theme.error),
-            };
-
-            let mut spans = Vec::new();
-            if i > 0 {
-                spans.push(Span::styled("  ", Style::default()));
-            }
-            spans.push(Span::styled(
-                format!("[{}] {}", key_hint, action.label),
-                style,
-            ));
-            spans
-        })
-        .collect();
-
-    let para = Paragraph::new(Line::from(hints)).alignment(Alignment::Center);
-    f.render_widget(para, area);
 }
 
 /// Map action IDs to keyboard hints (public accessor for footer rendering).

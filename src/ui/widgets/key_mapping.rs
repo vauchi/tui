@@ -274,6 +274,7 @@ fn map_component_key(
                 KeyCode::Up | KeyCode::Char('k') => {
                     if sel > 0 {
                         state.component_selections[idx] = sel - 1;
+                        state.ensure_visible(idx, 10);
                         KeyResult::Consumed
                     } else {
                         KeyResult::Unhandled
@@ -282,6 +283,7 @@ fn map_component_key(
                 KeyCode::Down | KeyCode::Char('j') => {
                     if sel < contacts.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
+                        state.ensure_visible(idx, 10);
                         KeyResult::Consumed
                     } else {
                         KeyResult::Unhandled
