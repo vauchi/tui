@@ -1,0 +1,86 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+═══ Step 1 ─ MyInfo — view card fields ═════════════════════
+                                * Alice Smith *
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit
+
+═══ Step 2 ─ AddField — press 'a' (Add Entry) ══════════════
+                                    Add Entry
+                                  Select a type
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ • Phone                                                                    │
+│   • Email                                                                    │
+│   • Website                                                                  │
+│   bandcamp Bandcamp                                                          │
+│   behance Behance                                                            │
+│   bitbucket Bitbucket                                                        │
+│   bluesky Bluesky                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─── Value ────────────────────────────────────────────Visible for Groups ─────┐
+│  Value:                    [                    ] 
+│  Displayed Entry Name:     [                    ]
+|  Comment (your eyes only): [                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Groups Visibility ───────────────────────────────────────────────────────────┐
+│ [x] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+                        [s] Save
+
+
+
+[EDIT]   [Esc] Cancel  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit
+
+═══ Step 3 ─ MyInfo — field saved, return to card ══════════
+                                * Alice Smith *
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

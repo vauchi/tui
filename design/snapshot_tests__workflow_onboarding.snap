@@ -1,0 +1,78 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+═══ Step 1 ─ SetupWelcome — no identity detected ═══════════
+                             * Welcome to Vauchi *
+                         Privacy-focused contact cards.
+
+
+
+       [Enter] Create new identity  [h] I already have an identity  
+       
+       
+       
+                              [q] quit
+
+
+═══ Step 2 ─ IdentityCheck → press 'Create New' ════════════
+                            [1/2]  ● ○ ○ ○ ○ ○ ○ ○ ○
+                             * Welcome to Vauchi *
+                           Your contacts, your rules.
+
+    Add Name ! Mandatory
+    [Editable Name field]
+    1 char min
+    
+    Use Groups (optional):
+┌ Groups ──────────────────────────────────────────────────────────────────────┐
+│ [ ] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+│ [ ] [ Add a custom group editable field ] [a] Add                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+[Enter] Get Started  [q] quit
+
+═══ Step 3 ─ LinkChoice → press 'Get Started' ══════════════
+                            [2/2]  ○ ●
+                             * Welcome to Vauchi *
+                           Your contacts, your rules.
+
+ Add your my info entries:
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                  Select a type                         [ESC] │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ • Phone                                                                  │↕│
+│   • Email                                                                  │ │
+│   • Website                                                                │ │
+│   • Birthday                                                               │ │
+│   • Time+Location                                                          │ │
+│   • Facebook                                                               │ │
+│   • Insta                                                                  │ │
+│   • TikTok                                                                 │ │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Adding: Phone
+
+Value
+┌──────────────────────────────────────────────────────────────────────────────┐
+│+41 79 123 45 67                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌ Groups Visibility ───────────────────────────────────────────────────────────┐
+│ [x] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    [a] ad

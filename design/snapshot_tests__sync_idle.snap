@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                    * Sync *
+
+┌ [-] Sync Status ─────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [-] Relay                                                                   │
+│                                                                              │
+│                                                                              │
+│  [-] Contacts                                                                │
+│      0                                                                       │
+│                                                                              │
+│  [-] Pending Updates                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+             [s] Sync Now  [t] Test Connection  [?] help  [Esc] back 
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

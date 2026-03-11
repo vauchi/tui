@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                 * Contacts *
+
+┌ Contacts (1) ─────────────────────────────────────────────── Groups──────────┐
+│▸ CG Carmen Gutierrez  +1-218-142-1078                        Friends, Work   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Search: carmen  [Esc] clear
+                 [g] Groups  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

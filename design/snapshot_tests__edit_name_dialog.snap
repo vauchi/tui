@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                             * Edit Display Name *
+
+Display Name
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│Alice Smith█                                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌ Default for Groups ──────────────────────────────────────────────────────────┐
+│ [ ] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [x] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+[EDIT]   [Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

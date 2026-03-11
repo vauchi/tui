@@ -1,0 +1,33 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                  [1/3]  ● ○ ○
+                               * Edit Contact *
+
+Display Name
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│Abigale Schroeder█                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Group Membership ───────────────────────────────────────────────────────────┐
+│ [x] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+┌ Fields  ─────────────────────────────────────────────────────────────────────┐
+│Type       Label           Value                            Comments          │
+│                                                                              │
+│Phone      Mobile          +1-200-100-1000                  Only in US        │
+│Email      Email           abigale.schroeder@example.com                      │
+│Address    Address         100 Main St, Springfield                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+[Enter] Continue  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

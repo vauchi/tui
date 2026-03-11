@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                               * Privacy & Data *
+
+┌ [-] Data Status ─────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Deletion Status                                                             │
+│  No deletion requested                                                       │
+│                                                                              │
+│  Consent                                                                     │
+│  No data export requested                                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   data View My Data  See what data is stored locally                         │
+│   consent Manage Consent  Review and update data consent                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+[Enter] Export Data  [x] Delete All Data  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit
