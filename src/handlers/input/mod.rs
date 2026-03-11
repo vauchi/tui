@@ -137,6 +137,37 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             app.goto(Screen::Help);
             return Action::Continue;
         }
+        // Direct screen switching: number keys 1-5
+        KeyCode::Char('1') => {
+            app.focus.zone = FocusZone::Content;
+            app.goto(Screen::Exchange);
+            return Action::Continue;
+        }
+        KeyCode::Char('2') => {
+            app.focus.zone = FocusZone::Content;
+            app.goto(Screen::MyInfo);
+            return Action::Continue;
+        }
+        KeyCode::Char('3') => {
+            app.focus.zone = FocusZone::Content;
+            app.goto(Screen::Contacts);
+            return Action::Continue;
+        }
+        KeyCode::Char('4') => {
+            app.focus.zone = FocusZone::Content;
+            app.goto(Screen::Settings);
+            return Action::Continue;
+        }
+        KeyCode::Char('5') => {
+            app.focus.zone = FocusZone::Content;
+            app.goto(Screen::Help);
+            return Action::Continue;
+        }
+        // Shift+Tab: move focus backwards (Content → NavBar → ActionBar → Content)
+        KeyCode::BackTab => {
+            app.focus.move_up();
+            return Action::Continue;
+        }
         KeyCode::Esc => {
             // If in a bar zone, return to content first
             if app.focus.zone != FocusZone::Content {
@@ -328,6 +359,11 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
             // Tab at bottom of content → move focus to action bar
             if key == KeyCode::Tab {
                 app.focus.move_down();
+                return;
+            }
+            // Shift+Tab → move focus backwards
+            if key == KeyCode::BackTab {
+                app.focus.move_up();
                 return;
             }
             // Down at bottom of content → move focus to action bar
