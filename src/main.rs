@@ -156,11 +156,9 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Run everything inside a closure so errors trigger cleanup
-    let res = (|| -> Result<()> {
-        let mut app = App::new(app_engine, relay_url, data_dir);
-        run_app(&mut terminal, &mut app)
-    })();
+    // Run the app, capture result so cleanup always runs
+    let mut app = App::new(app_engine, relay_url, data_dir);
+    let res = run_app(&mut terminal, &mut app);
 
     // Restore terminal (always runs, even after errors)
     disable_raw_mode()?;
@@ -412,8 +410,8 @@ fn seed_demo_data(vauchi: &mut Vauchi<MockTransport>) {
     for (i, name) in names.iter().enumerate() {
         let mut card = ContactCard::new(name);
         let num_fields = (i % 6) + 1;
-        for fi in 0..num_fields {
-            let (ref ft, label, template) = field_templates[fi];
+        for item in field_templates.iter().take(num_fields) {
+            let (ref ft, label, template) = *item;
             let value = template.replace("{}", &name.to_lowercase());
             let _ = card.add_field(ContactField::new(ft.clone(), label, &value));
         }

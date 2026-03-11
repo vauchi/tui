@@ -874,12 +874,7 @@ impl App {
             }),
             Screen::AddField => {
                 // Load available groups for the add field form
-                let groups = self
-                    .app_engine
-                    .available_groups()
-                    .into_iter()
-                    .map(|(id, name)| (id, name))
-                    .collect();
+                let groups = self.app_engine.available_groups().into_iter().collect();
                 Some(AppScreen::FormDialog {
                     dialog_type: FormDialogType::AddField {
                         available_groups: groups,
