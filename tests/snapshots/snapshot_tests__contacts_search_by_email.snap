@@ -4,8 +4,8 @@ expression: output
 ---
                                     Contacts
 
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│ CG Carmen Gutierrez  +1-218-142-1078                                         │
+┌ Contacts (1) ────────────────────────────────────────────────────────────────┐
+│▸ CG Carmen Gutierrez  +1-218-142-1078                                        │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -22,7 +22,7 @@ expression: output
 
 
 
-               [a] Add Contact  [g] Family  [g] Friends  [g] Work
 
-[a] Add Contact  [g] Family  [g] Friends  [g] Work  [?] help  [Esc] back
-    Exchange    │    MyInfo     │  ★ Contacts   │   Settings    │     Help
+ Search: carmen  [Esc] clear
+[a] Add Contact  [g] Groups  [?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │ 3 ★ Contacts  │  4 Settings   │    5 Help

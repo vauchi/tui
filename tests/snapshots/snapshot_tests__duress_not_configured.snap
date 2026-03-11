@@ -22,7 +22,7 @@ expression: output
 
 
 
-                               [Enter] Set Up PIN
 
-[Space] select  [Enter] Set Up PIN  [?] help  [Esc] back  [q] quit
-    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help
+
+[Enter] Set Up PIN  [?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help

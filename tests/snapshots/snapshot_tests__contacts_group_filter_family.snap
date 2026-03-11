@@ -4,10 +4,10 @@ expression: output
 ---
                                     Contacts
 
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│ AS Abigale Schroeder  +1-200-100-1000                                        │
-│ AN Ahmed Nikolaus  +1-203-107-1013                                           │
-│ AD Andreanne Doyle  +1-206-114-1026                                          │
+┌ Contacts (3) ────────────────────────────────────────────────────────────────┐
+│▸ AS Abigale Schroeder  +1-200-100-1000                                       │
+│  AN Ahmed Nikolaus  +1-203-107-1013                                          │
+│  AD Andreanne Doyle  +1-206-114-1026                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -21,8 +21,8 @@ expression: output
 
 
 
-      [a] Add Contact  [g] Family  [g] Friends  [g] Work  [g] All Contacts
+
 
  Filter: Family
-[a] Add Contact  [g] Family  [g] Friends  [g] Work  [g] All Contacts  [?] help
-    Exchange    │    MyInfo     │  ★ Contacts   │   Settings    │     Help
+[a] Add Contact  [g] Group: Family  [?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │ 3 ★ Contacts  │  4 Settings   │    5 Help

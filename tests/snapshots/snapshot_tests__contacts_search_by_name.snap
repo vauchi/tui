@@ -4,8 +4,8 @@ expression: output
 ---
                                     Contacts
 
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│ AN Ahmed Nikolaus  +1-203-107-1013                                           │
+┌ Contacts (1) ────────────────────────────────────────────────────────────────┐
+│▸ AN Ahmed Nikolaus  +1-203-107-1013                                          │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -22,7 +22,7 @@ expression: output
 
 
 
-               [a] Add Contact  [g] Family  [g] Friends  [g] Work
 
-[a] Add Contact  [g] Family  [g] Friends  [g] Work  [?] help  [Esc] back
-    Exchange    │    MyInfo     │  ★ Contacts   │   Settings    │     Help
+ Search: Ahmed  [Esc] clear
+[a] Add Contact  [g] Groups  [?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │ 3 ★ Contacts  │  4 Settings   │    5 Help

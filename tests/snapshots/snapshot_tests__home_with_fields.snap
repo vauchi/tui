@@ -5,9 +5,9 @@ expression: output
                                    Alice Smith
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  Email alice@company.com (Work)                                              │
-│  Phone +41 79 123 45 67 (Mobile)                                             │
-│  Website https://alice.example.com (Blog)                                    │
+│ ▸ Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -22,7 +22,7 @@ expression: output
 
 
 
-                        [a] Add Entry  [Enter] Group View
+
 
 [a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
-    Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help
+   1 Exchange   │  2 ★ MyInfo   │  3 Contacts   │  4 Settings   │    5 Help

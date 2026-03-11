@@ -22,7 +22,7 @@ expression: output
 
 
 
-                  [Enter] Create Backup  [Enter] Restore Backup
+
 
 [Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
-    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help
+   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help

@@ -1,18 +1,18 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 334
 expression: output
 ---
                                     Add Entry
                                   Select a type
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  • Phone                                                                     │
-│  • Email                                                                     │
-│  • Website                                                                   │
-│  bandcamp Bandcamp                                                           │
-│  behance Behance                                                             │
-│  bitbucket Bitbucket                                                         │
+│ ▸ • Phone                                                                    │
+│   • Email                                                                    │
+│   • Website                                                                  │
+│   bandcamp Bandcamp                                                          │
+│   behance Behance                                                            │
+│   bitbucket Bitbucket                                                        │
+│   bluesky Bluesky                                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -23,7 +23,6 @@ expression: output
 
 
 
-                                  [Esc] Cancel
 
 [EDIT]   [Esc] Cancel  [?] help  [Esc] back  [q] quit
-    Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help
+   1 Exchange   │  2 ★ MyInfo   │  3 Contacts   │  4 Settings   │    5 Help
