@@ -1,0 +1,21 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                            [7/8]  ○ ○ ○ ○ ○ ○ ● ○
+                              Security Options
+
+┌ Optional Security ───────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [ ] Enable Duress PIN                                                       │
+│      A secondary PIN that silently alerts chosen contacts                    │
+│                                                                              │
+│  [ ] Enable Tor                                                              │
+│      Route all traffic through Tor for extra privacy                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+       [Space] Toggle  [Enter] Continue  [s] Skip  [?] help  [Esc] back

@@ -1,0 +1,16 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                    Contacts
+
+┌ Contacts ────────────────────────────────────────────────────────────────────┐
+│  No contacts yet. Use Exchange to add one.                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+                    [a] Add Contact  [?] help  [Esc] back
+  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit

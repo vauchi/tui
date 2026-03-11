@@ -1,0 +1,20 @@
+---
+source: tests/snapshot_tests.rs
+description: "Exchange step 1 — group pre-selection before QR"
+expression: output
+---
+                             [1/7]  ● ○ ○ ○ ○ ○ ○
+                              Assign to Groups
+
+┌ Select Groups for New Contact ───────────────────────────────────────────────┐
+│ [ ] Family                                                                   │
+│ [ ] Friends                                                                  │
+│ [ ] Work                                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Or assign later after exchange.
+
+
+
+      [Space] Toggle  [Enter] Continue  [s] Skip  [Esc] Cancel  [?] help
+ 1 ★ Exchange │  2 MyInfo  │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit

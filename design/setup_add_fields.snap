@@ -1,0 +1,18 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                            [4/8]  ○ ○ ○ ● ○ ○ ○ ○
+                              Add Contact Info
+
+Add your details so contacts can reach you.
+
+┌ Your Entries ────────────────────────────────────────────────────────────────┐
+│ ▸ Phone  +41 79 123 45 67                                                    │
+│   Email  alice@company.com                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+             [a] Add More  [Enter] Continue  [?] help  [Esc] back

@@ -1,0 +1,20 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                              Welcome to Vauchi
+                          Privacy-focused contact cards.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Private by design                                                           │
+│  Your data is end-to-end encrypted and never leaves your control.            │
+│                                                                              │
+│  Multi-device                                                                │
+│  Use Vauchi on all your devices with seamless sync.                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+         [Enter] Create new identity  [h] I already have an identity

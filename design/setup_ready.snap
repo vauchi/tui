@@ -1,0 +1,22 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                            [8/8]  ○ ○ ○ ○ ○ ○ ○ ●
+                              Your Identity Is Ready
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Identity created                                                            │
+│  Alice Smith                                                                 │
+│                                                                              │
+│  3 contact entries added                                                     │
+│                                                                              │
+│  2 groups created                                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+                          [Enter] Start Using Vauchi

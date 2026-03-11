@@ -1,0 +1,16 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                 Edit Relay URL
+
+Relay URL
+┌ editing ─────────────────────────────────────────────────────────────────────┐
+│wss://relay.vauchi.app█                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+                     [Enter] Save  [Esc] Cancel  [?] help
+  1 Exchange  │  2 MyInfo  │  3 Contacts │  4 Groups │ 5 ★ Settings │  [q] Quit

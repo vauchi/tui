@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                     Group
+
+┌ Group Info ──────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Name: Friends                                        Members: 300           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Contacts ─────────────────────────────┐ ┌─ My Info Shared with Group ────────┐
+│   DP Diana Patel                      │ │                                    │
+│                                       │ │  Email alice@company.com (Work)    │
+│                                       │ │  Phone +41 79 123 45 67 (Mobile)   │
+│                                       │ │  Website https://alice.example.com │
+│                                       │ │                                    │
+│                                       │ │                                    │
+│                                       │ │                                    │
+│                                       │ │                                    │
+│                                       │ │                                    │
+│                                       │ │                                    │
+│                                       │ │                                    │
+│                                       │ │                                    │
+└───────────────────────────────────────┘ └────────────────────────────────────┘
+
+
+              [r] Rename  [d] Delete Group  [Esc] Back  [?] help
+  1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Groups │  5 Settings │  [q] Quit

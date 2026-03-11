@@ -1,0 +1,25 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                   Alice Smith
+
+┌─── Entry ────────────────────────────────────────────Visible for Groups ─────┐
+│ ▸ Email alice@company.com (Work)                     Work                    │
+│   ├─ Abigale Schroeder (Work)                        [Enter] go to contact  │
+│   ├─ Brady Koss (Work)                               [Enter] go to contact  │
+│   └─ Carmen Gutierrez (Work)                         [Enter] go to contact  │
+│   Phone +41 79 123 45 67 (Mobile)                    Friend, Family          │
+│   Website https://alice.example.com (Blog)           -                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+Shared with 5 contacts.
+
+
+
+
+        [a] Add Entry  [Enter] Go to Contact  [Esc] Collapse  [?] help
+  1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit

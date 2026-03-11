@@ -1,0 +1,23 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                     Groups
+
+┌ View Mode ───────────────────────────────────────────────────────────────────┐
+│ [x] Members                                                                  │
+│     Which contacts are in each group                                         │
+│ [ ] Visibility                                                               │
+│     Which of your fields each group sees                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌─ Groups ─────────────────────────────────────────────────────────────────────┐
+│ ▸ Family   3 members                                                         │
+│   Friends  4 members                                                         │
+│   Work     3 members                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+    [n] New Group  [r] Rename  [d] Delete  [m] Merge  [?] help  [Esc] back
+  1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Groups │  5 Settings │  [q] Quit

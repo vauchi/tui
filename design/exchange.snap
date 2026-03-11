@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                             [2/7]  ○ ● ○ ○ ○ ○ ○
+                                 Share Your Code
+
+┌ QR Code ─────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  ┌──────────────┐                                                            │
+│  │  ▄▄▄▄  ▄▄▄▄ │                                                             │
+│  │  █  █  █  █ │                                                             │
+│  │  ▀▀▀▀  ▀▀▀▀ │                                                             │
+│  └──────────────┘                                                            │
+│                                                                              │
+│  [PUBLIC_ID]...                                 │
+│  Alice Smith                                                                 │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+               [Enter] Scan Their Code  [Esc] Cancel  [?] help
+ 1 ★ Exchange │  2 MyInfo  │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit

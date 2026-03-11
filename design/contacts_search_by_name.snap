@@ -1,0 +1,17 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                    Contacts
+
+Search: Ahmed█
+
+┌ Results (1) ─────────────────────────────────────────────── Groups ──────────┐
+│▸ AN Ahmed Nikolaus  +1-203-107-1013                          Friends, Work   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+                 [Enter] Select  [Esc] Clear Search  [?] help
+  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit

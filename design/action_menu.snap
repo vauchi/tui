@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+description: "Contact detail with phone field selected — inline actions"
+expression: output
+---
+                               Abigale Schroeder
+
+┌ Perspective ─────────────────────────────────────────────────────────────────┐
+│ [x] Their Info                                                               │
+│     What they share with me                                                  │
+│ [ ] My Info for Them                                                         │
+│     What I share with them                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Initials                         Group Membership [g] Edit                  │
+│  AS                               Friends, Co-Workers                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+│Type       Label           Value                                              │
+│                                                                              │
+│Phone    ▸ Mobile          +1-200-100-1000                                    │
+│Email      Email           abigale.schroeder@example.com                      │
+│Address    Address         100 Main St, Springfield                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+         [c] Copy  [t] Call  [s] SMS  [e] Edit  [Esc] Back  [?] help
+  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit

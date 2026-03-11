@@ -1,0 +1,19 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                       Visibility: Abigale Schroeder
+
+Toggle which fields are visible to this contact.
+
+┌ Field Visibility ────────────────────────────────────────────────────────────┐
+│ [x] Email alice@company.com (Work)                                           │
+│ [x] Phone +41 79 123 45 67 (Mobile)                                          │
+│ [ ] Address  Av. Main, 1, 1000 Lausanne                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+             [Space] Toggle  [Enter] Save  [Esc] Cancel  [?] help
+  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit
