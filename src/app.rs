@@ -770,6 +770,7 @@ impl App {
     pub fn goto(&mut self, screen: Screen) {
         self.screen = screen;
         self.input_mode = InputMode::Normal;
+        self.sync_nav_index();
 
         // Navigate AppEngine for engine-driven screens
         if let Some(app_screen) = self.to_app_screen() {
@@ -1011,6 +1012,54 @@ impl App {
             _ => {}
         }
         self.input_mode = InputMode::Normal;
+        self.sync_nav_index();
+    }
+
+    /// Keep `focus.nav_index` in sync with the current screen so that
+    /// Left/Right navigation from Content zone lands on the correct tab.
+    fn sync_nav_index(&mut self) {
+        if let Some(idx) = self.nav_index_for_screen() {
+            self.focus.nav_index = idx;
+        }
+    }
+
+    /// Maps the current screen (or its parent tab) to a NavBar index.
+    /// Returns `None` for screens that don't correspond to a top-level tab
+    /// (onboarding, lock, etc.).
+    fn nav_index_for_screen(&self) -> Option<usize> {
+        match self.screen {
+            // Direct tab screens
+            Screen::Exchange => Some(0),
+            Screen::MyInfo
+            | Screen::MyInfoEntryDetail
+            | Screen::AddField
+            | Screen::EditField
+            | Screen::Groups
+            | Screen::GroupDetail => Some(1),
+            Screen::Contacts
+            | Screen::ContactDetail
+            | Screen::ContactEdit
+            | Screen::ContactVisibility
+            | Screen::ContactDuplicates
+            | Screen::ContactMerge
+            | Screen::ContactLimit
+            | Screen::ActionMenu => Some(2),
+            Screen::Settings
+            | Screen::Privacy
+            | Screen::Support
+            | Screen::Emergency
+            | Screen::Duress
+            | Screen::EditName
+            | Screen::EditRelayUrl
+            | Screen::Backup
+            | Screen::Devices
+            | Screen::Delivery
+            | Screen::TorSettings
+            | Screen::Sync
+            | Screen::Recovery => Some(3),
+            Screen::Help => Some(4),
+            _ => None,
+        }
     }
 }
 
