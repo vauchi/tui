@@ -6,10 +6,10 @@ expression: output
 ═══ Step 1 ─ MyInfo — home screen ══════════════════════════
                                    Alice Smith
 
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ Email alice@company.com (Work)                                             │
-│   Phone +41 79 123 45 67 (Mobile)                                            │
-│   Website https://alice.example.com (Blog)                                   │
+┌───────────────────────────────────────────────────── Group Visibility ───────┐
+│ ▸ Email alice@company.com (Work)                     Friends, CoWorkers      │
+│   Phone +41 79 123 45 67 (Mobile)                    Family                  │
+│   Website https://alice.example.com (Blog)           Friends                 │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -29,7 +29,26 @@ expression: output
 [a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
    1 Exchange   │  2 ★ MyInfo   │  3 Contacts   │  4 Settings   │    5 Help
 
+
 ═══ Step 2 ─ Exchange — press '1' (Exchange tab) ═══════════
+                               [2/6]  ○ ● ○ ○ ○ ○
+                      Preselect group membership for new contact
+
+
+
+┌ Groups ──────────────────────────────────────────────────────────────────────┐
+│ [x] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌── My Info I will share ──────────────────────────────────────────────────────┐
+│ ▸ Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+═══ Step 3 ─ Exchange — press 'enter' (Exchange tab) ═══════════
                                [2/6]  ○ ● ○ ○ ○ ○
                                  Share Your Code
 
@@ -41,7 +60,7 @@ expression: output
 │  │  ▀▀▀▀  ▀▀▀▀ │                                                             │
 │  └──────────────┘                                                            │
 │                                                                              │
-│  [PUBLIC_ID]...                                 │
+│  [PUBLIC_ID]...                                                              │
 │  Alice Smith                                                                 │
 │                                                                              │
 │                                                                              │
@@ -52,16 +71,16 @@ expression: output
 │                                                                              │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-[Enter] Scan Their Code  [?] help  [Esc] back  [q] quit
+           [Enter] Scan Their Code  [?] help  [Esc] back  [q] quit
   1 ★ Exchange  │   2 MyInfo    │  3 Contacts   │  4 Settings   │    5 Help
 
-═══ Step 3 ─ Contacts — press '3' (view exchanged contacts) 
+═══ Step 4 ─ Contacts — press '3' (view exchanged contacts) 
                                     Contacts
 
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet. Use Exchange to add one.                                   │
+┌ Contacts ──────────────────────────────────────────────────Groups────────────┐
+│  New Contact                                               Family            │
 │                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────────
 
 
 
@@ -69,14 +88,5 @@ expression: output
 
 
 
-
-
-
-
-
-
-
-
-
-[a] Add Contact  [?] help  [Esc] back  [q] quit
+                      [?] help  [Esc] back  [q] quit
    1 Exchange   │   2 MyInfo    │ 3 ★ Contacts  │  4 Settings   │    5 Help

@@ -6,8 +6,8 @@ expression: output
 ═══ Step 1 ─ Contacts — view contact list ══════════════════
                                     Contacts
 
-┌ Contacts (5) ────────────────────────────────────────────────────────────────┐
-│▸ AS Abigale Schroeder  +1-200-100-1000                                       │
+┌ Contacts (5) ─────────────────────────────────────────── Groups──────────────┐
+│▸ AS Abigale Schroeder  +1-200-100-1000                   Family              │
 │  AN Ahmed Nikolaus  +1-203-107-1013                                          │
 │  AD Andreanne Doyle  +1-206-114-1026                                         │
 │  AR Andres Raynor  +1-209-121-1039                                           │
@@ -40,8 +40,8 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
 │                                                                              │
-│  Initials                                                                    │
-│  AS                                                                          │
+│  Initials                                        Group Membership            │
+│  AS                                              Friends                     │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 │Type       Label           Value                                              │
@@ -63,14 +63,19 @@ Display Name
 ┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
 │Abigale Schroeder█                                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
+┌ Groups ──────────────────────────────────────────────────────────────────────┐
+│ [x] Family                                                                   │                                                │
+│ [x] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
 
 ────────────────────────────────────────────────────────────────────────────────
-┌ Fields (Show/Hide) ──────────────────────────────────────────────────────────┐
-│Type       Label           Value                            Visibility        │
+┌ Fields             ──────────────────────────────────────────────────────────┐
+│Type       Label           Value                            visble by group   │
 │                                                                              │
-│Phone      Mobile          +1-200-100-1000                  Shown             │
-│Email      Email           abigale.schroeder@example.com    Shown             │
-│Address    Address         100 Main St, Springfield         Shown             │
+│Phone      Mobile          +1-200-100-1000                  Friends           │
+│Email      Email           abigale.schroeder@example.com    Family            │
+│Address    Address         100 Main St, Springfield         Friendy,Family    │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -92,16 +97,17 @@ Display Name
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
 │                                                                              │
-│  Initials                                                                    │
-│  AS                                                                          │
+│  Initials                            Group Membership                        │
+│  AS                                  Family, Friends                         │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌ Fields ──────────────────────────────────────────────────────────────────────┐
-│Type       Label           Value                                              │
+┌ Fields             ──────────────────────────────────────────────────────────┐
+│Type       Label           Value                            visble by group   │
 │                                                                              │
-│Phone      Mobile          +1-200-100-1000                                    │
-│Email      Email           abigale.schroeder@example.com                      │
-│Address    Address         100 Main St, Springfield                           │
+│Phone      Mobile          +1-200-100-1000                  Friends           │
+│Email      Email           abigale.schroeder@example.com    Family            │
+│Address    Address         100 Main St, Springfield         Friendy,Family    │
 └──────────────────────────────────────────────────────────────────────────────┘
+
 
 
 [Space] select  [e] Edit  [Esc] Back  [?] help  [Esc] back  [q] quit
