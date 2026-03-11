@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                                  [1/3]  ● ○ ○
+                            * Emergency Data Wipe *
+
+┌ [!] Emergency Data Wipe ─────────────────────────────────────────────────────┐
+│                                                                              │
+│  [-] All contacts will be deleted                                            │
+│      Your contact cards and exchange history will be permanently removed.    │
+│                                                                              │
+│  [K] All keys will be destroyed                                              │
+│      Encryption keys will be securely shredded and cannot be recovered.      │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+[Enter] I Understand  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

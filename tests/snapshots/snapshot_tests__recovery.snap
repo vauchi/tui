@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: Settings → select Recovery
 expression: output
 ---
                                  Social Recovery

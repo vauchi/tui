@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: "MyInfo → press 'a' (Add Entry)"
 expression: output
 ---
                                     Add Entry

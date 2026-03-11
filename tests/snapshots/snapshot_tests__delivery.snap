@@ -1,0 +1,30 @@
+---
+source: tests/snapshot_tests.rs
+description: Settings → select Delivery
+expression: output
+---
+                                 Delivery Status
+
+┌ [-] All Delivered ───────────────────────────────────────────────────────────┐
+  - No sync yet
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help

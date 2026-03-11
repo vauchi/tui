@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: "MyInfo → press '1' (Exchange tab)"
 expression: output
 ---
                                [2/6]  ○ ● ○ ○ ○ ○

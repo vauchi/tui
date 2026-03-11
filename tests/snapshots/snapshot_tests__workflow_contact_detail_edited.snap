@@ -1,0 +1,107 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+═══ Step 1 ─ Contacts — view contact list ══════════════════
+                                 * Contacts *
+
+┌ Contacts (5) ────────────────────────────────────────────────────────────────┐
+│▸ AS Abigale Schroeder  +1-200-100-1000                                       │
+│  AN Ahmed Nikolaus  +1-203-107-1013                                          │
+│  AD Andreanne Doyle  +1-206-114-1026                                         │
+│  AR Andres Raynor  +1-209-121-1039                                           │
+│  AH Augusta Heller  +1-212-128-1052                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+[g] Groups  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit
+
+═══ Step 2 ─ ContactDetail — press Enter on contact ════════
+                             * Abigale Schroeder *
+
+┌ Perspective ─────────────────────────────────────────────────────────────────┐
+│ [x] Their Info                                                               │
+│     What they share with me                                                  │
+│ [ ] My Info for Them                                                         │
+│     What I share with them                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Initials                                                                    │
+│  AS                                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+│Type       Label           Value                                              │
+│                                                                              │
+│Phone      Mobile          +1-200-100-1000                                    │
+│Email      Email           abigale.schroeder@example.com                      │
+│Address    Address         100 Main St, Springfield                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+[Space] select  [e] Edit  [Esc] Back  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit
+
+═══ Step 3 ─ ContactEdit — press 'e' (Edit) ════════════════
+                                  [1/3]  ● ○ ○
+                               * Edit Contact *
+
+Display Name
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│Abigale Schroeder█                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+┌ Fields (Show/Hide) ──────────────────────────────────────────────────────────┐
+│Type       Label           Value                            Visibility        │
+│                                                                              │
+│Phone      Mobile          +1-200-100-1000                  Shown             │
+│Email      Email           abigale.schroeder@example.com    Shown             │
+│Address    Address         100 Main St, Springfield         Shown             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+[Enter] Continue  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit
+
+═══ Step 4 ─ ContactDetail — press Esc (back from edit) ════
+                             * Abigale Schroeder *
+
+┌ Perspective ─────────────────────────────────────────────────────────────────┐
+│ [x] Their Info                                                               │
+│     What they share with me                                                  │
+│ [ ] My Info for Them                                                         │
+│     What I share with them                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Initials                                                                    │
+│  AS                                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+│Type       Label           Value                                              │
+│                                                                              │
+│Phone      Mobile          +1-200-100-1000                                    │
+│Email      Email           abigale.schroeder@example.com                      │
+│Address    Address         100 Main St, Springfield                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+[Space] select  [e] Edit  [Esc] Back  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

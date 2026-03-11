@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_tests.rs
+description: Contacts → duplicates detected
+expression: output
+---
+                               Duplicate Detection
+
+No duplicate contacts detected.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │ 3 ★ Contacts  │  4 Settings   │    5 Help

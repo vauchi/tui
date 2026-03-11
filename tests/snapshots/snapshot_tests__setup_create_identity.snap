@@ -1,0 +1,29 @@
+---
+source: tests/snapshot_tests.rs
+description: SetupWelcome → press Enter (Get Started)
+expression: output
+---
+                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
+                                Welcome to Vauchi
+                           Your contacts, your rules.
+
+┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [*] Private                                                                 │
+│      End-to-end encrypted contact cards                                      │
+│                                                                              │
+│  [~] Always up to date                                                       │
+│      Update your card and contacts see changes automatically                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+[Enter] Get Started  [?] help  [Esc] back  [q] quit

@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: Sync → sync completed successfully
 expression: output
 ---
                                       Sync

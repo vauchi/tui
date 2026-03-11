@@ -1,0 +1,28 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+                               * Contact Limit *
+
+Set a maximum number of contacts to manage storage.
+
+10 contacts (no limit)
+
+Max Contacts
+┌──────────────────────────────────────────────────────────────────────────────┐
+│0                                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+[e] Edit Limit  [?] help  [Esc] back  [q] quit
+  1 Exchange  │ 2 ★ MyInfo  │ 3 Contacts  │ 4 Settings │  5 Help  │  [q] Quit

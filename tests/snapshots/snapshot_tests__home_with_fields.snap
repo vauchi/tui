@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: app_start → identity exists
 expression: output
 ---
                                    Alice Smith

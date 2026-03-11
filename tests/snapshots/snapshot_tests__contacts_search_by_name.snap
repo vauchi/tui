@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: "Contacts → type search 'Ahmed'"
 expression: output
 ---
                                     Contacts

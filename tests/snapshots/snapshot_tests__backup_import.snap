@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: Backup → select Restore Backup
 expression: output
 ---
                                 Backup & Recovery

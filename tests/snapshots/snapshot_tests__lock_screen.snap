@@ -1,0 +1,12 @@
+---
+source: tests/snapshot_tests.rs
+description: app_start → app password configured
+expression: output
+---
+                                 Enter Password
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│Password                                                                      │
+│                                                                              │
+│  ○ ○ ○ ○ ○ ○                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘

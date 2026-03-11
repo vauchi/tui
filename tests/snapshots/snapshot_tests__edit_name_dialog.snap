@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: Settings → select Display Name
 expression: output
 ---
                                 Edit Display Name
@@ -9,6 +10,11 @@ Display Name
 │Alice Smith█                                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 
+┌ Default for Groups ──────────────────────────────────────────────────────────┐
+│ [x] Family                                                                   │                                                │
+│ [ ] Friends                                                                  │
+│ [ ] Co-workers                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
 
 
 

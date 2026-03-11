@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+description: Settings → select Relay URL
 expression: output
 ---
                                  Edit Relay URL

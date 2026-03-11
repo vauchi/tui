@@ -1,0 +1,82 @@
+---
+source: tests/snapshot_tests.rs
+description: "Backup happy path: Settings → Backup menu → Export form"
+expression: output
+---
+═══ Step 1 ─ Settings — press '4' (Settings tab) ═══════════
+                                    Settings
+
+┌ Profile ─────────────────────────────────────────────────────────────────────┐
+│ ▸ Display Name  Alice Smith                                                  │
+│   Edit Profile  →                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Privacy ─────────────────────────────────────────────────────────────────────┐
+│   Delivery Receipts  [x]                                                     │
+│   Suppress Presence  [ ]                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Security ────────────────────────────────────────────────────────────────────┐
+│   Change Password  →                                                         │
+│   Devices  1 device                                                          │
+│   Duress PIN  →                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Network ─────────────────────────────────────────────────────────────────────┐
+│   Relay URL                                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Danger Zone ─────────────────────────────────────────────────────────────────┐
+│   Emergency Wipe  Wipe All Data                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+[?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+
+═══ Step 2 ─ Backup — select Backup ════════════════════════
+                                Backup & Recovery
+
+┌ [B] Protect your data ───────────────────────────────────────────────────────┐
+│                                                                              │
+│  Backup                                                                      │
+│  Create an encrypted backup of your identity and contacts.                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+
+═══ Step 3 ─ BackupExport — select Create Backup ═══════════
+                                Backup & Recovery
+
+┌ [B] Protect your data ───────────────────────────────────────────────────────┐
+│                                                                              │
+│  Backup                                                                      │
+│  Create an encrypted backup of your identity and contacts.                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
+   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
