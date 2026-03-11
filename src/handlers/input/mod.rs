@@ -91,6 +91,21 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         app.screen,
         Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField
     ) {
+        // Handle discard confirmation overlay
+        if app.form_discard_confirm {
+            match key {
+                KeyCode::Char('y') | KeyCode::Enter => {
+                    app.form_discard_confirm = false;
+                    app.set_status("Changes discarded");
+                    app.go_back();
+                }
+                _ => {
+                    app.form_discard_confirm = false;
+                }
+            }
+            return Action::Continue;
+        }
+
         if key == KeyCode::Esc {
             // For AddField: Esc with type selected → deselect type (via engine cancel)
             // For AddField: Esc without type → go back to parent
@@ -103,12 +118,19 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                 match result {
                     ActionResult::UpdateScreen(_) => {
                         // Engine handled it internally (e.g., deselected type)
+                        // Check if form has data after type deselection
                     }
                     _ => {
-                        // Engine wants to navigate away — go back
-                        app.go_back();
+                        // Engine wants to navigate away
+                        if app.app_engine.form_has_data() {
+                            app.form_discard_confirm = true;
+                        } else {
+                            app.go_back();
+                        }
                     }
                 }
+            } else if app.app_engine.form_has_data() {
+                app.form_discard_confirm = true;
             } else {
                 app.go_back();
             }

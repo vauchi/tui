@@ -840,6 +840,17 @@ pub fn render_delete_confirmation(
     render_confirmation_dialog(f, area, title, message, "Delete", true, theme);
 }
 
+/// Public wrapper for rendering a non-destructive confirmation dialog overlay.
+pub fn render_discard_confirmation(
+    f: &mut Frame,
+    area: Rect,
+    title: &str,
+    message: &str,
+    theme: &TuiTheme,
+) {
+    render_confirmation_dialog(f, area, title, message, "Discard", false, theme);
+}
+
 /// Render action hints at the bottom of the screen.
 fn render_action_hints(
     f: &mut Frame,

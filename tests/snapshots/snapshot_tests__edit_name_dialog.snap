@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_tests.rs
+assertion_line: 361
 expression: output
 ---
                                 Edit Display Name
@@ -24,5 +25,5 @@ Display Name
 
                            [Enter] Save  [Esc] Cancel
 
-[Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+[EDIT]   [Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
     Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

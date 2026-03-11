@@ -187,8 +187,20 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let mut bar_start = 1;
     if has_status {
         if let Some(msg) = &app.status_message {
-            let status =
-                Paragraph::new(format!(" {}", msg)).style(Style::default().fg(app.theme.accent));
+            // Flash effect: highlight background for first 500ms
+            let is_fresh = app
+                .status_message_time
+                .map(|t| t.elapsed() < std::time::Duration::from_millis(500))
+                .unwrap_or(false);
+            let style = if is_fresh {
+                Style::default()
+                    .fg(app.theme.bg)
+                    .bg(app.theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(app.theme.accent)
+            };
+            let status = Paragraph::new(format!(" {}", msg)).style(style);
             f.render_widget(status, chunks[bar_start]);
         }
         bar_start += 1;
@@ -215,6 +227,23 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             dialog_area,
             "Delete Contact",
             "Are you sure? This cannot be undone.",
+            &app.theme,
+        );
+    }
+
+    // Form discard confirmation overlay
+    if app.form_discard_confirm {
+        let popup_width = 50u16.min(area.width.saturating_sub(4));
+        let popup_height = 7u16.min(area.height.saturating_sub(2));
+        let x = area.x + (area.width.saturating_sub(popup_width)) / 2;
+        let y = area.y + (area.height.saturating_sub(popup_height)) / 2;
+        let dialog_area = Rect::new(x, y, popup_width, popup_height);
+        f.render_widget(Clear, dialog_area);
+        screen_renderer::render_discard_confirmation(
+            f,
+            dialog_area,
+            "Discard Changes",
+            "You have unsaved changes. Discard?",
             &app.theme,
         );
     }
@@ -249,6 +278,16 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
             .any(|c| matches!(c, vauchi_core::ui::Component::FieldList { .. }));
 
         let mut action_items: Vec<ActionItem> = Vec::new();
+
+        // Mode indicator for form screens
+        let is_form = matches!(
+            app.screen,
+            Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl
+        );
+        if is_form {
+            action_items.push(ActionItem::new("EDIT", "").with_active(true));
+        }
+
         if has_toggle_list {
             action_items.push(ActionItem::new("Space", "select"));
         }
