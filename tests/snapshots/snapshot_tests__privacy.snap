@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Privacy & Data
-
-────────────────────────────────────────────────────────────────────────────────
                                  Privacy & Data
 
 ┌ [-] Data Status ─────────────────────────────────────────────────────────────┐
@@ -13,6 +10,7 @@ Privacy & Data
 │  No deletion requested                                                       │
 │                                                                              │
 │  Consent                                                                     │
+│  No data export requested                                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │  data View My Data  See what data is stored locally                          │
@@ -22,7 +20,9 @@ Privacy & Data
 
 
 
+
+
                     [Enter] Export Data  [x] Delete All Data
 
-[E] Export Data  [x] Delete All Data  [?] help  [␛] back  [q] quit
+[Enter] Export Data  [x] Delete All Data  [?] help  [Esc] back  [q] quit
     Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

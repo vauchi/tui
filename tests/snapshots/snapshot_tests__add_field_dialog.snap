@@ -2,18 +2,18 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Add Entry
-
-────────────────────────────────────────────────────────────────────────────────
                                     Add Entry
-                            What type of information?
+                                  Select a type
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  • Contact  3 types                                                          │
-│  • Social  38 types                                                          │
-│  • Personal  2 types                                                         │
-│  • Custom  1 types                                                           │
+│  • Phone                                                                     │
+│  • Email                                                                     │
+│  • Website                                                                   │
+│  bandcamp Bandcamp                                                           │
+│  behance Behance                                                             │
+│  bitbucket Bitbucket                                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
+
 
 
 
@@ -24,5 +24,5 @@ Add Entry
 
                                   [Esc] Cancel
 
-[E] Cancel  [?] help  [␛] back  [q] quit
+[Esc] Cancel  [?] help  [Esc] back  [q] quit
     Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

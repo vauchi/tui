@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Sync
-
-────────────────────────────────────────────────────────────────────────────────
                                       Sync
 
 ┌ [-] Sync Status ─────────────────────────────────────────────────────────────┐
@@ -13,7 +10,10 @@ Sync
 │                                                                              │
 │                                                                              │
 │  [-] Contacts                                                                │
+│      0                                                                       │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
+
 
 
 
@@ -24,5 +24,5 @@ Sync
 
                     [Enter] Sync Now  [Enter] Test Connection
 
-[E] Sync Now  [E] Test Connection  [?] help  [␛] back  [q] quit
+[Enter] Sync Now  [Enter] Test Connection  [?] help  [Esc] back  [q] quit
     Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

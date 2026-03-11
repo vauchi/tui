@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Edit Relay URL
-
-────────────────────────────────────────────────────────────────────────────────
                                  Edit Relay URL
 
 Relay URL
@@ -22,7 +19,10 @@ Relay URL
 
 
 
+
+
+
                            [Enter] Save  [Esc] Cancel
 
-[E] Save  [E] Cancel  [?] help  [␛] back  [q] quit
+[Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
     Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

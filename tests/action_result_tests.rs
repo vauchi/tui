@@ -97,6 +97,8 @@ fn start_backup_import_sets_backup_screen() {
 
 #[test]
 fn open_url_sets_status_with_url() {
+    // Prevent xdg-open from actually opening a browser tab during tests
+    std::env::set_var("VAUCHI_NO_BROWSER", "1");
     let mut app = create_app_with_identity();
     handle_action_result(
         &mut app,
@@ -105,10 +107,7 @@ fn open_url_sets_status_with_url() {
         },
     );
     let msg = app.status_message.as_deref().unwrap();
-    assert!(
-        msg == "Opened: https://example.com" || msg == "URL: https://example.com",
-        "Unexpected status: {msg}"
-    );
+    assert_eq!(msg, "URL: https://example.com");
 }
 
 #[test]

@@ -70,6 +70,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::ContactLimit => {
                         app.screen = Screen::ContactLimit;
                     }
+                    vauchi_core::ui::AppScreen::MyInfoEntryDetail { .. } => {
+                        app.screen = Screen::MyInfoEntryDetail;
+                    }
                 }
             }
         }
@@ -83,16 +86,20 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.render_state = Default::default();
         }
         ActionResult::OpenUrl { url } => {
-            // Attempt to open in system browser; show URL as status fallback
-            match std::process::Command::new("xdg-open")
-                .arg(&url)
-                .stdin(std::process::Stdio::null())
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn()
-            {
-                Ok(_) => app.set_status(format!("Opened: {url}")),
-                Err(_) => app.set_status(format!("URL: {url}")),
+            // Skip browser open during tests (prevents unwanted tabs)
+            if std::env::var("VAUCHI_NO_BROWSER").is_ok() {
+                app.set_status(format!("URL: {url}"));
+            } else {
+                match std::process::Command::new("xdg-open")
+                    .arg(&url)
+                    .stdin(std::process::Stdio::null())
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .spawn()
+                {
+                    Ok(_) => app.set_status(format!("Opened: {url}")),
+                    Err(_) => app.set_status(format!("URL: {url}")),
+                }
             }
         }
         ActionResult::ShowAlert { title, message } => {
@@ -116,6 +123,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::RequestCamera => {
             // TUI can't open camera — show status message
             app.set_status("Camera not supported in terminal mode");
+        }
+        ActionResult::OpenEntryDetail { .. } => {
+            // Handled by AppEngine (intercepted before reaching TUI)
         }
         ActionResult::WipeComplete => {
             app.screen = Screen::SetupWelcome;

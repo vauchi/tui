@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Edit Field
-
-────────────────────────────────────────────────────────────────────────────────
                                    Edit Field
 
 Editing: Mobile
@@ -22,7 +19,10 @@ Value
 
 
 
+
+
+
                            [Enter] Save  [Esc] Cancel
 
-[E] Save  [E] Cancel  [?] help  [␛] back  [q] quit
+[Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
     Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

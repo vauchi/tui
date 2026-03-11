@@ -93,8 +93,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let show_nav_bar = !is_onboarding && app.screen != Screen::Lock;
 
     let mut constraints = vec![
-        Constraint::Length(3), // Header
-        Constraint::Min(0),    // Content
+        Constraint::Min(0), // Content
     ];
     if has_status {
         constraints.push(Constraint::Length(1)); // Status message
@@ -125,10 +124,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Sync content focus state so components dim when bar zones are active
     app.render_state.content_has_focus = app.focus.zone == FocusZone::Content;
 
-    // Header
-    draw_header(f, chunks[0], app, &cached);
-
-    // Content
+    // Content (chunk[0] — header removed)
     match app.screen {
         // Engine-driven screens — rendered via AppEngine ScreenModel
         Screen::MyInfo
@@ -157,20 +153,21 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::EditRelayUrl
         | Screen::ContactDuplicates
         | Screen::ContactMerge
-        | Screen::ContactLimit => {
-            render_cached_screen(f, chunks[1], cached.app.as_ref(), app);
+        | Screen::ContactLimit
+        | Screen::MyInfoEntryDetail => {
+            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
         }
         Screen::Lock => {
             if let Some(model) = &cached.lock {
-                screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
+                screen_renderer::render_screen(f, chunks[0], model, &app.render_state, &app.theme);
             } else {
-                lock::draw(f, chunks[1], app);
+                lock::draw(f, chunks[0], app);
             }
         }
         Screen::ActionMenu => {
             // Draw engine-driven contact detail underneath, then overlay action menu
-            render_cached_screen(f, chunks[1], cached.app.as_ref(), app);
-            draw_action_menu(f, chunks[1], app);
+            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
+            draw_action_menu(f, chunks[0], app);
         }
         // SP-21 Onboarding wizard — engine-driven rendering
         Screen::SetupWelcome
@@ -179,7 +176,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::SetupSecurity
         | Screen::SetupReady => {
             if let Some(model) = &cached.onboarding {
-                screen_renderer::render_screen(f, chunks[1], model, &app.render_state, &app.theme);
+                screen_renderer::render_screen(f, chunks[0], model, &app.render_state, &app.theme);
             } else {
                 unreachable!("OnboardingEngine always initialized for setup screens");
             }
@@ -187,7 +184,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 
     // Status message (conditional)
-    let mut bar_start = 2;
+    let mut bar_start = 1;
     if has_status {
         if let Some(msg) = &app.status_message {
             let status =
@@ -211,96 +208,6 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 }
 
-fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
-    // Use engine title for engine-driven screens (from cached models)
-    let engine_title: Option<String> = match app.screen {
-        Screen::MyInfo
-        | Screen::Contacts
-        | Screen::ContactDetail
-        | Screen::ContactEdit
-        | Screen::Exchange
-        | Screen::Settings
-        | Screen::Help
-        | Screen::Backup
-        | Screen::Delivery
-        | Screen::Devices
-        | Screen::Duress
-        | Screen::Emergency
-        | Screen::Sync
-        | Screen::TorSettings
-        | Screen::Recovery
-        | Screen::Groups
-        | Screen::GroupDetail
-        | Screen::ContactVisibility
-        | Screen::Privacy
-        | Screen::Support
-        | Screen::EditName
-        | Screen::EditField
-        | Screen::EditRelayUrl
-        | Screen::AddField
-        | Screen::ContactDuplicates
-        | Screen::ContactMerge
-        | Screen::ContactLimit => cached.app.as_ref().map(|m| m.title.clone()),
-        Screen::SetupWelcome
-        | Screen::SetupCreateIdentity
-        | Screen::SetupAddFields
-        | Screen::SetupSecurity
-        | Screen::SetupReady => cached
-            .onboarding
-            .as_ref()
-            .map(|m| format!("Vauchi - {}", m.title)),
-        Screen::Lock => cached.lock.as_ref().map(|m| m.title.clone()),
-        _ => None,
-    };
-
-    let title = engine_title.as_deref().unwrap_or(match app.screen {
-        Screen::MyInfo => "My Info",
-        Screen::Contacts => "Contacts",
-        Screen::ContactDetail => "Contact Details",
-        Screen::ContactEdit => "Edit Contact",
-        Screen::ContactVisibility => "Visibility Settings",
-        Screen::Exchange => "Exchange",
-        Screen::Settings => "Settings",
-        Screen::Help => "Help",
-        Screen::AddField => "Add Field",
-        Screen::EditField => "Edit Field",
-        Screen::EditName => "Edit Display Name",
-        Screen::EditRelayUrl => "Edit Relay URL",
-        Screen::Devices => "Devices",
-        Screen::Recovery => "Recovery",
-        Screen::Sync => "Sync",
-        Screen::Delivery => "Delivery",
-        Screen::Backup => "Backup & Restore",
-        Screen::TorSettings => "Tor Privacy",
-        Screen::Privacy => "Privacy & Data",
-        Screen::Support => "Support Vauchi",
-        Screen::Emergency => "Emergency Broadcast",
-        Screen::Duress => "Duress Protection",
-        Screen::Groups => "Contact Groups",
-        Screen::GroupDetail => "Group Details",
-        Screen::Lock => "Vauchi",
-        Screen::ActionMenu => "Contact Details",
-        Screen::SetupWelcome => "Vauchi - Welcome",
-        Screen::SetupCreateIdentity => "Vauchi - Create Identity",
-        Screen::SetupAddFields => "Vauchi - Add Fields",
-        Screen::SetupSecurity => "Vauchi - Security",
-        Screen::SetupReady => "Vauchi - Ready!",
-        Screen::ContactDuplicates => "Duplicate Detection",
-        Screen::ContactMerge => "Merge Contacts",
-        Screen::ContactLimit => "Contact Limit",
-    });
-
-    let header = Paragraph::new(title)
-        .style(
-            Style::default()
-                .fg(app.theme.accent)
-                .add_modifier(Modifier::BOLD),
-        )
-        .block(Block::default().borders(Borders::BOTTOM));
-
-    f.render_widget(header, area);
-}
-
 /// Build action items for the current screen from the engine ScreenModel.
 fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> {
     let screen_model = match app.screen {
@@ -314,16 +221,30 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
     };
 
     let mut items: Vec<ActionItem> = if let Some(model) = screen_model {
-        model
-            .actions
+        // Add component-level hints (e.g., Space for toggle lists)
+        let has_toggle_list = model
+            .components
             .iter()
-            .filter(|a| a.enabled)
-            .map(|a| {
-                let key_str = screen_renderer::action_key_hint_pub(&a.id);
-                let key = key_str.chars().next().unwrap_or('?');
-                ActionItem::new(key, &a.label)
-            })
-            .collect()
+            .any(|c| matches!(c, vauchi_core::ui::Component::ToggleList { .. }));
+        let has_field_list = model
+            .components
+            .iter()
+            .any(|c| matches!(c, vauchi_core::ui::Component::FieldList { .. }));
+
+        let mut action_items: Vec<ActionItem> = Vec::new();
+        if has_toggle_list {
+            action_items.push(ActionItem::new("Space", "select"));
+        }
+        if has_field_list {
+            action_items.push(ActionItem::new("Space", "toggle"));
+        }
+
+        action_items.extend(model.actions.iter().filter(|a| a.enabled).map(|a| {
+            let key_str = screen_renderer::action_key_hint_pub(&a.id);
+            ActionItem::new(key_str, &a.label)
+        }));
+
+        action_items
     } else {
         Vec::new()
     };
@@ -332,15 +253,15 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
     match app.screen {
         Screen::Lock => {}
         Screen::SetupWelcome => {
-            items.push(ActionItem::new('q', "quit"));
+            items.push(ActionItem::new("q", "quit"));
         }
         Screen::SetupReady => {
             // No back on final screen
         }
         _ => {
-            items.push(ActionItem::new('?', "help"));
-            items.push(ActionItem::new('\u{241B}', "back")); // ␛ for Esc
-            items.push(ActionItem::new('q', "quit"));
+            items.push(ActionItem::new("?", "help"));
+            items.push(ActionItem::new("Esc", "back"));
+            items.push(ActionItem::new("q", "quit"));
         }
     }
 

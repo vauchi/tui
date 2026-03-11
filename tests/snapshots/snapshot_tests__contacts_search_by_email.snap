@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Contacts
-
-────────────────────────────────────────────────────────────────────────────────
                                     Contacts
 
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
@@ -22,7 +19,10 @@ Contacts
 
 
 
-         [a] Add Contact  [Enter] Family  [Enter] Friends  [Enter] Work
 
-[a] Add Contact  [E] Family  [E] Friends  [E] Work  [?] help  [␛] back  [q] quit
+
+
+               [a] Add Contact  [g] Family  [g] Friends  [g] Work
+
+[a] Add Contact  [g] Family  [g] Friends  [g] Work  [?] help  [Esc] back
     Exchange    │    MyInfo     │  ★ Contacts   │   Settings    │     Help

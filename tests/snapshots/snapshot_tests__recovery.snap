@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Social Recovery
-
-────────────────────────────────────────────────────────────────────────────────
                                  Social Recovery
 
 ┌ [-] Quorum Status ───────────────────────────────────────────────────────────┐
@@ -13,6 +10,7 @@ Social Recovery
 │  0 of 3                                                                      │
 │                                                                              │
 │  Quorum Met                                                                  │
+│  No                                                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
 │  No contacts yet. Use Exchange to add one.                                   │
@@ -22,7 +20,9 @@ Social Recovery
 
 
 
+
+
                               [Enter] Check Status
 
-[E] Check Status  [?] help  [␛] back  [q] quit
+[Enter] Check Status  [?] help  [Esc] back  [q] quit
     Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

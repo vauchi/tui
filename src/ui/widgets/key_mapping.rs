@@ -169,16 +169,23 @@ fn map_component_key(
                 KeyCode::Up | KeyCode::Char('k') => {
                     if sel > 0 {
                         state.component_selections[idx] = sel - 1;
+                        KeyResult::Consumed
+                    } else {
+                        // At top of list — let parent handle (move to prev component)
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
                     if sel < items.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
+                        KeyResult::Consumed
+                    } else {
+                        // At bottom of list — let parent handle (move to next component)
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
-                KeyCode::Char(' ') | KeyCode::Enter => {
+                // Space toggles selection; Enter falls through to screen actions (e.g. Continue)
+                KeyCode::Char(' ') => {
                     if let Some(item) = items.get(sel) {
                         KeyResult::Action(UserAction::ItemToggled {
                             component_id: id.clone(),
@@ -199,14 +206,18 @@ fn map_component_key(
                 KeyCode::Up | KeyCode::Char('k') => {
                     if sel > 0 {
                         state.component_selections[idx] = sel - 1;
+                        KeyResult::Consumed
+                    } else {
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
                     if sel < fields.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
+                        KeyResult::Consumed
+                    } else {
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Char(' ') => {
                     // Toggle visibility of the selected field
@@ -263,14 +274,18 @@ fn map_component_key(
                 KeyCode::Up | KeyCode::Char('k') => {
                     if sel > 0 {
                         state.component_selections[idx] = sel - 1;
+                        KeyResult::Consumed
+                    } else {
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
                     if sel < contacts.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
+                        KeyResult::Consumed
+                    } else {
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Enter => {
                     if let Some(contact) = contacts.get(sel) {
@@ -293,14 +308,20 @@ fn map_component_key(
                 KeyCode::Up | KeyCode::Char('k') => {
                     if sel > 0 {
                         state.component_selections[idx] = sel - 1;
+                        KeyResult::Consumed
+                    } else {
+                        // At top — let parent move to previous component
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
                     if sel < items.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
+                        KeyResult::Consumed
+                    } else {
+                        // At bottom — let parent move to next component
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Enter | KeyCode::Char(' ') => {
                     if let Some(item) = items.get(sel) {
@@ -331,14 +352,18 @@ fn map_component_key(
                 KeyCode::Up | KeyCode::Char('k') => {
                     if sel > 0 {
                         state.component_selections[idx] = sel - 1;
+                        KeyResult::Consumed
+                    } else {
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
                     if sel < items.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
+                        KeyResult::Consumed
+                    } else {
+                        KeyResult::Unhandled
                     }
-                    KeyResult::Consumed
                 }
                 KeyCode::Enter => {
                     if let Some(item) = items.get(sel) {

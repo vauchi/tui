@@ -61,9 +61,9 @@ fn smoke_home_screen_renders_via_engine() {
     app.screen = Screen::MyInfo;
     let output = render_to_string(&mut app, 80, 24);
 
-    // Home screen should have the title and engine-driven content
+    // Home screen should have the title (display name or "My Info")
     assert!(
-        output.contains("My Info"),
+        output.contains("Smoke Tester") || output.contains("My Info"),
         "MyInfo screen should show title. Got:\n{}",
         output
     );

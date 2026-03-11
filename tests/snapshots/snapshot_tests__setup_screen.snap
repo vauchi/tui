@@ -1,11 +1,7 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 173
 expression: output
 ---
-Vauchi - Welcome to Vauchi
-
-────────────────────────────────────────────────────────────────────────────────
                                 Welcome to Vauchi
                          Privacy-focused contact cards.
 
@@ -15,7 +11,10 @@ Vauchi - Welcome to Vauchi
 │      Your data is end-to-end encrypted and never leaves your control.        │
 │                                                                              │
 │  [D] Multi-device                                                            │
+│      Use Vauchi on all your devices with seamless sync.                      │
 └──────────────────────────────────────────────────────────────────────────────┘
+
+
 
 
 
@@ -26,4 +25,4 @@ Vauchi - Welcome to Vauchi
 
            [Enter] Create new identity  [h] I already have an identity
 
-[E] Create new identity  [h] I already have an identity  [q] quit
+[Enter] Create new identity  [h] I already have an identity  [q] quit

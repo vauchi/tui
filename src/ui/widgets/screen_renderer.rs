@@ -888,6 +888,8 @@ fn action_key_hint(action_id: &str) -> &'static str {
         "delete" | "wipe" | "emergency_wipe" => "x",
         "scan" => "S",
         "enable" | "disable" | "toggle" => "t",
+        "toggle_view" => "Enter",
+        id if id.starts_with("filter_group") => "g",
         _ => "Enter",
     }
 }

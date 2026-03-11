@@ -89,6 +89,8 @@ pub enum Screen {
     ContactMerge,
     /// Contact limit configuration
     ContactLimit,
+    /// MyInfo entry detail view
+    MyInfoEntryDetail,
 }
 
 /// Input mode for text entry.
@@ -857,9 +859,20 @@ impl App {
                     current_url: self.edit_relay_url_state.new_url.clone(),
                 },
             }),
-            Screen::AddField => Some(AppScreen::FormDialog {
-                dialog_type: FormDialogType::AddField,
-            }),
+            Screen::AddField => {
+                // Load available groups for the add field form
+                let groups = self
+                    .app_engine
+                    .available_groups()
+                    .into_iter()
+                    .map(|(id, name)| (id, name))
+                    .collect();
+                Some(AppScreen::FormDialog {
+                    dialog_type: FormDialogType::AddField {
+                        available_groups: groups,
+                    },
+                })
+            }
             Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
             Screen::ContactMerge => {
                 let s = &self.merge_state;
@@ -871,6 +884,8 @@ impl App {
                 })
             }
             Screen::ContactLimit => Some(AppScreen::ContactLimit),
+            // MyInfoEntryDetail is engine-driven; AppEngine already has the right screen
+            Screen::MyInfoEntryDetail => None,
             _ => None,
         }
     }

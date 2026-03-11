@@ -2,7 +2,7 @@
 source: src/ui/widget_snapshots.rs
 expression: buffer_to_string(&buf)
 ---
-┌ Fields (Per Group) ────────────────────────────────────────────────┐
+┌ Fields (Coworkers, Family) ────────────────────────────────────────┐
 │Type       Label           Value                  Visibility        │
 │                                                                    │
 │Email      Work            alice@corp.com         Coworkers         │

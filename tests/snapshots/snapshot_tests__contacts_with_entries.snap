@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Contacts
-
-────────────────────────────────────────────────────────────────────────────────
                                     Contacts
 
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
@@ -13,6 +10,8 @@ Contacts
 │ AD Andreanne Doyle  +1-206-114-1026                                          │
 │ AR Andres Raynor  +1-209-121-1039                                            │
 │ AH Augusta Heller  +1-212-128-1052                                           │
+│ BK Brady Koss  +1-215-135-1065                                               │
+│ CG Carmen Gutierrez  +1-218-142-1078                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -22,7 +21,8 @@ Contacts
 
 
 
-         [a] Add Contact  [Enter] Family  [Enter] Friends  [Enter] Work
 
-[a] Add Contact  [E] Family  [E] Friends  [E] Work  [?] help  [␛] back  [q] quit
+               [a] Add Contact  [g] Family  [g] Friends  [g] Work
+
+[a] Add Contact  [g] Family  [g] Friends  [g] Work  [?] help  [Esc] back
     Exchange    │    MyInfo     │  ★ Contacts   │   Settings    │     Help

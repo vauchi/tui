@@ -2,17 +2,12 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-My Info
-
-────────────────────────────────────────────────────────────────────────────────
-                                     My Info
+                                   Alice Smith
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ setup Complete your setup — 2 of 6 steps done                                │
-└──────────────────────────────────────────────────────────────────────────────┘
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet. Use Exchange to add one.                                   │
-│                                                                              │
+│  Email alice@company.com (Work)                                              │
+│  Phone +41 79 123 45 67 (Mobile)                                             │
+│  Website https://alice.example.com (Blog)                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -22,7 +17,12 @@ My Info
 
 
 
-                                  [a] Add Entry
 
-[a] Add Entry  [?] help  [␛] back  [q] quit
+
+
+
+
+                        [a] Add Entry  [Enter] Group View
+
+[a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
     Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

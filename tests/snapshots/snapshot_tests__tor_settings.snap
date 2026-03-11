@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Tor Privacy
-
-────────────────────────────────────────────────────────────────────────────────
                                    Tor Privacy
 
 ┌ [-] Tor Status ──────────────────────────────────────────────────────────────┐
@@ -24,5 +21,8 @@ Tor Privacy
 
 
 
-[?] help  [␛] back  [q] quit
+
+
+
+[Space] select  [?] help  [Esc] back  [q] quit
     Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

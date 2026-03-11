@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Backup & Recovery
-
-────────────────────────────────────────────────────────────────────────────────
                                 Backup & Recovery
 
 ┌ [B] Protect your data ───────────────────────────────────────────────────────┐
@@ -22,7 +19,10 @@ Backup & Recovery
 
 
 
+
+
+
                   [Enter] Create Backup  [Enter] Restore Backup
 
-[E] Create Backup  [E] Restore Backup  [?] help  [␛] back  [q] quit
+[Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
     Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

@@ -2,10 +2,7 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Share Your Code
-
-────────────────────────────────────────────────────────────────────────────────
-                                [1/5]  ● ○ ○ ○ ○
+                               [2/6]  ○ ● ○ ○ ○ ○
                                  Share Your Code
 
 ┌ QR Code ─────────────────────────────────────────────────────────────────────┐
@@ -21,8 +18,11 @@ Share Your Code
 │                                                                              │
 │                                                                              │
 │                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
                              [Enter] Scan Their Code
 
-[E] Scan Their Code  [?] help  [␛] back  [q] quit
+[Enter] Scan Their Code  [?] help  [Esc] back  [q] quit
    ★ Exchange   │    MyInfo     │   Contacts    │   Settings    │     Help

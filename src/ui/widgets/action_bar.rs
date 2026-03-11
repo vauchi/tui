@@ -18,14 +18,14 @@ use crate::theme::TuiTheme;
 /// A single action item in the action bar.
 #[derive(Clone, Debug)]
 pub struct ActionItem {
-    pub key: char,
+    pub key: String,
     pub label: String,
 }
 
 impl ActionItem {
-    pub fn new(key: char, label: &str) -> Self {
+    pub fn new(key: &str, label: &str) -> Self {
         Self {
-            key,
+            key: key.to_string(),
             label: label.to_string(),
         }
     }
@@ -50,7 +50,7 @@ impl<'a> ActionBarWidget<'a> {
 
         for (i, item) in self.items.iter().enumerate() {
             // Format: "[key] label" with 2-char spacing between items
-            let text = format!("[{}] {}", item.key, item.label);
+            let text = format!("[{}] {}", &item.key, item.label);
             let text_width = text.chars().count();
             let spacing = if i > 0 { 2 } else { 0 };
 

@@ -10,7 +10,7 @@ mod features_input;
 mod navigation;
 
 use crossterm::event::KeyCode;
-use vauchi_core::ui::WorkflowEngine;
+use vauchi_core::ui::{ActionResult, UserAction, WorkflowEngine};
 
 use crate::app::{App, InputMode, Screen};
 use crate::handlers::action_result::handle_action_result;
@@ -91,6 +91,29 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         app.screen,
         Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField
     ) {
+        if key == KeyCode::Esc {
+            // For AddField: Esc with type selected → deselect type (via engine cancel)
+            // For AddField: Esc without type → go back to parent
+            // For other forms: go back
+            if app.screen == Screen::AddField {
+                // Send cancel action to engine — it handles back-step logic
+                let result = app.app_engine.handle_action(UserAction::ActionPressed {
+                    action_id: "cancel".into(),
+                });
+                match result {
+                    ActionResult::UpdateScreen(_) => {
+                        // Engine handled it internally (e.g., deselected type)
+                    }
+                    _ => {
+                        // Engine wants to navigate away — go back
+                        app.go_back();
+                    }
+                }
+            } else {
+                app.go_back();
+            }
+            return Action::Continue;
+        }
         handle_engine_keys(app, key);
         return Action::Continue;
     }
@@ -163,6 +186,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::AddField
             | Screen::ContactDuplicates
             | Screen::ContactMerge
+            | Screen::MyInfoEntryDetail
     ) {
         handle_engine_keys(app, key);
         return Action::Continue;
@@ -207,7 +231,8 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::ContactEdit
         | Screen::ContactDuplicates
         | Screen::ContactMerge
-        | Screen::ContactLimit => {
+        | Screen::ContactLimit
+        | Screen::MyInfoEntryDetail => {
             unreachable!("Engine-only screens handled by engine guard")
         }
     }
@@ -353,11 +378,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                         app.go_back();
                     }
                 }
-                // ContactEdit + SP-12a screens: Esc goes back, engine handles other actions
+                // ContactEdit + SP-12a + EntryDetail: Esc goes back
                 Screen::ContactEdit
                 | Screen::ContactDuplicates
                 | Screen::ContactMerge
-                | Screen::ContactLimit => {
+                | Screen::ContactLimit
+                | Screen::MyInfoEntryDetail => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }

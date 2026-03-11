@@ -43,7 +43,34 @@ fn main() -> Result<()> {
         original_hook(panic_info);
     }));
 
-    // Setup terminal
+    // Initialize data before entering alternate screen (so eprintln output is visible)
+    let data_dir = std::env::var("VAUCHI_DATA_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            dirs::data_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join("vauchi")
+        });
+    std::fs::create_dir_all(&data_dir).context("Failed to create data directory")?;
+
+    let storage_key = load_or_create_storage_key(&data_dir)?;
+    let vauchi_config = VauchiConfig {
+        storage_path: data_dir.join("vauchi.db"),
+        storage_key: Some(storage_key),
+        ..Default::default()
+    };
+    let mut vauchi: Vauchi<MockTransport> = Vauchi::new(vauchi_config)?;
+
+    // Seed with demo data if VAUCHI_SEED=1 and no identity exists yet
+    if std::env::var("VAUCHI_SEED").is_ok() && !vauchi.has_identity() {
+        seed_demo_data(&mut vauchi);
+    }
+
+    let app_engine = AppEngine::new(vauchi);
+    let relay_url = resolve_relay_url(&data_dir);
+
+    // Setup terminal (after init — no stray eprintln output in alternate screen)
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -52,35 +79,7 @@ fn main() -> Result<()> {
 
     // Run everything inside a closure so errors trigger cleanup
     let res = (|| -> Result<()> {
-        // Resolve data directory (VAUCHI_DATA_DIR env var overrides default)
-        let data_dir = std::env::var("VAUCHI_DATA_DIR")
-            .ok()
-            .map(PathBuf::from)
-            .unwrap_or_else(|| {
-                dirs::data_dir()
-                    .unwrap_or_else(|| PathBuf::from("."))
-                    .join("vauchi")
-            });
-
-        // Ensure data directory exists
-        std::fs::create_dir_all(&data_dir).context("Failed to create data directory")?;
-
-        // Create Vauchi instance and AppEngine
-        let storage_key = load_or_create_storage_key(&data_dir)?;
-        let vauchi_config = VauchiConfig {
-            storage_path: data_dir.join("vauchi.db"),
-            storage_key: Some(storage_key),
-            ..Default::default()
-        };
-        let vauchi: Vauchi<MockTransport> = Vauchi::new(vauchi_config)?;
-        let app_engine = AppEngine::new(vauchi);
-
-        // Resolve relay URL: config file → env var → default
-        let relay_url = resolve_relay_url(&data_dir);
-
         let mut app = App::new(app_engine, relay_url, data_dir);
-
-        // Run the app
         run_app(&mut terminal, &mut app)
     })();
 
@@ -276,6 +275,82 @@ fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
             Err(e) => {
                 anyhow::bail!("Storage error: {}", e);
             }
+        }
+    }
+}
+
+/// Seeds the Vauchi instance with demo data for local testing.
+///
+/// Creates an identity, adds fields, creates groups, and adds fake contacts.
+/// Only runs when VAUCHI_SEED=1 and no identity exists yet.
+fn seed_demo_data(vauchi: &mut Vauchi<MockTransport>) {
+    use vauchi_core::contact::Contact;
+    use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};
+    use vauchi_core::crypto::SymmetricKey;
+
+    // Create own identity
+    if vauchi.create_identity("Demo User").is_err() {
+        return;
+    }
+
+    // Add own fields
+    let own_fields = [
+        (FieldType::Phone, "Mobile", "+41 79 123 45 67"),
+        (FieldType::Email, "Work", "demo@vauchi.app"),
+        (FieldType::Website, "Website", "https://vauchi.app"),
+    ];
+    for (ft, label, value) in own_fields {
+        let _ = vauchi.add_own_field(ContactField::new(ft, label, value));
+    }
+
+    // Create groups
+    let family = vauchi.create_group("Family").ok();
+    let friends = vauchi.create_group("Friends").ok();
+    let work = vauchi.create_group("Work").ok();
+
+    // 57 demo contact names
+    let names = [
+        "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack",
+        "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rosa", "Sam", "Tina", "Uma",
+        "Victor", "Wendy", "Xavier", "Yuki", "Zara", "Amber", "Brian", "Clara", "David", "Elena",
+        "Felix", "Gina", "Hugo", "Iris", "James", "Kira", "Liam", "Maya", "Nora", "Oscar", "Petra",
+        "Rafael", "Sofia", "Theo", "Ursula", "Vera", "Walter", "Xena", "Yara", "Zoe", "Aria",
+        "Blake", "Cleo", "Dario", "Elsa", "Finn",
+    ];
+
+    // Field templates — each contact gets (i % 6 + 1) fields
+    let field_templates: &[(FieldType, &str, &str)] = &[
+        (FieldType::Phone, "Mobile", "+41 79 {} 00"),
+        (FieldType::Email, "Personal", "{}@example.com"),
+        (FieldType::Phone, "Work", "+41 44 {} 00"),
+        (FieldType::Website, "Website", "https://{}.dev"),
+        (FieldType::Email, "Work", "{}@corp.ch"),
+        (FieldType::Phone, "Home", "+41 31 {} 00"),
+    ];
+
+    let groups = [&family, &friends, &work];
+
+    for (i, name) in names.iter().enumerate() {
+        let mut card = ContactCard::new(name);
+        let num_fields = (i % 6) + 1;
+        for fi in 0..num_fields {
+            let (ref ft, label, template) = field_templates[fi];
+            let value = template.replace("{}", &name.to_lowercase());
+            let _ = card.add_field(ContactField::new(ft.clone(), label, &value));
+        }
+
+        let shared_key = SymmetricKey::generate();
+        let extra_key = SymmetricKey::generate();
+        let pubkey: [u8; 32] = *extra_key.as_bytes();
+        let contact = Contact::from_exchange(pubkey, card, shared_key);
+        let contact_id = contact.id().to_string();
+        if vauchi.add_contact(contact).is_err() {
+            continue;
+        }
+
+        // Assign to groups round-robin
+        if let Some(ref g) = groups[i % 3] {
+            let _ = vauchi.add_contact_to_group(g.id(), &contact_id);
         }
     }
 }

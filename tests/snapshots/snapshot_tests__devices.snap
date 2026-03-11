@@ -2,9 +2,6 @@
 source: tests/snapshot_tests.rs
 expression: output
 ---
-Link Device
-
-────────────────────────────────────────────────────────────────────────────────
                                  [1/4]  ● ○ ○ ○
                                    Link Device
 
@@ -21,8 +18,11 @@ Link Device
 │                                                                              │
 │                                                                              │
 │                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
                                   [Esc] Cancel
 
-[E] Cancel  [?] help  [␛] back  [q] quit
+[Esc] Cancel  [?] help  [Esc] back  [q] quit
     Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help
