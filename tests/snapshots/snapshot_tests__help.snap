@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 223
 expression: output
 ---
 Help & FAQ
@@ -26,4 +25,4 @@ Help & FAQ
 
 
 [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │     Home      │   Settings    │    ★ Help
+    Exchange    │    MyInfo     │   Contacts    │   Settings    │    ★ Help

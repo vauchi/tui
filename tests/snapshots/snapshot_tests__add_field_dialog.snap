@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 331
 expression: output
 ---
 Add Entry
@@ -26,4 +25,4 @@ Add Entry
                                   [Esc] Cancel
 
 [E] Cancel  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │    ★ Home     │   Settings    │     Help
+    Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 249
 expression: output
 ---
 Social Recovery
@@ -26,4 +25,4 @@ Social Recovery
                               [Enter] Check Status
 
 [E] Check Status  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help
+    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

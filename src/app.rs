@@ -19,8 +19,8 @@ use crate::ui::widgets::screen_renderer::ScreenRenderState;
 /// Current screen in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
-    /// Home screen with contact card
-    Home,
+    /// My Info screen with contact card
+    MyInfo,
     /// Contact list
     Contacts,
     /// Contact detail view
@@ -590,7 +590,7 @@ impl App {
         } else if app_engine.vauchi().is_password_enabled().unwrap_or(false) {
             Screen::Lock
         } else {
-            Screen::Home
+            Screen::MyInfo
         };
 
         // Navigate AppEngine to the correct initial screen
@@ -598,7 +598,7 @@ impl App {
         if has_identity {
             let target = match initial_screen {
                 Screen::Lock => AppScreen::Lock,
-                _ => AppScreen::Home,
+                _ => AppScreen::MyInfo,
             };
             app_engine.navigate_to(target);
         }
@@ -796,7 +796,7 @@ impl App {
     /// Maps TUI Screen to core AppScreen for engine-driven screens.
     pub fn to_app_screen(&self) -> Option<AppScreen> {
         match self.screen {
-            Screen::Home => Some(AppScreen::Home),
+            Screen::MyInfo => Some(AppScreen::MyInfo),
             Screen::Contacts => Some(AppScreen::Contacts),
             Screen::Exchange => Some(AppScreen::Exchange),
             Screen::Settings => Some(AppScreen::Settings),
@@ -918,12 +918,12 @@ impl App {
             | Screen::Sync
             | Screen::Delivery
             | Screen::TorSettings => {
-                self.screen = Screen::Home;
+                self.screen = Screen::MyInfo;
             }
             Screen::Devices => {
                 self.device_link_result = None;
                 self.revoke_confirm = false;
-                self.screen = Screen::Home;
+                self.screen = Screen::MyInfo;
             }
             Screen::Privacy => {
                 self.screen = Screen::Settings;
@@ -941,7 +941,7 @@ impl App {
             // From Backup, go back to onboarding/setup if no identity, otherwise Home
             Screen::Backup => {
                 if self.app_engine.vauchi().has_identity() {
-                    self.screen = Screen::Home;
+                    self.screen = Screen::MyInfo;
                 } else {
                     self.screen = Screen::SetupWelcome;
                 }
@@ -964,12 +964,12 @@ impl App {
                 self.screen = if self.onboarding_state.identity_created {
                     Screen::SetupAddFields
                 } else {
-                    Screen::Home
+                    Screen::MyInfo
                 };
                 self.add_field_state = AddFieldState::default();
             }
             Screen::EditField => {
-                self.screen = Screen::Home;
+                self.screen = Screen::MyInfo;
                 self.edit_field_state = EditFieldState::default();
             }
             Screen::EditName => {
@@ -981,7 +981,7 @@ impl App {
                 self.edit_relay_url_state = EditRelayUrlState::default();
             }
             Screen::Groups => {
-                self.screen = Screen::Home;
+                self.screen = Screen::MyInfo;
                 self.groups_state = GroupsState::default();
             }
             Screen::GroupDetail => {

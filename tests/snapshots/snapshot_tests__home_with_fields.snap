@@ -1,12 +1,11 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 186
 expression: output
 ---
-Home
+My Info
 
 ────────────────────────────────────────────────────────────────────────────────
-                                      Home
+                                     My Info
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ setup Complete your setup — 2 of 6 steps done                                │
@@ -26,4 +25,4 @@ Home
                                   [a] Add Entry
 
 [a] Add Entry  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │    ★ Home     │   Settings    │     Help
+    Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

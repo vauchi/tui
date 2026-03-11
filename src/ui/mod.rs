@@ -131,7 +131,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Content
     match app.screen {
         // Engine-driven screens — rendered via AppEngine ScreenModel
-        Screen::Home
+        Screen::MyInfo
         | Screen::Contacts
         | Screen::ContactDetail
         | Screen::ContactEdit
@@ -214,7 +214,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels) {
     // Use engine title for engine-driven screens (from cached models)
     let engine_title: Option<String> = match app.screen {
-        Screen::Home
+        Screen::MyInfo
         | Screen::Contacts
         | Screen::ContactDetail
         | Screen::ContactEdit
@@ -254,7 +254,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App, cached: &FrameScreenModels)
     };
 
     let title = engine_title.as_deref().unwrap_or(match app.screen {
-        Screen::Home => "Vauchi",
+        Screen::MyInfo => "My Info",
         Screen::Contacts => "Contacts",
         Screen::ContactDetail => "Contact Details",
         Screen::ContactEdit => "Edit Contact",
@@ -351,14 +351,14 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 fn build_nav_items(app: &App) -> Vec<NavItem> {
     let active_tab = match app.screen {
         Screen::Exchange => 0,
+        Screen::MyInfo => 1,
         Screen::Contacts
         | Screen::ContactDetail
         | Screen::ContactEdit
         | Screen::ContactVisibility
         | Screen::ContactDuplicates
         | Screen::ContactMerge
-        | Screen::ContactLimit => 1,
-        Screen::Home => 2,
+        | Screen::ContactLimit => 2,
         Screen::Settings
         | Screen::Devices
         | Screen::Recovery
@@ -371,7 +371,7 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::Emergency
         | Screen::Duress => 3,
         Screen::Help => 4,
-        _ => 2, // Default to Home
+        _ => 1, // Default to MyInfo
     };
 
     vec![
@@ -380,11 +380,11 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
             active: active_tab == 0,
         },
         NavItem {
-            label: "Contacts",
+            label: "MyInfo",
             active: active_tab == 1,
         },
         NavItem {
-            label: "Home",
+            label: "Contacts",
             active: active_tab == 2,
         },
         NavItem {

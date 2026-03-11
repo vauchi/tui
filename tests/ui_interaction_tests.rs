@@ -25,7 +25,7 @@ use vauchi_tui::app::{
 #[test]
 fn test_screen_variants_exist() {
     let screens = [
-        Screen::Home,
+        Screen::MyInfo,
         Screen::Contacts,
         Screen::ContactDetail,
         Screen::ContactVisibility,
@@ -69,15 +69,15 @@ fn test_screen_variants_exist() {
 /// Test: Screen Home is the initial screen variant
 #[test]
 fn test_screen_home_is_initial() {
-    let screen = Screen::Home;
-    assert_eq!(screen, Screen::Home);
+    let screen = Screen::MyInfo;
+    assert_eq!(screen, Screen::MyInfo);
 }
 
 /// Test: Screen equality works
 #[test]
 fn test_screen_equality() {
-    assert_eq!(Screen::Home, Screen::Home);
-    assert_ne!(Screen::Home, Screen::Contacts);
+    assert_eq!(Screen::MyInfo, Screen::MyInfo);
+    assert_ne!(Screen::MyInfo, Screen::Contacts);
     assert_ne!(Screen::Settings, Screen::Help);
 }
 

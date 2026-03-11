@@ -4,7 +4,7 @@
 
 //! Bottom Navigation Bar Widget
 //!
-//! Persistent bar with 5 tabs: Exchange, Contacts, Home, Settings, Help.
+//! Persistent bar with 5 tabs: Exchange, MyInfo, Contacts, Settings, Help.
 
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};

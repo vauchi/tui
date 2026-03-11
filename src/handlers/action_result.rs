@@ -21,7 +21,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             {
                 app.render_state = Default::default();
                 match app.app_engine.current_app_screen() {
-                    vauchi_core::ui::AppScreen::Home => app.screen = Screen::Home,
+                    vauchi_core::ui::AppScreen::MyInfo => app.screen = Screen::MyInfo,
                     vauchi_core::ui::AppScreen::Contacts => app.screen = Screen::Contacts,
                     vauchi_core::ui::AppScreen::Exchange => app.screen = Screen::Exchange,
                     vauchi_core::ui::AppScreen::Settings => app.screen = Screen::Settings,

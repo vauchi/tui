@@ -1056,12 +1056,12 @@ pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
                             Ok(AuthMode::Normal) => {
                                 app.lock_state = LockState::default();
                                 app.lock_engine = None;
-                                app.goto(Screen::Home);
+                                app.goto(Screen::MyInfo);
                             }
                             Ok(AuthMode::Duress) => {
                                 app.lock_state = LockState::default();
                                 app.lock_engine = None;
-                                app.goto(Screen::Home);
+                                app.goto(Screen::MyInfo);
                             }
                             Ok(AuthMode::Unauthenticated) | Err(_) => {
                                 // Invalid PIN or error
@@ -1106,11 +1106,11 @@ pub(super) fn handle_lock_keys(app: &mut App, key: KeyCode) {
                 {
                     Ok(AuthMode::Normal) => {
                         app.lock_state = LockState::default();
-                        app.goto(Screen::Home);
+                        app.goto(Screen::MyInfo);
                     }
                     Ok(AuthMode::Duress) => {
                         app.lock_state = LockState::default();
-                        app.goto(Screen::Home);
+                        app.goto(Screen::MyInfo);
                     }
                     Ok(AuthMode::Unauthenticated) | Err(_) => {
                         app.lock_state.pin_input.clear();

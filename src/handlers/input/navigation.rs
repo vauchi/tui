@@ -15,7 +15,7 @@ use super::Action;
 use vauchi_core::aha_moments::AhaMomentType;
 use vauchi_core::ui::{ActionResult, AppScreen, WorkflowEngine};
 
-pub(super) fn handle_home_keys(app: &mut App, key: KeyCode) {
+pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('c') => app.goto(Screen::Contacts),
         KeyCode::Char('s') => app.goto(Screen::Settings),
@@ -175,7 +175,7 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
                         Ok(()) => {
                             app.onboarding_state.identity_created = true;
                             // Navigate AppEngine to Home
-                            app.app_engine.navigate_to(AppScreen::Home);
+                            app.app_engine.navigate_to(AppScreen::MyInfo);
                             if let Ok(Some(moment)) = app
                                 .app_engine
                                 .vauchi()
@@ -197,7 +197,7 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
             }
             app.onboarding_engine = None;
             app.onboarding_state = OnboardingState::default();
-            app.goto(Screen::Home);
+            app.goto(Screen::MyInfo);
         }
         ActionResult::StartBackupImport => {
             app.backup_state.mode = BackupMode::Import;
@@ -341,6 +341,6 @@ pub(super) fn handle_setup_ready_keys(app: &mut App, key: KeyCode) {
     }
     if let KeyCode::Enter = key {
         app.onboarding_state = OnboardingState::default();
-        app.goto(Screen::Home);
+        app.goto(Screen::MyInfo);
     }
 }

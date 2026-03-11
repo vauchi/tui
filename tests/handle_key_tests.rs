@@ -41,7 +41,7 @@ fn create_test_app() -> (App, TempDir) {
         "wss://relay.vauchi.app".to_string(),
         temp_dir.path().to_path_buf(),
     );
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     (app, temp_dir)
 }
 
@@ -64,7 +64,7 @@ fn create_test_app_no_identity() -> (App, TempDir) {
 #[test]
 fn test_handle_key_q_returns_quit_from_home() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(matches!(action, Action::Quit), "q should quit from Home");
@@ -73,7 +73,7 @@ fn test_handle_key_q_returns_quit_from_home() {
 #[test]
 fn test_handle_key_question_mark_navigates_to_help() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     let action = handle_key(&mut app, KeyCode::Char('?'));
     assert!(
@@ -92,7 +92,7 @@ fn test_handle_key_esc_goes_back_from_contacts() {
     assert!(matches!(action, Action::Continue));
     assert_eq!(
         app.screen,
-        Screen::Home,
+        Screen::MyInfo,
         "Esc from Contacts should go to Home"
     );
 }
@@ -117,7 +117,7 @@ fn test_handle_key_esc_stays_on_setup() {
 #[test]
 fn test_handle_key_home_c_navigates_to_contacts() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Char('c'));
     assert_eq!(app.screen, Screen::Contacts);
@@ -126,7 +126,7 @@ fn test_handle_key_home_c_navigates_to_contacts() {
 #[test]
 fn test_handle_key_home_s_navigates_to_settings() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Char('s'));
     assert_eq!(app.screen, Screen::Settings);
@@ -135,7 +135,7 @@ fn test_handle_key_home_s_navigates_to_settings() {
 #[test]
 fn test_handle_key_home_d_navigates_to_devices() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Char('d'));
     assert_eq!(app.screen, Screen::Devices);
@@ -144,7 +144,7 @@ fn test_handle_key_home_d_navigates_to_devices() {
 #[test]
 fn test_handle_key_home_a_opens_add_field() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Char('a'));
     assert_eq!(app.screen, Screen::AddField);
@@ -240,7 +240,7 @@ fn test_handle_key_help_enter_selects_faq_item() {
 fn test_handle_key_editing_esc_returns_to_normal() {
     let (mut app, _tmp) = create_test_app();
     app.input_mode = InputMode::Editing;
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Esc);
     assert_eq!(
@@ -254,7 +254,7 @@ fn test_handle_key_editing_esc_returns_to_normal() {
 fn test_handle_key_editing_char_appends_to_input_buffer() {
     let (mut app, _tmp) = create_test_app();
     app.input_mode = InputMode::Editing;
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     app.input_buffer.clear();
 
     handle_key(&mut app, KeyCode::Char('a'));
@@ -269,7 +269,7 @@ fn test_handle_key_editing_char_appends_to_input_buffer() {
 fn test_handle_key_editing_backspace_removes_from_input_buffer() {
     let (mut app, _tmp) = create_test_app();
     app.input_mode = InputMode::Editing;
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     app.input_buffer = "abc".to_string();
 
     handle_key(&mut app, KeyCode::Backspace);
@@ -280,7 +280,7 @@ fn test_handle_key_editing_backspace_removes_from_input_buffer() {
 fn test_handle_key_editing_enter_returns_to_normal() {
     let (mut app, _tmp) = create_test_app();
     app.input_mode = InputMode::Editing;
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Enter);
     assert_eq!(app.input_mode, InputMode::Normal);
@@ -392,7 +392,7 @@ fn test_handle_key_search_mode_backspace_removes_char() {
 #[test]
 fn test_handle_key_home_j_increments_selected_field() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     // Add two fields so navigation works
     app.app_engine
         .vauchi()
@@ -412,23 +412,23 @@ fn test_handle_key_home_j_increments_selected_field() {
         .unwrap_or(0);
     handle_key(&mut app, KeyCode::Char('j'));
     // Ensure key was consumed (engine handles focus/component navigation)
-    assert_eq!(app.screen, Screen::Home, "should stay on Home");
+    assert_eq!(app.screen, Screen::MyInfo, "should stay on MyInfo");
 }
 
 #[test]
 fn test_handle_key_home_k_decrements_selected_field() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     // Engine-driven: k navigates within focused component
     handle_key(&mut app, KeyCode::Char('k'));
-    assert_eq!(app.screen, Screen::Home, "should stay on Home");
+    assert_eq!(app.screen, Screen::MyInfo, "should stay on MyInfo");
 }
 
 #[test]
 fn test_handle_key_home_k_stays_at_zero() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     app.selected_field = 0;
 
     handle_key(&mut app, KeyCode::Char('k'));
@@ -542,7 +542,7 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
 #[test]
 fn test_handle_key_home_g_navigates_to_groups() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Char('g'));
     assert_eq!(
@@ -556,7 +556,7 @@ fn test_handle_key_home_g_navigates_to_groups() {
 #[test]
 fn test_handle_key_home_uppercase_x_navigates_to_exchange() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
 
     handle_key(&mut app, KeyCode::Char('X'));
     assert_eq!(
@@ -637,7 +637,7 @@ fn test_handle_key_contact_detail_c_announces_copy_result() {
 #[test]
 fn test_handle_key_home_delete_announces_field_label() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     // Add a field, then delete it
     app.app_engine
         .vauchi()

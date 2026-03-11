@@ -29,7 +29,7 @@ use features_input::{
     handle_tor_settings_keys,
 };
 use navigation::{
-    handle_help_keys, handle_home_keys, handle_setup_add_fields_keys,
+    handle_help_keys, handle_my_info_keys, handle_setup_add_fields_keys,
     handle_setup_create_identity_keys, handle_setup_ready_keys, handle_setup_security_keys,
     handle_setup_welcome_keys,
 };
@@ -137,7 +137,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     // Engine-driven screens — route through AppEngine key mapping
     if matches!(
         app.screen,
-        Screen::Home
+        Screen::MyInfo
             | Screen::Contacts
             | Screen::ContactDetail
             | Screen::Exchange
@@ -170,7 +170,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
 
     // Screen-specific keys
     match app.screen {
-        Screen::Home => handle_home_keys(app, key),
+        Screen::MyInfo => handle_my_info_keys(app, key),
         Screen::Contacts => handle_contacts_keys(app, key),
         Screen::ContactDetail => handle_contact_detail_keys(app, key),
         Screen::ContactVisibility => handle_visibility_keys(app, key),
@@ -244,8 +244,8 @@ fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
                     // Navigate to the tab at the focused index
                     let target = match app.focus.nav_index {
                         0 => Screen::Exchange,
-                        1 => Screen::Contacts,
-                        2 => Screen::Home,
+                        1 => Screen::MyInfo,
+                        2 => Screen::Contacts,
                         3 => Screen::Settings,
                         4 => Screen::Help,
                         _ => return Some(Action::Continue),
@@ -310,9 +310,25 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 app.focus.move_down();
                 return;
             }
+            // Left/Right in content → jump to nav bar for tab navigation
+            if matches!(key, KeyCode::Left | KeyCode::Right) {
+                app.focus.zone = FocusZone::NavBar;
+                if key == KeyCode::Left {
+                    // Move left from current nav position
+                    if app.focus.nav_index > 0 {
+                        app.focus.nav_index -= 1;
+                    }
+                } else {
+                    // Move right from current nav position
+                    if app.focus.nav_index < 4 {
+                        app.focus.nav_index += 1;
+                    }
+                }
+                return;
+            }
             // Fall back to legacy handlers for TUI-specific shortcuts
             match app.screen {
-                Screen::Home => handle_home_keys(app, key),
+                Screen::MyInfo => handle_my_info_keys(app, key),
                 Screen::Contacts => handle_contacts_keys(app, key),
                 Screen::ContactDetail => handle_contact_detail_keys(app, key),
                 Screen::Exchange => handle_exchange_keys(app, key),

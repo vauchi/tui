@@ -184,7 +184,7 @@ fn test_snapshot_setup_screen() {
 #[test]
 fn test_snapshot_home_with_fields() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     let output = render_to_string(&mut app);
     insta::assert_snapshot!("home_with_fields", output);
 }

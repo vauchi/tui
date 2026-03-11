@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 398
 expression: output
 ---
 Privacy & Data
@@ -26,4 +25,4 @@ Privacy & Data
                     [Enter] Export Data  [x] Delete All Data
 
 [E] Export Data  [x] Delete All Data  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help
+    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

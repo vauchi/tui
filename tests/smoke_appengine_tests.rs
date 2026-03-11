@@ -58,19 +58,19 @@ fn render_to_string(app: &mut App, width: u16, height: u16) -> String {
 #[test]
 fn smoke_home_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Home;
+    app.screen = Screen::MyInfo;
     let output = render_to_string(&mut app, 80, 24);
 
     // Home screen should have the title and engine-driven content
     assert!(
-        output.contains("Home"),
-        "Home screen should show title. Got:\n{}",
+        output.contains("My Info"),
+        "MyInfo screen should show title. Got:\n{}",
         output
     );
     // Should show "Add Entry" action from engine
     assert!(
         output.contains("Add Entry"),
-        "Home screen should show Add Entry action. Got:\n{}",
+        "MyInfo screen should show Add Entry action. Got:\n{}",
         output
     );
 }
@@ -309,7 +309,7 @@ fn smoke_all_engine_screens_no_panic() {
     let (mut app, _dir) = create_app_with_identity();
 
     for screen in [
-        Screen::Home,
+        Screen::MyInfo,
         Screen::Contacts,
         Screen::Exchange,
         Screen::Settings,

@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 282
 expression: output
 ---
 Sync
@@ -26,4 +25,4 @@ Sync
                     [Enter] Sync Now  [Enter] Test Connection
 
 [E] Sync Now  [E] Test Connection  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help
+    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

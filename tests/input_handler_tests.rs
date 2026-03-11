@@ -81,7 +81,7 @@ fn create_app_without_identity() -> (App, TempDir) {
 #[test]
 fn test_goto_changes_screen() {
     let (mut app, _dir) = create_app_with_identity();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 
     app.goto(Screen::Contacts);
     assert_eq!(app.screen, Screen::Contacts);
@@ -108,7 +108,7 @@ fn test_go_back_from_contacts_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Contacts);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn test_go_back_from_settings_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Settings);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn test_go_back_from_exchange_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Exchange);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -132,7 +132,7 @@ fn test_go_back_from_help_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Help);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn test_go_back_from_devices_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Devices);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -148,7 +148,7 @@ fn test_go_back_from_recovery_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Recovery);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -156,7 +156,7 @@ fn test_go_back_from_sync_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Sync);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn test_go_back_from_tor_settings_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::TorSettings);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn test_go_back_from_add_field_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::AddField);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -204,7 +204,7 @@ fn test_go_back_from_edit_field_returns_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::EditField);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -240,7 +240,7 @@ fn test_go_back_from_backup_with_identity_goes_to_home() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Backup);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -270,7 +270,7 @@ fn test_set_status_and_clear_status() {
 #[test]
 fn test_handle_key_q_on_home_quits() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(matches!(action, Action::Quit));
@@ -289,7 +289,7 @@ fn test_handle_key_q_is_global_quit() {
 #[test]
 fn test_handle_key_question_mark_navigates_to_help() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('?'));
     assert!(matches!(action, Action::Continue));
@@ -303,14 +303,14 @@ fn test_handle_key_esc_goes_back() {
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 // @scenario: contacts_management:View all contacts
 #[test]
 fn test_handle_key_c_on_home_navigates_to_contacts() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('c'));
     assert!(matches!(action, Action::Continue));
@@ -320,7 +320,7 @@ fn test_handle_key_c_on_home_navigates_to_contacts() {
 #[test]
 fn test_handle_key_s_on_home_navigates_to_settings() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('s'));
     assert!(matches!(action, Action::Continue));
@@ -331,7 +331,7 @@ fn test_handle_key_s_on_home_navigates_to_settings() {
 #[test]
 fn test_handle_key_n_on_home_navigates_to_sync() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('n'));
     assert!(matches!(action, Action::Continue));
@@ -342,7 +342,7 @@ fn test_handle_key_n_on_home_navigates_to_sync() {
 #[test]
 fn test_handle_key_d_on_home_navigates_to_devices() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('d'));
     assert!(matches!(action, Action::Continue));
@@ -353,7 +353,7 @@ fn test_handle_key_d_on_home_navigates_to_devices() {
 #[test]
 fn test_handle_key_r_on_home_navigates_to_recovery() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('r'));
     assert!(matches!(action, Action::Continue));
@@ -364,7 +364,7 @@ fn test_handle_key_r_on_home_navigates_to_recovery() {
 #[test]
 fn test_handle_key_b_on_home_navigates_to_backup() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('b'));
     assert!(matches!(action, Action::Continue));
@@ -375,7 +375,7 @@ fn test_handle_key_b_on_home_navigates_to_backup() {
 #[test]
 fn test_handle_key_a_on_home_navigates_to_add_field() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('a'));
     assert!(matches!(action, Action::Continue));
@@ -385,7 +385,7 @@ fn test_handle_key_a_on_home_navigates_to_add_field() {
 #[test]
 fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
     app.input_mode = InputMode::Editing;
 
     let action = handle_key(&mut app, KeyCode::Esc);
@@ -400,7 +400,7 @@ fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
 #[test]
 fn test_app_new_with_identity_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -417,7 +417,7 @@ fn test_app_new_without_identity_starts_on_setup() {
 #[test]
 fn test_handle_key_y_on_home_navigates_to_delivery() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('y'));
     assert!(matches!(action, Action::Continue));
@@ -432,7 +432,7 @@ fn test_delivery_esc_goes_back_to_home() {
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 // @scenario: message_delivery:Delivery retry key sets status
@@ -525,7 +525,7 @@ fn test_duress_esc_in_status_goes_back() {
 fn test_lock_screen_no_password_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
     // No password configured → should start on Home, not Lock
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]
@@ -613,7 +613,7 @@ fn test_lock_screen_correct_pin_unlocks() {
         handle_key(&mut app, KeyCode::Char(c));
     }
     handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
     assert!(!app.lock_state.error);
 }
 
@@ -760,7 +760,7 @@ fn test_go_back_from_groups_returns_to_home() {
     app.goto(Screen::Groups);
     assert_eq!(app.screen, Screen::Groups);
     app.go_back();
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 // ============================================================================
@@ -772,7 +772,7 @@ fn test_go_back_from_groups_returns_to_home() {
 #[test]
 fn test_home_g_navigates_to_groups() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('g'));
     assert!(matches!(action, Action::Continue));
@@ -787,7 +787,7 @@ fn test_home_g_navigates_to_groups() {
 #[test]
 fn test_home_uppercase_x_navigates_to_exchange() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('X'));
     assert!(matches!(action, Action::Continue));
@@ -802,7 +802,7 @@ fn test_home_uppercase_x_navigates_to_exchange() {
 #[test]
 fn test_home_field_delete_status_includes_label() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Home);
+    app.goto(Screen::MyInfo);
 
     // Add a field
     app.app_engine

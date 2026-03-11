@@ -216,9 +216,9 @@ fn wipe_complete_resets_to_setup_welcome() {
 fn navigate_to_syncs_home_screen() {
     let mut app = create_app_with_identity();
     // Ensure the engine navigates to Home
-    app.app_engine.navigate_to(AppScreen::Home);
+    app.app_engine.navigate_to(AppScreen::MyInfo);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.screen, Screen::Home);
+    assert_eq!(app.screen, Screen::MyInfo);
 }
 
 #[test]

@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 437
 expression: output
 ---
 Duress PIN
@@ -26,4 +25,4 @@ Duress PIN
                                [Enter] Set Up PIN
 
 [E] Set Up PIN  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help
+    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

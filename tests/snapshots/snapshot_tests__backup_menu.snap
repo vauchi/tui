@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 295
 expression: output
 ---
 Backup & Recovery
@@ -26,4 +25,4 @@ Backup & Recovery
                   [Enter] Create Backup  [Enter] Restore Backup
 
 [E] Create Backup  [E] Restore Backup  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │     Home      │  ★ Settings   │     Help
+    Exchange    │    MyInfo     │   Contacts    │  ★ Settings   │     Help

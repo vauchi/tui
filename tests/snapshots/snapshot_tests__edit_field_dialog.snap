@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 346
 expression: output
 ---
 Edit Field
@@ -26,4 +25,4 @@ Value
                            [Enter] Save  [Esc] Cancel
 
 [E] Save  [E] Cancel  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │    ★ Home     │   Settings    │     Help
+    Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

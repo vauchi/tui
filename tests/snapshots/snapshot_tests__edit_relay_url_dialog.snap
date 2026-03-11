@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 369
 expression: output
 ---
 Edit Relay URL
@@ -26,4 +25,4 @@ Relay URL
                            [Enter] Save  [Esc] Cancel
 
 [E] Save  [E] Cancel  [?] help  [␛] back  [q] quit
-    Exchange    │   Contacts    │    ★ Home     │   Settings    │     Help
+    Exchange    │   ★ MyInfo    │   Contacts    │   Settings    │     Help

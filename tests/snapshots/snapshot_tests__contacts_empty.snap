@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 199
 expression: output
 ---
 Contacts
@@ -26,4 +25,4 @@ Contacts
                                  [a] Add Contact
 
 [a] Add Contact  [?] help  [␛] back  [q] quit
-    Exchange    │  ★ Contacts   │     Home      │   Settings    │     Help
+    Exchange    │    MyInfo     │  ★ Contacts   │   Settings    │     Help
