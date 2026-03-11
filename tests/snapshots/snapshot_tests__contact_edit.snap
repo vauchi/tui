@@ -10,19 +10,14 @@ Display Name
 ┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
 │Abigale Schroeder█                                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌ Groups ──────────────────────────────────────────────────────────────────────┐
-│ [x] Family                                                                   │                                                │
-│ [ ] Friends                                                                  │
-│ [ ] Co-workers                                                               │
-└──────────────────────────────────────────────────────────────────────────────┘
 
 ────────────────────────────────────────────────────────────────────────────────
-┌ Fields  ─────────────────────────────────────────────────────────────────────┐
-│Type       Label           Value                            Comments          │
+┌ Fields (Show/Hide) ──────────────────────────────────────────────────────────┐
+│Type       Label           Value                            Visibility        │
 │                                                                              │
-│Phone      Mobile          +1-200-100-1000                  Only in US        │
-│Email      Email           abigale.schroeder@example.com                      │
-│Address    Address         100 Main St, Springfield                           │
+│Phone      Mobile          +1-200-100-1000                  Shown             │
+│Email      Email           abigale.schroeder@example.com    Shown             │
+│Address    Address         100 Main St, Springfield         Shown             │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

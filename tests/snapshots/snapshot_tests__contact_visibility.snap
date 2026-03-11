@@ -8,9 +8,9 @@ expression: output
 Toggle which fields are visible to this contact.
 
 ┌ Field Visibility ────────────────────────────────────────────────────────────┐
-│ [x] Email alice@company.com (Work)                                           │
-│ [x] Phone +41 79 123 45 67 (Mobile)                                          │
-│ [ ] Address  Av. Main, 1, 1000 Lausanne                                      │
+│ [x] Mobile                                                                   │
+│ [x] Email                                                                    │
+│ [x] Address                                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

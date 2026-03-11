@@ -5,10 +5,10 @@ expression: output
 ---
                                    Alice Smith
 
-┌─── Entry ────────────────────────────────────────────Visible for Groups ─────┐
-│ ▸ Email alice@company.com (Work)                     Work                    │
-│   Phone +41 79 123 45 67 (Mobile)                    Friend, Family          │
-│   Website https://alice.example.com (Blog)           -                       │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
