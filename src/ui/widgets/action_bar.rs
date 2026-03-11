@@ -20,6 +20,8 @@ use crate::theme::TuiTheme;
 pub struct ActionItem {
     pub key: String,
     pub label: String,
+    /// Whether this action is the currently active/selected option (e.g. active group filter).
+    pub active: bool,
 }
 
 impl ActionItem {
@@ -27,7 +29,13 @@ impl ActionItem {
         Self {
             key: key.to_string(),
             label: label.to_string(),
+            active: false,
         }
+    }
+
+    pub fn with_active(mut self, active: bool) -> Self {
+        self.active = active;
+        self
     }
 }
 
@@ -67,6 +75,10 @@ impl<'a> ActionBarWidget<'a> {
                 Style::default()
                     .fg(self.theme.bg)
                     .bg(self.theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else if item.active {
+                Style::default()
+                    .fg(self.theme.accent)
                     .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(self.theme.fg_secondary)

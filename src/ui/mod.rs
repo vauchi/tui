@@ -258,7 +258,8 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 
         action_items.extend(model.actions.iter().filter(|a| a.enabled).map(|a| {
             let key_str = screen_renderer::action_key_hint_pub(&a.id);
-            ActionItem::new(key_str, &a.label)
+            let is_primary = a.style == vauchi_core::ui::ActionStyle::Primary;
+            ActionItem::new(key_str, &a.label).with_active(is_primary)
         }));
 
         action_items
