@@ -20,4 +20,4 @@ expression: output
 
 
     [n] New Group  [r] Rename  [d] Delete  [m] Merge  [?] help  [Esc] back
-  1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Groups │  5 Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Settings │   5 Help  │  [q] Quit

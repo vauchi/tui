@@ -14,7 +14,7 @@ expression: output
 
 
            [a] Add Entry  [Enter] Who Can See  [?] help  [Esc] back
-  1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 2 ─ Exchange Group Pre-Selection — press '1' ═══════
                              [1/7]  ● ○ ○ ○ ○ ○ ○
@@ -29,7 +29,7 @@ expression: output
 Or assign later after exchange.
 
               [Enter] Continue  [s] Skip  [Esc] Cancel  [?] help
- 1 ★ Exchange │  2 MyInfo  │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit
+  1 ★ Exchange │  2 MyInfo  │  3 Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 3 ─ Exchange QR — select groups, press Enter ═══════
                              [2/7]  ○ ● ○ ○ ○ ○ ○
@@ -48,7 +48,7 @@ Or assign later after exchange.
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
                [Enter] Scan Their Code  [Esc] Cancel  [?] help
- 1 ★ Exchange │  2 MyInfo  │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit
+  1 ★ Exchange │  2 MyInfo  │  3 Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 4 ─ Contacts — exchange complete, view contacts ════
                                     Contacts
@@ -59,4 +59,4 @@ Or assign later after exchange.
 
 Contact added. [z] Undo
 
-  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Settings │   5 Help  │  [q] Quit

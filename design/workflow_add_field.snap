@@ -14,7 +14,7 @@ expression: output
 
 
            [a] Add Entry  [Enter] Who Can See  [?] help  [Esc] back
-  1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 2 ─ AddField — press 'a' (Add Entry) ══════════════
                                  Add Entry to MyInfo
@@ -49,7 +49,7 @@ Comment (your eyes only, optional)
 └──────────────────────────────────────────────────────────────────────────────┘
 
                      [Enter] Save  [Esc] Cancel  [?] help
-  1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 3 ─ MyInfo — field saved, return to card ══════════
                                    Alice Smith
@@ -63,4 +63,4 @@ Comment (your eyes only, optional)
 
 Entry added. [z] Undo
 
-  1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │ 2 ★ MyInfo │  3 Contacts │  4 Settings │   5 Help  │  [q] Quit

@@ -29,7 +29,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
                              [?] help  [Esc] back
-  1 Exchange  │  2 MyInfo  │  3 Contacts │  4 Groups │ 5 ★ Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Settings │   5 Help  │  [q] Quit
 
 ═══ Step 2 ─ Privacy — select Privacy & Data ═══════════════
                                  Privacy & Data
@@ -48,7 +48,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
           [e] Export Data  [x] Delete All Data  [Esc] Back  [?] help
-  1 Exchange  │  2 MyInfo  │  3 Contacts │  4 Groups │ 5 ★ Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Settings │   5 Help  │  [q] Quit
 
 ═══ Step 3 ─ Settings — press Esc (back) ═══════════════════
                                     Settings
@@ -77,7 +77,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
                              [?] help  [Esc] back
-  1 Exchange  │  2 MyInfo  │  3 Contacts │  4 Groups │ 5 ★ Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Settings │   5 Help  │  [q] Quit
 
 ═══ Step 4 ─ Tor — select Tor Privacy ══════════════════════
                                   Tor Privacy
@@ -95,4 +95,4 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
                      [Space] Toggle  [Esc] Back  [?] help
-  1 Exchange  │  2 MyInfo  │  3 Contacts │  4 Groups │ 5 ★ Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │  3 Contacts │ 4 ★ Settings │   5 Help  │  [q] Quit

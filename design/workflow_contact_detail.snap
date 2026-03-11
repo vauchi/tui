@@ -16,7 +16,7 @@ expression: output
 
 
         [a] Add Contact  [g] Groups  [/] Search  [?] help  [Esc] back
-  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 2 ─ ContactDetail — press Enter on contact ════════
                                Abigale Schroeder
@@ -41,7 +41,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
          [c] Copy  [t] Call  [s] SMS  [e] Edit  [Esc] Back  [?] help
-  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 3 ─ ContactEdit — press 'e' (Edit) ════════════════
                                   Edit Contact
@@ -64,7 +64,7 @@ Display Name
 └──────────────────────────────────────────────────────────────────────────────┘
 
            [Tab] Next Section  [Enter] Save  [Esc] Cancel  [?] help
-  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Settings │   5 Help  │  [q] Quit
 
 ═══ Step 4 ─ ContactDetail — press Esc (back from edit) ════
                                Abigale Schroeder
@@ -89,4 +89,4 @@ Display Name
 └──────────────────────────────────────────────────────────────────────────────┘
 
          [c] Copy  [t] Call  [s] SMS  [e] Edit  [Esc] Back  [?] help
-  1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Groups │  5 Settings │  [q] Quit
+    1 Exchange  │  2 MyInfo  │ 3 ★ Contacts │  4 Settings │   5 Help  │  [q] Quit
