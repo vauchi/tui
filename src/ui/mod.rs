@@ -6,7 +6,6 @@
 
 pub mod exchange;
 pub(crate) mod focus;
-mod lock;
 pub(crate) mod widgets;
 
 // INLINE_TEST_REQUIRED: Widgets are pub(crate) — snapshot tests must live inside the crate to access them
@@ -161,8 +160,6 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Screen::Lock => {
             if let Some(model) = &cached.lock {
                 screen_renderer::render_screen(f, chunks[0], model, &app.render_state, &app.theme);
-            } else {
-                lock::draw(f, chunks[0], app);
             }
         }
         Screen::ActionMenu => {
