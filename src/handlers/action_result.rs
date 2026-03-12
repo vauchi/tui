@@ -4,7 +4,7 @@
 
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
-use vauchi_core::ui::{ActionResult, Component, WorkflowEngine};
+use vauchi_core::ui::{ActionResult, Component, LockScreenEngine, WorkflowEngine};
 
 use crate::app::{App, Screen};
 
@@ -60,7 +60,12 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.screen = Screen::ContactDetail;
                     }
                     vauchi_core::ui::AppScreen::Backup => app.screen = Screen::Backup,
-                    vauchi_core::ui::AppScreen::Lock => app.screen = Screen::Lock,
+                    vauchi_core::ui::AppScreen::Lock => {
+                        if app.lock_engine.is_none() {
+                            app.lock_engine = Some(LockScreenEngine::new(5));
+                        }
+                        app.screen = Screen::Lock;
+                    }
                     vauchi_core::ui::AppScreen::DeviceLinking => app.screen = Screen::Devices,
                     vauchi_core::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
                     vauchi_core::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
