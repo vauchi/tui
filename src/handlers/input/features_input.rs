@@ -16,9 +16,11 @@ use vauchi_core::aha_moments::AhaMomentType;
 use vauchi_core::identity::password::validate_password;
 
 pub(super) fn handle_exchange_keys(app: &mut App, key: KeyCode) {
-    use crate::ui::exchange::regenerate_qr;
     if let KeyCode::Char('r') = key {
-        regenerate_qr(app);
+        if let Ok(qr_data) = app.generate_exchange_qr() {
+            app.current_qr = Some(qr_data);
+            app.set_status(app.i18n.t("exchange.refreshed"));
+        }
     }
 }
 

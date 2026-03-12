@@ -4,7 +4,6 @@
 
 //! UI Rendering
 
-pub mod exchange;
 pub(crate) mod focus;
 pub(crate) mod widgets;
 
