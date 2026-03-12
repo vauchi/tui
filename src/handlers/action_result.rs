@@ -4,7 +4,7 @@
 
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
-use vauchi_core::ui::ActionResult;
+use vauchi_core::ui::{ActionResult, Component, WorkflowEngine};
 
 use crate::app::{App, Screen};
 
@@ -13,6 +13,29 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
     match result {
         ActionResult::UpdateScreen(_) => {
             // Screen model is re-fetched on next draw via app_engine.current_screen()
+
+            // On form screens, auto-advance focus to the first TextInput when the
+            // currently focused component is not a TextInput (e.g., after selecting
+            // a type in the ToggleList, the engine adds TextInput fields below it).
+            if matches!(
+                app.screen,
+                Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl
+            ) {
+                let screen_model = app.app_engine.current_screen();
+                let focused = screen_model
+                    .components
+                    .get(app.render_state.focused_component);
+                let focused_is_text_input = matches!(focused, Some(Component::TextInput { .. }));
+                if !focused_is_text_input {
+                    if let Some(idx) = screen_model
+                        .components
+                        .iter()
+                        .position(|c| matches!(c, Component::TextInput { .. }))
+                    {
+                        app.render_state.focused_component = idx;
+                    }
+                }
+            }
         }
         ActionResult::NavigateTo(_) => {
             // AppEngine already updated its internal screen; TUI re-renders on next draw.
@@ -56,9 +79,41 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactVisibility;
                     }
-                    vauchi_core::ui::AppScreen::FormDialog { .. } => {
-                        // Form dialogs stay on their current TUI screen (AddField, EditField, etc.)
-                        // The engine handles state; TUI screen doesn't change.
+                    vauchi_core::ui::AppScreen::FormDialog { ref dialog_type } => {
+                        // Map form dialog types to the corresponding TUI screens,
+                        // syncing legacy TUI state so to_app_screen() stays consistent.
+                        use crate::app::{EditFieldState, EditNameState, EditRelayUrlState};
+                        use vauchi_core::ui::FormDialogType;
+                        match dialog_type {
+                            FormDialogType::AddField { .. } => {
+                                app.screen = Screen::AddField;
+                            }
+                            FormDialogType::EditField {
+                                field_id,
+                                field_label,
+                                current_value,
+                            } => {
+                                app.edit_field_state = EditFieldState {
+                                    field_id: field_id.clone(),
+                                    field_label: field_label.clone(),
+                                    new_value: current_value.clone(),
+                                    ..Default::default()
+                                };
+                                app.screen = Screen::EditField;
+                            }
+                            FormDialogType::EditName { current_name } => {
+                                app.edit_name_state = EditNameState {
+                                    new_name: current_name.clone(),
+                                };
+                                app.screen = Screen::EditName;
+                            }
+                            FormDialogType::EditRelayUrl { current_url } => {
+                                app.edit_relay_url_state = EditRelayUrlState {
+                                    new_url: current_url.clone(),
+                                };
+                                app.screen = Screen::EditRelayUrl;
+                            }
+                        }
                     }
                     vauchi_core::ui::AppScreen::ContactEdit { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
