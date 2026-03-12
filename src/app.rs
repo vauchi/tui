@@ -596,7 +596,11 @@ impl App {
         } else if app_engine.vauchi().is_password_enabled().unwrap_or(false) {
             Screen::Lock
         } else {
-            Screen::MyInfo
+            // Use AppEngine's dynamic default: MyInfo (0 contacts) or Contacts (>=1)
+            match app_engine.default_screen() {
+                AppScreen::Contacts => Screen::Contacts,
+                _ => Screen::MyInfo,
+            }
         };
 
         // Navigate AppEngine to the correct initial screen
@@ -604,6 +608,7 @@ impl App {
         if has_identity {
             let target = match initial_screen {
                 Screen::Lock => AppScreen::Lock,
+                Screen::Contacts => AppScreen::Contacts,
                 _ => AppScreen::MyInfo,
             };
             app_engine.navigate_to(target);
