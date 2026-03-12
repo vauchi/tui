@@ -4,17 +4,17 @@ description: "MyInfo → press 'a' (Add Entry)"
 expression: output
 ---
                                     Add Entry
-                                  Select a type
+                                Select a category
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ • Phone                                                                    │
-│   • Email                                                                    │
-│   • Website                                                                  │
-│   bandcamp Bandcamp                                                          │
-│   behance Behance                                                            │
-│   bitbucket Bitbucket                                                        │
-│   bluesky Bluesky                                                            │
+│ ▸ • Contact  3                                                               │
+│   • Social  38                                                               │
+│   • Personal  2                                                              │
+│   • Custom  1                                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
+
+
+
 
 
 
