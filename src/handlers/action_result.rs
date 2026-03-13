@@ -198,6 +198,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::OpenEntryDetail { .. } => {
             // Handled by AppEngine (intercepted before reaching TUI)
         }
+        ActionResult::ShowToast { message, .. } => {
+            app.set_status(message);
+        }
         ActionResult::WipeComplete => {
             app.screen = Screen::SetupWelcome;
             app.onboarding_engine = Some(vauchi_core::ui::OnboardingEngine::new());

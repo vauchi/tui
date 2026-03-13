@@ -400,10 +400,41 @@ fn map_component_key(
             _ => KeyResult::Unhandled,
         },
 
+        Component::EditableText { id, value, .. } => match key {
+            KeyCode::Char(c) => {
+                let mut new_value = value.clone();
+                new_value.push(c);
+                KeyResult::Action(UserAction::TextChanged {
+                    component_id: id.clone(),
+                    value: new_value,
+                })
+            }
+            KeyCode::Backspace => {
+                let mut new_value = value.clone();
+                new_value.pop();
+                KeyResult::Action(UserAction::TextChanged {
+                    component_id: id.clone(),
+                    value: new_value,
+                })
+            }
+            KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
+                action_id: format!("submit_{id}"),
+            }),
+            _ => KeyResult::Unhandled,
+        },
+
+        Component::InlineConfirm { id, .. } => match key {
+            KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
+                action_id: id.clone(),
+            }),
+            _ => KeyResult::Unhandled,
+        },
+
         Component::Text { .. }
         | Component::InfoPanel { .. }
         | Component::StatusIndicator { .. }
         | Component::QrCode { .. }
+        | Component::ShowToast { .. }
         | Component::Divider => KeyResult::Unhandled,
     }
 }

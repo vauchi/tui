@@ -261,6 +261,9 @@ fn render_components(
             Component::QrCode { .. } => Constraint::Min(8),
             Component::ConfirmationDialog { .. } => Constraint::Min(6),
             Component::Divider => Constraint::Length(1),
+            Component::ShowToast { .. } => Constraint::Length(2),
+            Component::InlineConfirm { .. } => Constraint::Length(4),
+            Component::EditableText { .. } => Constraint::Length(3),
         })
         .collect();
 
@@ -423,6 +426,36 @@ fn render_components(
                     .borders(Borders::BOTTOM)
                     .border_style(Style::default().fg(theme.border));
                 f.render_widget(divider, chunk);
+            }
+            Component::ShowToast { message, .. } => {
+                let para = Paragraph::new(format!("  {message}"))
+                    .style(Style::default().fg(theme.fg_secondary));
+                f.render_widget(para, chunk);
+            }
+            Component::InlineConfirm {
+                warning,
+                confirm_text,
+                ..
+            } => {
+                let text = format!("  ⚠ {warning}  [Enter] {confirm_text}  [Esc] Cancel");
+                let para = Paragraph::new(text).style(Style::default().fg(theme.error));
+                f.render_widget(para, chunk);
+            }
+            Component::EditableText {
+                label,
+                value,
+                editing,
+                ..
+            } => {
+                let indicator = if *editing { "▎" } else { "" };
+                let text = format!("  {label}: {value}{indicator}");
+                let style = if is_focused {
+                    Style::default().fg(theme.accent)
+                } else {
+                    Style::default().fg(theme.fg)
+                };
+                let para = Paragraph::new(text).style(style);
+                f.render_widget(para, chunk);
             }
         }
     }
