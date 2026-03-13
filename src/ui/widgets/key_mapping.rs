@@ -29,6 +29,7 @@ fn is_focusable(component: &Component) -> bool {
             | Component::InfoPanel { .. }
             | Component::StatusIndicator { .. }
             | Component::QrCode { .. }
+            | Component::ShowToast { .. }
             | Component::Divider
     )
 }
@@ -426,6 +427,9 @@ fn map_component_key(
         Component::InlineConfirm { id, .. } => match key {
             KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
                 action_id: id.clone(),
+            }),
+            KeyCode::Esc => KeyResult::Action(UserAction::ActionPressed {
+                action_id: "cancel".to_string(),
             }),
             _ => KeyResult::Unhandled,
         },

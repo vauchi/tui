@@ -435,10 +435,17 @@ fn render_components(
             Component::InlineConfirm {
                 warning,
                 confirm_text,
+                cancel_text,
+                destructive,
                 ..
             } => {
-                let text = format!("  ⚠ {warning}  [Enter] {confirm_text}  [Esc] Cancel");
-                let para = Paragraph::new(text).style(Style::default().fg(theme.error));
+                let text = format!("  ⚠ {warning}  [Enter] {confirm_text}  [Esc] {cancel_text}");
+                let color = if *destructive {
+                    theme.error
+                } else {
+                    theme.accent
+                };
+                let para = Paragraph::new(text).style(Style::default().fg(color));
                 f.render_widget(para, chunk);
             }
             Component::EditableText {
