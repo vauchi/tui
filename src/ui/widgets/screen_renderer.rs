@@ -799,7 +799,12 @@ fn render_qr_code(
         QrMode::Display => {
             // In a real terminal, we'd render actual QR. For now, show data info.
             let truncated = if data.len() > 40 {
-                format!("{}...", &data[..40])
+                let end = data
+                    .char_indices()
+                    .nth(40)
+                    .map(|(i, _)| i)
+                    .unwrap_or(data.len());
+                format!("{}...", &data[..end])
             } else {
                 data.to_string()
             };
