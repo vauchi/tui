@@ -450,13 +450,12 @@ pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char(' ') | KeyCode::Enter => {
-            // Toggle consent for selected item (items 2..5 are consent types)
+            // Toggle consent for selected item (items 2..4 are consent types)
             let consent_index = app.privacy_state.selected_item;
             if consent_index >= 2 {
                 let consent_type = match consent_index - 2 {
                     0 => vauchi_core::api::ConsentType::DataProcessing,
                     1 => vauchi_core::api::ConsentType::ContactSharing,
-                    2 => vauchi_core::api::ConsentType::Analytics,
                     _ => vauchi_core::api::ConsentType::RecoveryVouching,
                 };
 
