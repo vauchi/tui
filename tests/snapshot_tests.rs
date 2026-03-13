@@ -19,8 +19,8 @@ use vauchi_core::contact_card::ContactAction;
 use vauchi_core::ui::AppEngine;
 use vauchi_core::ui::LockScreenEngine;
 use vauchi_core::{
-    Contact, ContactCard, ContactField, FieldType, MockTransport, SymmetricKey, Vauchi,
-    VauchiConfig,
+    Contact, ContactCard, ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig,
+    WebSocketTransport,
 };
 use vauchi_tui::app::{
     ActionMenuState, AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState,
@@ -55,14 +55,15 @@ fn ensure_locales_loaded() {
     });
 }
 
-fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<WebSocketTransport> {
     let key = SymmetricKey::generate();
     let config = VauchiConfig {
         storage_path: data_dir.join("vauchi.db"),
         storage_key: Some(key),
         ..Default::default()
     };
-    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    let vauchi: Vauchi<WebSocketTransport> =
+        Vauchi::with_transport_factory(config, WebSocketTransport::new).expect("vauchi");
     AppEngine::new(vauchi)
 }
 
@@ -532,7 +533,7 @@ fn test_snapshot_duress_enabled() {
 // =============================================================
 
 /// Seed N fake contacts into a Vauchi instance with groups.
-fn seed_contacts(vauchi: &Vauchi<MockTransport>, count: usize) {
+fn seed_contacts(vauchi: &Vauchi<WebSocketTransport>, count: usize) {
     // Create groups
     let family = vauchi.create_group("Family").expect("create group");
     let friends = vauchi.create_group("Friends").expect("create group");

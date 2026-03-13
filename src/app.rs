@@ -6,7 +6,7 @@
 
 use vauchi_core::contact_card::ContactAction;
 use vauchi_core::ui::{AppEngine, AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
-use vauchi_core::MockTransport;
+use vauchi_core::WebSocketTransport;
 
 use vauchi_core::api::DeviceLinkResult;
 
@@ -306,7 +306,7 @@ pub struct App {
     // ── Core-driven workflow engines ──
     /// Unified AppEngine orchestrator — single owner of Vauchi<T>.
     /// All identity/contact/card operations go through this.
-    pub app_engine: AppEngine<MockTransport>,
+    pub app_engine: AppEngine<WebSocketTransport>,
     /// Onboarding engine (core-driven state machine)
     pub onboarding_engine: Option<OnboardingEngine>,
     /// Lock screen engine (core-driven state machine)
@@ -585,7 +585,7 @@ impl App {
     /// AppEngine owns the single Vauchi<T> instance — all identity/contact/card
     /// operations go through it. Relay sync uses the standalone sync_service module.
     pub fn new(
-        app_engine: AppEngine<MockTransport>,
+        app_engine: AppEngine<WebSocketTransport>,
         relay_url: String,
         data_dir: std::path::PathBuf,
     ) -> Self {

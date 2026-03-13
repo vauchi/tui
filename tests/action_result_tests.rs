@@ -6,18 +6,19 @@
 //! produces the correct TUI state change.
 
 use vauchi_core::ui::{ActionResult, AppEngine, AppScreen, ScreenModel};
-use vauchi_core::{MockTransport, SymmetricKey, Vauchi, VauchiConfig};
+use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig, WebSocketTransport};
 use vauchi_tui::app::{App, Screen};
 use vauchi_tui::handlers::action_result::handle_action_result;
 
-fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<WebSocketTransport> {
     let key = SymmetricKey::generate();
     let config = VauchiConfig {
         storage_path: data_dir.join("vauchi.db"),
         storage_key: Some(key),
         ..Default::default()
     };
-    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    let vauchi: Vauchi<WebSocketTransport> =
+        Vauchi::with_transport_factory(config, WebSocketTransport::new).expect("vauchi");
     AppEngine::new(vauchi)
 }
 

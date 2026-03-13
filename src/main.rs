@@ -23,7 +23,7 @@ use vauchi_core::crypto::SymmetricKey;
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
 use vauchi_core::ui::AppEngine;
-use vauchi_core::{MockTransport, Vauchi, VauchiConfig};
+use vauchi_core::{Vauchi, VauchiConfig, WebSocketTransport};
 
 #[cfg(not(feature = "secure-storage"))]
 use vauchi_core::storage::secure::{FileKeyStorage, SecureStorage};
@@ -103,7 +103,13 @@ fn main() -> Result<()> {
         storage_key: Some(storage_key),
         ..Default::default()
     };
-    let mut vauchi: Vauchi<MockTransport> = Vauchi::new(vauchi_config)?;
+    let relay_url = cli
+        .relay_url
+        .clone()
+        .unwrap_or_else(|| resolve_relay_url(&data_dir));
+    let vauchi_config = vauchi_config.with_relay_url(&relay_url);
+    let mut vauchi: Vauchi<WebSocketTransport> =
+        Vauchi::with_transport_factory(vauchi_config, WebSocketTransport::new)?;
 
     // --check: validate data integrity and exit
     if cli.check {
@@ -360,7 +366,7 @@ fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
 ///
 /// Creates an identity, adds fields, creates groups, and adds fake contacts.
 /// Only runs when VAUCHI_SEED=1 and no identity exists yet.
-fn seed_demo_data(vauchi: &mut Vauchi<MockTransport>) {
+fn seed_demo_data(vauchi: &mut Vauchi<WebSocketTransport>) {
     use vauchi_core::contact::Contact;
     use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};
     use vauchi_core::crypto::SymmetricKey;

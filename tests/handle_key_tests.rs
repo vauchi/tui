@@ -11,20 +11,23 @@ use crossterm::event::KeyCode;
 use tempfile::TempDir;
 
 use vauchi_core::ui::AppEngine;
-use vauchi_core::{ContactField, FieldType, MockTransport, SymmetricKey, Vauchi, VauchiConfig};
+use vauchi_core::{
+    ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig, WebSocketTransport,
+};
 
 use vauchi_tui::app::{App, InputMode, Screen};
 use vauchi_tui::handlers::{handle_key, Action};
 
 /// Create AppEngine for a test data dir.
-fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<MockTransport> {
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<WebSocketTransport> {
     let key = SymmetricKey::generate();
     let config = VauchiConfig {
         storage_path: data_dir.join("vauchi.db"),
         storage_key: Some(key),
         ..Default::default()
     };
-    let vauchi: Vauchi<MockTransport> = Vauchi::new(config).expect("vauchi");
+    let vauchi: Vauchi<WebSocketTransport> =
+        Vauchi::with_transport_factory(config, WebSocketTransport::new).expect("vauchi");
     AppEngine::new(vauchi)
 }
 
