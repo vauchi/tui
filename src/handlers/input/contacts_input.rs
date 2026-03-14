@@ -476,6 +476,33 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 }
             }
         }
+        KeyCode::Char('b') => {
+            // Toggle block/unblock contact
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
+                if let Some(contact) = contacts.get(app.selected_contact) {
+                    let contact_id = contact.id().to_string();
+                    let display_name = contact.display_name().to_string();
+                    if contact.is_blocked() {
+                        match app.app_engine.vauchi().unblock_contact(&contact_id) {
+                            Ok(()) => {
+                                app.invalidate_engines();
+                                app.set_status(format!("{} unblocked", display_name));
+                            }
+                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        }
+                    } else {
+                        match app.app_engine.vauchi().block_contact(&contact_id) {
+                            Ok(()) => {
+                                app.invalidate_engines();
+                                app.set_status(format!("{} blocked", display_name));
+                                app.go_back();
+                            }
+                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        }
+                    }
+                }
+            }
+        }
         KeyCode::Char('h') => {
             // Toggle hide/unhide contact
             if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
