@@ -382,7 +382,7 @@ async fn process_legacy_exchanges(
         let contact_id = contact.id().to_string();
         storage.save_contact(&contact).map_err(|e| e.to_string())?;
 
-        let ratchet_dh = X3DHKeyPair::from_bytes(our_x3dh.secret_bytes());
+        let ratchet_dh = X3DHKeyPair::from_bytes(*our_x3dh.secret_bytes());
         let ratchet = DoubleRatchetState::initialize_responder(&shared_secret, ratchet_dh);
         let _ = storage.save_ratchet_state(&contact_id, &ratchet, true);
 
@@ -429,7 +429,7 @@ async fn process_encrypted_exchanges(
         let contact_id = contact.id().to_string();
         storage.save_contact(&contact).map_err(|e| e.to_string())?;
 
-        let ratchet_dh = X3DHKeyPair::from_bytes(our_x3dh.secret_bytes());
+        let ratchet_dh = X3DHKeyPair::from_bytes(*our_x3dh.secret_bytes());
         let ratchet = DoubleRatchetState::initialize_responder(&shared_secret, ratchet_dh);
         let _ = storage.save_ratchet_state(&contact_id, &ratchet, false);
 
