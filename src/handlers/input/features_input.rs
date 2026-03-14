@@ -409,10 +409,10 @@ pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('d') => {
-            // Schedule account deletion
+            // Schedule identity deletion
             let storage = app.app_engine.vauchi().storage();
             match vauchi_core::api::DeletionManager::new(storage).schedule_deletion() {
-                Ok(_) => app.set_status("Account deletion scheduled (7 day grace period)"),
+                Ok(_) => app.set_status("Identity deletion scheduled (7 day grace period)"),
                 Err(e) => app.set_status(format!("Schedule failed: {}", e)),
             }
         }
@@ -420,7 +420,7 @@ pub(super) fn handle_privacy_keys(app: &mut App, key: KeyCode) {
             // Cancel scheduled deletion
             let storage = app.app_engine.vauchi().storage();
             match vauchi_core::api::DeletionManager::new(storage).cancel_deletion() {
-                Ok(_) => app.set_status("Account deletion cancelled"),
+                Ok(_) => app.set_status("Identity deletion cancelled"),
                 Err(e) => app.set_status(format!("Cancel failed: {}", e)),
             }
         }
