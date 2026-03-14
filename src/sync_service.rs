@@ -464,7 +464,9 @@ async fn send_exchange_response(
     let update = SimpleEncryptedUpdate {
         recipient_id: recipient_id.to_string(),
         sender_id: our_id,
-        ciphertext: encrypted_msg.to_bytes(),
+        ciphertext: encrypted_msg
+            .to_bytes()
+            .map_err(|e| format!("Serialization failed: {:?}", e))?,
     };
 
     let envelope = create_simple_envelope(SimplePayload::EncryptedUpdate(update));
