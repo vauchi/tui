@@ -161,7 +161,14 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             if std::env::var("VAUCHI_NO_BROWSER").is_ok() {
                 app.set_status(format!("URL: {url}"));
             } else {
-                match std::process::Command::new("xdg-open")
+                let opener = if cfg!(target_os = "macos") {
+                    "open"
+                } else if cfg!(target_os = "windows") {
+                    "start"
+                } else {
+                    "xdg-open"
+                };
+                match std::process::Command::new(opener)
                     .arg(&url)
                     .stdin(std::process::Stdio::null())
                     .stdout(std::process::Stdio::null())
