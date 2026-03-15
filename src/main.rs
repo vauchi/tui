@@ -108,7 +108,7 @@ fn main() -> Result<()> {
         .clone()
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let vauchi_config = vauchi_config.with_relay_url(&relay_url);
-    let mut vauchi: Vauchi<WebSocketTransport> =
+    let mut vauchi: Vauchi =
         Vauchi::with_transport_factory(vauchi_config, WebSocketTransport::new)?;
 
     // --check: validate data integrity and exit
@@ -366,7 +366,7 @@ fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
 ///
 /// Creates an identity, adds fields, creates groups, and adds fake contacts.
 /// Only runs when VAUCHI_SEED=1 and no identity exists yet.
-fn seed_demo_data(vauchi: &mut Vauchi<WebSocketTransport>) {
+fn seed_demo_data(vauchi: &mut Vauchi) {
     use vauchi_core::contact::Contact;
     use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};
     use vauchi_core::crypto::SymmetricKey;

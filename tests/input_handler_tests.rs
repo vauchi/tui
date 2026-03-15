@@ -13,9 +13,7 @@ use tempfile::TempDir;
 use crossterm::event::KeyCode;
 
 use vauchi_core::ui::AppEngine;
-use vauchi_core::{
-    ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig, WebSocketTransport,
-};
+use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, EmergencyFocus, EmergencyState, InputMode, Screen};
 use vauchi_tui::handlers::{handle_key, Action};
 
@@ -37,15 +35,14 @@ fn ensure_locales_loaded() {
     });
 }
 
-fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<WebSocketTransport> {
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
     let key = SymmetricKey::generate();
     let config = VauchiConfig {
         storage_path: data_dir.join("vauchi.db"),
         storage_key: Some(key),
         ..Default::default()
     };
-    let vauchi: Vauchi<WebSocketTransport> =
-        Vauchi::with_transport_factory(config, WebSocketTransport::new).expect("vauchi");
+    let vauchi: Vauchi = Vauchi::new(config).expect("vauchi");
     AppEngine::new(vauchi)
 }
 

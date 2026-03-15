@@ -55,15 +55,14 @@ fn ensure_locales_loaded() {
     });
 }
 
-fn create_app_engine(data_dir: &std::path::Path) -> AppEngine<WebSocketTransport> {
+fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
     let key = SymmetricKey::generate();
     let config = VauchiConfig {
         storage_path: data_dir.join("vauchi.db"),
         storage_key: Some(key),
         ..Default::default()
     };
-    let vauchi: Vauchi<WebSocketTransport> =
-        Vauchi::with_transport_factory(config, WebSocketTransport::new).expect("vauchi");
+    let vauchi: Vauchi = Vauchi::new(config).expect("vauchi");
     AppEngine::new(vauchi)
 }
 
@@ -533,7 +532,7 @@ fn test_snapshot_duress_enabled() {
 // =============================================================
 
 /// Seed N fake contacts into a Vauchi instance with groups.
-fn seed_contacts(vauchi: &Vauchi<WebSocketTransport>, count: usize) {
+fn seed_contacts(vauchi: &Vauchi, count: usize) {
     // Create groups
     let family = vauchi.create_group("Family").expect("create group");
     let friends = vauchi.create_group("Friends").expect("create group");
