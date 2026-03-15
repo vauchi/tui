@@ -465,6 +465,11 @@ fn test_snapshot_exchange() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::Exchange;
     let output = render_to_string(&mut app);
+    // ADR-031: QR data contains ephemeral keys, redact for deterministic snapshot
+    let output = regex::Regex::new(r"V0JF\S+")
+        .unwrap()
+        .replace_all(&output, "[QR_DATA_REDACTED]")
+        .to_string();
     assert_snap!("exchange", "MyInfo", "press '1' (Exchange tab)", output);
 }
 
@@ -1214,6 +1219,11 @@ fn test_workflow_exchange() {
     ));
 
     let output = steps.join("\n\n");
+    // ADR-031: QR data contains ephemeral keys, redact for deterministic snapshot
+    let output = regex::Regex::new(r"V0JF\S+")
+        .unwrap()
+        .replace_all(&output, "[QR_DATA_REDACTED]")
+        .to_string();
     insta::with_settings!({
         description => "Exchange happy path: MyInfo → Exchange QR → Contacts",
     }, {
