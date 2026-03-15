@@ -8,4 +8,4 @@ src/app.rs 1135
 src/handlers/input/features_input.rs 1126
 src/ui/widgets/key_mapping.rs 1119
 src/ui/widgets/screen_renderer.rs 1039
-tests/snapshot_tests.rs 1403
+tests/snapshot_tests.rs 1411
