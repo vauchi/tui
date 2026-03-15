@@ -208,6 +208,10 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::ShowToast { message, .. } => {
             app.set_status(message);
         }
+        ActionResult::ExchangeCommands { .. } => {
+            // TUI can't perform hardware exchange actions (QR, BLE, NFC)
+            app.set_status("Hardware exchange not supported in terminal mode");
+        }
         ActionResult::WipeComplete => {
             app.screen = Screen::SetupWelcome;
             app.onboarding_engine = Some(vauchi_core::ui::OnboardingEngine::new());
