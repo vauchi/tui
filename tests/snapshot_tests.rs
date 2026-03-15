@@ -20,7 +20,6 @@ use vauchi_core::ui::AppEngine;
 use vauchi_core::ui::LockScreenEngine;
 use vauchi_core::{
     Contact, ContactCard, ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig,
-    WebSocketTransport,
 };
 use vauchi_tui::app::{
     ActionMenuState, AddFieldFocus, AddFieldState, App, BackupFocus, BackupMode, BackupState,

@@ -23,7 +23,7 @@ use vauchi_core::crypto::SymmetricKey;
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
 use vauchi_core::ui::AppEngine;
-use vauchi_core::{Vauchi, VauchiConfig, WebSocketTransport};
+use vauchi_core::{Vauchi, VauchiConfig};
 
 #[cfg(not(feature = "secure-storage"))]
 use vauchi_core::storage::secure::{FileKeyStorage, SecureStorage};
@@ -108,8 +108,7 @@ fn main() -> Result<()> {
         .clone()
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let vauchi_config = vauchi_config.with_relay_url(&relay_url);
-    let mut vauchi: Vauchi =
-        Vauchi::with_transport_factory(vauchi_config, WebSocketTransport::new)?;
+    let mut vauchi: Vauchi = Vauchi::new(vauchi_config)?;
 
     // --check: validate data integrity and exit
     if cli.check {
