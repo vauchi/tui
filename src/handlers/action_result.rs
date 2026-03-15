@@ -221,8 +221,5 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.app_engine
                 .navigate_to(vauchi_core::ui::AppScreen::Onboarding);
         }
-        ActionResult::ExchangeCommands { .. } => {
-            // TUI doesn't support hardware exchange commands (QR, BLE, NFC)
-        }
     }
 }
