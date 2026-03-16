@@ -425,7 +425,7 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
     let groups = [&family, &friends, &work];
 
     for (i, name) in names.iter().enumerate() {
-        let mut card = ContactCard::new(&name);
+        let mut card = ContactCard::new(name);
         let num_fields = (i % 6) + 1;
         for item in field_templates.iter().take(num_fields) {
             let (ref ft, label, template) = *item;
