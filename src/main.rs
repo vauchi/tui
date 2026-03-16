@@ -390,8 +390,8 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
     let friends = vauchi.create_group("Friends").ok();
     let work = vauchi.create_group("Work").ok();
 
-    // 57 demo contact names
-    let names = [
+    // Base names — combined with numeric suffixes to generate up to 200 contacts
+    let base_names = [
         "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack",
         "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rosa", "Sam", "Tina", "Uma",
         "Victor", "Wendy", "Xavier", "Yuki", "Zara", "Amber", "Brian", "Clara", "David", "Elena",
@@ -399,6 +399,18 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
         "Rafael", "Sofia", "Theo", "Ursula", "Vera", "Walter", "Xena", "Yara", "Zoe", "Aria",
         "Blake", "Cleo", "Dario", "Elsa", "Finn",
     ];
+
+    // Generate 200 names: first 57 as-is, then with numeric suffixes
+    let names: Vec<String> = (0..200)
+        .map(|i| {
+            let base = base_names[i % base_names.len()];
+            if i < base_names.len() {
+                base.to_string()
+            } else {
+                format!("{} {}", base, i / base_names.len() + 1)
+            }
+        })
+        .collect();
 
     // Field templates — each contact gets (i % 6 + 1) fields
     let field_templates: &[(FieldType, &str, &str)] = &[
@@ -413,7 +425,7 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
     let groups = [&family, &friends, &work];
 
     for (i, name) in names.iter().enumerate() {
-        let mut card = ContactCard::new(name);
+        let mut card = ContactCard::new(&name);
         let num_fields = (i % 6) + 1;
         for item in field_templates.iter().take(num_fields) {
             let (ref ft, label, template) = *item;
