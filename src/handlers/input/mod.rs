@@ -373,6 +373,18 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
     // Map the key to a UserAction via the key_mapping module
     match key_mapping::map_key(key, &screen_model, &mut app.render_state) {
         KeyResult::Action(action) => {
+            // On form dialog screens, "cancel" action means go back (don't forward to engine)
+            if matches!(
+                app.screen,
+                Screen::AddField | Screen::EditName | Screen::EditField | Screen::EditRelayUrl
+            ) {
+                if let UserAction::ActionPressed { ref action_id } = action {
+                    if action_id == "cancel" {
+                        app.go_back();
+                        return;
+                    }
+                }
+            }
             // Forward the action to AppEngine
             let result = app.app_engine.handle_action(action);
             handle_action_result(app, result);
