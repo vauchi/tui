@@ -332,6 +332,8 @@ pub struct App {
     pub relay_url: String,
     /// Data directory path (TUI storage location)
     pub data_dir: std::path::PathBuf,
+    /// ADR-031: Whether the exchange is waiting for QR scan input (paste).
+    pub exchange_scan_pending: bool,
 }
 
 /// State for the add field dialog.
@@ -676,6 +678,7 @@ impl App {
             theme_ids,
             relay_url,
             data_dir,
+            exchange_scan_pending: false,
         }
     }
 

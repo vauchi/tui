@@ -208,9 +208,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::ShowToast { message, .. } => {
             app.set_status(message);
         }
-        ActionResult::ExchangeCommands { .. } => {
-            // TUI can't perform hardware exchange actions (QR, BLE, NFC)
-            app.set_status("Hardware exchange not supported in terminal mode");
+        ActionResult::ExchangeCommands { commands } => {
+            handle_exchange_commands(app, commands);
         }
         ActionResult::WipeComplete => {
             app.screen = Screen::SetupWelcome;
@@ -220,6 +219,54 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             // AppEngine's Vauchi data was wiped — navigate to Onboarding
             app.app_engine
                 .navigate_to(vauchi_core::ui::AppScreen::Onboarding);
+        }
+    }
+}
+
+/// Handles ExchangeCommands from the ADR-031 command/event protocol.
+///
+/// TUI supports QR display (re-render) and QR scan (text paste prompt).
+/// BLE, NFC, and audio are reported as unavailable back to core so the
+/// session can fall back to QR.
+fn handle_exchange_commands(app: &mut App, commands: Vec<vauchi_core::exchange::ExchangeCommand>) {
+    use vauchi_core::exchange::{ExchangeCommand, ExchangeHardwareEvent};
+
+    for cmd in commands {
+        match cmd {
+            ExchangeCommand::QrDisplay { .. } => {
+                // QR data is embedded in the screen model — re-render picks it up
+            }
+            ExchangeCommand::QrRequestScan => {
+                // TUI: prompt user to paste QR data (handled via text input mode)
+                app.set_status("Paste the other person's QR code data and press Enter");
+                app.exchange_scan_pending = true;
+            }
+            // Hardware not available in terminal
+            ExchangeCommand::BleStartAdvertising { .. }
+            | ExchangeCommand::BleStartScanning { .. }
+            | ExchangeCommand::BleConnect { .. }
+            | ExchangeCommand::BleWriteCharacteristic { .. }
+            | ExchangeCommand::BleReadCharacteristic { .. }
+            | ExchangeCommand::BleDisconnect => {
+                let _ = app.app_engine.handle_hardware_event(
+                    ExchangeHardwareEvent::HardwareUnavailable {
+                        transport: "BLE".into(),
+                    },
+                );
+            }
+            ExchangeCommand::NfcActivate { .. } | ExchangeCommand::NfcDeactivate => {
+                let _ = app.app_engine.handle_hardware_event(
+                    ExchangeHardwareEvent::HardwareUnavailable {
+                        transport: "NFC".into(),
+                    },
+                );
+            }
+            ExchangeCommand::AudioEmitChallenge { .. }
+            | ExchangeCommand::AudioListenForResponse { .. }
+            | ExchangeCommand::AudioStop => {
+                // Audio proximity not available in terminal — silently skip
+                // (not fatal, just means no proximity verification)
+            }
         }
     }
 }
