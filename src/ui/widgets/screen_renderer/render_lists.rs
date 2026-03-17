@@ -1,0 +1,219 @@
+// SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+//! List-style component renderers — contact list, settings group, action list.
+
+use ratatui::prelude::*;
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
+
+use crate::theme::TuiTheme;
+use vauchi_core::ui::SettingsItemKind;
+
+use super::ScreenRenderState;
+
+/// Render a contact list component with scrolling and selection indicator.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn render_contact_list(
+    f: &mut Frame,
+    area: Rect,
+    contacts: &[vauchi_core::ui::ContactItem],
+    _searchable: bool,
+    is_focused: bool,
+    state: &ScreenRenderState,
+    component_idx: usize,
+    theme: &TuiTheme,
+) {
+    if contacts.is_empty() {
+        let empty = Paragraph::new("  No contacts yet. Use Exchange to add one.")
+            .style(Style::default().fg(theme.fg_secondary))
+            .block(
+                Block::default()
+                    .title(" Contacts ")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(theme.border)),
+            );
+        f.render_widget(empty, area);
+        return;
+    }
+
+    let selected = state.selection_for(component_idx);
+    // Visible rows = area height minus 2 for borders
+    let visible_count = area.height.saturating_sub(2) as usize;
+    // Use stored scroll, but clamp so selection is always visible
+    let scroll = {
+        let s = state.scroll_for(component_idx);
+        if selected < s {
+            selected
+        } else if visible_count > 0 && selected >= s + visible_count {
+            selected.saturating_sub(visible_count - 1)
+        } else {
+            s
+        }
+    };
+
+    let total = contacts.len();
+    let end = (scroll + visible_count).min(total);
+
+    let items: Vec<ListItem> = contacts[scroll..end]
+        .iter()
+        .enumerate()
+        .map(|(vi, contact)| {
+            let actual_idx = scroll + vi;
+            let prefix = if actual_idx == selected { "▸" } else { " " };
+            let line = if let Some(sub) = &contact.subtitle {
+                format!(
+                    "{} {} {}  {}",
+                    prefix, contact.avatar_initials, contact.name, sub
+                )
+            } else {
+                format!("{} {} {}", prefix, contact.avatar_initials, contact.name)
+            };
+            let style = if actual_idx == selected && is_focused {
+                Style::default()
+                    .fg(theme.bg)
+                    .bg(theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(theme.fg)
+            };
+            ListItem::new(line).style(style)
+        })
+        .collect();
+
+    let border_color = if is_focused {
+        theme.accent
+    } else {
+        theme.border
+    };
+
+    // Title with count and scroll indicator
+    let title = if total > visible_count {
+        format!(" Contacts ({}) ↕ ", total)
+    } else {
+        format!(" Contacts ({}) ", total)
+    };
+
+    let list = List::new(items).block(
+        Block::default()
+            .title(title)
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color)),
+    );
+    f.render_widget(list, area);
+}
+
+/// Render a settings group component.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn render_settings_group(
+    f: &mut Frame,
+    area: Rect,
+    label: &str,
+    items: &[vauchi_core::ui::SettingsItem],
+    is_focused: bool,
+    state: &ScreenRenderState,
+    component_idx: usize,
+    theme: &TuiTheme,
+) {
+    let selected = state.selection_for(component_idx);
+
+    let list_items: Vec<ListItem> = items
+        .iter()
+        .enumerate()
+        .map(|(i, item)| {
+            let right = match &item.kind {
+                SettingsItemKind::Toggle { enabled } => {
+                    if *enabled { "[x]" } else { "[ ]" }.to_string()
+                }
+                SettingsItemKind::Value { value } => value.clone(),
+                SettingsItemKind::Link { detail } => detail.as_deref().unwrap_or("→").to_string(),
+                SettingsItemKind::Destructive { label } => label.clone(),
+            };
+
+            let prefix = if i == selected && is_focused {
+                "▸"
+            } else {
+                " "
+            };
+            let text = format!(" {} {}  {}", prefix, item.label, right);
+            let style = if i == selected && is_focused {
+                Style::default()
+                    .fg(theme.bg)
+                    .bg(theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else if matches!(item.kind, SettingsItemKind::Destructive { .. }) {
+                Style::default().fg(theme.error)
+            } else {
+                Style::default().fg(theme.fg)
+            };
+            ListItem::new(text).style(style)
+        })
+        .collect();
+
+    let border_color = if is_focused {
+        theme.accent
+    } else {
+        theme.border
+    };
+    let list = List::new(list_items).block(
+        Block::default()
+            .title(format!(" {} ", label))
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color)),
+    );
+    f.render_widget(list, area);
+}
+
+/// Render an action list component.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn render_action_list(
+    f: &mut Frame,
+    area: Rect,
+    items: &[vauchi_core::ui::ActionListItem],
+    is_focused: bool,
+    state: &ScreenRenderState,
+    component_idx: usize,
+    theme: &TuiTheme,
+) {
+    let selected = state.selection_for(component_idx);
+
+    let list_items: Vec<ListItem> = items
+        .iter()
+        .enumerate()
+        .map(|(i, item)| {
+            let icon = item.icon.as_deref().unwrap_or("•");
+            let detail = item
+                .detail
+                .as_ref()
+                .map(|d| format!("  {}", d))
+                .unwrap_or_default();
+            let prefix = if i == selected && is_focused {
+                "▸"
+            } else {
+                " "
+            };
+            let text = format!(" {} {} {}{}", prefix, icon, item.label, detail);
+            let style = if i == selected && is_focused {
+                Style::default()
+                    .fg(theme.bg)
+                    .bg(theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(theme.fg)
+            };
+            ListItem::new(text).style(style)
+        })
+        .collect();
+
+    let border_color = if is_focused {
+        theme.accent
+    } else {
+        theme.border
+    };
+    let list = List::new(list_items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color)),
+    );
+    f.render_widget(list, area);
+}
