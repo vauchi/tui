@@ -12,8 +12,6 @@ mod common;
 
 use vauchi_core::contact_card::ContactAction;
 use vauchi_core::ui::LockScreenEngine;
-use vauchi_core::ContactField;
-use vauchi_core::FieldType;
 use vauchi_tui::app::{
     ActionMenuState, AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState,
     ContactLimitState, DeliveryState, DuplicateEntry, DuplicatesState, DuressState, EditFieldState,

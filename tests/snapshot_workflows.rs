@@ -12,8 +12,7 @@ mod common;
 use vauchi_tui::app::{AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState, Screen};
 
 use common::{
-    create_app_with_contacts, create_app_with_identity, create_app_without_identity,
-    render_to_string, workflow_step,
+    create_app_with_contacts, create_app_with_identity, create_app_without_identity, workflow_step,
 };
 
 // @workflow: onboarding — first launch to ready state
