@@ -17,5 +17,4 @@ src/ui/widgets/key_mapping.rs 1119
 # SPLIT — Phase 4: per-screen renderers
 src/ui/widgets/screen_renderer.rs 1039
 
-# SPLIT — Phase 2: split into 3 files by concern
-tests/snapshot_tests.rs 1411
+# DONE — Phase 2: split snapshot_tests.rs into snapshot_screens + snapshot_workflows + common
