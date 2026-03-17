@@ -2,10 +2,20 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Generated 2026-03-15. Files above error threshold, grandfathered.
-# These files must not grow beyond their baseline. Reduce over time.
+# Generated 2026-03-15. Updated 2026-03-16 with exemptions from PRB-2026-032.
+# Files must not grow beyond baseline. SPLIT per PRB-2026-032 Phase 4.
+
+# SPLIT — Phase 4: extract event handling
 src/app.rs 1135
+
+# SPLIT — Phase 4: per-feature handlers
 src/handlers/input/features_input.rs 1126
+
+# SPLIT — Phase 4: extract mapping tables
 src/ui/widgets/key_mapping.rs 1119
+
+# SPLIT — Phase 4: per-screen renderers
 src/ui/widgets/screen_renderer.rs 1039
+
+# SPLIT — Phase 2: split into 3 files by concern
 tests/snapshot_tests.rs 1411
