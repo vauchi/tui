@@ -117,7 +117,22 @@ test:snapshots:record:
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
   script:
     - echo "📸 Recording insta snapshot baselines..."
-    - INSTA_UPDATE=always VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets || true
+    - |
+      set +e
+      INSTA_UPDATE=always VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets 2>&1 | tee /tmp/cargo-record.log
+      CARGO_EXIT=$?
+      set -e
+      if [ "$CARGO_EXIT" -ne 0 ]; then
+        if grep -q "test result:" /tmp/cargo-record.log; then
+          echo "✅ Tests executed (exit code ${CARGO_EXIT} from snapshot updates — expected)"
+        else
+          echo "❌ Build/test infrastructure failure (exit code ${CARGO_EXIT})"
+          tail -20 /tmp/cargo-record.log
+          exit 1
+        fi
+      else
+        echo "✅ All tests passed"
+      fi
     # Preserve recorded snapshots across git checkout
     - cp -r tests/snapshots/ /tmp/insta-snapshots/
     # Configure git for push
