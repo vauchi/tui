@@ -672,6 +672,27 @@ fn test_snapshot_group_detail() {
     assert_snap!("group_detail", "Groups", "press Enter on group", output);
 }
 
+// @scenario: contacts_management:View empty group detail
+#[test]
+fn test_snapshot_group_detail_empty() {
+    let (mut app, _tmp) = create_app_with_identity();
+    // Create a group with no contacts
+    let group = app
+        .app_engine
+        .vauchi()
+        .create_group("Empty Group")
+        .expect("create group");
+    app.groups_state.selected_group_id = Some(group.id().to_string());
+    app.goto(Screen::GroupDetail);
+    let output = render_to_string(&mut app);
+    assert_snap!(
+        "group_detail_empty",
+        "Groups",
+        "press Enter on empty group",
+        output
+    );
+}
+
 // =============================================================
 // Onboarding Wizard
 // =============================================================
