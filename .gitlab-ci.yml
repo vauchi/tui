@@ -101,6 +101,47 @@ test:
       junit: target/nextest/ci/junit.xml
     expire_in: 1 week
 
+# Manual job: record insta snapshot baselines on CI and commit them to the branch.
+# CI is the single source of truth for baselines — never record locally.
+test:snapshots:record:
+  extends: [.rust-runner, .validation-rust, .timeout-quick]
+  stage: test
+  needs:
+    - job: lint:format
+      optional: true
+  when: manual
+  allow_failure: true
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - !reference [.git-credentials, before_script]
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
+  script:
+    - echo "📸 Recording insta snapshot baselines..."
+    - INSTA_UPDATE=always VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets || true
+    # Configure git for push
+    - git config user.name "vauchi-ci-bot"
+    - git config user.email "ci@vauchi.app"
+    - git remote set-url origin "https://vauchi-gitlab-runner:${PROJECT_ACCESS_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    - git fetch origin "${CI_COMMIT_REF_NAME}"
+    - git checkout "${CI_COMMIT_REF_NAME}"
+    # Commit and push baselines (skip if unchanged)
+    - |
+      git add tests/snapshots/
+      if git diff --cached --quiet; then
+        echo "✅ No baseline changes — nothing to commit"
+        exit 0
+      fi
+      CHANGED=$(git diff --cached --stat | tail -1)
+      git commit -m "chore: record snapshot baselines [ci]
+
+      ${CHANGED}
+
+      Co-Authored-By: vauchi-ci-bot <ci@vauchi.app>"
+      git push origin HEAD:${CI_COMMIT_REF_NAME}
+      echo "✅ Baselines committed and pushed — validation pipeline will trigger"
+  rules:
+    - !reference [.validation-rust, rules]
+
 # Main: full coverage with llvm-cov
 # Note: TUI uses custom VAUMI_LOCALES_DIR before script to handle special locales path
 coverage:
