@@ -118,12 +118,16 @@ test:snapshots:record:
   script:
     - echo "📸 Recording insta snapshot baselines..."
     - INSTA_UPDATE=always VAUCHI_LOCALES_DIR=/tmp/locales cargo test --all-targets || true
+    # Preserve recorded snapshots across git checkout
+    - cp -r tests/snapshots/ /tmp/insta-snapshots/
     # Configure git for push
     - git config user.name "vauchi-ci-bot"
     - git config user.email "ci@vauchi.app"
     - git remote set-url origin "https://vauchi-gitlab-runner:${PROJECT_ACCESS_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
     - git fetch origin "${CI_COMMIT_REF_NAME}"
     - git checkout "${CI_COMMIT_REF_NAME}"
+    # Restore recorded snapshots (git checkout above resets working directory)
+    - cp -r /tmp/insta-snapshots/ tests/snapshots/
     # Commit and push baselines (skip if unchanged)
     - |
       git add tests/snapshots/
