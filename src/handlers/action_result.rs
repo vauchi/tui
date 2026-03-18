@@ -220,6 +220,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.app_engine
                 .navigate_to(vauchi_core::ui::AppScreen::Onboarding);
         }
+        ActionResult::TorCommand { .. } => {
+            // Tor backend not available in terminal mode
+        }
     }
 }
 
