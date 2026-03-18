@@ -135,7 +135,8 @@ test:snapshots:record:
       fi
     # Preserve recorded snapshots across git checkout
     - cp -r tests/snapshots/ /tmp/insta-snapshots/
-    # Configure git for push
+    # Configure git for push (unset insteadOf so PROJECT_ACCESS_TOKEN isn't overridden by CI_JOB_TOKEN)
+    - git config --global --unset-all url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf 2>/dev/null || true
     - git config user.name "vauchi-ci-bot"
     - git config user.email "ci@vauchi.app"
     - git remote set-url origin "https://vauchi-gitlab-runner:${PROJECT_ACCESS_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
