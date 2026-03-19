@@ -183,6 +183,10 @@ pub struct App {
     pub data_dir: std::path::PathBuf,
     /// ADR-031: Whether the exchange is waiting for QR scan input (paste).
     pub exchange_scan_pending: bool,
+    /// Channel receiver for background sync results.
+    pub sync_rx: Option<std::sync::mpsc::Receiver<SyncResult>>,
+    /// Channel receiver for background relay connection test results.
+    pub relay_test_rx: Option<std::sync::mpsc::Receiver<anyhow::Result<bool>>>,
 }
 
 impl App {
@@ -284,10 +288,13 @@ impl App {
             relay_url,
             data_dir,
             exchange_scan_pending: false,
+            sync_rx: None,
+            relay_test_rx: None,
         }
     }
 
-    /// Performs a full sync with the relay server via WebSocket.
+    /// Performs a full sync with the relay server via WebSocket (blocking).
+    #[allow(dead_code)]
     pub fn sync(&self) -> SyncResult {
         let vauchi = self.app_engine.vauchi();
         let identity = match vauchi.identity() {
@@ -305,9 +312,25 @@ impl App {
         crate::sync_service::sync(identity, vauchi.storage(), &self.relay_url)
     }
 
-    /// Tests the relay connection.
+    /// Tests the relay connection (blocking — prefer background thread).
+    #[allow(dead_code)]
     pub fn test_relay_connection(&self) -> anyhow::Result<bool> {
         crate::sync_service::test_relay_connection(&self.relay_url)
+    }
+
+    /// Builds an owned `SyncRequest` that can be sent to a background thread.
+    ///
+    /// Returns `None` if there is no identity or storage key.
+    pub fn build_sync_request(&self) -> Option<crate::sync_service::SyncRequest> {
+        let vauchi = self.app_engine.vauchi();
+        let identity = vauchi.identity()?;
+        let storage_key = vauchi.config().storage_key.clone()?;
+        Some(crate::sync_service::SyncRequest {
+            identity_bytes: identity.to_storage_bytes(),
+            storage_path: vauchi.config().storage_path.clone(),
+            storage_key,
+            relay_url: self.relay_url.clone(),
+        })
     }
 
     /// Generates exchange QR data via Vauchi API.
@@ -369,6 +392,95 @@ impl App {
     pub fn clear_status(&mut self) {
         self.status_message = None;
         self.status_message_time = None;
+    }
+
+    /// Applies a completed background sync result to app state.
+    pub fn apply_sync_result(&mut self, result: SyncResult) {
+        use vauchi_core::aha_moments::AhaMomentType;
+
+        self.sync_state.is_syncing = false;
+
+        if result.success {
+            self.sync_state.connected = true;
+            let summary = format!(
+                "+{} contacts, {} updated, {} sent",
+                result.contacts_added, result.cards_updated, result.updates_sent
+            );
+            self.sync_state.last_result = Some(summary.clone());
+            self.sync_state
+                .sync_log
+                .push(format!("Sync complete: {}", summary));
+            self.set_status(format!("Sync complete: {}", summary));
+
+            // Update pending count
+            self.sync_state.pending_updates =
+                self.app_engine.vauchi().pending_update_count().unwrap_or(0);
+
+            // Check for aha moments based on sync results
+            if result.contacts_added > 0 {
+                if let Ok(Some(moment)) = self
+                    .app_engine
+                    .vauchi()
+                    .try_trigger_aha_moment(AhaMomentType::FirstContactAdded)
+                {
+                    self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                }
+            }
+            if result.cards_updated > 0 {
+                if let Ok(Some(moment)) = self
+                    .app_engine
+                    .vauchi()
+                    .try_trigger_aha_moment(AhaMomentType::FirstUpdateReceived)
+                {
+                    self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                }
+            }
+            if result.updates_sent > 0 {
+                if let Ok(Some(moment)) = self
+                    .app_engine
+                    .vauchi()
+                    .try_trigger_aha_moment(AhaMomentType::FirstOutboundDelivered)
+                {
+                    self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
+                }
+            }
+
+            // Invalidate cached screens since sync may have changed contacts/cards
+            self.invalidate_engines();
+        } else {
+            self.sync_state.connected = false;
+            let error_msg = result.error.unwrap_or_else(|| "Unknown error".to_string());
+            self.sync_state.last_result = Some(format!("Failed: {}", error_msg));
+            self.sync_state
+                .sync_log
+                .push(format!("Sync failed: {}", error_msg));
+            self.set_status(format!(
+                "Sync failed: {}. Changes saved locally and will sync when connected.",
+                error_msg
+            ));
+        }
+    }
+
+    /// Applies a completed background relay test result to app state.
+    pub fn apply_relay_test_result(&mut self, result: anyhow::Result<bool>) {
+        match result {
+            Ok(true) => {
+                self.sync_state.connected = true;
+                self.sync_state
+                    .sync_log
+                    .push("Relay connection test: OK".to_string());
+                self.set_status("Relay connection successful!");
+            }
+            Ok(false) | Err(_) => {
+                self.sync_state.connected = false;
+                self.sync_state
+                    .sync_log
+                    .push("Relay connection test: FAILED".to_string());
+                self.set_status(
+                    "Relay connection failed. Check your network or relay URL in Settings.",
+                );
+            }
+        }
     }
 
     /// Auto-clear status message after 3 seconds.

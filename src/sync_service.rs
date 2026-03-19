@@ -91,6 +91,39 @@ pub fn sync(identity: &Identity, storage: &Storage, relay_url: &str) -> SyncResu
     rt.block_on(sync_async(identity, storage, relay_url))
 }
 
+/// Data needed to run sync in a background thread.
+///
+/// All fields are owned and `Send`, allowing the sync operation to run
+/// on a separate thread without borrowing from the main-thread `App`.
+/// The background thread reconstructs `Identity` and opens a fresh
+/// `Storage` connection (rusqlite `Connection` is not `Send`).
+pub struct SyncRequest {
+    /// Serialized identity bytes (from `Identity::to_storage_bytes()`).
+    pub identity_bytes: Vec<u8>,
+    /// Path to the SQLite database file.
+    pub storage_path: std::path::PathBuf,
+    /// Storage encryption key (cloned from VauchiConfig).
+    pub storage_key: vauchi_core::crypto::SymmetricKey,
+    /// Relay WebSocket URL.
+    pub relay_url: String,
+}
+
+/// Performs a full sync in a self-contained way using owned, `Send` data.
+///
+/// Opens a fresh `Storage` connection and reconstructs `Identity` from
+/// serialized bytes, so this can safely run on a background thread.
+pub fn sync_owned(req: SyncRequest) -> SyncResult {
+    let identity = match Identity::from_storage_bytes(&req.identity_bytes) {
+        Ok(id) => id,
+        Err(e) => return SyncResult::error(format!("Identity restore failed: {}", e)),
+    };
+    let storage = match Storage::open(&req.storage_path, req.storage_key) {
+        Ok(s) => s,
+        Err(e) => return SyncResult::error(format!("Storage open failed: {}", e)),
+    };
+    sync(&identity, &storage, &req.relay_url)
+}
+
 /// Tests the relay connection by opening and closing a WebSocket.
 pub fn test_relay_connection(relay_url: &str) -> Result<bool> {
     let rt = tokio::runtime::Builder::new_current_thread()
@@ -105,6 +138,11 @@ pub fn test_relay_connection(relay_url: &str) -> Result<bool> {
         let _ = socket.close(None).await;
         Ok(true)
     })
+}
+
+/// Tests the relay connection on a background thread using owned data.
+pub fn test_relay_connection_owned(relay_url: String) -> Result<bool> {
+    test_relay_connection(&relay_url)
 }
 
 // ============================================================
