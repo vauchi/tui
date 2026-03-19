@@ -69,6 +69,10 @@ lint:format:
 lint:clippy:
   extends: [.rust-runner-readonly, .lint-clippy, .validation-rust, .timeout-quick]
   needs: []
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes 2>/dev/null || true
+    - python3 ../themes/scripts/generate.py 2>/dev/null || true
 
 # Duplicate dependency check (advisory)
 lint:duplicates:
@@ -92,6 +96,8 @@ test:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes 2>/dev/null || true
+    - python3 ../themes/scripts/generate.py 2>/dev/null || true
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
   script:
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --profile ci --all-targets
@@ -175,6 +181,8 @@ coverage:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
+    - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes 2>/dev/null || true
+    - python3 ../themes/scripts/generate.py 2>/dev/null || true
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
     - rustup component add llvm-tools-preview 2>/dev/null || true
   script:
