@@ -76,6 +76,7 @@ impl App {
             Screen::Sync => Some(AppScreen::Sync),
             Screen::TorSettings => Some(AppScreen::TorSettings),
             Screen::Recovery => Some(AppScreen::Recovery),
+            Screen::More => Some(AppScreen::More),
             Screen::Groups => Some(AppScreen::Groups),
             Screen::GroupDetail => {
                 self.groups_state
@@ -172,20 +173,21 @@ impl App {
             Screen::Lock => {
                 // Stay on lock screen
             }
-            Screen::Contacts
-            | Screen::Exchange
-            | Screen::Settings
+            Screen::Contacts | Screen::Exchange | Screen::More => {
+                self.screen = Screen::MyInfo;
+            }
+            Screen::Settings
             | Screen::Help
             | Screen::Recovery
             | Screen::Sync
             | Screen::Delivery
             | Screen::TorSettings => {
-                self.screen = Screen::MyInfo;
+                self.screen = Screen::More;
             }
             Screen::Devices => {
                 self.device_link_result = None;
                 self.revoke_confirm = false;
-                self.screen = Screen::MyInfo;
+                self.screen = Screen::More;
             }
             Screen::Privacy => {
                 self.screen = Screen::Settings;
@@ -200,10 +202,10 @@ impl App {
                 self.screen = Screen::Settings;
                 self.duress_state = DuressState::default();
             }
-            // From Backup, go back to onboarding/setup if no identity, otherwise Home
+            // From Backup, go back to onboarding/setup if no identity, otherwise More
             Screen::Backup => {
                 if self.app_engine.vauchi().has_identity() {
-                    self.screen = Screen::MyInfo;
+                    self.screen = Screen::More;
                 } else {
                     self.screen = Screen::SetupWelcome;
                 }
@@ -275,14 +277,13 @@ impl App {
     /// (onboarding, lock, etc.).
     fn nav_index_for_screen(&self) -> Option<usize> {
         match self.screen {
-            // Direct tab screens
-            Screen::Exchange => Some(0),
+            // 0: My Card (MyInfo and sub-screens)
             Screen::MyInfo
             | Screen::MyInfoEntryDetail
             | Screen::AddField
             | Screen::EditField
-            | Screen::Groups
-            | Screen::GroupDetail => Some(1),
+            | Screen::EditName => Some(0),
+            // 1: Contacts and sub-screens
             Screen::Contacts
             | Screen::ContactDetail
             | Screen::ContactEdit
@@ -290,21 +291,26 @@ impl App {
             | Screen::ContactDuplicates
             | Screen::ContactMerge
             | Screen::ContactLimit
-            | Screen::ActionMenu => Some(2),
-            Screen::Settings
+            | Screen::ActionMenu => Some(1),
+            // 2: Exchange
+            Screen::Exchange => Some(2),
+            // 3: Groups and sub-screens
+            Screen::Groups | Screen::GroupDetail => Some(3),
+            // 4: More and all infrastructure screens
+            Screen::More
+            | Screen::Settings
+            | Screen::Help
             | Screen::Privacy
             | Screen::Support
             | Screen::Emergency
             | Screen::Duress
-            | Screen::EditName
             | Screen::EditRelayUrl
             | Screen::Backup
             | Screen::Devices
             | Screen::Delivery
             | Screen::TorSettings
             | Screen::Sync
-            | Screen::Recovery => Some(3),
-            Screen::Help => Some(4),
+            | Screen::Recovery => Some(4),
             _ => None,
         }
     }

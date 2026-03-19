@@ -63,7 +63,7 @@ fn test_snapshot_contacts_empty() {
     assert_snap!(
         "contacts_empty",
         "MyInfo",
-        "press '3' (Contacts tab)",
+        "press '2' (Contacts tab)",
         output
     );
 }
@@ -77,7 +77,12 @@ fn test_snapshot_settings() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::Settings;
     let output = render_to_string(&mut app);
-    assert_snap!("settings", "MyInfo", "press '4' (Settings tab)", output);
+    assert_snap!(
+        "settings",
+        "MyInfo",
+        "press '5' (More tab) → Settings",
+        output
+    );
 }
 
 // =============================================================
@@ -89,7 +94,7 @@ fn test_snapshot_help() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::Help;
     let output = render_to_string(&mut app);
-    assert_snap!("help", "MyInfo", "press '5' (Help tab)", output);
+    assert_snap!("help", "MyInfo", "press '5' (More tab) → Help", output);
 }
 
 // =============================================================
@@ -303,7 +308,7 @@ fn test_snapshot_exchange() {
         .unwrap()
         .replace_all(&output, "[QR_DATA_REDACTED]")
         .to_string();
-    assert_snap!("exchange", "MyInfo", "press '1' (Exchange tab)", output);
+    assert_snap!("exchange", "MyInfo", "press '3' (Exchange tab)", output);
 }
 
 // @scenario: identity_management:Restore identity from backup
@@ -377,7 +382,7 @@ fn test_snapshot_contacts_with_entries() {
     assert_snap!(
         "contacts_with_entries",
         "MyInfo",
-        "press '3' (Contacts tab)",
+        "press '2' (Contacts tab)",
         output
     );
 }

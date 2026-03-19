@@ -74,6 +74,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_core::ui::AppScreen::TorSettings => app.screen = Screen::TorSettings,
                     vauchi_core::ui::AppScreen::Recovery => app.screen = Screen::Recovery,
                     vauchi_core::ui::AppScreen::Groups => app.screen = Screen::Groups,
+                    vauchi_core::ui::AppScreen::More => app.screen = Screen::More,
                     vauchi_core::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
                     vauchi_core::ui::AppScreen::Support => app.screen = Screen::Support,
                     vauchi_core::ui::AppScreen::GroupDetail { group_id } => {

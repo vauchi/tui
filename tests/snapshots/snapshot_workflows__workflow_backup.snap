@@ -1,9 +1,9 @@
 ---
-source: tests/snapshot_tests.rs
+source: tests/snapshot_workflows.rs
 description: "Backup happy path: Settings → Backup menu → Export form"
 expression: output
 ---
-═══ Step 1 ─ Settings — press '4' (Settings tab) ═══════════
+═══ Step 1 ─ Settings — press '5' (More tab) → Settings ══
                                     Settings
 
 ┌ Profile ─────────────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
 [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 2 ─ Backup — select Backup ════════════════════════
                                 Backup & Recovery
@@ -53,7 +53,7 @@ expression: output
 
 
 [Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 3 ─ BackupExport — select Create Backup ═══════════
                                 Backup & Recovery
@@ -79,4 +79,4 @@ expression: output
 
 
 [Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

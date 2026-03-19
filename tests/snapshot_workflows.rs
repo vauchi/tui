@@ -67,7 +67,7 @@ fn test_workflow_exchange() {
     app.goto(Screen::Exchange);
     steps.push(workflow_step(
         2,
-        "Exchange — press '1' (Exchange tab)",
+        "Exchange — press '3' (Exchange tab)",
         &mut app,
     ));
 
@@ -75,7 +75,7 @@ fn test_workflow_exchange() {
     app.goto(Screen::Contacts);
     steps.push(workflow_step(
         3,
-        "Contacts — press '3' (view exchanged contacts)",
+        "Contacts — press '2' (view exchanged contacts)",
         &mut app,
     ));
 
@@ -191,7 +191,7 @@ fn test_workflow_settings() {
     app.goto(Screen::Settings);
     steps.push(workflow_step(
         1,
-        "Settings — press '4' (Settings tab)",
+        "Settings — press '5' (More tab) → Settings",
         &mut app,
     ));
 
@@ -241,7 +241,7 @@ fn test_workflow_backup() {
     app.goto(Screen::Settings);
     steps.push(workflow_step(
         1,
-        "Settings — press '4' (Settings tab)",
+        "Settings — press '5' (More tab) → Settings",
         &mut app,
     ));
 

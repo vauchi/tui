@@ -112,11 +112,11 @@ fn test_go_back_from_contacts_returns_to_home() {
 }
 
 #[test]
-fn test_go_back_from_settings_returns_to_home() {
+fn test_go_back_from_settings_returns_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Settings);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
@@ -128,43 +128,43 @@ fn test_go_back_from_exchange_returns_to_home() {
 }
 
 #[test]
-fn test_go_back_from_help_returns_to_home() {
+fn test_go_back_from_help_returns_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Help);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
-fn test_go_back_from_devices_returns_to_home() {
+fn test_go_back_from_devices_returns_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Devices);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
-fn test_go_back_from_recovery_returns_to_home() {
+fn test_go_back_from_recovery_returns_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Recovery);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
-fn test_go_back_from_sync_returns_to_home() {
+fn test_go_back_from_sync_returns_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Sync);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
-fn test_go_back_from_tor_settings_returns_to_home() {
+fn test_go_back_from_tor_settings_returns_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::TorSettings);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
@@ -236,11 +236,11 @@ fn test_go_back_from_setup_stays_on_setup() {
 }
 
 #[test]
-fn test_go_back_from_backup_with_identity_goes_to_home() {
+fn test_go_back_from_backup_with_identity_goes_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Backup);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
@@ -426,13 +426,13 @@ fn test_handle_key_y_on_home_navigates_to_delivery() {
 
 // @scenario: message_delivery:Delivery screen esc goes back to home
 #[test]
-fn test_delivery_esc_goes_back_to_home() {
+fn test_delivery_esc_goes_back_to_more() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Delivery);
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.screen, Screen::More);
 }
 
 // @scenario: message_delivery:Delivery retry key sets status

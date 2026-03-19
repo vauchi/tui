@@ -153,7 +153,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::ContactDuplicates
         | Screen::ContactMerge
         | Screen::ContactLimit
-        | Screen::MyInfoEntryDetail => {
+        | Screen::MyInfoEntryDetail
+        | Screen::More => {
             render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
         }
         Screen::Lock => {
@@ -362,16 +363,23 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 /// Build navigation items for the persistent bottom nav bar.
 fn build_nav_items(app: &App) -> Vec<NavItem> {
     let active_tab = match app.screen {
-        Screen::Exchange => 0,
-        Screen::MyInfo => 1,
+        Screen::MyInfo
+        | Screen::MyInfoEntryDetail
+        | Screen::AddField
+        | Screen::EditField
+        | Screen::EditName => 0,
         Screen::Contacts
         | Screen::ContactDetail
         | Screen::ContactEdit
         | Screen::ContactVisibility
         | Screen::ContactDuplicates
         | Screen::ContactMerge
-        | Screen::ContactLimit => 2,
-        Screen::Settings
+        | Screen::ContactLimit => 1,
+        Screen::Exchange => 2,
+        Screen::Groups | Screen::GroupDetail => 3,
+        Screen::More
+        | Screen::Settings
+        | Screen::Help
         | Screen::Devices
         | Screen::Recovery
         | Screen::Sync
@@ -381,30 +389,30 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::Privacy
         | Screen::Support
         | Screen::Emergency
-        | Screen::Duress => 3,
-        Screen::Help => 4,
-        _ => 1, // Default to MyInfo
+        | Screen::Duress
+        | Screen::EditRelayUrl => 4,
+        _ => 0, // Default to My Card
     };
 
     vec![
         NavItem {
-            label: "Exchange",
+            label: "My Card",
             active: active_tab == 0,
         },
         NavItem {
-            label: "MyInfo",
+            label: "Contacts",
             active: active_tab == 1,
         },
         NavItem {
-            label: "Contacts",
+            label: "Exchange",
             active: active_tab == 2,
         },
         NavItem {
-            label: "Settings",
+            label: "Groups",
             active: active_tab == 3,
         },
         NavItem {
-            label: "Help",
+            label: "More",
             active: active_tab == 4,
         },
     ]

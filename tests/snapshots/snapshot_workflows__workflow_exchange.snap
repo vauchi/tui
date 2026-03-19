@@ -1,5 +1,5 @@
 ---
-source: tests/snapshot_tests.rs
+source: tests/snapshot_workflows.rs
 description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
 expression: output
 ---
@@ -27,9 +27,9 @@ expression: output
 
 
 [a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
-   1 Exchange   │  2 ★ MyInfo   │  3 Contacts   │  4 Settings   │    5 Help
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
-═══ Step 2 ─ Exchange — press '1' (Exchange tab) ═══════════
+═══ Step 2 ─ Exchange — press '3' (Exchange tab) ═══════════
                                [2/6]  ○ ● ○ ○ ○ ○
                                  Share Your Code
 
@@ -53,9 +53,9 @@ expression: output
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 [Enter] Scan Their Code  [?] help  [Esc] back  [q] quit
-  1 ★ Exchange  │   2 MyInfo    │  3 Contacts   │  4 Settings   │    5 Help
+   1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More
 
-═══ Step 3 ─ Contacts — press '3' (view exchanged contacts) 
+═══ Step 3 ─ Contacts — press '2' (view exchanged contacts) 
                                     Contacts
 
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
@@ -79,4 +79,4 @@ expression: output
 
 
 [a] Add Contact  [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │ 3 ★ Contacts  │  4 Settings   │    5 Help
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

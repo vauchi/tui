@@ -57,6 +57,8 @@ pub enum Screen {
     Duress,
     /// Lock screen (shown on startup when app password is configured)
     Lock,
+    /// More menu (Settings, Help, and other infrastructure screens)
+    More,
     /// Contact groups management screen
     Groups,
     /// Group detail view

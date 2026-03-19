@@ -165,27 +165,27 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         // Direct screen switching: number keys 1-5
         KeyCode::Char('1') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Exchange);
+            app.goto(Screen::MyInfo);
             return Action::Continue;
         }
         KeyCode::Char('2') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::MyInfo);
+            app.goto(Screen::Contacts);
             return Action::Continue;
         }
         KeyCode::Char('3') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Contacts);
+            app.goto(Screen::Exchange);
             return Action::Continue;
         }
         KeyCode::Char('4') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Settings);
+            app.goto(Screen::Groups);
             return Action::Continue;
         }
         KeyCode::Char('5') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Help);
+            app.goto(Screen::More);
             return Action::Continue;
         }
         // Shift+Tab: move focus backwards (Content → NavBar → ActionBar → Content)
@@ -243,6 +243,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::ContactDuplicates
             | Screen::ContactMerge
             | Screen::MyInfoEntryDetail
+            | Screen::More
     ) {
         handle_engine_keys(app, key);
         return Action::Continue;
@@ -288,7 +289,8 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::ContactDuplicates
         | Screen::ContactMerge
         | Screen::ContactLimit
-        | Screen::MyInfoEntryDetail => {
+        | Screen::MyInfoEntryDetail
+        | Screen::More => {
             unreachable!("Engine-only screens handled by engine guard")
         }
     }
@@ -324,11 +326,11 @@ fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
                 FocusZone::NavBar => {
                     // Navigate to the tab at the focused index
                     let target = match app.focus.nav_index {
-                        0 => Screen::Exchange,
-                        1 => Screen::MyInfo,
-                        2 => Screen::Contacts,
-                        3 => Screen::Settings,
-                        4 => Screen::Help,
+                        0 => Screen::MyInfo,
+                        1 => Screen::Contacts,
+                        2 => Screen::Exchange,
+                        3 => Screen::Groups,
+                        4 => Screen::More,
                         _ => return Some(Action::Continue),
                     };
                     // Cancel any pending state before navigating

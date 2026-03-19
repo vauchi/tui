@@ -38,7 +38,7 @@ impl FocusManager {
             zone: FocusZone::Content,
             content_index: 0,
             action_index: 0,
-            nav_index: 2, // Home (center tab)
+            nav_index: 0, // Home (My Card tab)
             content_count: 0,
             action_count: 0,
             nav_count: 5,

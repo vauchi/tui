@@ -1,5 +1,5 @@
 ---
-source: tests/snapshot_tests.rs
+source: tests/snapshot_screens.rs
 description: Settings → select Devices
 expression: output
 ---
@@ -26,4 +26,4 @@ expression: output
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 [Esc] Cancel  [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

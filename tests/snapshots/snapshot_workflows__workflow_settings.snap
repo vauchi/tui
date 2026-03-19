@@ -1,9 +1,9 @@
 ---
-source: tests/snapshot_tests.rs
+source: tests/snapshot_workflows.rs
 description: "Settings navigation: Settings → Privacy → Backup → Tor"
 expression: output
 ---
-═══ Step 1 ─ Settings — press '4' (Settings tab) ═══════════
+═══ Step 1 ─ Settings — press '5' (More tab) → Settings ══
                                     Settings
 
 ┌ Profile ─────────────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
 [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 2 ─ Privacy — select Privacy & Data ═══════════════
                                  Privacy & Data
@@ -53,7 +53,7 @@ expression: output
 
 
 [Enter] Export Data  [x] Delete All Data  [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 3 ─ Settings — press Esc (back) ═══════════════════
                                     Settings
@@ -79,7 +79,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
 [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 4 ─ Backup — select Backup ════════════════════════
                                 Backup & Recovery
@@ -105,7 +105,7 @@ expression: output
 
 
 [Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 5 ─ Settings — press Esc (back) ═══════════════════
                                     Settings
@@ -131,7 +131,7 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 
 [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 6 ─ TorSettings — select Tor Privacy ══════════════
                                    Tor Privacy
@@ -157,4 +157,4 @@ expression: output
 
 
 [?] help  [Esc] back  [q] quit
-   1 Exchange   │   2 MyInfo    │  3 Contacts   │ 4 ★ Settings  │    5 Help
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
