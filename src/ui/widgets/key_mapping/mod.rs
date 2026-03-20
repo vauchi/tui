@@ -74,12 +74,11 @@ pub fn map_key(key: KeyCode, screen: &ScreenModel, state: &mut ScreenRenderState
     state.ensure_capacity(screen.components.len());
 
     // Auto-focus first interactive component if current focus is non-interactive
-    if let Some(current) = screen.components.get(state.focused_component) {
-        if !is_focusable(current) {
-            if let Some(idx) = find_first_focusable(&screen.components) {
-                state.focused_component = idx;
-            }
-        }
+    if let Some(current) = screen.components.get(state.focused_component)
+        && !is_focusable(current)
+        && let Some(idx) = find_first_focusable(&screen.components)
+    {
+        state.focused_component = idx;
     }
 
     match key {

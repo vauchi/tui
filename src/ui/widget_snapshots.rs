@@ -6,9 +6,9 @@
 //!
 //! Each widget is rendered into a `TestBackend` and snapshotted with `insta`.
 
+use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
-use ratatui::Terminal;
 
 use vauchi_core::ui::{
     FieldDisplay, GroupCardView, InfoItem, ToggleItem, UiFieldVisibility, VisibilityMode,

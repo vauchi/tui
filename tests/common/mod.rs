@@ -7,9 +7,9 @@
 
 use std::sync::Once;
 
+use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
-use ratatui::Terminal;
 use tempfile::TempDir;
 
 use vauchi_core::ui::AppEngine;
@@ -142,7 +142,7 @@ pub fn redact_dynamic_values(s: &str) -> String {
 /// `from`: the previous screen, `trigger`: the user action or event that caused this screen.
 #[macro_export]
 macro_rules! assert_snap {
-    ($name:expr, $from:expr, $trigger:expr, $output:expr) => {
+    ($name:expr_2021, $from:expr_2021, $trigger:expr_2021, $output:expr_2021) => {
         insta::with_settings!({
             description => concat!($from, " → ", $trigger),
         }, {

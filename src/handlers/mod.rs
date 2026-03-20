@@ -7,4 +7,4 @@
 pub mod action_result;
 mod input;
 
-pub use input::{handle_key, Action};
+pub use input::{Action, handle_key};

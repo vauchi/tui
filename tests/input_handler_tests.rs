@@ -15,7 +15,7 @@ use crossterm::event::KeyCode;
 use vauchi_core::ui::AppEngine;
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, EmergencyFocus, EmergencyState, InputMode, Screen};
-use vauchi_tui::handlers::{handle_key, Action};
+use vauchi_tui::handlers::{Action, handle_key};
 
 static INIT_LOCALES: Once = Once::new();
 

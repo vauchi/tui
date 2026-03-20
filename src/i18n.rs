@@ -7,7 +7,7 @@
 //! Provides convenient string lookup using vauchi-core i18n.
 
 use vauchi_core::i18n::{
-    get_available_locales, get_locale_info, get_string, get_string_with_args, Locale, LocaleInfo,
+    Locale, LocaleInfo, get_available_locales, get_locale_info, get_string, get_string_with_args,
 };
 
 /// Current locale state for the TUI.
@@ -94,6 +94,7 @@ impl I18n {
     }
 }
 
+// INLINE_TEST_REQUIRED: tests use private LOCALE_STORE static and format_locale_key
 #[cfg(test)]
 mod tests {
     use super::*;

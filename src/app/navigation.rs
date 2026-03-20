@@ -6,8 +6,8 @@
 
 use vauchi_core::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
 
-use super::state::*;
 use super::App;
+use super::state::*;
 use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
 impl App {

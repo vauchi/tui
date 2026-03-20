@@ -67,21 +67,21 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('x') | KeyCode::Delete => {
             // Delete selected field
-            if let Ok(Some(card)) = app.app_engine.vauchi().own_card() {
-                if let Some(field) = card.fields().get(app.selected_field) {
-                    let label = field.label().to_string();
-                    let field_id = field.id().to_string();
-                    if app
-                        .app_engine
-                        .vauchi()
-                        .remove_own_field_by_id(&field_id)
-                        .is_ok()
-                    {
-                        app.invalidate_engines();
-                        app.set_status(format!("Field removed: {}", label));
-                        if app.selected_field > 0 {
-                            app.selected_field -= 1;
-                        }
+            if let Ok(Some(card)) = app.app_engine.vauchi().own_card()
+                && let Some(field) = card.fields().get(app.selected_field)
+            {
+                let label = field.label().to_string();
+                let field_id = field.id().to_string();
+                if app
+                    .app_engine
+                    .vauchi()
+                    .remove_own_field_by_id(&field_id)
+                    .is_ok()
+                {
+                    app.invalidate_engines();
+                    app.set_status(format!("Field removed: {}", label));
+                    if app.selected_field > 0 {
+                        app.selected_field -= 1;
                     }
                 }
             }
@@ -134,17 +134,17 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Opti
         }
         KeyResult::Unhandled => {
             // Check for 'i' (import backup) on welcome/identity_check screen
-            if key == KeyCode::Char('i') {
-                if let Some(engine) = &app.onboarding_engine {
-                    let screen_id = engine.current_screen().screen_id;
-                    if screen_id == "welcome" || screen_id == "identity_check" {
-                        app.backup_state.mode = BackupMode::Import;
-                        app.backup_state.backup_data.clear();
-                        app.backup_state.password.clear();
-                        app.backup_state.focus = BackupFocus::Data;
-                        app.input_mode = InputMode::Editing;
-                        app.goto(Screen::Backup);
-                    }
+            if key == KeyCode::Char('i')
+                && let Some(engine) = &app.onboarding_engine
+            {
+                let screen_id = engine.current_screen().screen_id;
+                if screen_id == "welcome" || screen_id == "identity_check" {
+                    app.backup_state.mode = BackupMode::Import;
+                    app.backup_state.backup_data.clear();
+                    app.backup_state.password.clear();
+                    app.backup_state.focus = BackupFocus::Data;
+                    app.input_mode = InputMode::Editing;
+                    app.goto(Screen::Backup);
                 }
             }
         }

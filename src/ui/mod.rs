@@ -66,10 +66,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     app.tick_status();
 
     // Sync AppEngine to match the current TUI screen before rendering
-    if let Some(target) = app.to_app_screen() {
-        if *app.app_engine.current_app_screen() != target {
-            app.app_engine.navigate_to(target);
-        }
+    if let Some(target) = app.to_app_screen()
+        && *app.app_engine.current_app_screen() != target
+    {
+        app.app_engine.navigate_to(target);
     }
 
     // Cache screen models once per frame to avoid redundant allocations

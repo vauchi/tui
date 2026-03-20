@@ -14,7 +14,7 @@ use vauchi_core::ui::{AppEngine, AppScreen, LockScreenEngine, OnboardingEngine};
 
 use crate::i18n::I18n;
 use crate::sync_service::SyncResult;
-use crate::theme::{get_default_tui_theme, get_tui_theme, list_themes, TuiTheme};
+use crate::theme::{TuiTheme, get_default_tui_theme, get_tui_theme, list_themes};
 use crate::ui::focus::FocusManager;
 use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
@@ -27,23 +27,22 @@ fn theme_config_path() -> Option<std::path::PathBuf> {
 /// or default to dark.
 fn load_saved_theme(theme_ids: &[String]) -> (TuiTheme, usize) {
     // Check env var first
-    if let Ok(id) = std::env::var("VAUCHI_THEME") {
-        if let Some(pos) = theme_ids.iter().position(|t| t == &id) {
-            if let Some(t) = get_tui_theme(&id) {
-                return (t, pos);
-            }
-        }
+    if let Ok(id) = std::env::var("VAUCHI_THEME")
+        && let Some(pos) = theme_ids.iter().position(|t| t == &id)
+        && let Some(t) = get_tui_theme(&id)
+    {
+        return (t, pos);
     }
 
     // Check saved config
-    if let Some(path) = theme_config_path() {
-        if let Ok(id) = std::fs::read_to_string(&path) {
-            let id = id.trim();
-            if let Some(pos) = theme_ids.iter().position(|t| t == id) {
-                if let Some(t) = get_tui_theme(id) {
-                    return (t, pos);
-                }
-            }
+    if let Some(path) = theme_config_path()
+        && let Ok(id) = std::fs::read_to_string(&path)
+    {
+        let id = id.trim();
+        if let Some(pos) = theme_ids.iter().position(|t| t == id)
+            && let Some(t) = get_tui_theme(id)
+        {
+            return (t, pos);
         }
     }
 
@@ -306,7 +305,7 @@ impl App {
                     updates_sent: 0,
                     success: false,
                     error: Some("No identity".into()),
-                }
+                };
             }
         };
         crate::sync_service::sync(identity, vauchi.storage(), &self.relay_url)
@@ -417,32 +416,29 @@ impl App {
                 self.app_engine.vauchi().pending_update_count().unwrap_or(0);
 
             // Check for aha moments based on sync results
-            if result.contacts_added > 0 {
-                if let Ok(Some(moment)) = self
+            if result.contacts_added > 0
+                && let Ok(Some(moment)) = self
                     .app_engine
                     .vauchi()
                     .try_trigger_aha_moment(AhaMomentType::FirstContactAdded)
-                {
-                    self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                }
+            {
+                self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
             }
-            if result.cards_updated > 0 {
-                if let Ok(Some(moment)) = self
+            if result.cards_updated > 0
+                && let Ok(Some(moment)) = self
                     .app_engine
                     .vauchi()
                     .try_trigger_aha_moment(AhaMomentType::FirstUpdateReceived)
-                {
-                    self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                }
+            {
+                self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
             }
-            if result.updates_sent > 0 {
-                if let Ok(Some(moment)) = self
+            if result.updates_sent > 0
+                && let Ok(Some(moment)) = self
                     .app_engine
                     .vauchi()
                     .try_trigger_aha_moment(AhaMomentType::FirstOutboundDelivered)
-                {
-                    self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                }
+            {
+                self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
             }
 
             // Invalidate cached screens since sync may have changed contacts/cards
@@ -485,10 +481,10 @@ impl App {
 
     /// Auto-clear status message after 3 seconds.
     pub fn tick_status(&mut self) {
-        if let Some(time) = self.status_message_time {
-            if time.elapsed() >= std::time::Duration::from_secs(3) {
-                self.clear_status();
-            }
+        if let Some(time) = self.status_message_time
+            && time.elapsed() >= std::time::Duration::from_secs(3)
+        {
+            self.clear_status();
         }
     }
 }
@@ -504,16 +500,20 @@ mod tests {
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     fn clear_locale_env() {
-        std::env::remove_var("LC_ALL");
-        std::env::remove_var("LC_MESSAGES");
-        std::env::remove_var("LANG");
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::remove_var("LC_ALL") };
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::remove_var("LC_MESSAGES") };
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::remove_var("LANG") };
     }
 
     #[test]
     fn test_detect_locale_german() {
         let _guard = ENV_LOCK.lock().unwrap();
         clear_locale_env();
-        std::env::set_var("LANG", "de_CH.UTF-8");
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::set_var("LANG", "de_CH.UTF-8") };
         let i18n = detect_locale();
         assert_eq!(i18n.locale(), Locale::German);
         clear_locale_env();
@@ -523,7 +523,8 @@ mod tests {
     fn test_detect_locale_french() {
         let _guard = ENV_LOCK.lock().unwrap();
         clear_locale_env();
-        std::env::set_var("LANG", "fr_FR.UTF-8");
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::set_var("LANG", "fr_FR.UTF-8") };
         let i18n = detect_locale();
         assert_eq!(i18n.locale(), Locale::French);
         clear_locale_env();
@@ -533,8 +534,10 @@ mod tests {
     fn test_detect_locale_lc_all_overrides() {
         let _guard = ENV_LOCK.lock().unwrap();
         clear_locale_env();
-        std::env::set_var("LANG", "en_US.UTF-8");
-        std::env::set_var("LC_ALL", "es_ES.UTF-8");
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::set_var("LANG", "en_US.UTF-8") };
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::set_var("LC_ALL", "es_ES.UTF-8") };
         let i18n = detect_locale();
         assert_eq!(i18n.locale(), Locale::Spanish);
         clear_locale_env();
@@ -544,7 +547,8 @@ mod tests {
     fn test_detect_locale_fallback_english() {
         let _guard = ENV_LOCK.lock().unwrap();
         clear_locale_env();
-        std::env::set_var("LANG", "C");
+        // TODO: Audit that the environment access only happens in single-threaded code.
+        unsafe { std::env::set_var("LANG", "C") };
         let i18n = detect_locale();
         assert_eq!(i18n.locale(), Locale::English);
         clear_locale_env();

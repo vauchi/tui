@@ -98,7 +98,8 @@ fn start_backup_import_sets_backup_screen() {
 #[test]
 fn open_url_sets_status_with_url() {
     // Prevent xdg-open from actually opening a browser tab during tests
-    std::env::set_var("VAUCHI_NO_BROWSER", "1");
+    // TODO: Audit that the environment access only happens in single-threaded code.
+    unsafe { std::env::set_var("VAUCHI_NO_BROWSER", "1") };
     let mut app = create_app_with_identity();
     handle_action_result(
         &mut app,

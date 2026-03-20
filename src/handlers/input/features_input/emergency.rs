@@ -45,11 +45,11 @@ pub(in crate::handlers::input) fn handle_emergency_keys(app: &mut App, key: KeyC
                     .duration_since(std::time::UNIX_EPOCH)
                     .map(|d| d.as_secs())
                     .unwrap_or(0);
-                if let Some(last) = app.emergency_state.last_broadcast_time {
-                    if now.saturating_sub(last) < 60 {
-                        app.set_status("Alert recently sent. Wait before sending again.");
-                        return;
-                    }
+                if let Some(last) = app.emergency_state.last_broadcast_time
+                    && now.saturating_sub(last) < 60
+                {
+                    app.set_status("Alert recently sent. Wait before sending again.");
+                    return;
                 }
                 app.emergency_state.focus = EmergencyFocus::Confirm;
             }

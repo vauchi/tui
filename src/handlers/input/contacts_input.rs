@@ -76,10 +76,10 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Enter => {
             // Look up contact ID for engine-driven ContactDetail screen
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    app.selected_contact_id = Some(contact.id().to_string());
-                }
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                app.selected_contact_id = Some(contact.id().to_string());
             }
             app.goto(Screen::ContactDetail);
         }
@@ -226,16 +226,12 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
 
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
-            if let Ok(groups) = app.app_engine.vauchi().list_groups() {
-                if let Some(group) = groups.get(app.groups_state.selected_group) {
-                    if let Ok(contacts) = app.app_engine.vauchi().get_group_members(group.id()) {
-                        if app.groups_state.selected_contact_in_group
-                            < contacts.len().saturating_sub(1)
-                        {
-                            app.groups_state.selected_contact_in_group += 1;
-                        }
-                    }
-                }
+            if let Ok(groups) = app.app_engine.vauchi().list_groups()
+                && let Some(group) = groups.get(app.groups_state.selected_group)
+                && let Ok(contacts) = app.app_engine.vauchi().get_group_members(group.id())
+                && app.groups_state.selected_contact_in_group < contacts.len().saturating_sub(1)
+            {
+                app.groups_state.selected_contact_in_group += 1;
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
@@ -246,10 +242,10 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('r') => {
             // Start renaming
             app.groups_state.edit_mode = true;
-            if let Ok(groups) = app.app_engine.vauchi().list_groups() {
-                if let Some(group) = groups.get(app.groups_state.selected_group) {
-                    app.groups_state.group_name_input = group.name().to_string();
-                }
+            if let Ok(groups) = app.app_engine.vauchi().list_groups()
+                && let Some(group) = groups.get(app.groups_state.selected_group)
+            {
+                app.groups_state.group_name_input = group.name().to_string();
             }
         }
         _ => {}
@@ -262,14 +258,13 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
         match key {
             KeyCode::Char('y') | KeyCode::Enter => {
                 app.contact_delete_confirm = false;
-                if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                    if let Some(contact) = contacts.get(app.selected_contact) {
-                        if app.app_engine.vauchi().remove_contact(contact.id()).is_ok() {
-                            app.invalidate_engines();
-                            app.set_status("Contact removed");
-                            app.go_back();
-                        }
-                    }
+                if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                    && let Some(contact) = contacts.get(app.selected_contact)
+                    && app.app_engine.vauchi().remove_contact(contact.id()).is_ok()
+                {
+                    app.invalidate_engines();
+                    app.set_status("Contact removed");
+                    app.go_back();
                 }
             }
             _ => {
@@ -283,23 +278,22 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
     // The engine path sets selected_contact_id (String), but all legacy operations
     // below use selected_contact (usize index). Sync the index to prevent operating
     // on the wrong contact.
-    if let Some(ref id) = app.selected_contact_id {
-        if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-            if let Some(idx) = contacts.iter().position(|c| c.id() == id.as_str()) {
-                app.selected_contact = idx;
-            }
-        }
+    if let Some(ref id) = app.selected_contact_id
+        && let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+        && let Some(idx) = contacts.iter().position(|c| c.id() == id.as_str())
+    {
+        app.selected_contact = idx;
     }
 
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
             // Navigate down through contact fields
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    let field_count = contact.card().fields().len();
-                    if app.selected_contact_field < field_count.saturating_sub(1) {
-                        app.selected_contact_field += 1;
-                    }
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                let field_count = contact.card().fields().len();
+                if app.selected_contact_field < field_count.saturating_sub(1) {
+                    app.selected_contact_field += 1;
                 }
             }
         }
@@ -311,37 +305,34 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Enter | KeyCode::Char('o') => {
             // Show action menu for the selected field
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if let Some(field) = contact.card().fields().get(app.selected_contact_field) {
-                        let actions: Vec<_> = field
-                            .to_secondary_actions()
-                            .into_iter()
-                            .map(|a| (helpers::action_label(&a), a))
-                            .collect();
-                        if actions.len() > 1 {
-                            app.action_menu_state = ActionMenuState {
-                                actions,
-                                selected: 0,
-                            };
-                            app.goto(Screen::ActionMenu);
-                        } else if let Some(uri) = field.to_uri() {
-                            let action_type = field.to_action();
-                            let type_name = match &action_type {
-                                vauchi_core::contact_card::ContactAction::Call(_) => "call",
-                                vauchi_core::contact_card::ContactAction::SendSms(_) => "sms",
-                                vauchi_core::contact_card::ContactAction::SendEmail(_) => "email",
-                                vauchi_core::contact_card::ContactAction::OpenUrl(_) => "web",
-                                vauchi_core::contact_card::ContactAction::OpenMap(_) => "map",
-                                vauchi_core::contact_card::ContactAction::GetDirections(_) => {
-                                    "directions"
-                                }
-                                vauchi_core::contact_card::ContactAction::CopyToClipboard => "copy",
-                            };
-                            let msg = helpers::open_field_uri(&uri, field.label(), type_name);
-                            app.set_status(msg);
-                        }
-                    }
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+                && let Some(field) = contact.card().fields().get(app.selected_contact_field)
+            {
+                let actions: Vec<_> = field
+                    .to_secondary_actions()
+                    .into_iter()
+                    .map(|a| (helpers::action_label(&a), a))
+                    .collect();
+                if actions.len() > 1 {
+                    app.action_menu_state = ActionMenuState {
+                        actions,
+                        selected: 0,
+                    };
+                    app.goto(Screen::ActionMenu);
+                } else if let Some(uri) = field.to_uri() {
+                    let action_type = field.to_action();
+                    let type_name = match &action_type {
+                        vauchi_core::contact_card::ContactAction::Call(_) => "call",
+                        vauchi_core::contact_card::ContactAction::SendSms(_) => "sms",
+                        vauchi_core::contact_card::ContactAction::SendEmail(_) => "email",
+                        vauchi_core::contact_card::ContactAction::OpenUrl(_) => "web",
+                        vauchi_core::contact_card::ContactAction::OpenMap(_) => "map",
+                        vauchi_core::contact_card::ContactAction::GetDirections(_) => "directions",
+                        vauchi_core::contact_card::ContactAction::CopyToClipboard => "copy",
+                    };
+                    let msg = helpers::open_field_uri(&uri, field.label(), type_name);
+                    app.set_status(msg);
                 }
             }
         }
@@ -366,167 +357,173 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('v') => {
             // Open visibility settings for this contact
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    app.visibility_state.contact_id = Some(contact.id().to_string());
-                    app.visibility_state.selected_field = 0;
-                    app.goto(Screen::ContactVisibility);
-                }
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                app.visibility_state.contact_id = Some(contact.id().to_string());
+                app.visibility_state.selected_field = 0;
+                app.goto(Screen::ContactVisibility);
             }
         }
         KeyCode::Char('t') => {
             // Toggle recovery trust
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    match app.app_engine.vauchi().toggle_recovery_trust(contact.id()) {
-                        Ok(true) => {
-                            app.invalidate_engines();
-                            app.set_status("Marked as recovery-trusted");
-                        }
-                        Ok(false) => {
-                            app.invalidate_engines();
-                            app.set_status("Removed recovery trust");
-                        }
-                        Err(e) => app.set_status(format!("Error: {}", e)),
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                match app.app_engine.vauchi().toggle_recovery_trust(contact.id()) {
+                    Ok(true) => {
+                        app.invalidate_engines();
+                        app.set_status("Marked as recovery-trusted");
                     }
+                    Ok(false) => {
+                        app.invalidate_engines();
+                        app.set_status("Removed recovery trust");
+                    }
+                    Err(e) => app.set_status(format!("Error: {}", e)),
                 }
             }
         }
         KeyCode::Char('V') => {
             // Validate selected field
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if let Some(field) = contact.card().fields().get(app.selected_contact_field) {
-                        match app.app_engine.vauchi().validate_field(
-                            contact.id(),
-                            field.label(),
-                            field.value(),
-                        ) {
-                            Ok(_) => app.set_status(format!(
-                                "Validated {} for {}",
+            match app.app_engine.vauchi().list_contacts() {
+                Ok(contacts) => {
+                    if let Some(contact) = contacts.get(app.selected_contact) {
+                        if let Some(field) = contact.card().fields().get(app.selected_contact_field)
+                        {
+                            match app.app_engine.vauchi().validate_field(
+                                contact.id(),
                                 field.label(),
-                                contact.display_name()
-                            )),
-                            Err(e) => app.set_status(format!("Error: {}", e)),
+                                field.value(),
+                            ) {
+                                Ok(_) => app.set_status(format!(
+                                    "Validated {} for {}",
+                                    field.label(),
+                                    contact.display_name()
+                                )),
+                                Err(e) => app.set_status(format!("Error: {}", e)),
+                            }
+                        } else {
+                            app.set_status("No field selected");
                         }
                     } else {
-                        app.set_status("No field selected");
+                        app.set_status("No contact selected");
                     }
-                } else {
-                    app.set_status("No contact selected");
                 }
-            } else {
-                app.set_status("No contacts available");
+                _ => {
+                    app.set_status("No contacts available");
+                }
             }
         }
         KeyCode::Char('R') => {
             // Revoke validation on selected field
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    if let Some(field) = contact.card().fields().get(app.selected_contact_field) {
-                        match app
-                            .app_engine
-                            .vauchi()
-                            .revoke_field_validation(contact.id(), field.label())
+            match app.app_engine.vauchi().list_contacts() {
+                Ok(contacts) => {
+                    if let Some(contact) = contacts.get(app.selected_contact) {
+                        if let Some(field) = contact.card().fields().get(app.selected_contact_field)
                         {
-                            Ok(true) => {
-                                app.set_status(format!("Revoked validation for {}", field.label()))
+                            match app
+                                .app_engine
+                                .vauchi()
+                                .revoke_field_validation(contact.id(), field.label())
+                            {
+                                Ok(true) => app.set_status(format!(
+                                    "Revoked validation for {}",
+                                    field.label()
+                                )),
+                                Ok(false) => app.set_status("No validation to revoke"),
+                                Err(e) => app.set_status(format!("Error: {}", e)),
                             }
-                            Ok(false) => app.set_status("No validation to revoke"),
-                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        } else {
+                            app.set_status("No field selected");
                         }
                     } else {
-                        app.set_status("No field selected");
+                        app.set_status("No contact selected");
                     }
-                } else {
-                    app.set_status("No contact selected");
                 }
-            } else {
-                app.set_status("No contacts available");
+                _ => {
+                    app.set_status("No contacts available");
+                }
             }
         }
         KeyCode::Char('f') => {
             // Show fingerprint and verify
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    let their_fp = contact.fingerprint();
-                    let our_fp = app
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                let their_fp = contact.fingerprint();
+                let our_fp = app
+                    .app_engine
+                    .vauchi()
+                    .own_fingerprint()
+                    .unwrap_or_default();
+                if contact.is_fingerprint_verified() {
+                    app.set_status(format!(
+                        "Already verified. Theirs: {}  Ours: {}",
+                        their_fp, our_fp
+                    ));
+                } else {
+                    match app
                         .app_engine
                         .vauchi()
-                        .own_fingerprint()
-                        .unwrap_or_default();
-                    if contact.is_fingerprint_verified() {
-                        app.set_status(format!(
-                            "Already verified. Theirs: {}  Ours: {}",
+                        .verify_contact_fingerprint(contact.id())
+                    {
+                        Ok(()) => app.set_status(format!(
+                            "Verified! Theirs: {}  Ours: {}",
                             their_fp, our_fp
-                        ));
-                    } else {
-                        match app
-                            .app_engine
-                            .vauchi()
-                            .verify_contact_fingerprint(contact.id())
-                        {
-                            Ok(()) => app.set_status(format!(
-                                "Verified! Theirs: {}  Ours: {}",
-                                their_fp, our_fp
-                            )),
-                            Err(e) => app.set_status(format!("Error: {}", e)),
-                        }
+                        )),
+                        Err(e) => app.set_status(format!("Error: {}", e)),
                     }
                 }
             }
         }
         KeyCode::Char('b') => {
             // Toggle block/unblock contact
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    let contact_id = contact.id().to_string();
-                    let display_name = contact.display_name().to_string();
-                    if contact.is_blocked() {
-                        match app.app_engine.vauchi().unblock_contact(&contact_id) {
-                            Ok(()) => {
-                                app.invalidate_engines();
-                                app.set_status(format!("{} unblocked", display_name));
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                let contact_id = contact.id().to_string();
+                let display_name = contact.display_name().to_string();
+                if contact.is_blocked() {
+                    match app.app_engine.vauchi().unblock_contact(&contact_id) {
+                        Ok(()) => {
+                            app.invalidate_engines();
+                            app.set_status(format!("{} unblocked", display_name));
                         }
-                    } else {
-                        match app.app_engine.vauchi().block_contact(&contact_id) {
-                            Ok(()) => {
-                                app.invalidate_engines();
-                                app.set_status(format!("{} blocked", display_name));
-                                app.go_back();
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                } else {
+                    match app.app_engine.vauchi().block_contact(&contact_id) {
+                        Ok(()) => {
+                            app.invalidate_engines();
+                            app.set_status(format!("{} blocked", display_name));
+                            app.go_back();
                         }
+                        Err(e) => app.set_status(format!("Error: {}", e)),
                     }
                 }
             }
         }
         KeyCode::Char('h') => {
             // Toggle hide/unhide contact
-            if let Ok(contacts) = app.app_engine.vauchi().list_contacts() {
-                if let Some(contact) = contacts.get(app.selected_contact) {
-                    let contact_id = contact.id().to_string();
-                    let display_name = contact.display_name().to_string();
-                    if contact.is_hidden() {
-                        match app.app_engine.vauchi().unhide_contact(&contact_id) {
-                            Ok(()) => {
-                                app.set_status(format!("{} is now visible", display_name));
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
+            if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
+                && let Some(contact) = contacts.get(app.selected_contact)
+            {
+                let contact_id = contact.id().to_string();
+                let display_name = contact.display_name().to_string();
+                if contact.is_hidden() {
+                    match app.app_engine.vauchi().unhide_contact(&contact_id) {
+                        Ok(()) => {
+                            app.set_status(format!("{} is now visible", display_name));
                         }
-                    } else {
-                        match app.app_engine.vauchi().hide_contact(&contact_id) {
-                            Ok(()) => {
-                                app.set_status(format!(
-                                    "{} hidden from contact list",
-                                    display_name
-                                ));
-                                app.go_back();
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
+                        Err(e) => app.set_status(format!("Error: {}", e)),
+                    }
+                } else {
+                    match app.app_engine.vauchi().hide_contact(&contact_id) {
+                        Ok(()) => {
+                            app.set_status(format!("{} hidden from contact list", display_name));
+                            app.go_back();
                         }
+                        Err(e) => app.set_status(format!("Error: {}", e)),
                     }
                 }
             }
@@ -576,10 +573,10 @@ pub(super) fn handle_visibility_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
             // Count own card fields for navigation bounds
-            if let Ok(Some(card)) = app.app_engine.vauchi().own_card() {
-                if app.visibility_state.selected_field < card.fields().len().saturating_sub(1) {
-                    app.visibility_state.selected_field += 1;
-                }
+            if let Ok(Some(card)) = app.app_engine.vauchi().own_card()
+                && app.visibility_state.selected_field < card.fields().len().saturating_sub(1)
+            {
+                app.visibility_state.selected_field += 1;
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
@@ -588,26 +585,25 @@ pub(super) fn handle_visibility_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char(' ') | KeyCode::Enter => {
-            if let Some(ref contact_id) = app.visibility_state.contact_id {
-                if let Ok(Some(card)) = app.app_engine.vauchi().own_card() {
-                    if let Some(field) = card.fields().get(app.visibility_state.selected_field) {
-                        let field_label = field.label().to_string();
-                        match app
-                            .app_engine
-                            .vauchi()
-                            .toggle_field_visibility(contact_id, &field_label)
-                        {
-                            Ok(now_visible) => {
-                                let status = if now_visible {
-                                    "now visible"
-                                } else {
-                                    "now hidden"
-                                };
-                                app.set_status(format!("Field {} {}", field_label, status));
-                            }
-                            Err(e) => app.set_status(format!("Error: {}", e)),
-                        }
+            if let Some(ref contact_id) = app.visibility_state.contact_id
+                && let Ok(Some(card)) = app.app_engine.vauchi().own_card()
+                && let Some(field) = card.fields().get(app.visibility_state.selected_field)
+            {
+                let field_label = field.label().to_string();
+                match app
+                    .app_engine
+                    .vauchi()
+                    .toggle_field_visibility(contact_id, &field_label)
+                {
+                    Ok(now_visible) => {
+                        let status = if now_visible {
+                            "now visible"
+                        } else {
+                            "now hidden"
+                        };
+                        app.set_status(format!("Field {} {}", field_label, status));
                     }
+                    Err(e) => app.set_status(format!("Error: {}", e)),
                 }
             }
         }

@@ -16,15 +16,15 @@ use tokio_tungstenite::tungstenite::Message;
 
 use vauchi_core::exchange::EncryptedExchangeMessage;
 use vauchi_core::network::simple_message::{
-    create_device_sync_ack, create_signed_handshake, create_simple_ack, create_simple_envelope,
-    decode_simple_message, encode_simple_message, LegacyExchangeMessage, SimpleAckStatus,
-    SimpleDeviceSyncMessage, SimpleEncryptedUpdate, SimplePayload,
+    LegacyExchangeMessage, SimpleAckStatus, SimpleDeviceSyncMessage, SimpleEncryptedUpdate,
+    SimplePayload, create_device_sync_ack, create_signed_handshake, create_simple_ack,
+    create_simple_envelope, decode_simple_message, encode_simple_message,
 };
-use vauchi_core::network::{classify_message, MessageType};
-use vauchi_core::sync::{process_card_updates, DeviceSyncOrchestrator, SyncItem};
+use vauchi_core::network::{MessageType, classify_message};
+use vauchi_core::sync::{DeviceSyncOrchestrator, SyncItem, process_card_updates};
 use vauchi_core::{
-    contact_card::ContactCard, crypto::ratchet::DoubleRatchetState, exchange::X3DHKeyPair,
-    storage::Storage, Contact, Identity,
+    Contact, Identity, contact_card::ContactCard, crypto::ratchet::DoubleRatchetState,
+    exchange::X3DHKeyPair, storage::Storage,
 };
 
 /// Type alias for the async WebSocket stream.
@@ -296,42 +296,42 @@ async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, Stri
                 let msg_type = classify_message(&data);
                 match msg_type {
                     MessageType::EncryptedUpdate => {
-                        if let Ok(envelope) = decode_simple_message(&data) {
-                            if let SimplePayload::EncryptedUpdate(update) = envelope.payload {
-                                if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
-                                    if let Some(exchange) =
-                                        LegacyExchangeMessage::from_bytes(&update.ciphertext)
-                                    {
-                                        legacy_exchange.push(exchange);
-                                    }
-                                } else if EncryptedExchangeMessage::from_bytes(&update.ciphertext)
-                                    .is_ok()
+                        if let Ok(envelope) = decode_simple_message(&data)
+                            && let SimplePayload::EncryptedUpdate(update) = envelope.payload
+                        {
+                            if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
+                                if let Some(exchange) =
+                                    LegacyExchangeMessage::from_bytes(&update.ciphertext)
                                 {
-                                    encrypted_exchange.push(update.ciphertext);
-                                } else {
-                                    card_updates.push((update.sender_id, update.ciphertext));
+                                    legacy_exchange.push(exchange);
                                 }
+                            } else if EncryptedExchangeMessage::from_bytes(&update.ciphertext)
+                                .is_ok()
+                            {
+                                encrypted_exchange.push(update.ciphertext);
+                            } else {
+                                card_updates.push((update.sender_id, update.ciphertext));
+                            }
 
-                                let ack = create_simple_ack(
-                                    &envelope.message_id,
-                                    SimpleAckStatus::ReceivedByRecipient,
-                                );
-                                if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data)).await;
-                                }
+                            let ack = create_simple_ack(
+                                &envelope.message_id,
+                                SimpleAckStatus::ReceivedByRecipient,
+                            );
+                            if let Ok(ack_data) = encode_simple_message(&ack) {
+                                let _ = socket.send(Message::Binary(ack_data)).await;
                             }
                         }
                     }
                     MessageType::DeviceSync => {
-                        if let Ok(envelope) = decode_simple_message(&data) {
-                            if let SimplePayload::DeviceSyncMessage(msg) = envelope.payload {
-                                let version = msg.version;
-                                device_sync_messages.push(msg);
+                        if let Ok(envelope) = decode_simple_message(&data)
+                            && let SimplePayload::DeviceSyncMessage(msg) = envelope.payload
+                        {
+                            let version = msg.version;
+                            device_sync_messages.push(msg);
 
-                                let ack = create_device_sync_ack(&envelope.message_id, version);
-                                if let Ok(ack_data) = encode_simple_message(&ack) {
-                                    let _ = socket.send(Message::Binary(ack_data)).await;
-                                }
+                            let ack = create_device_sync_ack(&envelope.message_id, version);
+                            if let Ok(ack_data) = encode_simple_message(&ack) {
+                                let _ = socket.send(Message::Binary(ack_data)).await;
                             }
                         }
                     }
@@ -386,12 +386,11 @@ async fn process_legacy_exchanges(
         let public_id = hex::encode(identity_key);
 
         if exchange.is_response {
-            if let Ok(Some(mut contact)) = storage.load_contact(&public_id) {
-                if contact.display_name() != exchange.display_name
-                    && contact.set_display_name(&exchange.display_name).is_ok()
-                {
-                    let _ = storage.save_contact(&contact);
-                }
+            if let Ok(Some(mut contact)) = storage.load_contact(&public_id)
+                && contact.display_name() != exchange.display_name
+                && contact.set_display_name(&exchange.display_name).is_ok()
+            {
+                let _ = storage.save_contact(&contact);
             }
             continue;
         }
@@ -602,10 +601,10 @@ fn apply_sync_item(storage: &Storage, item: &SyncItem) -> Result<(), String> {
             new_value,
             ..
         } => {
-            if let Ok(Some(mut card)) = storage.load_own_card() {
-                if card.update_field_value(field_label, new_value).is_ok() {
-                    storage.save_own_card(&card).map_err(|e| e.to_string())?;
-                }
+            if let Ok(Some(mut card)) = storage.load_own_card()
+                && card.update_field_value(field_label, new_value).is_ok()
+            {
+                storage.save_own_card(&card).map_err(|e| e.to_string())?;
             }
         }
         SyncItem::VisibilityChanged {

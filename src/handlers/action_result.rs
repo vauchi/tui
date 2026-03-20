@@ -26,14 +26,13 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     .components
                     .get(app.render_state.focused_component);
                 let focused_is_text_input = matches!(focused, Some(Component::TextInput { .. }));
-                if !focused_is_text_input {
-                    if let Some(idx) = screen_model
+                if !focused_is_text_input
+                    && let Some(idx) = screen_model
                         .components
                         .iter()
                         .position(|c| matches!(c, Component::TextInput { .. }))
-                    {
-                        app.render_state.focused_component = idx;
-                    }
+                {
+                    app.render_state.focused_component = idx;
                 }
             }
         }
@@ -85,7 +84,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactVisibility;
                     }
-                    vauchi_core::ui::AppScreen::FormDialog { ref dialog_type } => {
+                    vauchi_core::ui::AppScreen::FormDialog { dialog_type } => {
                         // Map form dialog types to the corresponding TUI screens,
                         // syncing legacy TUI state so to_app_screen() stays consistent.
                         use crate::app::{EditFieldState, EditNameState, EditRelayUrlState};

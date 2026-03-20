@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 
 use ratatui::style::Color;
 use serde::Deserialize;
-use vauchi_core::theme::{default_theme, ThemeMode};
+use vauchi_core::theme::{ThemeMode, default_theme};
 
 /// Embedded ANSI token mapping — compiled from `themes/generated/tokens_ansi.json`.
 const TOKENS_ANSI_JSON: &[u8] = include_bytes!("../../themes/generated/tokens_ansi.json");

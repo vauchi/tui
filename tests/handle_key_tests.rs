@@ -14,7 +14,7 @@ use vauchi_core::ui::AppEngine;
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 
 use vauchi_tui::app::{App, InputMode, Screen};
-use vauchi_tui::handlers::{handle_key, Action};
+use vauchi_tui::handlers::{Action, handle_key};
 
 /// Create AppEngine for a test data dir.
 fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {

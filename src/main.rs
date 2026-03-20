@@ -15,7 +15,7 @@ use clap::Parser;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::prelude::*;
 
@@ -443,7 +443,7 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
         }
 
         // Assign to groups round-robin
-        if let Some(ref g) = groups[i % 3] {
+        if let Some(g) = groups[i % 3] {
             let _ = vauchi.add_contact_to_group(g.id(), &contact_id);
         }
     }
@@ -460,19 +460,19 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
         terminal.draw(|f| ui::draw(f, app))?;
 
         // Poll background sync result channel (non-blocking).
-        if let Some(rx) = &app.sync_rx {
-            if let Ok(result) = rx.try_recv() {
-                app.sync_rx = None;
-                app.apply_sync_result(result);
-            }
+        if let Some(rx) = &app.sync_rx
+            && let Ok(result) = rx.try_recv()
+        {
+            app.sync_rx = None;
+            app.apply_sync_result(result);
         }
 
         // Poll background relay test result channel (non-blocking).
-        if let Some(rx) = &app.relay_test_rx {
-            if let Ok(result) = rx.try_recv() {
-                app.relay_test_rx = None;
-                app.apply_relay_test_result(result);
-            }
+        if let Some(rx) = &app.relay_test_rx
+            && let Ok(result) = rx.try_recv()
+        {
+            app.relay_test_rx = None;
+            app.apply_relay_test_result(result);
         }
 
         // Use short poll timeout when a background operation is in flight or
@@ -488,14 +488,13 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
             Duration::from_secs(1)
         };
 
-        if event::poll(poll_timeout)? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    match handlers::handle_key(app, key.code) {
-                        handlers::Action::Quit => return Ok(()),
-                        handlers::Action::Continue => {}
-                    }
-                }
+        if event::poll(poll_timeout)?
+            && let Event::Key(key) = event::read()?
+            && key.kind == KeyEventKind::Press
+        {
+            match handlers::handle_key(app, key.code) {
+                handlers::Action::Quit => return Ok(()),
+                handlers::Action::Continue => {}
             }
         }
     }

@@ -7,11 +7,11 @@
 //! Displays keybindings and their corresponding actions.
 //! Content changes based on the current screen.
 
+use ratatui::Frame;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
-use ratatui::Frame;
 
 use crate::theme::TuiTheme;
 

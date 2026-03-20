@@ -363,10 +363,10 @@ fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
 /// (e.g., TUI-specific navigation shortcuts like 's' for Settings).
 fn handle_engine_keys(app: &mut App, key: KeyCode) {
     // Ensure AppEngine is synced to the current TUI screen
-    if let Some(target) = app.to_app_screen() {
-        if *app.app_engine.current_app_screen() != target {
-            app.app_engine.navigate_to(target);
-        }
+    if let Some(target) = app.to_app_screen()
+        && *app.app_engine.current_app_screen() != target
+    {
+        app.app_engine.navigate_to(target);
     }
 
     // Get the current screen model from AppEngine
@@ -379,13 +379,11 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
             if matches!(
                 app.screen,
                 Screen::AddField | Screen::EditName | Screen::EditField | Screen::EditRelayUrl
-            ) {
-                if let UserAction::ActionPressed { ref action_id } = action {
-                    if action_id == "cancel" {
-                        app.go_back();
-                        return;
-                    }
-                }
+            ) && let UserAction::ActionPressed { ref action_id } = action
+                && action_id == "cancel"
+            {
+                app.go_back();
+                return;
             }
             // Forward the action to AppEngine
             let result = app.app_engine.handle_action(action);
