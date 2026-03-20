@@ -37,6 +37,7 @@ include:
       - '/ci-templates/perf.yml'
       - '/ci-templates/design-drift.yml'
       - '/ci-templates/badges.yml'
+      - '/ci-templates/token-lint.yml'
 
 stages:
   - auto-tag
@@ -345,6 +346,12 @@ verify:upstream-prerelease:
 # ============================================================
 # Deploy Stage — Badge Pages
 # ============================================================
+
+check:design-tokens:
+  extends: .token-lint-job
+  variables:
+    TOKEN_LINT_PATHS: "src"
+    TOKEN_LINT_GLOBS: "*.rs"
 
 pages:
   extends: .badges-pages
