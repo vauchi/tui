@@ -109,7 +109,6 @@ fn test_workflow_add_field() {
         label: String::new(),
         value: String::new(),
         focus: AddFieldFocus::Type,
-        ..Default::default()
     };
     steps.push(workflow_step(
         2,

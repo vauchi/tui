@@ -222,24 +222,13 @@ pub struct LockState {
     pub error: bool,
 }
 
-/// State for the add field dialog.
+/// State for the add field dialog (legacy — engine-driven path handles most logic).
 #[derive(Debug, Default)]
 pub struct AddFieldState {
     pub field_type_index: usize,
     pub label: String,
     pub value: String,
     pub focus: AddFieldFocus,
-    /// Social network picker state (used when field type is Social).
-    pub social_picker: SocialPickerState,
-}
-
-/// State for the social network picker.
-#[derive(Debug, Default)]
-pub struct SocialPickerState {
-    /// Available networks (id, display_name) pairs, sorted by display name.
-    pub networks: Vec<(String, String)>,
-    /// Currently selected network index.
-    pub selected: usize,
 }
 
 /// Tracks which input field is focused in the add-field dialog.
@@ -247,8 +236,6 @@ pub struct SocialPickerState {
 pub enum AddFieldFocus {
     #[default]
     Type,
-    /// Social network picker (only shown when field type is Social).
-    Network,
     Label,
     Value,
 }
