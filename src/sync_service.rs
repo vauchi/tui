@@ -285,35 +285,29 @@ async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, Stri
         match msg {
             Message::Binary(data) => {
                 let msg_type = classify_message(&data);
-                match msg_type {
-                    MessageType::EncryptedUpdate => {
-                        if let Ok(envelope) = decode_simple_message(&data)
-                            && let SimplePayload::EncryptedUpdate(update) = envelope.payload
+                if msg_type == MessageType::EncryptedUpdate
+                    && let Ok(envelope) = decode_simple_message(&data)
+                    && let SimplePayload::EncryptedUpdate(update) = envelope.payload
+                {
+                    if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
+                        if let Some(exchange) =
+                            LegacyExchangeMessage::from_bytes(&update.ciphertext)
                         {
-                            if LegacyExchangeMessage::is_exchange(&update.ciphertext) {
-                                if let Some(exchange) =
-                                    LegacyExchangeMessage::from_bytes(&update.ciphertext)
-                                {
-                                    legacy_exchange.push(exchange);
-                                }
-                            } else if EncryptedExchangeMessage::from_bytes(&update.ciphertext)
-                                .is_ok()
-                            {
-                                encrypted_exchange.push(update.ciphertext);
-                            } else {
-                                card_updates.push((update.sender_id, update.ciphertext));
-                            }
-
-                            let ack = create_simple_ack(
-                                &envelope.message_id,
-                                SimpleAckStatus::ReceivedByRecipient,
-                            );
-                            if let Ok(ack_data) = encode_simple_message(&ack) {
-                                let _ = socket.send(Message::Binary(ack_data)).await;
-                            }
+                            legacy_exchange.push(exchange);
                         }
+                    } else if EncryptedExchangeMessage::from_bytes(&update.ciphertext).is_ok() {
+                        encrypted_exchange.push(update.ciphertext);
+                    } else {
+                        card_updates.push((update.sender_id, update.ciphertext));
                     }
-                    _ => {}
+
+                    let ack = create_simple_ack(
+                        &envelope.message_id,
+                        SimpleAckStatus::ReceivedByRecipient,
+                    );
+                    if let Ok(ack_data) = encode_simple_message(&ack) {
+                        let _ = socket.send(Message::Binary(ack_data)).await;
+                    }
                 }
             }
             Message::Ping(data) => {
