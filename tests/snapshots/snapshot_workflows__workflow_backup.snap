@@ -35,7 +35,7 @@ expression: output
 ┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
 │  Backup                                                                      │
-│  Create an encrypted backup of your identity and contacts.                   │
+│  Create an encrypted backup of your identity. To preserve contacts, use devic│
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -61,7 +61,7 @@ expression: output
 ┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
 │  Backup                                                                      │
-│  Create an encrypted backup of your identity and contacts.                   │
+│  Create an encrypted backup of your identity. To preserve contacts, use devic│
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

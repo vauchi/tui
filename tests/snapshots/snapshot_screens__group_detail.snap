@@ -3,18 +3,18 @@ source: tests/snapshot_screens.rs
 description: Groups → press Enter on group
 expression: output
 ---
-                                      Group
+                                     Family
 
 ┌ [#] Group Info ──────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] Members                                                                 │
-│      0                                                                       │
+│      3                                                                       │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet. Use Exchange to add one.                                   │
-│                                                                              │
+┌ Contacts (3) ────────────────────────────────────────────────────────────────┐
+│▸ AS Abigale Schroeder                                                        │
+│  AD Andreanne Doyle                                                          │
+│  AN Ahmed Nikolaus                                                           │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

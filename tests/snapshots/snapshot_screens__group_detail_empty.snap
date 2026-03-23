@@ -3,7 +3,7 @@ source: tests/snapshot_screens.rs
 description: Groups → press Enter on empty group
 expression: output
 ---
-                                      Group
+                                   Empty Group
 
 ┌ [#] Group Info ──────────────────────────────────────────────────────────────┐
 │                                                                              │
