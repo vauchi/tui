@@ -16,12 +16,12 @@ use tokio_tungstenite::tungstenite::Message;
 
 use vauchi_core::exchange::EncryptedExchangeMessage;
 use vauchi_core::network::simple_message::{
-    LegacyExchangeMessage, SimpleAckStatus, SimpleDeviceSyncMessage, SimpleEncryptedUpdate,
-    SimplePayload, create_device_sync_ack, create_signed_handshake, create_simple_ack,
-    create_simple_envelope, decode_simple_message, encode_simple_message,
+    LegacyExchangeMessage, SimpleAckStatus, SimpleEncryptedUpdate, SimplePayload,
+    create_signed_handshake, create_simple_ack, create_simple_envelope, decode_simple_message,
+    encode_simple_message,
 };
 use vauchi_core::network::{MessageType, classify_message};
-use vauchi_core::sync::{DeviceSyncOrchestrator, SyncItem, process_card_updates};
+use vauchi_core::sync::process_card_updates;
 use vauchi_core::{
     Contact, Identity, contact_card::ContactCard, crypto::ratchet::DoubleRatchetState,
     exchange::X3DHKeyPair, storage::Storage,
@@ -73,7 +73,6 @@ struct ReceivedMessages {
     legacy_exchange: Vec<LegacyExchangeMessage>,
     encrypted_exchange: Vec<Vec<u8>>,
     card_updates: Vec<(String, Vec<u8>)>,
-    device_sync_messages: Vec<SimpleDeviceSyncMessage>,
 }
 
 /// Performs a full sync with the relay server.
@@ -206,13 +205,6 @@ async fn sync_async(identity: &Identity, storage: &Storage, relay_url: &str) -> 
         Err(e) => return SyncResult::error(format!("Card update failed: {}", e)),
     };
 
-    // Process device sync messages
-    let device_synced =
-        match process_device_sync_messages(identity, storage, received.device_sync_messages) {
-            Ok(count) => count,
-            Err(e) => return SyncResult::error(format!("Device sync failed: {}", e)),
-        };
-
     // Build device sync envelopes then send
     let device_envelopes =
         vauchi_core::sync::build_device_sync_envelopes(identity, storage).unwrap_or_default();
@@ -246,7 +238,7 @@ async fn sync_async(identity: &Identity, storage: &Storage, relay_url: &str) -> 
 
     SyncResult::success(
         contacts_added,
-        cards_updated + device_synced,
+        cards_updated,
         updates_sent + device_sync_sent,
     )
 }
@@ -282,7 +274,6 @@ async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, Stri
     let mut legacy_exchange = Vec::new();
     let mut encrypted_exchange = Vec::new();
     let mut card_updates = Vec::new();
-    let mut device_sync_messages = Vec::new();
 
     loop {
         let msg = match tokio::time::timeout(Duration::from_secs(1), socket.next()).await {
@@ -322,19 +313,6 @@ async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, Stri
                             }
                         }
                     }
-                    MessageType::DeviceSync => {
-                        if let Ok(envelope) = decode_simple_message(&data)
-                            && let SimplePayload::DeviceSyncMessage(msg) = envelope.payload
-                        {
-                            let version = msg.version;
-                            device_sync_messages.push(msg);
-
-                            let ack = create_device_sync_ack(&envelope.message_id, version);
-                            if let Ok(ack_data) = encode_simple_message(&ack) {
-                                let _ = socket.send(Message::Binary(ack_data)).await;
-                            }
-                        }
-                    }
                     _ => {}
                 }
             }
@@ -350,7 +328,6 @@ async fn receive_pending(socket: &mut WsStream) -> Result<ReceivedMessages, Stri
         legacy_exchange,
         encrypted_exchange,
         card_updates,
-        device_sync_messages,
     })
 }
 
@@ -518,118 +495,6 @@ async fn send_exchange_response(
     tokio::time::sleep(Duration::from_millis(100)).await;
     let _ = socket.close(None).await;
 
-    Ok(())
-}
-
-fn process_device_sync_messages(
-    identity: &Identity,
-    storage: &Storage,
-    messages: Vec<SimpleDeviceSyncMessage>,
-) -> Result<u32, String> {
-    if messages.is_empty() {
-        return Ok(0);
-    }
-
-    let registry = match storage.load_device_registry() {
-        Ok(Some(r)) if r.device_count() > 1 => r,
-        _ => return Ok(0),
-    };
-
-    let mut orchestrator =
-        DeviceSyncOrchestrator::new(storage, identity.create_device_info(), registry.clone());
-
-    let mut processed = 0u32;
-
-    for msg in messages {
-        let sender_device_id: [u8; 32] = match hex::decode(&msg.sender_device_id) {
-            Ok(bytes) if bytes.len() == 32 => {
-                let mut arr = [0u8; 32];
-                arr.copy_from_slice(&bytes);
-                arr
-            }
-            _ => continue,
-        };
-
-        let sender_device = match registry.find_device(&sender_device_id) {
-            Some(d) => d,
-            None => continue,
-        };
-
-        let plaintext = match orchestrator
-            .decrypt_from_device(&sender_device.exchange_public_key, &msg.encrypted_payload)
-        {
-            Ok(pt) => pt,
-            Err(_) => continue,
-        };
-
-        let items: Vec<SyncItem> = match serde_json::from_slice(&plaintext) {
-            Ok(items) => items,
-            Err(_) => continue,
-        };
-
-        let applied = match orchestrator.process_incoming(items) {
-            Ok(applied) => applied,
-            Err(_) => continue,
-        };
-
-        for item in &applied {
-            let _ = apply_sync_item(storage, item);
-        }
-
-        if !applied.is_empty() {
-            processed += 1;
-        }
-    }
-
-    Ok(processed)
-}
-
-fn apply_sync_item(storage: &Storage, item: &SyncItem) -> Result<(), String> {
-    match item {
-        SyncItem::ContactAdded { contact_data, .. } => {
-            if let Ok(contact) = contact_data.to_contact() {
-                storage.save_contact(&contact).map_err(|e| e.to_string())?;
-            }
-        }
-        SyncItem::ContactRemoved { contact_id, .. } => {
-            storage
-                .delete_contact(contact_id)
-                .map_err(|e| e.to_string())?;
-        }
-        SyncItem::CardUpdated {
-            field_label,
-            new_value,
-            ..
-        } => {
-            if let Ok(Some(mut card)) = storage.load_own_card()
-                && card.update_field_value(field_label, new_value).is_ok()
-            {
-                storage.save_own_card(&card).map_err(|e| e.to_string())?;
-            }
-        }
-        SyncItem::VisibilityChanged {
-            contact_id,
-            field_label,
-            is_visible,
-            ..
-        } => {
-            if let Some(mut contact) = storage
-                .load_contact(contact_id)
-                .map_err(|e| e.to_string())?
-            {
-                if *is_visible {
-                    contact.visibility_rules_mut().set_everyone(field_label);
-                } else {
-                    contact.visibility_rules_mut().set_nobody(field_label);
-                }
-                storage.save_contact(&contact).map_err(|e| e.to_string())?;
-            }
-        }
-        SyncItem::LabelChange { .. }
-        | SyncItem::ContactTrustChanged { .. }
-        | SyncItem::DeletionScheduled { .. }
-        | SyncItem::DeletionCancelled { .. } => {}
-    }
     Ok(())
 }
 
