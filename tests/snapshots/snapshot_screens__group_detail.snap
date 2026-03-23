@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_screens.rs
+assertion_line: 676
 description: Groups → press Enter on group
 expression: output
 ---
@@ -12,8 +13,8 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts (3) ────────────────────────────────────────────────────────────────┐
 │▸ AS Abigale Schroeder                                                        │
-│  AD Andreanne Doyle                                                          │
 │  AN Ahmed Nikolaus                                                           │
+│  AD Andreanne Doyle                                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
