@@ -7,7 +7,7 @@
 
 use crossterm::event::KeyCode;
 
-use vauchi_core::ui::{Component, UserAction};
+use vauchi_app::ui::{Component, UserAction};
 
 use super::super::screen_renderer::ScreenRenderState;
 use super::KeyResult;
@@ -103,7 +103,7 @@ pub(super) fn map_component_key(
                     // Toggle visibility of the selected field
                     if let Some(field) = fields.get(sel) {
                         let currently_visible =
-                            !matches!(field.visibility, vauchi_core::ui::UiFieldVisibility::Hidden);
+                            !matches!(field.visibility, vauchi_app::ui::UiFieldVisibility::Hidden);
                         KeyResult::Action(UserAction::FieldVisibilityChanged {
                             field_id: field.id.clone(),
                             group_id: None,
@@ -208,7 +208,7 @@ pub(super) fn map_component_key(
                 KeyCode::Enter | KeyCode::Char(' ') => {
                     if let Some(item) = items.get(sel) {
                         match &item.kind {
-                            vauchi_core::ui::SettingsItemKind::Toggle { .. } => {
+                            vauchi_app::ui::SettingsItemKind::Toggle { .. } => {
                                 KeyResult::Action(UserAction::SettingsToggled {
                                     component_id: id.clone(),
                                     item_id: item.id.clone(),

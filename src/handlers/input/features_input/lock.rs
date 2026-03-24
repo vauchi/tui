@@ -16,8 +16,8 @@ use crate::app::{App, LockState, Screen};
 /// 'q' does NOT quit — it's a PIN character.
 pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) {
     use crate::ui::widgets::key_mapping::{self, KeyResult};
+    use vauchi_app::ui::{ActionResult, WorkflowEngine};
     use vauchi_core::api::AuthMode;
-    use vauchi_core::ui::{ActionResult, WorkflowEngine};
 
     // Try engine-driven handling first
     if let Some(engine) = app.lock_engine.as_mut() {
@@ -28,7 +28,7 @@ pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) 
             KeyResult::Action(action) => {
                 // Sync lock_state from TextChanged actions before forwarding
                 match &action {
-                    vauchi_core::ui::UserAction::TextChanged {
+                    vauchi_app::ui::UserAction::TextChanged {
                         component_id,
                         value: _,
                     } if component_id == "pin" => {
@@ -46,11 +46,10 @@ pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) 
                         }
                         // Feed full accumulated value to engine
                         if let Some(engine) = app.lock_engine.as_mut() {
-                            let _ =
-                                engine.handle_action(vauchi_core::ui::UserAction::TextChanged {
-                                    component_id: "pin".into(),
-                                    value: app.lock_state.pin_input.clone(),
-                                });
+                            let _ = engine.handle_action(vauchi_app::ui::UserAction::TextChanged {
+                                component_id: "pin".into(),
+                                value: app.lock_state.pin_input.clone(),
+                            });
                         }
                         return;
                     }

@@ -12,7 +12,7 @@ use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 use tempfile::TempDir;
 
-use vauchi_core::ui::AppEngine;
+use vauchi_app::ui::AppEngine;
 use vauchi_core::{
     Contact, ContactCard, ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig,
 };
@@ -36,7 +36,7 @@ pub fn ensure_locales_loaded() {
         ];
         for candidate in candidates.iter().flatten() {
             let path = std::path::Path::new(candidate);
-            if path.join("en.json").exists() && vauchi_core::i18n::init(path).is_ok() {
+            if path.join("en.json").exists() && vauchi_app::i18n::init(path).is_ok() {
                 return;
             }
         }

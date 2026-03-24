@@ -7,8 +7,8 @@
 //! These functions wrap platform operations (opening URLs, copying to clipboard)
 //! that don't belong in vauchi-core.
 
+use vauchi_app::ui::{UserAction, WorkflowEngine};
 use vauchi_core::contact_card::ContactAction;
-use vauchi_core::ui::{UserAction, WorkflowEngine};
 
 /// Execute a contact action (open URI or copy to clipboard).
 ///
@@ -116,7 +116,7 @@ pub fn cycle_group_filter(app: &mut crate::app::App) {
 
     // Find current active group (Primary style = active)
     let active = screen.actions.iter().find(|a| {
-        a.id.starts_with("filter_group:") && a.style == vauchi_core::ui::ActionStyle::Primary
+        a.id.starts_with("filter_group:") && a.style == vauchi_app::ui::ActionStyle::Primary
     });
 
     let next_action = if let Some(active) = active {

@@ -5,7 +5,7 @@
 //! Tests for `handle_action_result` — verifies that each `ActionResult` variant
 //! produces the correct TUI state change.
 
-use vauchi_core::ui::{ActionResult, AppEngine, AppScreen, ScreenModel};
+use vauchi_app::ui::{ActionResult, AppEngine, AppScreen, ScreenModel};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, Screen};
 use vauchi_tui::handlers::action_result::handle_action_result;

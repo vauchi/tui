@@ -4,7 +4,7 @@
 
 //! Screen navigation — `goto()`, `go_back()`, `to_app_screen()`, and nav-index sync.
 
-use vauchi_core::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
+use vauchi_app::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
 
 use super::App;
 use super::state::*;

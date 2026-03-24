@@ -10,7 +10,7 @@ mod component_keys;
 
 use crossterm::event::KeyCode;
 
-use vauchi_core::ui::{Component, ScreenModel, UserAction};
+use vauchi_app::ui::{Component, ScreenModel, UserAction};
 
 use super::screen_renderer::ScreenRenderState;
 
@@ -142,7 +142,7 @@ pub fn map_key(key: KeyCode, screen: &ScreenModel, state: &mut ScreenRenderState
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vauchi_core::ui::*;
+    use vauchi_app::ui::*;
 
     fn make_screen(components: Vec<Component>, actions: Vec<ScreenAction>) -> ScreenModel {
         ScreenModel {

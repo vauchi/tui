@@ -12,7 +12,7 @@ use tempfile::TempDir;
 
 use crossterm::event::KeyCode;
 
-use vauchi_core::ui::AppEngine;
+use vauchi_app::ui::AppEngine;
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, EmergencyFocus, EmergencyState, InputMode, Screen};
 use vauchi_tui::handlers::{Action, handle_key};
@@ -28,7 +28,7 @@ fn ensure_locales_loaded() {
         ];
         for candidate in candidates.iter().flatten() {
             let path = std::path::Path::new(candidate);
-            if path.join("en.json").exists() && vauchi_core::i18n::init(path).is_ok() {
+            if path.join("en.json").exists() && vauchi_app::i18n::init(path).is_ok() {
                 return;
             }
         }

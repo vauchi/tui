@@ -19,10 +19,10 @@ use crossterm::{
 };
 use ratatui::prelude::*;
 
+use vauchi_app::ui::AppEngine;
 use vauchi_core::crypto::SymmetricKey;
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
-use vauchi_core::ui::AppEngine;
 use vauchi_core::{Vauchi, VauchiConfig};
 
 #[cfg(not(feature = "secure-storage"))]

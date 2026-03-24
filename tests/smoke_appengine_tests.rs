@@ -9,7 +9,7 @@
 
 use ratatui::prelude::*;
 
-use vauchi_core::ui::AppEngine;
+use vauchi_app::ui::AppEngine;
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, Screen};
 use vauchi_tui::ui;

@@ -11,7 +11,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Tabs};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::{FieldDisplay, GroupCardView};
+use vauchi_app::ui::{FieldDisplay, GroupCardView};
 
 /// State needed to render a card preview component.
 pub struct CardPreviewWidget<'a> {

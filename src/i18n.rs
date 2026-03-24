@@ -6,7 +6,7 @@
 //!
 //! Provides convenient string lookup using vauchi-core i18n.
 
-use vauchi_core::i18n::{
+use vauchi_app::i18n::{
     Locale, LocaleInfo, get_available_locales, get_locale_info, get_string, get_string_with_args,
 };
 

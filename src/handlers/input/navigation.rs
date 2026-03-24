@@ -12,8 +12,8 @@ use crate::app::{
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use super::Action;
+use vauchi_app::ui::{ActionResult, AppScreen, WorkflowEngine};
 use vauchi_core::aha_moments::AhaMomentType;
-use vauchi_core::ui::{ActionResult, AppScreen, WorkflowEngine};
 
 pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
     match key {

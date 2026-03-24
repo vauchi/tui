@@ -10,8 +10,8 @@
 
 mod common;
 
+use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
-use vauchi_core::ui::LockScreenEngine;
 use vauchi_tui::app::{
     ActionMenuState, AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState,
     ContactLimitState, DeliveryState, DuplicateEntry, DuplicatesState, DuressState, EditFieldState,
@@ -708,15 +708,15 @@ fn test_snapshot_setup_create_identity() {
     // Advance onboarding to CreateIdentity step
     app.screen = Screen::SetupCreateIdentity;
     if let Some(engine) = &mut app.onboarding_engine {
-        use vauchi_core::ui::WorkflowEngine;
+        use vauchi_app::ui::WorkflowEngine;
         // Navigate through IdentityCheck -> LinkChoice -> Welcome -> CreateIdentity
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
         });
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "next".to_string(),
         });
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "next".to_string(),
         });
     }
@@ -735,17 +735,17 @@ fn test_snapshot_setup_add_fields() {
     let (mut app, _tmp) = create_app_without_identity();
     app.screen = Screen::SetupAddFields;
     if let Some(engine) = &mut app.onboarding_engine {
-        use vauchi_core::ui::WorkflowEngine;
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        use vauchi_app::ui::WorkflowEngine;
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
         });
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "next".to_string(),
         });
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "next".to_string(),
         });
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "next".to_string(),
         });
     }
@@ -764,12 +764,12 @@ fn test_snapshot_setup_security() {
     let (mut app, _tmp) = create_app_without_identity();
     app.screen = Screen::SetupSecurity;
     if let Some(engine) = &mut app.onboarding_engine {
-        use vauchi_core::ui::WorkflowEngine;
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        use vauchi_app::ui::WorkflowEngine;
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
         });
         for _ in 0..4 {
-            let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+            let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
                 action_id: "next".to_string(),
             });
         }
@@ -784,12 +784,12 @@ fn test_snapshot_setup_ready() {
     let (mut app, _tmp) = create_app_without_identity();
     app.screen = Screen::SetupReady;
     if let Some(engine) = &mut app.onboarding_engine {
-        use vauchi_core::ui::WorkflowEngine;
-        let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+        use vauchi_app::ui::WorkflowEngine;
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
         });
         for _ in 0..5 {
-            let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+            let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
                 action_id: "next".to_string(),
             });
         }

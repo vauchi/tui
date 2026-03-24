@@ -11,7 +11,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::ToggleItem;
+use vauchi_app::ui::ToggleItem;
 
 /// State needed to render a toggle list component.
 pub struct ToggleListWidget<'a> {

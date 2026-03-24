@@ -37,9 +37,9 @@ fn test_workflow_onboarding() {
     ];
     let actions = ["create_new", "next", "next", "next"];
     for (i, (label, action_id)) in step_labels.iter().zip(actions.iter()).enumerate() {
-        use vauchi_core::ui::WorkflowEngine;
+        use vauchi_app::ui::WorkflowEngine;
         if let Some(engine) = &mut app.onboarding_engine {
-            let _ = engine.handle_action(vauchi_core::ui::UserAction::ActionPressed {
+            let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
                 action_id: action_id.to_string(),
             });
         }

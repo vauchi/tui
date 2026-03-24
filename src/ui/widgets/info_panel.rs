@@ -11,7 +11,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::InfoItem;
+use vauchi_app::ui::InfoItem;
 
 /// State needed to render an info panel component.
 pub struct InfoPanelWidget<'a> {

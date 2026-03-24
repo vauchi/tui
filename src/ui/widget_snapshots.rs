@@ -10,7 +10,7 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 
-use vauchi_core::ui::{
+use vauchi_app::ui::{
     FieldDisplay, GroupCardView, InfoItem, ToggleItem, UiFieldVisibility, VisibilityMode,
 };
 

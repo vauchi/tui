@@ -9,13 +9,13 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::{QrMode, Status};
+use vauchi_app::ui::{QrMode, Status};
 
 /// Render the step progress indicator.
 pub(super) fn render_progress(
     f: &mut Frame,
     area: Rect,
-    progress: &vauchi_core::ui::Progress,
+    progress: &vauchi_app::ui::Progress,
     theme: &TuiTheme,
 ) {
     let dots: String = (1..=progress.total_steps)

@@ -14,7 +14,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::{Component, ScreenModel, TextStyle};
+use vauchi_app::ui::{Component, ScreenModel, TextStyle};
 
 use super::card_preview::CardPreviewWidget;
 use super::field_list::FieldListWidget;

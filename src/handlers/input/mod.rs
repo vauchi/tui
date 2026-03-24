@@ -10,7 +10,7 @@ mod features_input;
 mod navigation;
 
 use crossterm::event::KeyCode;
-use vauchi_core::ui::{ActionResult, UserAction, WorkflowEngine};
+use vauchi_app::ui::{ActionResult, UserAction, WorkflowEngine};
 
 use crate::app::{App, InputMode, Screen};
 use crate::handlers::action_result::handle_action_result;

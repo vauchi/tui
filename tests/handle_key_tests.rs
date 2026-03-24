@@ -10,7 +10,7 @@
 use crossterm::event::KeyCode;
 use tempfile::TempDir;
 
-use vauchi_core::ui::AppEngine;
+use vauchi_app::ui::AppEngine;
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 
 use vauchi_tui::app::{App, InputMode, Screen};

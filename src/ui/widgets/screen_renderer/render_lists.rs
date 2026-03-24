@@ -8,7 +8,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
 
 use crate::theme::TuiTheme;
-use vauchi_core::ui::SettingsItemKind;
+use vauchi_app::ui::SettingsItemKind;
 
 use super::ScreenRenderState;
 
@@ -17,7 +17,7 @@ use super::ScreenRenderState;
 pub(super) fn render_contact_list(
     f: &mut Frame,
     area: Rect,
-    contacts: &[vauchi_core::ui::ContactItem],
+    contacts: &[vauchi_app::ui::ContactItem],
     _searchable: bool,
     is_focused: bool,
     state: &ScreenRenderState,
@@ -109,7 +109,7 @@ pub(super) fn render_settings_group(
     f: &mut Frame,
     area: Rect,
     label: &str,
-    items: &[vauchi_core::ui::SettingsItem],
+    items: &[vauchi_app::ui::SettingsItem],
     is_focused: bool,
     state: &ScreenRenderState,
     component_idx: usize,
@@ -169,7 +169,7 @@ pub(super) fn render_settings_group(
 pub(super) fn render_action_list(
     f: &mut Frame,
     area: Rect,
-    items: &[vauchi_core::ui::ActionListItem],
+    items: &[vauchi_app::ui::ActionListItem],
     is_focused: bool,
     state: &ScreenRenderState,
     component_idx: usize,

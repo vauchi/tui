@@ -5,7 +5,7 @@
 //! Contact-related input handlers: contact list, detail, actions, visibility.
 
 use crossterm::event::KeyCode;
-use vauchi_core::ui::WorkflowEngine;
+use vauchi_app::ui::WorkflowEngine;
 
 use crate::app::{
     ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, Screen,
@@ -59,9 +59,7 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
                 .components
                 .iter()
                 .find_map(|c| match c {
-                    vauchi_core::ui::Component::ContactList { contacts, .. } => {
-                        Some(contacts.len())
-                    }
+                    vauchi_app::ui::Component::ContactList { contacts, .. } => Some(contacts.len()),
                     _ => None,
                 })
                 .unwrap_or(0);

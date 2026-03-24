@@ -9,8 +9,8 @@ pub mod state;
 
 pub use state::*;
 
+use vauchi_app::ui::{AppEngine, AppScreen, LockScreenEngine, OnboardingEngine};
 use vauchi_core::api::DeviceLinkResult;
-use vauchi_core::ui::{AppEngine, AppScreen, LockScreenEngine, OnboardingEngine};
 
 use crate::i18n::I18n;
 use crate::sync_service::SyncResult;
@@ -494,7 +494,7 @@ impl App {
 mod tests {
     use super::*;
     use std::sync::Mutex;
-    use vauchi_core::i18n::Locale;
+    use vauchi_app::i18n::Locale;
 
     /// Env-var tests must be serialised — set_var/remove_var is process-global.
     static ENV_LOCK: Mutex<()> = Mutex::new(());

@@ -7,7 +7,7 @@
 
 use crossterm::event::KeyCode;
 
-use vauchi_core::ui::{ScreenModel, UserAction};
+use vauchi_app::ui::{ScreenModel, UserAction};
 
 use super::KeyResult;
 
@@ -23,7 +23,7 @@ pub(super) fn map_action_key(key: KeyCode, screen: &ScreenModel) -> KeyResult {
             let action = screen
                 .actions
                 .iter()
-                .find(|a| a.enabled && matches!(a.style, vauchi_core::ui::ActionStyle::Primary))
+                .find(|a| a.enabled && matches!(a.style, vauchi_app::ui::ActionStyle::Primary))
                 .or_else(|| screen.actions.iter().find(|a| a.enabled));
 
             if let Some(action) = action {

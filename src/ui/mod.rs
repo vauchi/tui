@@ -13,7 +13,7 @@ mod widget_snapshots;
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
-use vauchi_core::ui::{ScreenModel, WorkflowEngine};
+use vauchi_app::ui::{ScreenModel, WorkflowEngine};
 
 use crate::app::{App, Screen};
 use crate::ui::focus::FocusZone;
@@ -282,12 +282,12 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
         let focused_is_toggle = model
             .components
             .get(focused)
-            .map(|c| matches!(c, vauchi_core::ui::Component::ToggleList { .. }))
+            .map(|c| matches!(c, vauchi_app::ui::Component::ToggleList { .. }))
             .unwrap_or(false);
         let focused_is_field = model
             .components
             .get(focused)
-            .map(|c| matches!(c, vauchi_core::ui::Component::FieldList { .. }))
+            .map(|c| matches!(c, vauchi_app::ui::Component::FieldList { .. }))
             .unwrap_or(false);
 
         let mut action_items: Vec<ActionItem> = Vec::new();
@@ -318,7 +318,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
                         .iter()
                         .find(|ga| {
                             ga.id.starts_with("filter_group:")
-                                && ga.style == vauchi_core::ui::ActionStyle::Primary
+                                && ga.style == vauchi_app::ui::ActionStyle::Primary
                         })
                         .map(|ga| ga.label.as_str());
                     let label = match active_group {
@@ -331,7 +331,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
                 }
             } else {
                 let key_str = screen_renderer::action_key_hint_pub(&a.id);
-                let is_primary = a.style == vauchi_core::ui::ActionStyle::Primary;
+                let is_primary = a.style == vauchi_app::ui::ActionStyle::Primary;
                 action_items.push(ActionItem::new(key_str, &a.label).with_active(is_primary));
             }
         }

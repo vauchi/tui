@@ -5,3 +5,7 @@
 [default.extend-words]
 # Terminal snapshots contain truncated words at screen boundaries
 devic = "devic"
+# Ratatui is the TUI framework crate name
+Ratatui = "Ratatui"
+# Intentional garbled text check for corrupted storage detection
+ecryption = "ecryption"

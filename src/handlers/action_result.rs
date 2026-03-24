@@ -4,7 +4,7 @@
 
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
-use vauchi_core::ui::{ActionResult, Component, LockScreenEngine, WorkflowEngine};
+use vauchi_app::ui::{ActionResult, Component, LockScreenEngine, WorkflowEngine};
 
 use crate::app::{App, Screen};
 
@@ -46,49 +46,49 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             {
                 app.render_state = Default::default();
                 match app.app_engine.current_app_screen() {
-                    vauchi_core::ui::AppScreen::MyInfo => app.screen = Screen::MyInfo,
-                    vauchi_core::ui::AppScreen::Contacts => app.screen = Screen::Contacts,
-                    vauchi_core::ui::AppScreen::Exchange => app.screen = Screen::Exchange,
-                    vauchi_core::ui::AppScreen::Settings => app.screen = Screen::Settings,
-                    vauchi_core::ui::AppScreen::Help => app.screen = Screen::Help,
-                    vauchi_core::ui::AppScreen::Onboarding => {
+                    vauchi_app::ui::AppScreen::MyInfo => app.screen = Screen::MyInfo,
+                    vauchi_app::ui::AppScreen::Contacts => app.screen = Screen::Contacts,
+                    vauchi_app::ui::AppScreen::Exchange => app.screen = Screen::Exchange,
+                    vauchi_app::ui::AppScreen::Settings => app.screen = Screen::Settings,
+                    vauchi_app::ui::AppScreen::Help => app.screen = Screen::Help,
+                    vauchi_app::ui::AppScreen::Onboarding => {
                         app.screen = Screen::SetupWelcome;
                     }
-                    vauchi_core::ui::AppScreen::ContactDetail { contact_id } => {
+                    vauchi_app::ui::AppScreen::ContactDetail { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactDetail;
                     }
-                    vauchi_core::ui::AppScreen::Backup => app.screen = Screen::Backup,
-                    vauchi_core::ui::AppScreen::Lock => {
+                    vauchi_app::ui::AppScreen::Backup => app.screen = Screen::Backup,
+                    vauchi_app::ui::AppScreen::Lock => {
                         if app.lock_engine.is_none() {
                             app.lock_engine = Some(LockScreenEngine::new(5));
                         }
                         app.screen = Screen::Lock;
                     }
-                    vauchi_core::ui::AppScreen::DeviceLinking => app.screen = Screen::Devices,
-                    vauchi_core::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
-                    vauchi_core::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
-                    vauchi_core::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
-                    vauchi_core::ui::AppScreen::Sync => app.screen = Screen::Sync,
-                    vauchi_core::ui::AppScreen::TorSettings => app.screen = Screen::TorSettings,
-                    vauchi_core::ui::AppScreen::Recovery => app.screen = Screen::Recovery,
-                    vauchi_core::ui::AppScreen::Groups => app.screen = Screen::Groups,
-                    vauchi_core::ui::AppScreen::More => app.screen = Screen::More,
-                    vauchi_core::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
-                    vauchi_core::ui::AppScreen::Support => app.screen = Screen::Support,
-                    vauchi_core::ui::AppScreen::GroupDetail { group_id } => {
+                    vauchi_app::ui::AppScreen::DeviceLinking => app.screen = Screen::Devices,
+                    vauchi_app::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
+                    vauchi_app::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
+                    vauchi_app::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
+                    vauchi_app::ui::AppScreen::Sync => app.screen = Screen::Sync,
+                    vauchi_app::ui::AppScreen::TorSettings => app.screen = Screen::TorSettings,
+                    vauchi_app::ui::AppScreen::Recovery => app.screen = Screen::Recovery,
+                    vauchi_app::ui::AppScreen::Groups => app.screen = Screen::Groups,
+                    vauchi_app::ui::AppScreen::More => app.screen = Screen::More,
+                    vauchi_app::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
+                    vauchi_app::ui::AppScreen::Support => app.screen = Screen::Support,
+                    vauchi_app::ui::AppScreen::GroupDetail { group_id } => {
                         app.groups_state.selected_group_id = Some(group_id.clone());
                         app.screen = Screen::GroupDetail;
                     }
-                    vauchi_core::ui::AppScreen::ContactVisibility { contact_id } => {
+                    vauchi_app::ui::AppScreen::ContactVisibility { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactVisibility;
                     }
-                    vauchi_core::ui::AppScreen::FormDialog { dialog_type } => {
+                    vauchi_app::ui::AppScreen::FormDialog { dialog_type } => {
                         // Map form dialog types to the corresponding TUI screens,
                         // syncing legacy TUI state so to_app_screen() stays consistent.
                         use crate::app::{EditFieldState, EditNameState, EditRelayUrlState};
-                        use vauchi_core::ui::FormDialogType;
+                        use vauchi_app::ui::FormDialogType;
                         match dialog_type {
                             FormDialogType::AddField { .. } => {
                                 app.screen = Screen::AddField;
@@ -120,20 +120,20 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                             }
                         }
                     }
-                    vauchi_core::ui::AppScreen::ContactEdit { contact_id } => {
+                    vauchi_app::ui::AppScreen::ContactEdit { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactEdit;
                     }
-                    vauchi_core::ui::AppScreen::ContactDuplicates => {
+                    vauchi_app::ui::AppScreen::ContactDuplicates => {
                         app.screen = Screen::ContactDuplicates;
                     }
-                    vauchi_core::ui::AppScreen::ContactMerge { .. } => {
+                    vauchi_app::ui::AppScreen::ContactMerge { .. } => {
                         app.screen = Screen::ContactMerge;
                     }
-                    vauchi_core::ui::AppScreen::ContactLimit => {
+                    vauchi_app::ui::AppScreen::ContactLimit => {
                         app.screen = Screen::ContactLimit;
                     }
-                    vauchi_core::ui::AppScreen::MyInfoEntryDetail { .. } => {
+                    vauchi_app::ui::AppScreen::MyInfoEntryDetail { .. } => {
                         app.screen = Screen::MyInfoEntryDetail;
                     }
                 }
@@ -213,12 +213,12 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         }
         ActionResult::WipeComplete => {
             app.screen = Screen::SetupWelcome;
-            app.onboarding_engine = Some(vauchi_core::ui::OnboardingEngine::new());
+            app.onboarding_engine = Some(vauchi_app::ui::OnboardingEngine::new());
             app.render_state = Default::default();
             app.invalidate_engines();
             // AppEngine's Vauchi data was wiped — navigate to Onboarding
             app.app_engine
-                .navigate_to(vauchi_core::ui::AppScreen::Onboarding);
+                .navigate_to(vauchi_app::ui::AppScreen::Onboarding);
         }
         ActionResult::TorCommand { .. } => {
             // Tor backend not available in terminal mode
