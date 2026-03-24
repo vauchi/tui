@@ -96,6 +96,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                                 field_id,
                                 field_label,
                                 current_value,
+                                current_note: _,
                             } => {
                                 app.edit_field_state = EditFieldState {
                                     field_id: field_id.clone(),
@@ -219,6 +220,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             app.app_engine
                 .navigate_to(vauchi_app::ui::AppScreen::Onboarding);
         }
+        // trust-notes-preview (core!368) — not yet implemented in TUI
+        ActionResult::PreviewAs { .. } | ActionResult::ShowContactPicker => {}
     }
 }
 

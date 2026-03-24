@@ -104,6 +104,7 @@ impl App {
                     field_id: self.edit_field_state.field_id.clone(),
                     field_label: self.edit_field_state.field_label.clone(),
                     current_value: self.edit_field_state.new_value.clone(),
+                    current_note: None,
                 },
             }),
             Screen::EditRelayUrl => Some(AppScreen::FormDialog {

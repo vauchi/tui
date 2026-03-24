@@ -318,6 +318,7 @@ pub(super) fn map_component_key(
         | Component::StatusIndicator { .. }
         | Component::QrCode { .. }
         | Component::ShowToast { .. }
+        | Component::Banner { .. }
         | Component::Divider => KeyResult::Unhandled,
     }
 }

@@ -6,24 +6,24 @@ expression: output
                                 Abigale Schroeder
 
 ┌ Perspective ─────────────────────────────────────────────────────────────────┐
-│ [x] Their Info                                                               │
-│     What they share with me                                                  │
-│ [ ] My Info for Them                                                         │
-│     What I share with them                                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
-│                                                                              │
-│  Initials                                                                    │
-│  AS                                                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
-│Type       Label           Value                                              │
-│                                                                              │
-│Phone      Mobile          +1-200-100-1000                                    │
-│Email      Email           abigale.schroeder@example.com                      │
-│Address    Address         100 Main St, Springfield                           │
 └──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
 
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
 
-[Space] select  [e] Edit  [Esc] Back  [?] help  [Esc] back  [q] quit
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+  Private note:
+
+┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+[Space] select  [e] Edit  [Enter] What do they see?  [Esc] Back  [?] help
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

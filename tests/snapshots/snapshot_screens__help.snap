@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_screens.rs
-description: "MyInfo → press '5' (Help tab)"
+description: "MyInfo → press '5' (More tab) → Help"
 expression: output
 ---
                                    Help & FAQ
@@ -15,7 +15,7 @@ expression: output
 │   • How does social recovery work?                                           │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   • How does Tor routing protect my privacy?                                 │
+│   • How is my IP address protected?                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

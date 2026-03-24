@@ -61,8 +61,8 @@ fn test_screen_variants_exist() {
         Screen::ContactLimit,
     ];
 
-    // Verify we have all 33 screen variants (Setup removed — superseded by SetupWelcome)
-    assert_eq!(screens.len(), 33);
+    // Verify we have all 32 screen variants (TorSettings removed — replaced by OHTTP)
+    assert_eq!(screens.len(), 32);
 }
 
 /// Test: Screen Home is the initial screen variant

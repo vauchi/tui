@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_screens.rs
-assertion_line: 676
 description: Groups → press Enter on group
 expression: output
 ---
@@ -26,5 +25,5 @@ expression: output
 
 
 
-[Enter] Rename  [Enter] Delete Group  [?] help  [Esc] back  [q] quit
+[Enter] Preview as Abigale Schroeder  [Enter] Preview as Ahmed Nikolaus
    1 My Card    │  2 Contacts   │  3 Exchange   │  4 ★ Groups   │    5 More

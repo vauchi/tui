@@ -215,6 +215,7 @@ fn render_components(
             Component::ShowToast { .. } => Constraint::Length(2),
             Component::InlineConfirm { .. } => Constraint::Length(4),
             Component::EditableText { .. } => Constraint::Length(3),
+            Component::Banner { .. } => Constraint::Length(2),
         })
         .collect();
 
@@ -424,6 +425,17 @@ fn render_components(
                     Style::default().fg(theme.fg)
                 };
                 let para = Paragraph::new(text).style(style);
+                f.render_widget(para, chunk);
+            }
+            Component::Banner {
+                text,
+                action_label: _,
+                action_id: _,
+            } => {
+                let style = Style::default()
+                    .fg(theme.accent)
+                    .add_modifier(Modifier::BOLD);
+                let para = Paragraph::new(format!("  {text}")).style(style);
                 f.render_widget(para, chunk);
             }
         }

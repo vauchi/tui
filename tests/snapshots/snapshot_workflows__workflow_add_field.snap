@@ -26,7 +26,7 @@ expression: output
 
 
 
-[a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
+[a] Add Entry  [Enter] Group View  [Enter] Preview as...  [?] help  [Esc] back
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 2 ─ AddField — press 'a' (Add Entry) ══════════════
@@ -78,5 +78,5 @@ Comment (your eyes only, optional)
 
 
 
-[a] Add Entry  [Enter] Group View  [?] help  [Esc] back  [q] quit
+[a] Add Entry  [Enter] Group View  [Enter] Preview as...  [?] help  [Esc] back
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
