@@ -1,0 +1,134 @@
+---
+source: tests/snapshot_workflows.rs
+description: "Settings navigation: Settings → Privacy → Backup"
+expression: output
+---
+═══ Step 1 ─ Settings — press '5' (More tab) → Settings ══
+                                    Settings
+
+┌ Profile ─────────────────────────────────────────────────────────────────────┐
+│ ▸ Display Name  Alice Smith                                                  │
+│   Edit Profile  →                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Privacy ─────────────────────────────────────────────────────────────────────┐
+│   Delivery Receipts  [x]                                                     │
+│   Suppress Presence  [ ]                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Security ────────────────────────────────────────────────────────────────────┐
+│   Change Password  →                                                         │
+│   Devices  1 device                                                          │
+│   Duress PIN  →                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Network ─────────────────────────────────────────────────────────────────────┐
+│   Relay URL  wss://relay.vauchi.app                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Danger Zone ─────────────────────────────────────────────────────────────────┐
+│   Emergency Wipe  Wipe All Data                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+[?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
+
+═══ Step 2 ─ Privacy — select Privacy & Data ═══════════════
+                                 Privacy & Data
+
+┌ [-] Data Status ─────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Deletion Status                                                             │
+│  No deletion requested                                                       │
+│                                                                              │
+│  Consent                                                                     │
+│  Active                                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   data View My Data  See what data is stored locally                         │
+│   consent Manage Consent  Review and update data consent                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+[Enter] Export Data  [x] Delete Identity  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
+
+═══ Step 3 ─ Settings — press Esc (back) ═══════════════════
+                                    Settings
+
+┌ Profile ─────────────────────────────────────────────────────────────────────┐
+│ ▸ Display Name  Alice Smith                                                  │
+│   Edit Profile  →                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Privacy ─────────────────────────────────────────────────────────────────────┐
+│   Delivery Receipts  [x]                                                     │
+│   Suppress Presence  [ ]                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Security ────────────────────────────────────────────────────────────────────┐
+│   Change Password  →                                                         │
+│   Devices  1 device                                                          │
+│   Duress PIN  →                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Network ─────────────────────────────────────────────────────────────────────┐
+│   Relay URL  wss://relay.vauchi.app                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Danger Zone ─────────────────────────────────────────────────────────────────┐
+│   Emergency Wipe  Wipe All Data                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+[?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
+
+═══ Step 4 ─ Backup — select Backup ════════════════════════
+                                Backup & Recovery
+
+┌ [B] Protect your data ───────────────────────────────────────────────────────┐
+│                                                                              │
+│  Backup                                                                      │
+│  Create an encrypted backup of your identity. To preserve contacts, use devic│
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
+
+═══ Step 5 ─ Settings — press Esc (back) ═══════════════════
+                                    Settings
+
+┌ Profile ─────────────────────────────────────────────────────────────────────┐
+│ ▸ Display Name  Alice Smith                                                  │
+│   Edit Profile  →                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Privacy ─────────────────────────────────────────────────────────────────────┐
+│   Delivery Receipts  [x]                                                     │
+│   Suppress Presence  [ ]                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Security ────────────────────────────────────────────────────────────────────┐
+│   Change Password  →                                                         │
+│   Devices  1 device                                                          │
+│   Duress PIN  →                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Network ─────────────────────────────────────────────────────────────────────┐
+│   Relay URL  wss://relay.vauchi.app                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Danger Zone ─────────────────────────────────────────────────────────────────┐
+│   Emergency Wipe  Wipe All Data                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+[?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
