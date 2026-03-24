@@ -38,7 +38,7 @@ expression: output
 │  No deletion requested                                                       │
 │                                                                              │
 │  Consent                                                                     │
-│  No data export requested                                                    │
+│  Active                                                                      │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │   data View My Data  See what data is stored locally                         │
@@ -52,7 +52,7 @@ expression: output
 
 
 
-[Enter] Export Data  [x] Delete All Data  [?] help  [Esc] back  [q] quit
+[Enter] Export Data  [x] Delete Identity  [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 3 ─ Settings — press Esc (back) ═══════════════════

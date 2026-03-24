@@ -5,7 +5,10 @@ expression: output
 ---
                                       Sync
 
-┌ [-] Sync Status ─────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ✗ Relay: Offline — Changes will sync automatically when connected. Check your│
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ [-] Details ─────────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] Relay                                                                   │
 │      wss://relay.vauchi.app                                                  │
@@ -22,8 +25,5 @@ expression: output
 
 
 
-
-
-
-[Enter] Sync Now  [Enter] Test Connection  [?] help  [Esc] back  [q] quit
+[Enter] Retry Connection  [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
