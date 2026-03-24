@@ -26,7 +26,6 @@ use features_input::{
     handle_backup_keys, handle_delivery_keys, handle_devices_keys, handle_duress_keys,
     handle_emergency_keys, handle_exchange_keys, handle_lock_keys, handle_privacy_keys,
     handle_recovery_keys, handle_settings_keys, handle_support_keys, handle_sync_keys,
-    handle_tor_settings_keys,
 };
 use navigation::{
     handle_help_keys, handle_my_info_keys, handle_setup_add_fields_keys,
@@ -228,7 +227,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::Duress
             | Screen::Emergency
             | Screen::Sync
-            | Screen::TorSettings
             | Screen::Recovery
             | Screen::Groups
             | Screen::GroupDetail
@@ -267,7 +265,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Sync => handle_sync_keys(app, key),
         Screen::Delivery => handle_delivery_keys(app, key),
         Screen::Backup => handle_backup_keys(app, key),
-        Screen::TorSettings => handle_tor_settings_keys(app, key),
         Screen::Privacy => handle_privacy_keys(app, key),
         Screen::Support => handle_support_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
@@ -438,7 +435,6 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Duress => handle_duress_keys(app, key),
                 Screen::Emergency => handle_emergency_keys(app, key),
                 Screen::Sync => handle_sync_keys(app, key),
-                Screen::TorSettings => handle_tor_settings_keys(app, key),
                 Screen::Recovery => handle_recovery_keys(app, key),
                 Screen::Groups => handle_groups_keys(app, key),
                 Screen::GroupDetail => handle_group_detail_keys(app, key),

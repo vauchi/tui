@@ -139,7 +139,6 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::Sync
         | Screen::Delivery
         | Screen::Backup
-        | Screen::TorSettings
         | Screen::Privacy
         | Screen::Support
         | Screen::Emergency
@@ -385,7 +384,6 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::Sync
         | Screen::Delivery
         | Screen::Backup
-        | Screen::TorSettings
         | Screen::Privacy
         | Screen::Support
         | Screen::Emergency

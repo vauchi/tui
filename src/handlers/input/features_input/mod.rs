@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! Feature screen handlers: exchange, settings, devices, recovery, delivery,
-//! sync, tor, privacy, support, backup, emergency, duress, lock.
+//! sync, privacy, support, backup, emergency, duress, lock.
 
 mod backup;
 mod delivery;
@@ -17,7 +17,6 @@ mod recovery;
 mod settings;
 mod support;
 mod sync;
-pub(super) mod tor;
 
 pub(super) use backup::handle_backup_keys;
 pub(super) use delivery::handle_delivery_keys;
@@ -31,4 +30,3 @@ pub(super) use recovery::handle_recovery_keys;
 pub(super) use settings::handle_settings_keys;
 pub(super) use support::handle_support_keys;
 pub(super) use sync::handle_sync_keys;
-pub(super) use tor::handle_tor_settings_keys;

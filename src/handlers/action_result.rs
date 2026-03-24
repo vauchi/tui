@@ -70,7 +70,6 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_app::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
                     vauchi_app::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
                     vauchi_app::ui::AppScreen::Sync => app.screen = Screen::Sync,
-                    vauchi_app::ui::AppScreen::TorSettings => app.screen = Screen::TorSettings,
                     vauchi_app::ui::AppScreen::Recovery => app.screen = Screen::Recovery,
                     vauchi_app::ui::AppScreen::Groups => app.screen = Screen::Groups,
                     vauchi_app::ui::AppScreen::More => app.screen = Screen::More,
@@ -219,9 +218,6 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             // AppEngine's Vauchi data was wiped — navigate to Onboarding
             app.app_engine
                 .navigate_to(vauchi_app::ui::AppScreen::Onboarding);
-        }
-        ActionResult::TorCommand { .. } => {
-            // Tor backend not available in terminal mode
         }
     }
 }

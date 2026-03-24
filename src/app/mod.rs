@@ -134,8 +134,6 @@ pub struct App {
     pub sync_state: SyncState,
     /// Delivery state
     pub delivery_state: DeliveryState,
-    /// Tor privacy mode state
-    pub tor_state: TorState,
     /// Privacy/GDPR screen state
     pub privacy_state: PrivacyState,
     /// Action menu state (popup for field actions)
@@ -264,7 +262,6 @@ impl App {
             current_qr: None,
             sync_state: SyncState::default(),
             delivery_state: DeliveryState::default(),
-            tor_state: TorState::default(),
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
             emergency_state: EmergencyState::default(),

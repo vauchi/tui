@@ -41,8 +41,6 @@ pub enum Screen {
     Sync,
     /// Backup/restore screen
     Backup,
-    /// Tor privacy settings screen
-    TorSettings,
     /// Privacy & GDPR screen
     Privacy,
     /// Support Vauchi screen
@@ -128,19 +126,6 @@ pub struct DeliveryState {
     pub offline_queue_depth: usize,
     /// Last action result message.
     pub last_result: Option<String>,
-}
-
-/// Tor privacy mode state for the UI.
-#[derive(Debug, Clone, Default)]
-pub struct TorState {
-    /// Whether Tor mode is enabled.
-    pub enabled: bool,
-    /// Whether .onion addresses are preferred.
-    pub prefer_onion: bool,
-    /// Circuit rotation interval in seconds.
-    pub circuit_rotation_secs: u64,
-    /// Number of configured bridges.
-    pub bridge_count: usize,
 }
 
 /// Emergency broadcast screen state.

@@ -10,7 +10,6 @@ use crate::app::{App, EditNameState, EditRelayUrlState, PrivacyState, Screen};
 
 use super::duress::refresh_duress_state;
 use super::emergency::refresh_emergency_state;
-use super::tor::refresh_tor_state;
 
 pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
@@ -33,11 +32,6 @@ pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCo
         KeyCode::Char('b') => app.goto(Screen::Backup),
         KeyCode::Char('d') => app.goto(Screen::Devices),
         KeyCode::Char('r') => app.goto(Screen::Recovery),
-        KeyCode::Char('t') => {
-            // Load current Tor config and navigate to Tor settings
-            refresh_tor_state(app);
-            app.goto(Screen::TorSettings);
-        }
         KeyCode::Char('p') | KeyCode::Char('g') => {
             // Open Privacy & Data screen
             app.privacy_state = PrivacyState::default();

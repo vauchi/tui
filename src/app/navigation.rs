@@ -74,7 +74,6 @@ impl App {
                     })
             }
             Screen::Sync => Some(AppScreen::Sync),
-            Screen::TorSettings => Some(AppScreen::TorSettings),
             Screen::Recovery => Some(AppScreen::Recovery),
             Screen::More => Some(AppScreen::More),
             Screen::Groups => Some(AppScreen::Groups),
@@ -180,8 +179,7 @@ impl App {
             | Screen::Help
             | Screen::Recovery
             | Screen::Sync
-            | Screen::Delivery
-            | Screen::TorSettings => {
+            | Screen::Delivery => {
                 self.screen = Screen::More;
             }
             Screen::Devices => {
@@ -308,7 +306,6 @@ impl App {
             | Screen::Backup
             | Screen::Devices
             | Screen::Delivery
-            | Screen::TorSettings
             | Screen::Sync
             | Screen::Recovery => Some(4),
             _ => None,
