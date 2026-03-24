@@ -20,28 +20,28 @@ pub(super) fn refresh_tor_state(app: &mut App) {
 pub(in crate::handlers::input) fn handle_tor_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('e') => {
-            // Enable Tor
+            // Enable Tor preference (NOT wired to connections yet)
             if app.tor_state.enabled {
-                app.set_status("Tor mode is already enabled");
+                app.set_status("Tor preference is already enabled (not wired to connections)");
                 return;
             }
             match app.app_engine.vauchi_mut().enable_tor() {
                 Ok(()) => {
-                    app.set_status("Tor mode enabled");
+                    app.set_status("Tor preference saved — not yet wired to connections");
                     refresh_tor_state(app);
                 }
                 Err(e) => app.set_status(format!("Error: {}", e)),
             }
         }
         KeyCode::Char('d') => {
-            // Disable Tor
+            // Disable Tor preference
             if !app.tor_state.enabled {
-                app.set_status("Tor mode is already disabled");
+                app.set_status("Tor preference is already disabled");
                 return;
             }
             match app.app_engine.vauchi_mut().disable_tor() {
                 Ok(()) => {
-                    app.set_status("Tor mode disabled");
+                    app.set_status("Tor preference disabled");
                     refresh_tor_state(app);
                 }
                 Err(e) => app.set_status(format!("Error: {}", e)),
@@ -68,7 +68,7 @@ pub(in crate::handlers::input) fn handle_tor_settings_keys(app: &mut App, key: K
                 app.set_status("Enable Tor mode first");
                 return;
             }
-            app.set_status("Circuit rotation requested");
+            app.set_status("Circuit rotation not available — Tor not wired to connections");
         }
         KeyCode::Char('x') => {
             // Clear bridges
