@@ -16,7 +16,7 @@ use vauchi_tui::app::{
     ActionMenuState, AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState,
     ContactLimitState, DeliveryState, DuplicateEntry, DuplicatesState, DuressState, EditFieldState,
     EditNameState, EditRelayUrlState, EmergencyState, LockState, MergeState, PrivacyState, Screen,
-    SyncState, TorState,
+    SyncState,
 };
 
 use common::{
@@ -270,21 +270,6 @@ fn test_snapshot_edit_relay_url_dialog() {
 // ============================================================================
 // tui-F-018 through tui-F-021: Missing snapshot tests
 // ============================================================================
-
-// @scenario: tor_mode:View Tor connection status
-#[test]
-fn test_snapshot_tor_settings() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::TorSettings;
-    app.tor_state = TorState {
-        enabled: false,
-        prefer_onion: false,
-        circuit_rotation_secs: 600,
-        bridge_count: 0,
-    };
-    let output = render_to_string(&mut app);
-    assert_snap!("tor_settings", "Settings", "select Tor Privacy", output);
-}
 
 // @scenario: visibility_control:Configure default visibility
 #[test]

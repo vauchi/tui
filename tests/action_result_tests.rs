@@ -332,14 +332,6 @@ fn navigate_to_syncs_sync_screen() {
 }
 
 #[test]
-fn navigate_to_syncs_tor_settings_screen() {
-    let mut app = create_app_with_identity();
-    app.app_engine.navigate_to(AppScreen::TorSettings);
-    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.screen, Screen::TorSettings);
-}
-
-#[test]
 fn navigate_to_syncs_recovery_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Recovery);

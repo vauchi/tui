@@ -214,17 +214,9 @@ fn test_workflow_settings() {
     app.goto(Screen::Settings);
     steps.push(workflow_step(5, "Settings — press Esc (back)", &mut app));
 
-    // Step 6: Tor
-    app.goto(Screen::TorSettings);
-    steps.push(workflow_step(
-        6,
-        "TorSettings — select Tor Privacy",
-        &mut app,
-    ));
-
     let output = steps.join("\n\n");
     insta::with_settings!({
-        description => "Settings navigation: Settings → Privacy → Backup → Tor",
+        description => "Settings navigation: Settings → Privacy → Backup",
     }, {
         insta::assert_snapshot!("workflow_settings", output);
     });

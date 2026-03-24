@@ -160,14 +160,6 @@ fn test_go_back_from_sync_returns_to_more() {
 }
 
 #[test]
-fn test_go_back_from_tor_settings_returns_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::TorSettings);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
-}
-
-#[test]
 fn test_go_back_from_privacy_returns_to_settings() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Privacy);
@@ -833,21 +825,6 @@ fn test_contact_detail_copy_announces_result() {
     assert!(
         app.status_message.is_some(),
         "Copy should announce result in status bar"
-    );
-}
-
-/// @scenario: accessibility.feature @keyboard - Settings 't' opens Tor settings
-#[test]
-fn test_settings_t_opens_tor_settings() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Settings);
-
-    let action = handle_key(&mut app, KeyCode::Char('t'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(
-        app.screen,
-        Screen::TorSettings,
-        "t on Settings should navigate to TorSettings"
     );
 }
 

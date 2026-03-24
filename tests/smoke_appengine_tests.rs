@@ -219,18 +219,6 @@ fn smoke_sync_screen_renders_via_engine() {
 }
 
 #[test]
-fn smoke_tor_settings_screen_renders_via_engine() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::TorSettings;
-    let output = render_to_string(&mut app, 80, 24);
-    assert!(
-        output.contains("Tor") || output.contains("Privacy"),
-        "TorSettings screen should show Tor content. Got:\n{}",
-        output
-    );
-}
-
-#[test]
 fn smoke_recovery_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
     app.screen = Screen::Recovery;
@@ -320,7 +308,6 @@ fn smoke_all_engine_screens_no_panic() {
         Screen::Duress,
         Screen::Emergency,
         Screen::Sync,
-        Screen::TorSettings,
         Screen::Recovery,
         Screen::Groups,
         Screen::Privacy,

@@ -21,7 +21,7 @@ use vauchi_tui::app::{
 // Screen Enum Tests
 // ============================================================================
 
-/// Test: All screen variants exist (including TorSettings, Privacy)
+/// Test: All screen variants exist (including Privacy)
 #[test]
 fn test_screen_variants_exist() {
     let screens = [
@@ -40,7 +40,6 @@ fn test_screen_variants_exist() {
         Screen::Recovery,
         Screen::Sync,
         Screen::Backup,
-        Screen::TorSettings,
         Screen::Privacy,
         Screen::Support,
         Screen::Delivery,

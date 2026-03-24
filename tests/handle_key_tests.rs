@@ -596,22 +596,6 @@ fn test_handle_key_sync_r_refreshes_pending() {
     assert_eq!(app.screen, Screen::Sync, "r should stay on Sync screen");
 }
 
-// --- Settings screen: Tor shortcut key ---
-
-/// @scenario: accessibility.feature @keyboard - Settings Tor shortcut
-#[test]
-fn test_handle_key_settings_t_navigates_to_tor() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Settings;
-
-    handle_key(&mut app, KeyCode::Char('t'));
-    assert_eq!(
-        app.screen,
-        Screen::TorSettings,
-        "t on Settings should navigate to Tor settings"
-    );
-}
-
 // --- Contact detail: copy shortcut announces field info ---
 
 /// @scenario: accessibility.feature @keyboard - Copy field value announces result
