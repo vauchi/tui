@@ -306,6 +306,7 @@ rc:test:
     - rustup component add llvm-tools-preview 2>/dev/null || true
   variables:
     COVERAGE_REPO_LABEL: "tui"
+    VAUCHI_LOCALES_DIR: "/tmp/locales"
 
 rc:mutation:
   extends: [.mutation-nightly, .rust-runner, .timeout-extended]
