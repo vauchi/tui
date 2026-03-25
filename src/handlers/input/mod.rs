@@ -258,7 +258,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Help => handle_help_keys(app, key),
         // Form dialogs: handled by engine guard above when app_engine is present
         Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl => {
-            unreachable!("Form dialogs handled by engine guard")
+            eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
         }
         Screen::Devices => handle_devices_keys(app, key),
         Screen::Recovery => handle_recovery_keys(app, key),
@@ -272,11 +272,13 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Duress => handle_duress_keys(app, key),
         Screen::Groups => handle_groups_keys(app, key),
         Screen::GroupDetail => handle_group_detail_keys(app, key),
-        Screen::Lock => unreachable!("Lock screen handled before global keys"),
+        Screen::Lock => {
+            eprintln!("WARNING: Lock screen reached legacy handler unexpectedly");
+        }
         // SP-21 Onboarding wizard
         Screen::SetupWelcome => handle_setup_welcome_keys(app, key),
         Screen::SetupCreateIdentity => {
-            unreachable!("SetupCreateIdentity handled before global keys")
+            eprintln!("WARNING: SetupCreateIdentity reached legacy handler unexpectedly");
         }
         Screen::SetupAddFields => handle_setup_add_fields_keys(app, key),
         Screen::SetupSecurity => handle_setup_security_keys(app, key),
@@ -288,7 +290,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::ContactLimit
         | Screen::MyInfoEntryDetail
         | Screen::More => {
-            unreachable!("Engine-only screens handled by engine guard")
+            eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
         }
     }
 

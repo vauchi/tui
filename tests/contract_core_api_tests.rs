@@ -197,7 +197,7 @@ fn contract_contact_has_expected_accessors() {
         let _: &str = c.id();
         let _: &str = c.display_name();
         let _: &ContactCard = c.card();
-        let _: &[u8; 32] = c.public_key();
+        let _: Option<&[u8; 32]> = c.public_key();
         let _: bool = c.is_hidden();
         let _: bool = c.is_blocked();
     }

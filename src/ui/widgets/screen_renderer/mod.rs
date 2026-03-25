@@ -285,6 +285,7 @@ fn render_components(
                 fields,
                 group_views,
                 selected_group,
+                ..
             } => {
                 CardPreviewWidget {
                     name,
@@ -354,6 +355,7 @@ fn render_components(
                 filled,
                 masked,
                 validation_error,
+                ..
             } => {
                 let error = state
                     .validation_error_for(id)
@@ -431,6 +433,7 @@ fn render_components(
                 text,
                 action_label: _,
                 action_id: _,
+                ..
             } => {
                 let style = Style::default()
                     .fg(theme.accent)

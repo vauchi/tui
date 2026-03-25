@@ -58,11 +58,13 @@ pub(in crate::handlers::input) fn handle_privacy_keys(app: &mut App, key: KeyCod
         }
         KeyCode::Char('x') => {
             // Execute scheduled deletion (after grace period)
-            let has_identity = app.app_engine.vauchi().identity().is_some();
-            if has_identity {
+            {
                 let vauchi = app.app_engine.vauchi();
                 let storage = vauchi.storage();
-                let identity = vauchi.identity().unwrap();
+                let Some(identity) = vauchi.identity() else {
+                    app.set_status("Execute failed: no identity loaded");
+                    return;
+                };
                 match vauchi_core::api::DeletionManager::new(storage).execute_deletion(identity) {
                     Ok(result) => {
                         let count = result.revocations.len();
@@ -70,8 +72,6 @@ pub(in crate::handlers::input) fn handle_privacy_keys(app: &mut App, key: KeyCod
                     }
                     Err(e) => app.set_status(format!("Execute failed: {}", e)),
                 }
-            } else {
-                app.set_status("Execute failed: no identity loaded");
             }
         }
         KeyCode::Char('!') => {
