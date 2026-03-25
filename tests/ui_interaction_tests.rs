@@ -61,7 +61,7 @@ fn test_screen_variants_exist() {
         Screen::ContactLimit,
     ];
 
-    // Verify we have all 32 screen variants (TorSettings removed — replaced by OHTTP)
+    // Verify we have all 32 screen variants
     assert_eq!(screens.len(), 32);
 }
 
