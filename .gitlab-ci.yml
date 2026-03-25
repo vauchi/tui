@@ -171,8 +171,10 @@ test:snapshots:record:
   rules:
     - !reference [.validation-rust, rules]
 
-# Main: full coverage with llvm-cov
-# Note: TUI uses custom VAUMI_LOCALES_DIR before script to handle special locales path
+# Main: full coverage with llvm-cov (uses shared .coverage-job template)
+# TUI needs themes (compile-time include_bytes) and locales (runtime) — both
+# cloned in before_script. VAUCHI_LOCALES_DIR is set via variables so the
+# template's script sees it without an inline override.
 coverage:
   extends: [.coverage-job, .rust-runner, .timeout-long]
   needs:
@@ -188,14 +190,10 @@ coverage:
     - ls ../themes/generated/tokens_ansi.json
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
     - rustup component add llvm-tools-preview 2>/dev/null || true
-  script:
-    - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov nextest --all-targets --lcov --output-path lcov.info
-    - cargo llvm-cov report --cobertura --output-path cobertura.xml
-    - VAUCHI_LOCALES_DIR=/tmp/locales cargo llvm-cov report
-    - ./push-coverage.sh cobertura.xml tui || true
   variables:
     COVERAGE_REPO_LABEL: "tui"
     COVERAGE_USE_NEXTEST: "true"
+    VAUCHI_LOCALES_DIR: "/tmp/locales"
 
 # Binary size tracking (main merges + release tags)
 perf:binary-size:
