@@ -90,7 +90,7 @@ lint:machete:
 # ============================================================
 
 # MR: fast nextest (no coverage overhead)
-test:
+test:unit:
   extends: [.rust-runner, .validation-rust, .timeout-quick]
   stage: test
   needs:
@@ -177,7 +177,7 @@ test:snapshots:record:
 # TUI needs themes (compile-time include_bytes) and locales (runtime) — both
 # cloned in before_script. VAUCHI_LOCALES_DIR is set via variables so the
 # template's script sees it without an inline override.
-coverage:
+coverage:workspace:
   extends: [.coverage-job, .rust-runner, .timeout-long]
   needs:
     - job: lint:format
