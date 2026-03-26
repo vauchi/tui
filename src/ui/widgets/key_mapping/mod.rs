@@ -35,7 +35,6 @@ fn is_focusable(component: &Component) -> bool {
             | Component::InfoPanel { .. }
             | Component::StatusIndicator { .. }
             | Component::QrCode { .. }
-            | Component::ShowToast { .. }
             | Component::Divider
     )
 }
@@ -177,8 +176,6 @@ mod tests {
             max_length: None,
             validation_error: None,
             input_type: InputType::Text,
-            accessible_label: None,
-            accessible_hint: None,
         }
     }
 
@@ -225,16 +222,12 @@ mod tests {
                     id: "label".into(),
                     content: "Label".into(),
                     style: TextStyle::Body,
-                    accessible_label: None,
-                    accessible_hint: None,
                 },
                 make_text_input("input1"),
                 Component::Text {
                     id: "info".into(),
                     content: "Info".into(),
                     style: TextStyle::Body,
-                    accessible_label: None,
-                    accessible_hint: None,
                 },
                 make_text_input("input2"),
             ],
@@ -261,8 +254,6 @@ mod tests {
                     id: "title".into(),
                     content: "Title".into(),
                     style: TextStyle::Body,
-                    accessible_label: None,
-                    accessible_hint: None,
                 },
                 make_text_input("name"),
             ],
@@ -296,8 +287,6 @@ mod tests {
                     id: "sep".into(),
                     content: "---".into(),
                     style: TextStyle::Body,
-                    accessible_label: None,
-                    accessible_hint: None,
                 },
                 make_text_input("b"),
             ],
@@ -329,8 +318,6 @@ mod tests {
                 max_length: None,
                 validation_error: None,
                 input_type: InputType::Text,
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![],
         );
@@ -361,8 +348,6 @@ mod tests {
                 max_length: None,
                 validation_error: None,
                 input_type: InputType::Text,
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![],
         );
@@ -394,20 +379,14 @@ mod tests {
                         label: "Family".into(),
                         selected: false,
                         subtitle: None,
-                        accessible_label: None,
-                        accessible_hint: None,
                     },
                     ToggleItem {
                         id: "friends".into(),
                         label: "Friends".into(),
                         selected: true,
                         subtitle: None,
-                        accessible_label: None,
-                        accessible_hint: None,
                     },
                 ],
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![],
         );
@@ -442,11 +421,7 @@ mod tests {
                     label: "Family".into(),
                     selected: false,
                     subtitle: None,
-                    accessible_label: None,
-                    accessible_hint: None,
                 }],
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![],
         );
@@ -474,8 +449,6 @@ mod tests {
                 id: "t".into(),
                 content: "info".into(),
                 style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![
                 ScreenAction {
@@ -514,8 +487,6 @@ mod tests {
                 id: "t".into(),
                 content: "info".into(),
                 style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![ScreenAction {
                 id: "skip".into(),
@@ -546,8 +517,6 @@ mod tests {
                 id: "t".into(),
                 content: "info".into(),
                 style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![ScreenAction {
                 id: "continue".into(),
@@ -583,13 +552,9 @@ mod tests {
                     label: "Email".into(),
                     value: "a@b.c".into(),
                     visibility: UiFieldVisibility::Shown,
-                    accessible_label: None,
-                    accessible_hint: None,
                 }],
                 visibility_mode: VisibilityMode::ShowHide,
                 available_groups: vec![],
-                accessible_label: None,
-                accessible_hint: None,
             }],
             vec![],
         );

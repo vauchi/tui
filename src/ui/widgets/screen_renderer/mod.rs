@@ -210,9 +210,7 @@ fn render_components(
             Component::StatusIndicator { .. } => Constraint::Length(3),
             Component::PinInput { .. } => Constraint::Length(5),
             Component::QrCode { .. } => Constraint::Min(8),
-            Component::ConfirmationDialog { .. } => Constraint::Min(6),
             Component::Divider => Constraint::Length(1),
-            Component::ShowToast { .. } => Constraint::Length(2),
             Component::InlineConfirm { .. } => Constraint::Length(4),
             Component::EditableText { .. } => Constraint::Length(3),
             Component::Banner { .. } => Constraint::Length(2),
@@ -369,33 +367,11 @@ fn render_components(
             } => {
                 render_misc::render_qr_code(f, chunk, data, mode, label.as_deref(), theme);
             }
-            Component::ConfirmationDialog {
-                title,
-                message,
-                confirm_text,
-                destructive,
-                ..
-            } => {
-                render_misc::render_confirmation_dialog(
-                    f,
-                    chunk,
-                    title,
-                    message,
-                    confirm_text,
-                    *destructive,
-                    theme,
-                );
-            }
             Component::Divider => {
                 let divider = Block::default()
                     .borders(Borders::BOTTOM)
                     .border_style(Style::default().fg(theme.border));
                 f.render_widget(divider, chunk);
-            }
-            Component::ShowToast { message, .. } => {
-                let para = Paragraph::new(format!("  {message}"))
-                    .style(Style::default().fg(theme.fg_secondary));
-                f.render_widget(para, chunk);
             }
             Component::InlineConfirm {
                 warning,

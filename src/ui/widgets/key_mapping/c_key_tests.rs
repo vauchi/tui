@@ -20,8 +20,6 @@ fn test_c_key_triggers_create_new_when_action_exists() {
             id: "welcome".into(),
             content: "Welcome to Vauchi".into(),
             style: TextStyle::Body,
-            accessible_label: None,
-            accessible_hint: None,
         }],
         vec![ScreenAction {
             id: "create_new".into(),
@@ -59,8 +57,6 @@ fn test_c_key_unhandled_when_no_create_new_action() {
             id: "home_info".into(),
             content: "Your card".into(),
             style: TextStyle::Body,
-            accessible_label: None,
-            accessible_hint: None,
         }],
         vec![ScreenAction {
             id: "add_field".into(),
@@ -88,8 +84,6 @@ fn test_c_key_unhandled_when_create_new_disabled() {
             id: "info".into(),
             content: "info".into(),
             style: TextStyle::Body,
-            accessible_label: None,
-            accessible_hint: None,
         }],
         vec![ScreenAction {
             id: "create_new".into(),
@@ -118,8 +112,6 @@ fn test_c_key_unhandled_on_screen_with_no_actions() {
             id: "t".into(),
             content: "text".into(),
             style: TextStyle::Body,
-            accessible_label: None,
-            accessible_hint: None,
         }],
         vec![],
     );

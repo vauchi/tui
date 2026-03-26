@@ -273,13 +273,6 @@ pub(super) fn map_component_key(
             _ => KeyResult::Unhandled,
         },
 
-        Component::ConfirmationDialog { .. } => match key {
-            KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
-                action_id: "confirm".to_string(),
-            }),
-            _ => KeyResult::Unhandled,
-        },
-
         Component::EditableText { id, value, .. } => match key {
             KeyCode::Char(c) => {
                 let mut new_value = value.clone();
@@ -317,7 +310,6 @@ pub(super) fn map_component_key(
         | Component::InfoPanel { .. }
         | Component::StatusIndicator { .. }
         | Component::QrCode { .. }
-        | Component::ShowToast { .. }
         | Component::Banner { .. }
         | Component::Divider => KeyResult::Unhandled,
     }
