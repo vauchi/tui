@@ -392,7 +392,7 @@ impl App {
 
     /// Applies a completed background sync result to app state.
     pub fn apply_sync_result(&mut self, result: SyncResult) {
-        use vauchi_core::aha_moments::AhaMomentType;
+        use vauchi_core::types::AhaMomentType;
 
         self.sync_state.is_syncing = false;
 

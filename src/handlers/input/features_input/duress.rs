@@ -64,7 +64,7 @@ pub(in crate::handlers::input) fn handle_duress_keys(app: &mut App, key: KeyCode
                         .map(|s| s.trim().to_string())
                         .filter(|s| !s.is_empty())
                         .collect();
-                    let settings = vauchi_core::api::DuressSettings {
+                    let settings = vauchi_core::types::DuressSettings {
                         alert_contact_ids: ids,
                         alert_message: app.duress_state.message_input.clone(),
                         include_location: app.duress_state.include_location,
@@ -169,7 +169,7 @@ pub(in crate::handlers::input) fn handle_duress_keys(app: &mut App, key: KeyCode
                 if ids.is_empty() {
                     app.set_status("At least one contact ID is required");
                 } else {
-                    let settings = vauchi_core::api::DuressSettings {
+                    let settings = vauchi_core::types::DuressSettings {
                         alert_contact_ids: ids.clone(),
                         alert_message: app.duress_state.message_input.clone(),
                         include_location: app.duress_state.include_location,
