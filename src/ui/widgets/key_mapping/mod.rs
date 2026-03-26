@@ -140,11 +140,16 @@ pub fn map_key(key: KeyCode, screen: &ScreenModel, state: &mut ScreenRenderState
 
 // INLINE_TEST_REQUIRED: tests need access to pub(crate) key_mapping internals
 #[cfg(test)]
+mod c_key_tests;
+#[cfg(test)]
 mod tests {
     use super::*;
     use vauchi_app::ui::*;
 
-    fn make_screen(components: Vec<Component>, actions: Vec<ScreenAction>) -> ScreenModel {
+    pub(super) fn make_screen(
+        components: Vec<Component>,
+        actions: Vec<ScreenAction>,
+    ) -> ScreenModel {
         ScreenModel {
             screen_id: "test".into(),
             title: "Test".into(),
@@ -155,7 +160,7 @@ mod tests {
         }
     }
 
-    fn key_result_debug(result: &KeyResult) -> String {
+    pub(super) fn key_result_debug(result: &KeyResult) -> String {
         match result {
             KeyResult::Action(a) => format!("Action({:?})", a),
             KeyResult::Consumed => "Consumed".to_string(),
@@ -619,132 +624,5 @@ mod tests {
         let result = map_key(KeyCode::Tab, &screen, &mut state);
         assert!(matches!(result, KeyResult::Consumed));
         assert_eq!(state.focused_component, 0);
-    }
-
-    // ========================================================================
-    // H4: 'c' key conflict — create_new vs legacy Contacts navigation
-    // ========================================================================
-
-    /// Verify 'c' triggers `create_new` when the action exists on the screen
-    /// (e.g., Onboarding screen with a "Create new identity" action).
-    #[test]
-    fn test_c_key_triggers_create_new_when_action_exists() {
-        let screen = make_screen(
-            vec![Component::Text {
-                id: "welcome".into(),
-                content: "Welcome to Vauchi".into(),
-                style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
-            }],
-            vec![ScreenAction {
-                id: "create_new".into(),
-                label: "Create New Identity".into(),
-                style: ActionStyle::Primary,
-                enabled: true,
-            }],
-        );
-
-        let mut state = ScreenRenderState::default();
-
-        let result = map_key(KeyCode::Char('c'), &screen, &mut state);
-        match result {
-            KeyResult::Action(UserAction::ActionPressed { action_id }) => {
-                assert_eq!(
-                    action_id, "create_new",
-                    "'c' should trigger create_new action when present"
-                );
-            }
-            other => panic!(
-                "Expected ActionPressed(create_new), got {}",
-                key_result_debug(&other)
-            ),
-        }
-    }
-
-    /// Verify 'c' returns `Unhandled` when no `create_new` action exists
-    /// (e.g., Home screen), allowing the legacy nav handler to pick it up
-    /// for Contacts navigation.
-    #[test]
-    fn test_c_key_unhandled_when_no_create_new_action() {
-        // Simulate a Home-like screen: has actions, but none with id "create_new"
-        let screen = make_screen(
-            vec![Component::Text {
-                id: "home_info".into(),
-                content: "Your card".into(),
-                style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
-            }],
-            vec![ScreenAction {
-                id: "add_field".into(),
-                label: "Add Field".into(),
-                style: ActionStyle::Secondary,
-                enabled: true,
-            }],
-        );
-
-        let mut state = ScreenRenderState::default();
-
-        let result = map_key(KeyCode::Char('c'), &screen, &mut state);
-        assert!(
-            matches!(result, KeyResult::Unhandled),
-            "'c' should be Unhandled when no create_new action exists, got {}",
-            key_result_debug(&result)
-        );
-    }
-
-    /// Verify 'c' returns `Unhandled` when `create_new` action exists but is disabled.
-    #[test]
-    fn test_c_key_unhandled_when_create_new_disabled() {
-        let screen = make_screen(
-            vec![Component::Text {
-                id: "info".into(),
-                content: "info".into(),
-                style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
-            }],
-            vec![ScreenAction {
-                id: "create_new".into(),
-                label: "Create New Identity".into(),
-                style: ActionStyle::Primary,
-                enabled: false,
-            }],
-        );
-
-        let mut state = ScreenRenderState::default();
-
-        let result = map_key(KeyCode::Char('c'), &screen, &mut state);
-        assert!(
-            matches!(result, KeyResult::Unhandled),
-            "'c' should be Unhandled when create_new is disabled, got {}",
-            key_result_debug(&result)
-        );
-    }
-
-    /// Verify 'c' returns `Unhandled` on a screen with no actions at all
-    /// (empty actions list).
-    #[test]
-    fn test_c_key_unhandled_on_screen_with_no_actions() {
-        let screen = make_screen(
-            vec![Component::Text {
-                id: "t".into(),
-                content: "text".into(),
-                style: TextStyle::Body,
-                accessible_label: None,
-                accessible_hint: None,
-            }],
-            vec![],
-        );
-
-        let mut state = ScreenRenderState::default();
-
-        let result = map_key(KeyCode::Char('c'), &screen, &mut state);
-        assert!(
-            matches!(result, KeyResult::Unhandled),
-            "'c' should be Unhandled on screen with no actions, got {}",
-            key_result_debug(&result)
-        );
     }
 }
