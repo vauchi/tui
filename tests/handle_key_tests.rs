@@ -457,56 +457,7 @@ fn test_handle_key_search_mode_q_does_not_quit() {
 }
 
 // ============================================================================
-// Contact Detail Validation Key Bindings
-// ============================================================================
-
-// @scenario: field_validation.feature - V key triggers validate on ContactDetail
-#[test]
-fn test_handle_key_contact_detail_uppercase_v_sets_status() {
-    let (mut app, _tmp) = create_test_app();
-    app.selected_contact_id = Some("dummy-contact-id".to_string());
-    app.screen = Screen::ContactDetail;
-    app.selected_contact = 0;
-    app.selected_contact_field = 0;
-
-    handle_key(&mut app, KeyCode::Char('V'));
-
-    // With no contacts, the handler should set an error/info status
-    assert!(
-        app.status_message.is_some(),
-        "V on ContactDetail should set a status message"
-    );
-    // Should stay on ContactDetail (not navigate away)
-    assert_eq!(
-        app.screen,
-        Screen::ContactDetail,
-        "V should stay on ContactDetail"
-    );
-}
-
-// @scenario: field_validation.feature - R key triggers revoke on ContactDetail
-#[test]
-fn test_handle_key_contact_detail_uppercase_r_sets_status() {
-    let (mut app, _tmp) = create_test_app();
-    app.selected_contact_id = Some("dummy-contact-id".to_string());
-    app.screen = Screen::ContactDetail;
-    app.selected_contact = 0;
-    app.selected_contact_field = 0;
-
-    handle_key(&mut app, KeyCode::Char('R'));
-
-    // With no contacts, the handler should set an error/info status
-    assert!(
-        app.status_message.is_some(),
-        "R on ContactDetail should set a status message"
-    );
-    // Should stay on ContactDetail
-    assert_eq!(
-        app.screen,
-        Screen::ContactDetail,
-        "R should stay on ContactDetail"
-    );
-}
+// Community scoring keybindings (V=validate, R=revoke) removed per ADR-040
 
 // @scenario: field_validation.feature - lowercase v still opens visibility
 #[test]
