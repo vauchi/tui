@@ -81,6 +81,8 @@ pub enum Screen {
     ContactLimit,
     /// MyInfo entry detail view
     MyInfoEntryDetail,
+    /// Fingerprint verification screen
+    VerifyFingerprint,
 }
 
 /// Input mode for text entry.

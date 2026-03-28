@@ -136,6 +136,10 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_app::ui::AppScreen::MyInfoEntryDetail { .. } => {
                         app.screen = Screen::MyInfoEntryDetail;
                     }
+                    vauchi_app::ui::AppScreen::VerifyFingerprint { contact_id } => {
+                        app.selected_contact_id = Some(contact_id.clone());
+                        app.screen = Screen::VerifyFingerprint;
+                    }
                 }
             }
             // Show success feedback when completing a form dialog
@@ -219,6 +223,11 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             // AppEngine's Vauchi data was wiped — navigate to Onboarding
             app.app_engine
                 .navigate_to(vauchi_app::ui::AppScreen::Onboarding);
+        }
+        ActionResult::VerifyFingerprint { contact_id } => {
+            app.selected_contact_id = Some(contact_id);
+            app.screen = Screen::VerifyFingerprint;
+            app.render_state = Default::default();
         }
         // trust-notes-preview (core!368) — not yet implemented in TUI
         ActionResult::PreviewAs { .. } | ActionResult::ShowContactPicker => {}

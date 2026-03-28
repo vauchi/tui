@@ -289,6 +289,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::ContactMerge
         | Screen::ContactLimit
         | Screen::MyInfoEntryDetail
+        | Screen::VerifyFingerprint
         | Screen::More => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
         }

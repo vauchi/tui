@@ -153,6 +153,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::ContactMerge
         | Screen::ContactLimit
         | Screen::MyInfoEntryDetail
+        | Screen::VerifyFingerprint
         | Screen::More => {
             render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
         }

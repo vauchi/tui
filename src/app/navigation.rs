@@ -132,6 +132,13 @@ impl App {
                 })
             }
             Screen::ContactLimit => Some(AppScreen::ContactLimit),
+            Screen::VerifyFingerprint => {
+                self.selected_contact_id
+                    .as_ref()
+                    .map(|id| AppScreen::VerifyFingerprint {
+                        contact_id: id.clone(),
+                    })
+            }
             // MyInfoEntryDetail is engine-driven; AppEngine already has the right screen
             Screen::MyInfoEntryDetail => None,
             _ => None,
@@ -223,6 +230,9 @@ impl App {
                 self.screen = Screen::ContactDetail;
                 self.visibility_state = VisibilityState::default();
             }
+            Screen::VerifyFingerprint => {
+                self.screen = Screen::ContactDetail;
+            }
             Screen::AddField => {
                 // Return to onboarding wizard if we came from there
                 self.screen = if self.onboarding_state.identity_created {
@@ -290,7 +300,8 @@ impl App {
             | Screen::ContactDuplicates
             | Screen::ContactMerge
             | Screen::ContactLimit
-            | Screen::ActionMenu => Some(1),
+            | Screen::ActionMenu
+            | Screen::VerifyFingerprint => Some(1),
             // 2: Exchange
             Screen::Exchange => Some(2),
             // 3: Groups and sub-screens

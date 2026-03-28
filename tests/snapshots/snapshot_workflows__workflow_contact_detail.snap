@@ -52,7 +52,7 @@ expression: output
 
 ┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
-[Space] select  [e] Edit  [Enter] What do they see?  [Esc] Back  [?] help
+[Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 3 ─ ContactEdit — press 'e' (Edit) ════════════════
@@ -104,5 +104,5 @@ Display Name
 
 ┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
-[Space] select  [e] Edit  [Enter] What do they see?  [Esc] Back  [?] help
+[Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
