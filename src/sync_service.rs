@@ -21,11 +21,9 @@ use vauchi_core::network::simple_message::{
     encode_simple_message,
 };
 use vauchi_core::network::{MessageType, classify_message};
+use vauchi_core::storage::Storage;
 use vauchi_core::sync::process_card_updates;
-use vauchi_core::{
-    Contact, Identity, contact_card::ContactCard, crypto::ratchet::DoubleRatchetState,
-    exchange::X3DHKeyPair, storage::Storage,
-};
+use vauchi_core::{Identity, Vauchi, VauchiConfig};
 
 /// Type alias for the async WebSocket stream.
 type WsStream =
@@ -79,7 +77,7 @@ struct ReceivedMessages {
 ///
 /// Connects via WebSocket, receives pending messages, processes them
 /// using core functions, and sends outbound updates.
-pub fn sync(identity: &Identity, storage: &Storage, relay_url: &str) -> SyncResult {
+pub fn sync(identity: &Identity, vauchi: &Vauchi, relay_url: &str) -> SyncResult {
     let rt = match tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -87,7 +85,7 @@ pub fn sync(identity: &Identity, storage: &Storage, relay_url: &str) -> SyncResu
         Ok(rt) => rt,
         Err(e) => return SyncResult::error(format!("Runtime error: {}", e)),
     };
-    rt.block_on(sync_async(identity, storage, relay_url))
+    rt.block_on(sync_async(identity, vauchi, relay_url))
 }
 
 /// Data needed to run sync in a background thread.
@@ -109,18 +107,24 @@ pub struct SyncRequest {
 
 /// Performs a full sync in a self-contained way using owned, `Send` data.
 ///
-/// Opens a fresh `Storage` connection and reconstructs `Identity` from
-/// serialized bytes, so this can safely run on a background thread.
+/// Creates a fresh `Vauchi` instance on the background thread. Identity
+/// is loaded from storage automatically.
 pub fn sync_owned(req: SyncRequest) -> SyncResult {
+    let config = VauchiConfig {
+        storage_path: req.storage_path,
+        storage_key: Some(req.storage_key),
+        ..VauchiConfig::default()
+    };
+    let vauchi = match Vauchi::new(config) {
+        Ok(v) => v,
+        Err(e) => return SyncResult::error(format!("Vauchi init failed: {}", e)),
+    };
+    // Identity is loaded from storage — reconstruct from bytes for handshake
     let identity = match Identity::from_storage_bytes(&req.identity_bytes) {
         Ok(id) => id,
         Err(e) => return SyncResult::error(format!("Identity restore failed: {}", e)),
     };
-    let storage = match Storage::open(&req.storage_path, req.storage_key) {
-        Ok(s) => s,
-        Err(e) => return SyncResult::error(format!("Storage open failed: {}", e)),
-    };
-    sync(&identity, &storage, &req.relay_url)
+    sync(&identity, &vauchi, &req.relay_url)
 }
 
 /// Tests the relay connection by opening and closing a WebSocket.
@@ -148,7 +152,8 @@ pub fn test_relay_connection_owned(relay_url: String) -> Result<bool> {
 // Async internals
 // ============================================================
 
-async fn sync_async(identity: &Identity, storage: &Storage, relay_url: &str) -> SyncResult {
+async fn sync_async(identity: &Identity, vauchi: &Vauchi, relay_url: &str) -> SyncResult {
+    let storage = vauchi.storage();
     let device_id_hex = hex::encode(identity.device_id());
 
     // Connect to relay
@@ -171,31 +176,22 @@ async fn sync_async(identity: &Identity, storage: &Storage, relay_url: &str) -> 
         Err(e) => return SyncResult::error(format!("Receive failed: {}", e)),
     };
 
-    // Process legacy exchange messages
-    let legacy_added = match process_legacy_exchanges(
-        identity,
-        storage,
-        relay_url,
-        received.legacy_exchange,
-    )
-    .await
-    {
-        Ok(count) => count,
-        Err(e) => return SyncResult::error(format!("Legacy exchange failed: {}", e)),
-    };
+    // Process legacy exchange messages (ADR-021: crypto in core)
+    let legacy_added =
+        match process_legacy_exchanges(identity, vauchi, relay_url, received.legacy_exchange).await
+        {
+            Ok(count) => count,
+            Err(e) => return SyncResult::error(format!("Legacy exchange failed: {}", e)),
+        };
 
-    // Process encrypted exchange messages
-    let encrypted_added = match process_encrypted_exchanges(
-        identity,
-        storage,
-        relay_url,
-        received.encrypted_exchange,
-    )
-    .await
-    {
-        Ok(count) => count,
-        Err(e) => return SyncResult::error(format!("Encrypted exchange failed: {}", e)),
-    };
+    // Process encrypted exchange messages (ADR-021: crypto in core)
+    let encrypted_added =
+        match process_encrypted_exchanges(identity, vauchi, relay_url, received.encrypted_exchange)
+            .await
+        {
+            Ok(count) => count,
+            Err(e) => return SyncResult::error(format!("Encrypted exchange failed: {}", e)),
+        };
 
     let contacts_added = legacy_added + encrypted_added;
 
@@ -341,12 +337,11 @@ fn parse_hex_key(hex_str: &str) -> Option<[u8; 32]> {
 
 async fn process_legacy_exchanges(
     identity: &Identity,
-    storage: &Storage,
+    vauchi: &Vauchi,
     relay_url: &str,
     messages: Vec<LegacyExchangeMessage>,
 ) -> Result<u32, String> {
     let mut added = 0u32;
-    let our_x3dh = identity.x3dh_keypair();
 
     for exchange in messages {
         let identity_key = match parse_hex_key(&exchange.identity_public_key) {
@@ -356,21 +351,14 @@ async fn process_legacy_exchanges(
 
         let public_id = hex::encode(identity_key);
 
+        // Response messages update display name of existing contact
         if exchange.is_response {
-            if let Ok(Some(mut contact)) = storage.load_contact(&public_id)
+            if let Ok(Some(mut contact)) = vauchi.get_contact(&public_id)
                 && contact.display_name() != exchange.display_name
                 && contact.set_display_name(&exchange.display_name).is_ok()
             {
-                let _ = storage.save_contact(&contact);
+                let _ = vauchi.update_contact(&contact);
             }
-            continue;
-        }
-
-        if storage
-            .load_contact(&public_id)
-            .map_err(|e| e.to_string())?
-            .is_some()
-        {
             continue;
         }
 
@@ -379,25 +367,15 @@ async fn process_legacy_exchanges(
             None => continue,
         };
 
-        let shared_secret =
-            match vauchi_core::exchange::X3DH::respond(&our_x3dh, &identity_key, &ephemeral_key) {
-                Ok(secret) => secret,
-                Err(_) => continue,
-            };
+        // ADR-021: all crypto (X3DH, ratchet init) delegated to core
+        match vauchi.accept_relay_exchange(&identity_key, &ephemeral_key, &exchange.display_name) {
+            Ok(_contact_id) => added += 1,
+            Err(_) => continue,
+        }
 
-        let card = ContactCard::new(&exchange.display_name);
-        let contact = Contact::from_exchange(identity_key, card, shared_secret.clone());
-        let contact_id = contact.id().to_string();
-        storage.save_contact(&contact).map_err(|e| e.to_string())?;
-
-        let secret = our_x3dh.secret_bytes();
-        let ratchet_dh = X3DHKeyPair::from_bytes(*secret);
-        let ratchet = DoubleRatchetState::initialize_responder(&shared_secret, ratchet_dh);
-        let _ = storage.save_ratchet_state(&contact_id, &ratchet, true);
-
-        added += 1;
-
-        let _ = send_exchange_response(identity, relay_url, &public_id, &ephemeral_key).await;
+        // Send encrypted response via relay
+        let _ =
+            send_exchange_response(identity, vauchi, relay_url, &public_id, &ephemeral_key).await;
     }
 
     Ok(added)
@@ -405,48 +383,23 @@ async fn process_legacy_exchanges(
 
 async fn process_encrypted_exchanges(
     identity: &Identity,
-    storage: &Storage,
+    vauchi: &Vauchi,
     relay_url: &str,
     encrypted_data: Vec<Vec<u8>>,
 ) -> Result<u32, String> {
     let mut added = 0u32;
-    let our_x3dh = identity.x3dh_keypair();
 
     for data in encrypted_data {
-        let encrypted_msg = match EncryptedExchangeMessage::from_bytes(&data) {
-            Ok(msg) => msg,
-            Err(_) => continue,
-        };
-
-        let (payload, shared_secret) = match encrypted_msg.decrypt(&our_x3dh) {
+        // ADR-021: all crypto (decrypt, X3DH, ratchet init) delegated to core
+        let (contact_id, exchange_key) = match vauchi.accept_encrypted_relay_exchange(&data) {
             Ok(result) => result,
             Err(_) => continue,
         };
 
-        let public_id = hex::encode(payload.identity_key);
-
-        if storage
-            .load_contact(&public_id)
-            .map_err(|e| e.to_string())?
-            .is_some()
-        {
-            continue;
-        }
-
-        let card = ContactCard::new(&payload.display_name);
-        let contact = Contact::from_exchange(payload.identity_key, card, shared_secret.clone());
-        let contact_id = contact.id().to_string();
-        storage.save_contact(&contact).map_err(|e| e.to_string())?;
-
-        let secret = our_x3dh.secret_bytes();
-        let ratchet_dh = X3DHKeyPair::from_bytes(*secret);
-        let ratchet = DoubleRatchetState::initialize_responder(&shared_secret, ratchet_dh);
-        let _ = storage.save_ratchet_state(&contact_id, &ratchet, false);
-
         added += 1;
 
         let _ =
-            send_exchange_response(identity, relay_url, &public_id, &payload.exchange_key).await;
+            send_exchange_response(identity, vauchi, relay_url, &contact_id, &exchange_key).await;
     }
 
     Ok(added)
@@ -454,6 +407,7 @@ async fn process_encrypted_exchanges(
 
 async fn send_exchange_response(
     identity: &Identity,
+    vauchi: &Vauchi,
     relay_url: &str,
     recipient_id: &str,
     recipient_exchange_key: &[u8; 32],
@@ -461,22 +415,15 @@ async fn send_exchange_response(
     let mut socket = connect_to_relay(relay_url).await?;
     send_handshake(&mut socket, identity, None).await?;
 
-    let our_id = identity.public_id();
-    let our_x3dh = identity.x3dh_keypair();
-    let (encrypted_msg, _) = EncryptedExchangeMessage::create(
-        &our_x3dh,
-        recipient_exchange_key,
-        identity.signing_public_key(),
-        identity.display_name(),
-    )
-    .map_err(|e| format!("Failed to encrypt exchange: {:?}", e))?;
+    // ADR-021: exchange message creation delegated to core
+    let ciphertext = vauchi
+        .create_encrypted_exchange_response(recipient_exchange_key)
+        .map_err(|e| format!("Failed to create exchange response: {:?}", e))?;
 
     let update = SimpleEncryptedUpdate {
         recipient_id: recipient_id.to_string(),
-        sender_id: our_id,
-        ciphertext: encrypted_msg
-            .to_bytes()
-            .map_err(|e| format!("Serialization failed: {:?}", e))?,
+        sender_id: identity.public_id(),
+        ciphertext,
     };
 
     let envelope = create_simple_envelope(SimplePayload::EncryptedUpdate(update));

@@ -305,7 +305,7 @@ impl App {
                 };
             }
         };
-        crate::sync_service::sync(identity, vauchi.storage(), &self.relay_url)
+        crate::sync_service::sync(identity, vauchi, &self.relay_url)
     }
 
     /// Tests the relay connection (blocking — prefer background thread).
