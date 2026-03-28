@@ -214,6 +214,7 @@ fn render_components(
             Component::InlineConfirm { .. } => Constraint::Length(4),
             Component::EditableText { .. } => Constraint::Length(3),
             Component::Banner { .. } => Constraint::Length(2),
+            _ => Constraint::Length(1),
         })
         .collect();
 
@@ -417,6 +418,9 @@ fn render_components(
                 let para = Paragraph::new(format!("  {text}")).style(style);
                 f.render_widget(para, chunk);
             }
+            _ => {
+                // Unknown component variant — skip rendering
+            }
         }
     }
 }
@@ -430,6 +434,7 @@ fn render_text(f: &mut Frame, area: Rect, content: &str, style: &TextStyle, them
         TextStyle::Subtitle => Style::default().fg(theme.fg_secondary),
         TextStyle::Body => Style::default().fg(theme.fg),
         TextStyle::Caption => Style::default().fg(theme.fg_secondary),
+        _ => Style::default().fg(theme.fg),
     };
 
     let para = Paragraph::new(content).style(text_style);

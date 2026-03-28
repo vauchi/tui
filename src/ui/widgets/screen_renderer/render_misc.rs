@@ -89,6 +89,7 @@ pub(super) fn render_status_indicator(
         Status::Success => ("✓", theme.success),
         Status::Failed => ("✗", theme.error),
         Status::Warning => ("⚠", theme.warning),
+        _ => ("?", theme.fg_secondary),
     };
 
     let display_icon = icon.unwrap_or(status_icon);
@@ -171,6 +172,7 @@ pub(super) fn render_qr_code(
     let title = match mode {
         QrMode::Display => " QR Code ",
         QrMode::Scan => " Scan QR Code ",
+        _ => " QR Code ",
     };
 
     let content = match mode {
@@ -242,6 +244,12 @@ pub(super) fn render_qr_code(
                 )));
             }
             lines
+        }
+        _ => {
+            vec![Line::from(Span::styled(
+                "  (QR mode not supported)",
+                Style::default().fg(theme.fg_secondary),
+            ))]
         }
     };
 

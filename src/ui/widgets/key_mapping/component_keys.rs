@@ -312,5 +312,6 @@ pub(super) fn map_component_key(
         | Component::QrCode { .. }
         | Component::Banner { .. }
         | Component::Divider => KeyResult::Unhandled,
+        _ => KeyResult::Unhandled,
     }
 }

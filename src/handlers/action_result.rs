@@ -118,6 +118,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                                 };
                                 app.screen = Screen::EditRelayUrl;
                             }
+                            _ => {
+                                // Unknown FormDialogType — ignore
+                            }
                         }
                     }
                     vauchi_app::ui::AppScreen::ContactEdit { contact_id } => {
@@ -139,6 +142,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_app::ui::AppScreen::VerifyFingerprint { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::VerifyFingerprint;
+                    }
+                    _ => {
+                        // Unknown AppScreen variant — stay on current screen
                     }
                 }
             }
@@ -231,6 +237,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         }
         // trust-notes-preview (core!368) — not yet implemented in TUI
         ActionResult::PreviewAs { .. } | ActionResult::ShowContactPicker => {}
+        _ => {
+            // Unknown ActionResult variant — ignore
+        }
     }
 }
 
@@ -277,6 +286,14 @@ fn handle_exchange_commands(app: &mut App, commands: Vec<vauchi_core::exchange::
             | ExchangeCommand::AudioStop => {
                 // Audio proximity not available in terminal — silently skip
                 // (not fatal, just means no proximity verification)
+            }
+            _ => {
+                // Unknown ExchangeCommand — report as unavailable
+                let _ = app.app_engine.handle_hardware_event(
+                    ExchangeHardwareEvent::HardwareUnavailable {
+                        transport: "unknown".into(),
+                    },
+                );
             }
         }
     }

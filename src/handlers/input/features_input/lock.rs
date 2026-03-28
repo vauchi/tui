@@ -75,8 +75,8 @@ pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) 
                                 app.lock_engine = None;
                                 app.goto(Screen::MyInfo);
                             }
-                            Ok(AuthMode::Unauthenticated) | Err(_) => {
-                                // Invalid PIN or error
+                            Ok(AuthMode::Unauthenticated) | Ok(_) | Err(_) => {
+                                // Invalid PIN, unknown mode, or error
                                 app.lock_state.pin_input.clear();
                                 app.lock_state.attempts += 1;
                                 app.lock_state.error = true;
@@ -124,7 +124,7 @@ pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) 
                         app.lock_state = LockState::default();
                         app.goto(Screen::MyInfo);
                     }
-                    Ok(AuthMode::Unauthenticated) | Err(_) => {
+                    Ok(AuthMode::Unauthenticated) | Ok(_) | Err(_) => {
                         app.lock_state.pin_input.clear();
                         app.lock_state.attempts += 1;
                         app.lock_state.error = true;

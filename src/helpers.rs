@@ -54,6 +54,7 @@ pub fn execute_action(action: &ContactAction) -> Result<String, String> {
         ContactAction::CopyToClipboard => {
             Err("CopyToClipboard should be handled by the caller with field value".to_string())
         }
+        _ => Err("Unknown action type".to_string()),
     }
 }
 
@@ -88,6 +89,7 @@ pub fn action_label(action: &ContactAction) -> String {
         ContactAction::OpenMap(_) => "Open in Maps".to_string(),
         ContactAction::GetDirections(_) => "Get Directions".to_string(),
         ContactAction::CopyToClipboard => "Copy to Clipboard".to_string(),
+        _ => "Unknown Action".to_string(),
     }
 }
 

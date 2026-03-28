@@ -128,6 +128,7 @@ pub(super) fn render_settings_group(
                 SettingsItemKind::Value { value } => value.clone(),
                 SettingsItemKind::Link { detail } => detail.as_deref().unwrap_or("→").to_string(),
                 SettingsItemKind::Destructive { label } => label.clone(),
+                _ => String::new(),
             };
 
             let prefix = if i == selected && is_focused {

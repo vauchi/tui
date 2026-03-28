@@ -94,6 +94,7 @@ impl<'a> FieldListWidget<'a> {
                                 groups.join(", ")
                             }
                         }
+                        _ => "Unknown".to_string(),
                     };
                     Row::new(vec![
                         field.field_type.clone(),
@@ -122,6 +123,7 @@ impl<'a> FieldListWidget<'a> {
                     format!(" Fields ({}) ", self.available_groups.join(", "))
                 }
             }
+            _ => " Fields ".to_string(),
         };
 
         if is_read_only {

@@ -328,6 +328,7 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                         vauchi_core::contact_card::ContactAction::OpenMap(_) => "map",
                         vauchi_core::contact_card::ContactAction::GetDirections(_) => "directions",
                         vauchi_core::contact_card::ContactAction::CopyToClipboard => "copy",
+                        _ => "action",
                     };
                     let msg = helpers::open_field_uri(&uri, field.label(), type_name);
                     app.set_status(msg);
