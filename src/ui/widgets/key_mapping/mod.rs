@@ -156,6 +156,7 @@ mod tests {
             components,
             actions,
             progress: None,
+            ..Default::default()
         }
     }
 

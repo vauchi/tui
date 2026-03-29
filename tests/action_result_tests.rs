@@ -44,6 +44,7 @@ fn dummy_screen_model() -> ScreenModel {
         components: vec![],
         actions: vec![],
         progress: None,
+        ..Default::default()
     }
 }
 
