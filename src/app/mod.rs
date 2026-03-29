@@ -166,6 +166,8 @@ pub struct App {
     pub merge_state: MergeState,
     /// Contact limit state (SP-12a)
     pub contact_limit_state: ContactLimitState,
+    /// Contact import state
+    pub import_state: ImportState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -277,6 +279,7 @@ impl App {
             duplicates_state: DuplicatesState::default(),
             merge_state: MergeState::default(),
             contact_limit_state: ContactLimitState::default(),
+            import_state: ImportState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,

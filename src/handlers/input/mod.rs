@@ -293,6 +293,12 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::More => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
         }
+        Screen::ContactImport => {
+            // Handled entirely in editing mode — Esc returns to Contacts
+            if key == KeyCode::Esc {
+                app.goto(Screen::Contacts);
+            }
+        }
     }
 
     Action::Continue

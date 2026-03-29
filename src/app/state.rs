@@ -83,6 +83,8 @@ pub enum Screen {
     MyInfoEntryDetail,
     /// Fingerprint verification screen
     VerifyFingerprint,
+    /// Contact import (vCard file path entry)
+    ContactImport,
 }
 
 /// Input mode for text entry.
@@ -365,6 +367,17 @@ pub struct MergeState {
     pub secondary_name: String,
     /// Secondary contact fields.
     pub secondary_fields: Vec<String>,
+}
+
+/// State for the contact import screen.
+#[derive(Debug, Default)]
+pub struct ImportState {
+    /// File path input buffer.
+    pub file_path: String,
+    /// Result message after import attempt.
+    pub result_message: Option<String>,
+    /// Whether the import succeeded (for styling).
+    pub success: bool,
 }
 
 /// State for the contact limit screen (SP-12a).

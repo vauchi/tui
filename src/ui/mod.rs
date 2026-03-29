@@ -167,6 +167,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
             draw_action_menu(f, chunks[0], app);
         }
+        Screen::ContactImport => {
+            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
+            draw_import_dialog(f, chunks[0], app);
+        }
         // SP-21 Onboarding wizard — engine-driven rendering
         Screen::SetupWelcome
         | Screen::SetupCreateIdentity
@@ -374,7 +378,8 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::ContactVisibility
         | Screen::ContactDuplicates
         | Screen::ContactMerge
-        | Screen::ContactLimit => 1,
+        | Screen::ContactLimit
+        | Screen::ContactImport => 1,
         Screen::Exchange => 2,
         Screen::Groups | Screen::GroupDetail => 3,
         Screen::More
@@ -487,6 +492,69 @@ fn draw_action_menu(f: &mut Frame, area: Rect, app: &App) {
     );
 
     f.render_widget(list, popup_area);
+}
+
+/// Draw the contact import dialog (file path text input).
+fn draw_import_dialog(f: &mut Frame, area: Rect, app: &App) {
+    let popup_width = 60u16.min(area.width.saturating_sub(4));
+    let popup_height = if app.import_state.result_message.is_some() {
+        7
+    } else {
+        5
+    };
+
+    let x = area.x + (area.width.saturating_sub(popup_width)) / 2;
+    let y = area.y + (area.height.saturating_sub(popup_height)) / 2;
+    let popup_area = Rect::new(x, y, popup_width, popup_height);
+
+    f.render_widget(Clear, popup_area);
+
+    let inner = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(if app.import_state.result_message.is_some() {
+            vec![
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+            ]
+        } else {
+            vec![Constraint::Length(1), Constraint::Length(1)]
+        })
+        .margin(1)
+        .split(popup_area);
+
+    let block = Block::default()
+        .title(" Import vCard [Enter] import [Esc] cancel ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(app.theme.accent))
+        .style(Style::default().bg(app.theme.bg));
+    f.render_widget(block, popup_area);
+
+    let label = Paragraph::new("File path:").style(Style::default().fg(app.theme.fg));
+    f.render_widget(label, inner[0]);
+
+    let input_style = Style::default()
+        .fg(app.theme.fg)
+        .bg(app.theme.bg)
+        .add_modifier(Modifier::UNDERLINED);
+    let input = Paragraph::new(app.import_state.file_path.as_str()).style(input_style);
+    f.render_widget(input, inner[1]);
+
+    // Show cursor at end of input
+    f.set_cursor_position((
+        inner[1].x + app.import_state.file_path.len() as u16,
+        inner[1].y,
+    ));
+
+    if let Some(msg) = &app.import_state.result_message {
+        let style = if app.import_state.success {
+            Style::default().fg(app.theme.accent)
+        } else {
+            Style::default().fg(Color::Red)
+        };
+        let result = Paragraph::new(msg.as_str()).style(style);
+        f.render_widget(result, inner[2]);
+    }
 }
 
 /// Draw a modal alert dialog centered on screen. Dismissed by Esc/Enter.

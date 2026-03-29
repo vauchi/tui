@@ -8,7 +8,8 @@ use crossterm::event::KeyCode;
 use vauchi_app::ui::WorkflowEngine;
 
 use crate::app::{
-    ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, Screen,
+    ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, ImportState,
+    InputMode, Screen,
 };
 use crate::helpers;
 
@@ -111,6 +112,12 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
                 }
                 Err(e) => app.set_status(format!("Error: {}", e)),
             }
+        }
+        KeyCode::Char('i') => {
+            // Open contact import screen
+            app.import_state = ImportState::default();
+            app.input_mode = InputMode::Editing;
+            app.goto(Screen::ContactImport);
         }
         KeyCode::Char('L') => {
             // Open contact limit screen
