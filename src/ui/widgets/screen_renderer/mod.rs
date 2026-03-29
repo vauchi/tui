@@ -14,6 +14,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
+use vauchi_app::DesignTokens;
 use vauchi_app::ui::{Component, ScreenModel, TextStyle};
 
 use super::card_preview::CardPreviewWidget;
@@ -107,6 +108,23 @@ impl ScreenRenderState {
     }
 }
 
+// ── Token-to-terminal conversion ──────────────────────────────────
+//
+// Design tokens are pixel-based. Terminal cells are ~8px wide, ~16px tall.
+// These helpers convert token values to character cells.
+// Terminal line height divisor (one line ≈ 16 px).
+const LINE_HEIGHT_PX: u16 = 16;
+
+/// Component header/footer padding in terminal lines, derived from spacing.sm.
+fn component_padding_lines(tokens: &DesignTokens) -> u16 {
+    (tokens.spacing.sm / LINE_HEIGHT_PX).max(1)
+}
+
+/// Minimum content area in terminal lines, derived from spacing.xl.
+fn content_min_lines(tokens: &DesignTokens) -> u16 {
+    (tokens.spacing.xl / LINE_HEIGHT_PX).max(3)
+}
+
 /// Render a complete `ScreenModel` into the given area.
 pub fn render_screen(
     f: &mut Frame,
@@ -129,8 +147,8 @@ pub fn render_screen(
     // Title
     constraints.push(Constraint::Length(if has_subtitle { 3 } else { 2 }));
 
-    // Components area (flexible)
-    constraints.push(Constraint::Min(5));
+    // Components area (flexible, token-derived minimum)
+    constraints.push(Constraint::Min(content_min_lines(&screen.tokens)));
 
     // (Action hints removed — shown in the persistent action bar instead)
 
@@ -158,7 +176,14 @@ pub fn render_screen(
     chunk_idx += 1;
 
     // Components
-    render_components(f, chunks[chunk_idx], &screen.components, state, theme);
+    render_components(
+        f,
+        chunks[chunk_idx],
+        &screen.components,
+        state,
+        theme,
+        &screen.tokens,
+    );
 
     // (Action hints removed — shown in the persistent action bar instead)
 }
@@ -170,42 +195,48 @@ fn render_components(
     components: &[Component],
     state: &ScreenRenderState,
     theme: &TuiTheme,
+    tokens: &DesignTokens,
 ) {
     if components.is_empty() {
         return;
     }
 
-    // Build constraints: each component gets a portion of the available space
+    // Component chrome: 1 line structural + token-derived gap.
+    // With default tokens (spacing.sm=8, line_height=16): chrome = 1 + 1 = 2.
+    let chrome = 1 + component_padding_lines(tokens);
+
+    // Build constraints: each component gets a portion of the available space.
+    // `chrome` replaces the former hardcoded `+ 2` — now token-derived.
     let constraints: Vec<Constraint> = components
         .iter()
         .map(|c| match c {
-            Component::Text { .. } => Constraint::Length(2),
-            Component::TextInput { .. } => Constraint::Length(5),
+            Component::Text { .. } => Constraint::Length(chrome),
+            Component::TextInput { .. } => Constraint::Length(3 + chrome),
             Component::ToggleList { items, .. } => {
                 let item_lines: usize = items
                     .iter()
                     .map(|i| if i.subtitle.is_some() { 2 } else { 1 })
                     .sum();
-                Constraint::Length((item_lines as u16 + 2).min(area.height / 2))
+                Constraint::Length((item_lines as u16 + chrome).min(area.height / 2))
             }
             Component::FieldList { fields, .. } => {
-                Constraint::Length((fields.len() as u16 + 4).min(area.height / 2))
+                Constraint::Length((fields.len() as u16 + 2 + chrome).min(area.height / 2))
             }
             Component::CardPreview { group_views, .. } => {
-                let extra = if group_views.is_empty() { 0 } else { 2 };
+                let extra = if group_views.is_empty() { 0 } else { chrome };
                 Constraint::Min(8 + extra)
             }
             Component::InfoPanel { items, .. } => {
-                Constraint::Length((items.len() as u16 * 3 + 2).min(area.height / 2))
+                Constraint::Length((items.len() as u16 * 3 + chrome).min(area.height / 2))
             }
             Component::ContactList { contacts, .. } => {
-                Constraint::Length((contacts.len() as u16 + 2).min(area.height / 2).max(4))
+                Constraint::Length((contacts.len() as u16 + chrome).min(area.height / 2).max(4))
             }
             Component::SettingsGroup { items, .. } => {
-                Constraint::Length((items.len() as u16 + 2).min(area.height / 2))
+                Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
             }
             Component::ActionList { items, .. } => {
-                Constraint::Length((items.len() as u16 + 2).min(area.height / 2))
+                Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
             }
             Component::StatusIndicator { .. } => Constraint::Length(3),
             Component::PinInput { .. } => Constraint::Length(5),
@@ -500,5 +531,35 @@ mod tests {
 
         state.clear_all_errors();
         assert!(state.validation_errors.is_empty());
+    }
+
+    #[test]
+    fn test_spacing_from_tokens_uses_screen_model_values() {
+        // Validates architecture: ScreenModel.tokens flows to render layout
+        use vauchi_app::DesignTokens;
+
+        let tokens = DesignTokens::default();
+        // Token gap: spacing.sm (8px) / 16px line height → 1 line (min 1)
+        assert_eq!(component_padding_lines(&tokens), 1);
+        // Content minimum: spacing.xl (32px) / 16px → 2, clamped to min 3
+        assert_eq!(content_min_lines(&tokens), 3);
+    }
+
+    #[test]
+    fn test_spacing_from_tokens_respects_custom_values() {
+        use vauchi_app::DesignTokens;
+
+        let mut tokens = DesignTokens::default();
+        // 16px → 1 line (16/16 = 1)
+        tokens.spacing.sm = 16;
+        assert_eq!(component_padding_lines(&tokens), 1);
+
+        // 32px → 2 lines
+        tokens.spacing.sm = 32;
+        assert_eq!(component_padding_lines(&tokens), 2);
+
+        // 48px → 3 lines
+        tokens.spacing.sm = 48;
+        assert_eq!(component_padding_lines(&tokens), 3);
     }
 }
