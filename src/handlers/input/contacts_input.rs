@@ -258,27 +258,6 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
 }
 
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
-    // Handle delete confirmation overlay
-    if app.contact_delete_confirm {
-        match key {
-            KeyCode::Char('y') | KeyCode::Enter => {
-                app.contact_delete_confirm = false;
-                if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
-                    && let Some(contact) = contacts.get(app.selected_contact)
-                    && app.app_engine.vauchi().remove_contact(contact.id()).is_ok()
-                {
-                    app.invalidate_engines();
-                    app.set_status("Contact removed");
-                    app.go_back();
-                }
-            }
-            _ => {
-                app.contact_delete_confirm = false;
-            }
-        }
-        return;
-    }
-
     // Resolve the correct contact index from selected_contact_id if available.
     // The engine path sets selected_contact_id (String), but all legacy operations
     // below use selected_contact (usize index). Sync the index to prevent operating
@@ -472,13 +451,9 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 }
             }
         }
-        KeyCode::Char('x') | KeyCode::Delete => {
-            // Show delete confirmation
-            app.contact_delete_confirm = true;
-        }
-        KeyCode::Char('d') => {
-            // Dispatch delete_contact or archive_contact depending on which action
-            // the ContactDetailEngine placed on the current screen.
+        KeyCode::Char('x') | KeyCode::Delete | KeyCode::Char('d') => {
+            // Dispatch delete_contact (imported) or archive_contact (exchanged)
+            // via the AppEngine intercept, which validates contact kind.
             let action_id = app
                 .app_engine
                 .current_screen()
@@ -490,7 +465,9 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                 let result = app
                     .app_engine
                     .handle_action(UserAction::ActionPressed { action_id: id });
-                drop(result);
+                // AppEngine navigates back internally; sync TUI screen state
+                app.go_back();
+                crate::handlers::action_result::handle_action_result(app, result);
             }
         }
         _ => {}
