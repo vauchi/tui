@@ -240,7 +240,7 @@ fn render_components(
             }
             Component::StatusIndicator { .. } => Constraint::Length(3),
             Component::PinInput { .. } => Constraint::Length(5),
-            Component::QrCode { .. } => Constraint::Min(8),
+            Component::QrCode { .. } => Constraint::Min(14),
             Component::Divider => Constraint::Length(1),
             Component::InlineConfirm { .. } => Constraint::Length(4),
             Component::EditableText { .. } => Constraint::Length(3),

@@ -132,9 +132,13 @@ pub fn redact_dynamic_values(s: &str) -> String {
     // Replace standalone 16-char hex sequences
     let re_hex16 = regex::Regex::new(r"\b[0-9a-f]{16}\b").unwrap();
     let s = re_hex16.replace_all(&s, "[HEX_ID]").to_string();
-    // Redact QR code data lines (must contain at least one block char) — crypto nonces make these non-deterministic
-    let re_qr = regex::Regex::new(r"(?m)^(│\s+)[\s█]*█[\s█]*(\s+│)$").unwrap();
-    re_qr.replace_all(&s, "$1[QR_DATA]$2").to_string()
+    // Redact entire QR Code box content — Dense1x2 unicode QR contains ephemeral crypto keys
+    // that make every rendered QR image non-deterministic. Replace the full interior with a
+    // stable placeholder while preserving the box borders.
+    let re_qr_block = regex::Regex::new(r"(?s)(┌ QR Code [─]+┐\n).*?(└[─]+┘)").unwrap();
+    re_qr_block
+        .replace_all(&s, "$1│  [QR_IMAGE_REDACTED]                                                         │\n$2")
+        .to_string()
 }
 
 /// Assert a snapshot with navigation context metadata.

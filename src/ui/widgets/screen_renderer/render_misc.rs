@@ -177,46 +177,34 @@ pub(super) fn render_qr_code(
 
     let content = match mode {
         QrMode::Display => {
-            // In a real terminal, we'd render actual QR. For now, show data info.
-            let truncated = if data.len() > 40 {
-                let end = data
-                    .char_indices()
-                    .nth(40)
-                    .map(|(i, _)| i)
-                    .unwrap_or(data.len());
-                format!("{}...", &data[..end])
-            } else {
-                data.to_string()
-            };
-            let mut lines = vec![
-                Line::from(""),
-                Line::from(Span::styled(
-                    "  ┌──────────────┐",
-                    Style::default().fg(theme.fg_secondary),
-                )),
-                Line::from(Span::styled(
-                    "  │  ▄▄▄▄  ▄▄▄▄ │",
-                    Style::default().fg(theme.fg),
-                )),
-                Line::from(Span::styled(
-                    "  │  █  █  █  █ │",
-                    Style::default().fg(theme.fg),
-                )),
-                Line::from(Span::styled(
-                    "  │  ▀▀▀▀  ▀▀▀▀ │",
-                    Style::default().fg(theme.fg),
-                )),
-                Line::from(Span::styled(
-                    "  └──────────────┘",
-                    Style::default().fg(theme.fg_secondary),
-                )),
-                Line::from(""),
-                Line::from(Span::styled(
-                    format!("  {}", truncated),
-                    Style::default().fg(theme.fg_secondary),
-                )),
-            ];
+            let mut lines = vec![Line::from("")];
+
+            match qrcode::QrCode::new(data) {
+                Ok(code) => {
+                    let image = code
+                        .render::<qrcode::render::unicode::Dense1x2>()
+                        .dark_color(qrcode::render::unicode::Dense1x2::Light)
+                        .light_color(qrcode::render::unicode::Dense1x2::Dark)
+                        .quiet_zone(false)
+                        .build();
+
+                    for qr_line in image.lines() {
+                        lines.push(Line::from(Span::styled(
+                            format!("  {}", qr_line),
+                            Style::default().fg(theme.fg),
+                        )));
+                    }
+                }
+                Err(_) => {
+                    lines.push(Line::from(Span::styled(
+                        "  (QR code too large to render)",
+                        Style::default().fg(theme.error),
+                    )));
+                }
+            }
+
             if let Some(l) = label {
+                lines.push(Line::from(""));
                 lines.push(Line::from(Span::styled(
                     format!("  {}", l),
                     Style::default().fg(theme.fg_secondary),

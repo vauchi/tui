@@ -79,12 +79,8 @@ fn test_workflow_exchange() {
         &mut app,
     ));
 
+    // ADR-031: QR image contains ephemeral keys — redacted by redact_dynamic_values in render_to_string
     let output = steps.join("\n\n");
-    // ADR-031: QR data contains ephemeral keys, redact for deterministic snapshot
-    let output = regex::Regex::new(r"V0JF\S+")
-        .unwrap()
-        .replace_all(&output, "[QR_DATA_REDACTED]")
-        .to_string();
     insta::with_settings!({
         description => "Exchange happy path: MyInfo → Exchange QR → Contacts",
     }, {

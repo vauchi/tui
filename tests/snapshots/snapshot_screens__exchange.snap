@@ -1,29 +1,13 @@
 ---
 source: tests/snapshot_screens.rs
-description: "MyInfo → press '1' (Exchange tab)"
+description: "MyInfo → press '3' (Exchange tab)"
 expression: output
 ---
                                [2/6]  ○ ● ○ ○ ○ ○
                                  Share Your Code
 
 ┌ QR Code ─────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  ┌──────────────┐                                                            │
-│  │  ▄▄▄▄  ▄▄▄▄ │                                                             │
-│  │  █  █  █  █ │                                                             │
-│  │  ▀▀▀▀  ▀▀▀▀ │                                                             │
-│  └──────────────┘                                                            │
-│                                                                              │
-│  [QR_DATA_REDACTED]                                 │
-│  Alice Smith                                                                 │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
-│                                                                              │
+│  [QR_IMAGE_REDACTED]                                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 [Enter] Scan Their Code  [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More

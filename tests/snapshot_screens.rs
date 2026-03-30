@@ -286,12 +286,8 @@ fn test_snapshot_privacy() {
 fn test_snapshot_exchange() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::Exchange;
+    // ADR-031: QR image contains ephemeral keys — redacted by redact_dynamic_values in render_to_string
     let output = render_to_string(&mut app);
-    // ADR-031: QR data contains ephemeral keys, redact for deterministic snapshot
-    let output = regex::Regex::new(r"V0JF\S+")
-        .unwrap()
-        .replace_all(&output, "[QR_DATA_REDACTED]")
-        .to_string();
     assert_snap!("exchange", "MyInfo", "press '3' (Exchange tab)", output);
 }
 
