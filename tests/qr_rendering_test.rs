@@ -54,6 +54,9 @@ fn qr_code_handles_long_exchange_data() {
 #[test]
 fn qr_code_fails_gracefully_on_oversized_data() {
     let data = "X".repeat(5000);
-    let result = QrCode::new(&data);
-    assert!(result.is_err(), "Oversized data should fail QR generation");
+    match QrCode::new(&data) {
+        Err(qrcode::types::QrError::DataTooLong) => {} // expected
+        Err(_) => panic!("Expected DataTooLong error for oversized data"),
+        Ok(_) => panic!("Expected error for oversized data, got Ok"),
+    }
 }
