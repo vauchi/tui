@@ -9,5 +9,7 @@ expression: output
 ┌ QR Code ─────────────────────────────────────────────────────────────────────┐
 │  [QR_IMAGE_REDACTED]                                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
+To join from another device, use: vauchi device join <qr_data>
+
 [Esc] Cancel  [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
