@@ -354,6 +354,7 @@ fn action_key_hint(action_id: &str) -> &'static str {
         "create_new" => "Enter",
         "have_identity" => "h",
         "delete" | "wipe" | "emergency_wipe" => "x",
+        "delete_contact" | "archive_contact" => "d",
         "scan" => "S",
         "enable" | "disable" | "toggle" => "t",
         "toggle_view" => "Enter",

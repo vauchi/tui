@@ -5,7 +5,7 @@
 //! Contact-related input handlers: contact list, detail, actions, visibility.
 
 use crossterm::event::KeyCode;
-use vauchi_app::ui::WorkflowEngine;
+use vauchi_app::ui::{UserAction, WorkflowEngine};
 
 use crate::app::{
     ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, ImportState,
@@ -475,6 +475,23 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('x') | KeyCode::Delete => {
             // Show delete confirmation
             app.contact_delete_confirm = true;
+        }
+        KeyCode::Char('d') => {
+            // Dispatch delete_contact or archive_contact depending on which action
+            // the ContactDetailEngine placed on the current screen.
+            let action_id = app
+                .app_engine
+                .current_screen()
+                .actions
+                .iter()
+                .find(|a| a.enabled && (a.id == "delete_contact" || a.id == "archive_contact"))
+                .map(|a| a.id.clone());
+            if let Some(id) = action_id {
+                let result = app
+                    .app_engine
+                    .handle_action(UserAction::ActionPressed { action_id: id });
+                drop(result);
+            }
         }
         _ => {}
     }
