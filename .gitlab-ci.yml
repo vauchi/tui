@@ -143,8 +143,9 @@ test:snapshots:record:
       else
         echo "✅ All tests passed"
       fi
-    # Preserve recorded snapshots across git checkout
-    - cp -r tests/snapshots/ /tmp/insta-snapshots/
+    # Preserve ALL recorded snapshots across git checkout
+    # (covers tests/snapshots/, src/ui/snapshots/, and any future location)
+    - find . -name '*.snap' -not -path './target/*' -not -path './.cargo/*' | tar cf /tmp/insta-all-snapshots.tar -T -
     # Configure git for push — bypass credential helpers and insteadOf rewrites
     - git config --global --unset-all url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf 2>/dev/null || true
     - git config --global --unset-all credential.helper 2>/dev/null || true
@@ -153,11 +154,11 @@ test:snapshots:record:
     - PUSH_URL="https://vauchi-gitlab-runner:${PROJECT_ACCESS_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
     - git fetch "$PUSH_URL" "${CI_COMMIT_REF_NAME}"
     - git checkout "${CI_COMMIT_REF_NAME}"
-    # Restore recorded snapshots (git checkout above resets working directory)
-    - cp -r /tmp/insta-snapshots/ tests/snapshots/
+    # Restore ALL recorded snapshots (git checkout resets working directory)
+    - tar xf /tmp/insta-all-snapshots.tar
     # Commit and push baselines (skip if unchanged)
     - |
-      git add tests/snapshots/
+      find . -name '*.snap' -not -path './target/*' -not -path './.cargo/*' -exec git add {} +
       if git diff --cached --quiet; then
         echo "✅ No baseline changes — nothing to commit"
         exit 0
