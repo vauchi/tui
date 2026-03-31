@@ -306,11 +306,17 @@ pub(super) fn map_component_key(
             _ => KeyResult::Unhandled,
         },
 
+        Component::Banner { action_id, .. } => match key {
+            KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
+                action_id: action_id.clone(),
+            }),
+            _ => KeyResult::Unhandled,
+        },
+
         Component::Text { .. }
         | Component::InfoPanel { .. }
         | Component::StatusIndicator { .. }
         | Component::QrCode { .. }
-        | Component::Banner { .. }
         | Component::Divider => KeyResult::Unhandled,
         _ => KeyResult::Unhandled,
     }

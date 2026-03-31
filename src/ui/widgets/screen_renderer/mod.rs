@@ -439,14 +439,29 @@ fn render_components(
             }
             Component::Banner {
                 text,
-                action_label: _,
+                action_label,
                 action_id: _,
                 ..
             } => {
-                let style = Style::default()
-                    .fg(theme.accent)
-                    .add_modifier(Modifier::BOLD);
-                let para = Paragraph::new(format!("  {text}")).style(style);
+                let line = Line::from(vec![
+                    Span::styled(
+                        format!("  {text}"),
+                        Style::default()
+                            .fg(theme.accent)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    if !action_label.is_empty() {
+                        Span::styled(
+                            format!("  [{action_label}]"),
+                            Style::default()
+                                .fg(theme.accent)
+                                .add_modifier(Modifier::UNDERLINED),
+                        )
+                    } else {
+                        Span::raw("")
+                    },
+                ]);
+                let para = Paragraph::new(line);
                 f.render_widget(para, chunk);
             }
             _ => {
