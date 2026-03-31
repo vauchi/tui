@@ -56,6 +56,18 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
+    // Toast undo: 'z' triggers UndoPressed when a toast has an undo action
+    if key == KeyCode::Char('z')
+        && let Some(action_id) = app.undo_action_id.take()
+    {
+        let result = app
+            .app_engine
+            .handle_action(UserAction::UndoPressed { action_id });
+        app.clear_status();
+        handle_action_result(app, result);
+        return Action::Continue;
+    }
+
     // Lock screen bypasses ALL global keys — PIN chars include 'q', Esc, etc.
     if app.screen == Screen::Lock {
         handle_lock_keys(app, key);

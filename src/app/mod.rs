@@ -90,6 +90,8 @@ pub struct App {
     pub status_message: Option<String>,
     /// When the status message was set (for auto-clear after 3 seconds).
     pub status_message_time: Option<std::time::Instant>,
+    /// Undo action ID from the most recent `ShowToast` (cleared with status).
+    pub undo_action_id: Option<String>,
     /// Modal alert message (title, body) — requires user dismissal.
     pub alert_message: Option<(String, String)>,
     /// Selected contact index (for contacts list)
@@ -242,6 +244,7 @@ impl App {
             should_quit: false,
             status_message: None,
             status_message_time: None,
+            undo_action_id: None,
             alert_message: None,
             selected_contact: 0,
             selected_contact_id: None,
@@ -384,6 +387,14 @@ impl App {
     pub fn set_status(&mut self, msg: impl Into<String>) {
         self.status_message = Some(msg.into());
         self.status_message_time = Some(std::time::Instant::now());
+        self.undo_action_id = None;
+    }
+
+    /// Set a status message with an optional undo action.
+    pub fn set_status_with_undo(&mut self, msg: impl Into<String>, undo_action_id: Option<String>) {
+        self.status_message = Some(msg.into());
+        self.status_message_time = Some(std::time::Instant::now());
+        self.undo_action_id = undo_action_id;
     }
 
     /// Clear the status message.
@@ -391,6 +402,7 @@ impl App {
     pub fn clear_status(&mut self) {
         self.status_message = None;
         self.status_message_time = None;
+        self.undo_action_id = None;
     }
 
     /// Applies a completed background sync result to app state.

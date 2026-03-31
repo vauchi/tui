@@ -202,7 +202,12 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             } else {
                 Style::default().fg(app.theme.accent)
             };
-            let status = Paragraph::new(format!(" {}", msg)).style(style);
+            let text = if app.undo_action_id.is_some() {
+                format!(" {}  [z] Undo", msg)
+            } else {
+                format!(" {}", msg)
+            };
+            let status = Paragraph::new(text).style(style);
             f.render_widget(status, chunks[bar_start]);
         } else if has_search {
             let search_style = if app.contact_search_mode {

@@ -215,8 +215,11 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::OpenEntryDetail { .. } => {
             // Handled by AppEngine (intercepted before reaching TUI)
         }
-        ActionResult::ShowToast { message, .. } => {
-            app.set_status(message);
+        ActionResult::ShowToast {
+            message,
+            undo_action_id,
+        } => {
+            app.set_status_with_undo(message, undo_action_id);
         }
         ActionResult::ExchangeCommands { commands } => {
             handle_exchange_commands(app, commands);
