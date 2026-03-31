@@ -9,6 +9,20 @@
 [semgrep]
   description = "Semgrep with Rust community + vauchi security rules"
 
+  # Disable println/eprintln-in-lib: this is a binary-only crate (no lib.rs).
+  # All println!/eprintln! calls are intentional user-facing TUI output.
+  [[semgrep.ruleset]]
+    disable = true
+    [semgrep.ruleset.identifier]
+      type = "semgrep_id"
+      value = "vauchi-no-println-in-lib"
+
+  [[semgrep.ruleset]]
+    disable = true
+    [semgrep.ruleset.identifier]
+      type = "semgrep_id"
+      value = "vauchi-no-eprintln-in-lib"
+
   [[semgrep.passthrough]]
     type = "url"
     value = "https://semgrep.dev/c/p/rust"
