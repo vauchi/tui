@@ -3,12 +3,13 @@
 
 > **Mirror:** This repo is a read-only mirror of [gitlab.com/vauchi/tui](https://gitlab.com/vauchi/tui). Please open issues and merge requests there.
 
-[![Pipeline](https://vauchi.gitlab.io/tui/badges/pipeline.svg)](https://gitlab.com/vauchi/tui/-/pipelines)
-[![Coverage](https://vauchi.gitlab.io/tui/badges/coverage.svg)](https://gitlab.com/vauchi/tui/-/pipelines)
+[![Pipeline](https://img.shields.io/endpoint?url=https://vauchi.gitlab.io/tui/badges/pipeline.json&label=pipeline)](https://gitlab.com/vauchi/tui/-/pipelines)
+[![Coverage](https://img.shields.io/endpoint?url=https://vauchi.gitlab.io/tui/badges/coverage.json&label=coverage)](https://gitlab.com/vauchi/tui/-/pipelines)
 [![REUSE](https://api.reuse.software/badge/gitlab.com/vauchi/tui)](https://api.reuse.software/info/gitlab.com/vauchi/tui)
 
 > [!WARNING]
-> **Pre-Alpha Software** - This project is under heavy development and not ready for production use.
+> **Pre-Alpha Software** - This project is under heavy development
+> and not ready for production use.
 > APIs may change without notice. Use at your own risk.
 
 # Vauchi TUI
@@ -57,7 +58,7 @@ cargo build -p vauchi-tui --release
 
 ## Project Structure
 
-```
+```text
 vauchi-tui/src/
 ├── main.rs          # Entry point, event loop
 ├── app.rs           # Application state
