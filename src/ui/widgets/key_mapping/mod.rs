@@ -653,4 +653,62 @@ mod tests {
             "Non-Enter key on banner should be unhandled"
         );
     }
+
+    #[test]
+    fn test_inline_confirm_enter_fires_confirm_prefixed_action() {
+        let screen = make_screen(
+            vec![Component::InlineConfirm {
+                id: "delete_group".into(),
+                warning: "Are you sure?".into(),
+                confirm_text: "Delete".into(),
+                cancel_text: "Cancel".into(),
+                destructive: true,
+            }],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        let result = map_key(KeyCode::Enter, &screen, &mut state);
+        match result {
+            KeyResult::Action(UserAction::ActionPressed { action_id }) => {
+                assert_eq!(
+                    action_id, "confirm_delete_group",
+                    "Enter on InlineConfirm must use confirm_ prefix convention"
+                );
+            }
+            other => panic!(
+                "Expected ActionPressed(confirm_delete_group), got {}",
+                key_result_debug(&other)
+            ),
+        }
+    }
+
+    #[test]
+    fn test_inline_confirm_esc_fires_cancel_prefixed_action() {
+        let screen = make_screen(
+            vec![Component::InlineConfirm {
+                id: "delete_group".into(),
+                warning: "Are you sure?".into(),
+                confirm_text: "Delete".into(),
+                cancel_text: "Cancel".into(),
+                destructive: true,
+            }],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        let result = map_key(KeyCode::Esc, &screen, &mut state);
+        match result {
+            KeyResult::Action(UserAction::ActionPressed { action_id }) => {
+                assert_eq!(
+                    action_id, "cancel_delete_group",
+                    "Esc on InlineConfirm must use cancel_ prefix convention"
+                );
+            }
+            other => panic!(
+                "Expected ActionPressed(cancel_delete_group), got {}",
+                key_result_debug(&other)
+            ),
+        }
+    }
 }
