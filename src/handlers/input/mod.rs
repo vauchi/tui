@@ -10,7 +10,7 @@ mod features_input;
 mod navigation;
 
 use crossterm::event::KeyCode;
-use vauchi_app::ui::{ActionResult, UserAction, WorkflowEngine};
+use vauchi_app::ui::{ActionResult, Component, UserAction, WorkflowEngine};
 
 use crate::app::{App, InputMode, Screen};
 use crate::handlers::action_result::handle_action_result;
@@ -208,6 +208,19 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             // If in a bar zone, return to content first
             if app.focus.zone != FocusZone::Content {
                 app.focus.zone = FocusZone::Content;
+                return Action::Continue;
+            }
+            // If an InlineConfirm is on screen, cancel it instead of navigating back
+            let screen = app.app_engine.current_screen();
+            if let Some(Component::InlineConfirm { id, .. }) = screen
+                .components
+                .iter()
+                .find(|c| matches!(c, Component::InlineConfirm { .. }))
+            {
+                let result = app.app_engine.handle_action(UserAction::ActionPressed {
+                    action_id: format!("cancel_{id}"),
+                });
+                handle_action_result(app, result);
                 return Action::Continue;
             }
             app.go_back();
