@@ -298,10 +298,10 @@ pub(super) fn map_component_key(
 
         Component::InlineConfirm { id, .. } => match key {
             KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
-                action_id: id.clone(),
+                action_id: format!("confirm_{id}"),
             }),
             KeyCode::Esc => KeyResult::Action(UserAction::ActionPressed {
-                action_id: "cancel".to_string(),
+                action_id: format!("cancel_{id}"),
             }),
             _ => KeyResult::Unhandled,
         },
