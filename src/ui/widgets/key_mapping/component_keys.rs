@@ -307,9 +307,11 @@ pub(super) fn map_component_key(
         },
 
         Component::Banner { action_id, .. } => match key {
-            KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
-                action_id: action_id.clone(),
-            }),
+            KeyCode::Enter if !action_id.is_empty() => {
+                KeyResult::Action(UserAction::ActionPressed {
+                    action_id: action_id.clone(),
+                })
+            }
             _ => KeyResult::Unhandled,
         },
 

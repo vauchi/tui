@@ -421,3 +421,48 @@ fn edit_contact_result_routes_to_contact_edit_screen() {
     assert_eq!(app.screen, Screen::ContactEdit);
     assert_eq!(app.selected_contact_id.as_deref(), Some("abc"));
 }
+
+// --- ShowToast with undo ---
+
+#[test]
+fn show_toast_with_undo_sets_status_and_undo_id() {
+    let mut app = create_app_with_identity();
+    handle_action_result(
+        &mut app,
+        ActionResult::ShowToast {
+            message: "Field hidden".into(),
+            undo_action_id: Some("undo_hide_abc".into()),
+        },
+    );
+    assert_eq!(app.status_message.as_deref(), Some("Field hidden"));
+    assert_eq!(app.undo_action_id.as_deref(), Some("undo_hide_abc"));
+}
+
+#[test]
+fn show_toast_without_undo_clears_stale_undo_id() {
+    let mut app = create_app_with_identity();
+    app.undo_action_id = Some("leftover".into());
+    handle_action_result(
+        &mut app,
+        ActionResult::ShowToast {
+            message: "Done".into(),
+            undo_action_id: None,
+        },
+    );
+    assert_eq!(app.status_message.as_deref(), Some("Done"));
+    assert!(
+        app.undo_action_id.is_none(),
+        "undo_action_id should be cleared when toast has no undo"
+    );
+}
+
+#[test]
+fn clear_status_also_clears_undo_id() {
+    let mut app = create_app_with_identity();
+    app.undo_action_id = Some("undo_x".into());
+    app.set_status("temp");
+    assert!(
+        app.undo_action_id.is_none(),
+        "set_status should clear undo_action_id"
+    );
+}

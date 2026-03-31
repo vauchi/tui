@@ -591,4 +591,66 @@ mod tests {
         assert!(matches!(result, KeyResult::Consumed));
         assert_eq!(state.focused_component, 0);
     }
+
+    #[test]
+    fn test_banner_enter_fires_action_pressed() {
+        let screen = make_screen(
+            vec![Component::Banner {
+                text: "Viewing as Alice".into(),
+                action_label: "Exit Preview".into(),
+                action_id: "exit-preview".into(),
+            }],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        let result = map_key(KeyCode::Enter, &screen, &mut state);
+        match result {
+            KeyResult::Action(UserAction::ActionPressed { action_id }) => {
+                assert_eq!(action_id, "exit-preview");
+            }
+            other => panic!(
+                "Expected ActionPressed(exit-preview), got {}",
+                key_result_debug(&other)
+            ),
+        }
+    }
+
+    #[test]
+    fn test_banner_empty_action_id_enter_is_unhandled() {
+        let screen = make_screen(
+            vec![Component::Banner {
+                text: "Info only".into(),
+                action_label: String::new(),
+                action_id: String::new(),
+            }],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        let result = map_key(KeyCode::Enter, &screen, &mut state);
+        assert!(
+            matches!(result, KeyResult::Unhandled),
+            "Enter on banner with empty action_id should be unhandled"
+        );
+    }
+
+    #[test]
+    fn test_banner_non_enter_is_unhandled() {
+        let screen = make_screen(
+            vec![Component::Banner {
+                text: "Preview mode".into(),
+                action_label: "Exit".into(),
+                action_id: "exit".into(),
+            }],
+            vec![],
+        );
+
+        let mut state = ScreenRenderState::default();
+        let result = map_key(KeyCode::Char('x'), &screen, &mut state);
+        assert!(
+            matches!(result, KeyResult::Unhandled),
+            "Non-Enter key on banner should be unhandled"
+        );
+    }
 }
