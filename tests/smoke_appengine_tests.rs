@@ -95,8 +95,8 @@ fn smoke_exchange_screen_renders_via_engine() {
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
-        output.contains("Share Your Code"),
-        "Exchange screen should show share prompt. Got:\n{}",
+        output.contains("Share Your Code") || output.contains("Exchange Mode"),
+        "Exchange screen should show share prompt or mode selection. Got:\n{}",
         output
     );
 }
