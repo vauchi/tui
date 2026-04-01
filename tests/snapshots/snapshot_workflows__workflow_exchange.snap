@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_workflows.rs
+assertion_line: 87
 description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
 expression: output
 ---
@@ -30,13 +31,29 @@ expression: output
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 2 ─ Exchange — press '3' (Exchange tab) ═══════════
-                               [2/6]  ○ ● ○ ○ ○ ○
-                                 Share Your Code
+                                  Exchange Mode
+                      Choose how to exchange contact cards
 
-┌ QR Code ─────────────────────────────────────────────────────────────────────┐
-│  [QR_IMAGE_REDACTED]                                                         │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ • Glance  Requires camera                                                  │
+│   • Bump  Requires BLE, accelerometer                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
-[Enter] Scan Their Code  [?] help  [Esc] back  [q] quit
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Hover  Requires camera, microphone, speaker                              │
+│   • Shake  Requires BLE, accelerometer                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Tap tap  Requires BLE, NFC                                               │
+│   • Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerometer   │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Broadcast  Requires camera                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Web  Requires camera, internet                                           │
+│   star.fill Link  Requires internet                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+[?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More
 
 ═══ Step 3 ─ Contacts — press '2' (view exchanged contacts) 
