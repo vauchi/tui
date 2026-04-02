@@ -9,3 +9,5 @@ devic = "devic"
 Ratatui = "Ratatui"
 # Intentional garbled text check for corrupted storage detection
 ecryption = "ecryption"
+# Crate name used in cargo-vet supply-chain/config.toml
+flate = "flate"
