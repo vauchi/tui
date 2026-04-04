@@ -6,8 +6,13 @@ expression: output
 ═══ Step 1 ─ MyInfo — view card fields ═════════════════════
                                    Alice Smith
 
+┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+│                                                                              │
+│  [#] Find someone nearby                                                     │
+│      Share your contact card in person — private and secure.                 │
+└──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ Email alice@company.com (Work)                                             │
+│   Email alice@company.com (Work)                                             │
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -21,12 +26,7 @@ expression: output
 
 
 
-
-
-
-
-
-[a] Add Entry  [Enter] Group View  [Enter] Preview as...  [?] help  [Esc] back
+[Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 2 ─ AddField — press 'a' (Add Entry) ══════════════
@@ -58,8 +58,13 @@ Comment (your eyes only, optional)
 ═══ Step 3 ─ MyInfo — field saved, return to card ══════════
                                    Alice Smith
 
+┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+│                                                                              │
+│  [#] Find someone nearby                                                     │
+│      Share your contact card in person — private and secure.                 │
+└──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ Email alice@company.com (Work)                                             │
+│   Email alice@company.com (Work)                                             │
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -73,10 +78,5 @@ Comment (your eyes only, optional)
 
 
 
-
-
-
-
-
-[a] Add Entry  [Enter] Group View  [Enter] Preview as...  [?] help  [Esc] back
+[Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

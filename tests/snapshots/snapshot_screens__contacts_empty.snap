@@ -1,13 +1,14 @@
 ---
 source: tests/snapshot_screens.rs
-description: "MyInfo → press '3' (Contacts tab)"
+description: "MyInfo → press '2' (Contacts tab)"
 expression: output
 ---
                                     Contacts
 
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet. Use Exchange to add one.                                   │
+┌ [#] No contacts yet ─────────────────────────────────────────────────────────┐
 │                                                                              │
+│  [-] Exchange cards in person                                                │
+│      Meet someone nearby and share your contact card securely.               │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -24,6 +25,5 @@ expression: output
 
 
 
-
-[a] Add Contact  [?] help  [Esc] back  [q] quit
+[Enter] Exchange Now  [a] Add Contact  [?] help  [Esc] back  [q] quit
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
