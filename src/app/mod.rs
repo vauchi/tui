@@ -295,23 +295,14 @@ impl App {
         }
     }
 
-    /// Performs a full sync with the relay server via WebSocket (blocking).
+    /// Performs a full sync with the relay server (blocking).
     #[allow(dead_code)]
-    pub fn sync(&self) -> SyncResult {
-        let vauchi = self.app_engine.vauchi();
-        let identity = match vauchi.identity() {
-            Some(id) => id,
-            None => {
-                return SyncResult {
-                    contacts_added: 0,
-                    cards_updated: 0,
-                    updates_sent: 0,
-                    success: false,
-                    error: Some("No identity".into()),
-                };
-            }
-        };
-        crate::sync_service::sync(identity, vauchi, &self.relay_url)
+    pub fn sync(&mut self) -> SyncResult {
+        if !self.app_engine.vauchi().has_identity() {
+            return SyncResult::error("No identity");
+        }
+        let vauchi = self.app_engine.vauchi_mut();
+        crate::sync_service::sync(vauchi)
     }
 
     /// Tests the relay connection (blocking — prefer background thread).
@@ -414,8 +405,8 @@ impl App {
         if result.success {
             self.sync_state.connected = true;
             let summary = format!(
-                "+{} contacts, {} updated, {} sent",
-                result.contacts_added, result.cards_updated, result.updates_sent
+                "{} received, {} sent, {} acked",
+                result.cards_updated, result.updates_sent, result.acknowledged
             );
             self.sync_state.last_result = Some(summary.clone());
             self.sync_state
@@ -428,14 +419,6 @@ impl App {
                 self.app_engine.vauchi().pending_update_count().unwrap_or(0);
 
             // Check for aha moments based on sync results
-            if result.contacts_added > 0
-                && let Ok(Some(moment)) = self
-                    .app_engine
-                    .vauchi()
-                    .try_trigger_aha_moment(AhaMomentType::FirstContactAdded)
-            {
-                self.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-            }
             if result.cards_updated > 0
                 && let Ok(Some(moment)) = self
                     .app_engine
