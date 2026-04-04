@@ -316,10 +316,9 @@ impl App {
     /// Returns `None` if there is no identity or storage key.
     pub fn build_sync_request(&self) -> Option<crate::sync_service::SyncRequest> {
         let vauchi = self.app_engine.vauchi();
-        let identity = vauchi.identity()?;
+        let _ = vauchi.identity()?; // gate: no request without identity
         let storage_key = vauchi.config().storage_key.clone()?;
         Some(crate::sync_service::SyncRequest {
-            identity_bytes: identity.to_storage_bytes(),
             storage_path: vauchi.config().storage_path.clone(),
             storage_key,
             relay_url: self.relay_url.clone(),

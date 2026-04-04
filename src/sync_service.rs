@@ -46,6 +46,17 @@ impl SyncResult {
             error: Some(msg.into()),
         }
     }
+
+    /// Sync was skipped (e.g. C1/C2 timing) — not a failure.
+    fn skipped(msg: impl Into<String>) -> Self {
+        Self {
+            cards_updated: 0,
+            updates_sent: 0,
+            acknowledged: 0,
+            success: true,
+            error: Some(msg.into()),
+        }
+    }
 }
 
 /// Performs a full sync with the relay server.
@@ -77,7 +88,7 @@ pub fn sync(vauchi: &mut Vauchi) -> SyncResult {
             }
             result
         }
-        VauchiSyncOutcome::TooSoon => SyncResult::error("Sync skipped: too soon"),
+        VauchiSyncOutcome::TooSoon => SyncResult::skipped("Too soon since last sync"),
         VauchiSyncOutcome::NotConnected => SyncResult::error("Not connected to relay"),
         VauchiSyncOutcome::NoIdentity => SyncResult::error("No identity found"),
     }
@@ -88,8 +99,6 @@ pub fn sync(vauchi: &mut Vauchi) -> SyncResult {
 /// All fields are owned and `Send`, allowing the sync operation to run
 /// on a separate thread without borrowing from the main-thread `App`.
 pub struct SyncRequest {
-    /// Serialized identity bytes (from `Identity::to_storage_bytes()`).
-    pub identity_bytes: Vec<u8>,
     /// Path to the SQLite database file.
     pub storage_path: std::path::PathBuf,
     /// Storage encryption key (cloned from VauchiConfig).
