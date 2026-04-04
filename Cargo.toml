@@ -22,9 +22,6 @@ vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "main", feat
 ratatui = "0.28"
 crossterm = "0.28"
 
-# Async runtime
-tokio = { version = "1", features = ["full"] }
-
 # CLI argument parsing
 clap = { version = "4", features = ["derive"] }
 
