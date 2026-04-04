@@ -255,7 +255,7 @@ check:design-drift:
   extends: .design-drift-job
   variables:
     DESIGN_DRIFT_MATCH_MODE: "grep"
-    DESIGN_DRIFT_GREP_FILE: "src/ui/widgets/screen_renderer.rs"
+    DESIGN_DRIFT_GREP_FILE: "src/ui/widgets/screen_renderer/mod.rs"
 
 # Removed symbols: detect stale references to removed features
 check:removed-symbols:
