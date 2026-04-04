@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_screens.rs
+assertion_line: 63
 description: "MyInfo → press '2' (Contacts tab)"
 expression: output
 ---
