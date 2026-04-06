@@ -23,7 +23,7 @@ use super::info_panel::InfoPanelWidget;
 use super::text_input::TextInputWidget;
 use super::toggle_list::ToggleListWidget;
 
-pub use render_misc::{action_key_hint_pub, render_discard_confirmation};
+pub use render_misc::action_key_hint_pub;
 
 /// Tracks focus and selection state for the screen renderer.
 #[derive(Default)]

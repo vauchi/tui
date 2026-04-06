@@ -250,67 +250,6 @@ pub(super) fn render_qr_code(
     f.render_widget(para, area);
 }
 
-/// Render a confirmation dialog component.
-pub(super) fn render_confirmation_dialog(
-    f: &mut Frame,
-    area: Rect,
-    title: &str,
-    message: &str,
-    confirm_text: &str,
-    destructive: bool,
-    theme: &TuiTheme,
-) {
-    let confirm_style = if destructive {
-        Style::default()
-            .fg(theme.error)
-            .add_modifier(Modifier::BOLD)
-    } else {
-        Style::default()
-            .fg(theme.accent)
-            .add_modifier(Modifier::BOLD)
-    };
-
-    let lines = vec![
-        Line::from(Span::styled(
-            format!("  {}", title),
-            Style::default().fg(theme.fg).add_modifier(Modifier::BOLD),
-        )),
-        Line::from(""),
-        Line::from(Span::styled(
-            format!("  {}", message),
-            Style::default().fg(theme.fg),
-        )),
-        Line::from(""),
-        Line::from(Span::styled(
-            format!("  [Enter] {}  [Esc] Cancel", confirm_text),
-            confirm_style,
-        )),
-    ];
-
-    let border_color = if destructive {
-        theme.error
-    } else {
-        theme.accent
-    };
-    let para = Paragraph::new(lines).block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(border_color)),
-    );
-    f.render_widget(para, area);
-}
-
-/// Public wrapper for rendering a non-destructive confirmation dialog overlay.
-pub fn render_discard_confirmation(
-    f: &mut Frame,
-    area: Rect,
-    title: &str,
-    message: &str,
-    theme: &TuiTheme,
-) {
-    render_confirmation_dialog(f, area, title, message, "Discard", false, theme);
-}
-
 /// Map action IDs to keyboard hints (public accessor for footer rendering).
 pub fn action_key_hint_pub(action_id: &str) -> &'static str {
     action_key_hint(action_id)
