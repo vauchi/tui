@@ -65,8 +65,13 @@ pub(in crate::handlers::input) fn handle_backup_keys(app: &mut App, key: KeyCode
                         }
                     }
                     Err(_) => {
-                        if app.backup_state.password.len() < 8 {
-                            app.set_status("Password must be at least 8 characters");
+                        if app.backup_state.password.len()
+                            < vauchi_core::identity::password::MIN_PASSWORD_LENGTH
+                        {
+                            app.set_status(format!(
+                                "Password must be at least {} characters",
+                                vauchi_core::identity::password::MIN_PASSWORD_LENGTH
+                            ));
                         } else {
                             app.set_status("Password too weak. Use a stronger passphrase.");
                         }
