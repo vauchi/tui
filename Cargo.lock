@@ -4300,3 +4300,11 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
 ]
+
+[[patch.unused]]
+name = "vauchi-app"
+version = "0.18.3"
+
+[[patch.unused]]
+name = "vauchi-core"
+version = "0.18.3"
