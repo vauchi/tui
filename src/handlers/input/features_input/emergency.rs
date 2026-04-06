@@ -40,13 +40,14 @@ pub(in crate::handlers::input) fn handle_emergency_keys(app: &mut App, key: KeyC
                     app.set_status("Configure emergency broadcast first");
                     return;
                 }
-                // Rate limit: 60 seconds between broadcasts
+                // Rate limit: prevent accidental double-sends
                 let now = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map(|d| d.as_secs())
                     .unwrap_or(0);
                 if let Some(last) = app.emergency_state.last_broadcast_time
-                    && now.saturating_sub(last) < 60
+                    && now.saturating_sub(last)
+                        < vauchi_core::api::emergency::BROADCAST_COOLDOWN_SECS
                 {
                     app.set_status("Alert recently sent. Wait before sending again.");
                     return;
