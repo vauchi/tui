@@ -218,7 +218,6 @@ impl App {
             }
             Screen::ContactDetail => {
                 self.selected_contact_id = None;
-                self.contact_delete_confirm = false;
                 self.screen = Screen::Contacts;
             }
             Screen::ContactEdit => {

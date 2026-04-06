@@ -126,8 +126,6 @@ pub struct App {
     pub contact_search_query: String,
     /// Contact search mode active
     pub contact_search_mode: bool,
-    /// Whether a contact delete confirmation is pending
-    pub contact_delete_confirm: bool,
     /// Whether a form discard confirmation is pending (Escape with unsaved data)
     pub form_discard_confirm: bool,
     /// Current exchange QR data (for expiration tracking)
@@ -262,7 +260,6 @@ impl App {
             revoke_confirm: false,
             contact_search_query: String::new(),
             contact_search_mode: false,
-            contact_delete_confirm: false,
             form_discard_confirm: false,
             current_qr: None,
             sync_state: SyncState::default(),

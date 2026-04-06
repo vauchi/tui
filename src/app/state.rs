@@ -320,8 +320,6 @@ pub struct GroupsState {
     pub group_search_query: String,
     /// Whether group search mode is active.
     pub group_search_mode: bool,
-    /// Whether a delete confirmation is pending.
-    pub delete_confirm: bool,
 }
 
 /// State for the onboarding wizard (SP-21).

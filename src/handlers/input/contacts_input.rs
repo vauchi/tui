@@ -196,9 +196,8 @@ pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
             app.groups_state.show_group_detail = true;
             app.goto(Screen::GroupDetail);
         }
-        KeyCode::Char('d') => {
-            app.groups_state.delete_confirm = true;
-        }
+        // 'd' for group deletion is handled by core's InlineConfirm via the action bar
+        KeyCode::Char('d') => {}
         _ => {}
     }
 }
