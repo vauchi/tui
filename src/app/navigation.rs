@@ -38,7 +38,9 @@ impl App {
             }
             Screen::Lock => {
                 if self.lock_engine.is_none() {
-                    self.lock_engine = Some(LockScreenEngine::new(5));
+                    self.lock_engine = Some(LockScreenEngine::new(
+                        vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
+                    ));
                 }
                 self.render_state = ScreenRenderState::default();
             }

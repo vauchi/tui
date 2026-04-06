@@ -224,7 +224,9 @@ impl App {
             None
         };
         let lock_engine = if initial_screen == Screen::Lock {
-            Some(LockScreenEngine::new(5))
+            Some(LockScreenEngine::new(
+                vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
+            ))
         } else {
             None
         };

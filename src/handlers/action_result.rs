@@ -61,7 +61,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_app::ui::AppScreen::Backup => app.screen = Screen::Backup,
                     vauchi_app::ui::AppScreen::Lock => {
                         if app.lock_engine.is_none() {
-                            app.lock_engine = Some(LockScreenEngine::new(5));
+                            app.lock_engine = Some(LockScreenEngine::new(
+                                vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
+                            ));
                         }
                         app.screen = Screen::Lock;
                     }
