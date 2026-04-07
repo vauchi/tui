@@ -46,11 +46,7 @@ pub fn ensure_locales_loaded() {
 
 pub fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
     let key = SymmetricKey::generate();
-    let config = VauchiConfig {
-        storage_path: data_dir.join("vauchi.db"),
-        storage_key: Some(key),
-        ..Default::default()
-    };
+    let config = VauchiConfig::with_storage_path(data_dir.join("vauchi.db")).with_storage_key(key);
     let vauchi: Vauchi = Vauchi::new(config).expect("vauchi");
     AppEngine::new(vauchi)
 }

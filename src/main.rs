@@ -98,11 +98,8 @@ fn main() -> Result<()> {
     }
 
     let storage_key = load_or_create_storage_key(&data_dir)?;
-    let vauchi_config = VauchiConfig {
-        storage_path: data_dir.join("vauchi.db"),
-        storage_key: Some(storage_key),
-        ..Default::default()
-    };
+    let vauchi_config =
+        VauchiConfig::with_storage_path(data_dir.join("vauchi.db")).with_storage_key(storage_key);
     let relay_url = cli
         .relay_url
         .clone()
