@@ -81,6 +81,7 @@ pub fn sync(vauchi: &mut Vauchi) -> SyncResult {
             sent,
             acknowledged,
             errors,
+            version_policy: _,
         } => {
             let mut result = SyncResult::success(received as u32, sent as u32, acknowledged as u32);
             if !errors.is_empty() {
