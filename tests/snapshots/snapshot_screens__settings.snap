@@ -1,6 +1,6 @@
 ---
 source: tests/snapshot_screens.rs
-description: "MyInfo → press '4' (Settings tab)"
+description: "MyInfo → press '5' (More tab) → Settings"
 expression: output
 ---
                                     Settings
@@ -13,10 +13,11 @@ expression: output
 │   Delivery Receipts  [x]                                                     │
 │   Suppress Presence  [ ]                                                     │
 └──────────────────────────────────────────────────────────────────────────────┘
+┌ Notifications ───────────────────────────────────────────────────────────────┐
+│   New Contact Added  [ ]                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
 ┌ Security ────────────────────────────────────────────────────────────────────┐
 │   Change Password  →                                                         │
-│   Devices  1 device                                                          │
-│   Duress PIN  →                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Network ─────────────────────────────────────────────────────────────────────┐
 │   Relay URL  wss://relay.vauchi.app                                          │
@@ -24,6 +25,5 @@ expression: output
 ┌ Danger Zone ─────────────────────────────────────────────────────────────────┐
 │   Emergency Wipe  Wipe All Data                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
