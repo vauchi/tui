@@ -66,6 +66,7 @@ fn text_input_empty_focused() {
 }
 
 #[test]
+// @scenario: accessibility.feature:Contact details are fully announced
 fn text_input_with_value() {
     let theme = test_theme();
     let backend = TestBackend::new(40, 6);
@@ -91,6 +92,8 @@ fn text_input_with_value() {
 }
 
 #[test]
+// @scenario: accessibility.feature:Notifications are announced
+// @scenario: accessibility.feature:Helpful error messages
 fn text_input_with_error() {
     let theme = test_theme();
     let backend = TestBackend::new(40, 6);
@@ -118,6 +121,7 @@ fn text_input_with_error() {
 // ── ToggleList ─────────────────────────────────────────────
 
 #[test]
+// @scenario: accessibility.feature:Contact list is navigable with screen reader
 fn toggle_list_mixed_selection() {
     let theme = test_theme();
     let items = vec![
@@ -474,6 +478,7 @@ fn info_panel_with_icons() {
 }
 
 #[test]
+// @scenario: accessibility.feature:Screen reader announces app structure on desktop
 fn info_panel_no_icon() {
     let theme = test_theme();
     let items = vec![InfoItem {

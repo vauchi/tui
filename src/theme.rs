@@ -278,6 +278,7 @@ mod tests {
     }
 
     #[test]
+    // @scenario: accessibility.feature:Information not conveyed by color alone
     fn test_high_contrast_theme_colors() {
         let theme = get_tui_theme("high-contrast").expect("high-contrast must exist");
         assert_eq!(theme.bg, Color::Rgb(0, 0, 0)); // #000000

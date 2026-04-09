@@ -280,6 +280,9 @@ mod tests {
     }
 
     #[test]
+    // @scenario: accessibility.feature:Full keyboard navigation on desktop
+    // @scenario: accessibility.feature:Focus management during navigation
+    // @scenario: accessibility.feature:Text zoom support on desktop
     fn test_key_mapping_arrow_navigates_between_focusable() {
         let screen = make_screen(
             vec![
@@ -309,6 +312,7 @@ mod tests {
     }
 
     #[test]
+    // @scenario: accessibility.feature:Keyboard shortcuts for common actions
     fn test_key_mapping_text_input_char() {
         let screen = make_screen(
             vec![Component::TextInput {
@@ -369,6 +373,7 @@ mod tests {
     }
 
     #[test]
+    // @scenario: accessibility.feature:Arrow key navigation in lists
     fn test_key_mapping_toggle_list_navigation() {
         let screen = make_screen(
             vec![Component::ToggleList {
