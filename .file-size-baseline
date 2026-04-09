@@ -6,6 +6,7 @@
 # Remaining file above warn threshold — monitor, do not grow.
 
 # DONE — all original oversized files split into sub-modules
-# Remaining: key_mapping/mod.rs at 714 lines (below 800 target, above 500 warn)
+# Remaining: key_mapping/mod.rs at 719 lines (below 800 target, above 500 warn)
 # Grew +5 lines from InlineConfirm/Banner key handler tests (2026-03-31)
-src/ui/widgets/key_mapping/mod.rs 714
+# Grew +5 lines from @scenario trace annotations (2026-04-09)
+src/ui/widgets/key_mapping/mod.rs 719
