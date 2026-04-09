@@ -145,6 +145,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::VerifyFingerprint;
                     }
+                    vauchi_app::ui::AppScreen::ActivityLog => {
+                        app.screen = Screen::Activity;
+                    }
                     _ => {
                         // Unknown AppScreen variant — stay on current screen
                     }

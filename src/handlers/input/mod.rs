@@ -227,6 +227,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::ContactDuplicates
             | Screen::ContactMerge
             | Screen::MyInfoEntryDetail
+            | Screen::Activity
             | Screen::More
     ) {
         handle_engine_keys(app, key);
@@ -276,7 +277,8 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::ContactLimit
         | Screen::MyInfoEntryDetail
         | Screen::VerifyFingerprint
-        | Screen::More => {
+        | Screen::More
+        | Screen::Activity => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
         }
         Screen::ContactImport => {

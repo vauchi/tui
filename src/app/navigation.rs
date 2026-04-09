@@ -76,6 +76,7 @@ impl App {
                     })
             }
             Screen::Sync => Some(AppScreen::Sync),
+            Screen::Activity => Some(AppScreen::ActivityLog),
             Screen::Recovery => Some(AppScreen::Recovery),
             Screen::More => Some(AppScreen::More),
             Screen::Groups => Some(AppScreen::Groups),
@@ -189,6 +190,7 @@ impl App {
             | Screen::Help
             | Screen::Recovery
             | Screen::Sync
+            | Screen::Activity
             | Screen::Delivery => {
                 self.screen = Screen::More;
             }
@@ -320,6 +322,7 @@ impl App {
             | Screen::Devices
             | Screen::Delivery
             | Screen::Sync
+            | Screen::Activity
             | Screen::Recovery => Some(4),
             _ => None,
         }

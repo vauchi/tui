@@ -47,6 +47,8 @@ pub enum Screen {
     Support,
     /// Delivery status screen
     Delivery,
+    /// Activity log and notifications screen
+    Activity,
     /// Action menu popup for contact fields
     ActionMenu,
     /// Emergency broadcast configuration screen
@@ -389,4 +391,13 @@ pub struct ContactLimitState {
     pub limit_input: String,
     /// Whether editing is active.
     pub editing: bool,
+}
+
+/// Activity log screen state (Phase 2.4).
+#[derive(Debug, Default)]
+pub struct ActivityState {
+    /// Activity log entries.
+    pub entries: Vec<vauchi_core::storage::ActivityLogRow>,
+    /// Selected entry index.
+    pub selected: usize,
 }
