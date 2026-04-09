@@ -456,6 +456,10 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
     loop {
         terminal.draw(|f| ui::draw(f, app))?;
 
+        // Periodic maintenance (ADR-031)
+        app.tick_status();
+        app.tick_notifications();
+
         // Poll background sync result channel (non-blocking).
         if let Some(rx) = &app.sync_rx
             && let Ok(result) = rx.try_recv()

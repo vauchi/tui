@@ -480,6 +480,26 @@ impl App {
             self.clear_status();
         }
     }
+
+    /// Poll for notifications from the AppEngine and display them.
+    ///
+    /// Emergency alerts are shown as modal alerts (blocking).
+    /// Others (e.g. contact added) are shown as status messages (toasts).
+    pub fn tick_notifications(&mut self) {
+        use vauchi_app::notification_types::NotificationCategory;
+
+        let notifications = self.app_engine.poll_notifications();
+        for n in notifications {
+            match n.category {
+                NotificationCategory::EmergencyAlert => {
+                    self.alert_message = Some((n.title, n.body));
+                }
+                NotificationCategory::ContactAdded => {
+                    self.set_status(format!("{} — {}", n.title, n.body));
+                }
+            }
+        }
+    }
 }
 
 // INLINE_TEST_REQUIRED: Tests need access to private detect_locale() and App internals
