@@ -132,7 +132,7 @@ pub fn test_relay_connection(relay_url: &str) -> anyhow::Result<bool> {
         timeout_ms: 5000,
         proxy: ProxyConfig::None,
         allow_direct: true,
-        pinned_certs: vec![],
+        pinned_certs: vauchi_core::api::RelayConfig::default_pins(),
     });
     transport
         .health_check()
