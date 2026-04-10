@@ -350,6 +350,12 @@ verify:upstream-compat:
   extends: [.rust-runner, .verify-on-upstream, .verify-nextest-artifacts, .timeout-standard]
   stage: verify
   needs: []
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - !reference [.git-credentials, before_script]
+    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
+    - python3 ../themes/scripts/generate.py
+    - ls ../themes/generated/tokens_ansi.json
   script:
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --profile ci --all-targets
@@ -363,6 +369,9 @@ verify:upstream-prerelease:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
+    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
+    - python3 ../themes/scripts/generate.py
+    - ls ../themes/generated/tokens_ansi.json
     - git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" /tmp/locales || true
   script:
     - VAUCHI_LOCALES_DIR=/tmp/locales cargo nextest run --profile ci --all-targets
