@@ -11,7 +11,7 @@ expression: output
 ┌ [-] Details ─────────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] Relay                                                                   │
-│      wss://relay.vauchi.app                                                  │
+│      https://relay.vauchi.app                                                │
 │                                                                              │
 │  [-] Contacts                                                                │
 │      0                                                                       │
