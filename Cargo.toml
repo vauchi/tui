@@ -15,8 +15,8 @@ secure-storage = ["vauchi-core/secure-storage"]
 
 [dependencies]
 # Core library - use git dependency for CI, patched to local path via .cargo/config.toml
-vauchi-core = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network-native-tls"] }
-vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network-native-tls"] }
+vauchi-core = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network"] }
+vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network"] }
 
 # Terminal UI
 ratatui = "0.28"
