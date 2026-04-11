@@ -58,7 +58,7 @@ impl App {
             Screen::Help => Some(AppScreen::Help),
             Screen::Backup => Some(AppScreen::Backup),
             Screen::Delivery => Some(AppScreen::DeliveryStatus),
-            Screen::Devices => Some(AppScreen::DeviceLinking),
+            Screen::Devices => Some(AppScreen::DeviceManagement),
             Screen::Duress => Some(AppScreen::DuressPin),
             Screen::Emergency => Some(AppScreen::EmergencyShred),
             Screen::ContactDetail => {
@@ -196,7 +196,6 @@ impl App {
             }
             Screen::Devices => {
                 self.device_link_result = None;
-                self.revoke_confirm = false;
                 self.screen = Screen::More;
             }
             Screen::Privacy => {

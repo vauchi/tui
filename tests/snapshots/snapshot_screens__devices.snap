@@ -3,13 +3,27 @@ source: tests/snapshot_screens.rs
 description: Settings → select Devices
 expression: output
 ---
-                                 [1/4]  ● ○ ○ ○
-                                   Link Device
+                                     Devices
 
-┌ QR Code ─────────────────────────────────────────────────────────────────────┐
-│  [QR_IMAGE_REDACTED]                                                         │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ device.current This Device  This device                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
-To join from another device, use: vauchi device join <qr_data>
 
-[Esc] Cancel  [?] help  [Esc] back  [q] quit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Link New Device  [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

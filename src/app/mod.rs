@@ -120,8 +120,6 @@ pub struct App {
     pub selected_device: usize,
     /// Device link result (shown as overlay on Devices screen)
     pub device_link_result: Option<DeviceLinkResult>,
-    /// Whether a revoke confirmation is pending
-    pub revoke_confirm: bool,
     /// Contact search query
     pub contact_search_query: String,
     /// Contact search mode active
@@ -259,7 +257,6 @@ impl App {
             backup_state: BackupState::default(),
             selected_device: 0,
             device_link_result: None,
-            revoke_confirm: false,
             contact_search_query: String::new(),
             contact_search_mode: false,
             current_qr: None,
