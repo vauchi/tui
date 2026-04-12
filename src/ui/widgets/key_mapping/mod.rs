@@ -177,6 +177,7 @@ mod tests {
             max_length: None,
             validation_error: None,
             input_type: InputType::Text,
+            a11y: None,
         }
     }
 
@@ -323,6 +324,7 @@ mod tests {
                 max_length: None,
                 validation_error: None,
                 input_type: InputType::Text,
+                a11y: None,
             }],
             vec![],
         );
@@ -353,6 +355,7 @@ mod tests {
                 max_length: None,
                 validation_error: None,
                 input_type: InputType::Text,
+                a11y: None,
             }],
             vec![],
         );
@@ -668,6 +671,7 @@ mod tests {
                 confirm_text: "Delete".into(),
                 cancel_text: "Cancel".into(),
                 destructive: true,
+                a11y: None,
             }],
             vec![],
         );
@@ -697,6 +701,7 @@ mod tests {
                 confirm_text: "Delete".into(),
                 cancel_text: "Cancel".into(),
                 destructive: true,
+                a11y: None,
             }],
             vec![],
         );
