@@ -130,18 +130,21 @@ fn toggle_list_mixed_selection() {
             label: "Family".into(),
             selected: true,
             subtitle: Some("Close relatives".into()),
+            a11y: None,
         },
         ToggleItem {
             id: "friends".into(),
             label: "Friends".into(),
             selected: false,
             subtitle: None,
+            a11y: None,
         },
         ToggleItem {
             id: "work".into(),
             label: "Coworkers".into(),
             selected: true,
             subtitle: Some("Professional contacts".into()),
+            a11y: None,
         },
     ];
 
@@ -175,12 +178,14 @@ fn toggle_list_unfocused() {
             label: "Alpha".into(),
             selected: false,
             subtitle: None,
+            a11y: None,
         },
         ToggleItem {
             id: "b".into(),
             label: "Beta".into(),
             selected: true,
             subtitle: None,
+            a11y: None,
         },
     ];
 
@@ -217,6 +222,7 @@ fn field_list_show_hide_mode() {
             label: "Personal".into(),
             value: "alice@example.com".into(),
             visibility: UiFieldVisibility::Shown,
+            a11y: None,
         },
         FieldDisplay {
             id: "2".into(),
@@ -224,6 +230,7 @@ fn field_list_show_hide_mode() {
             label: "Mobile".into(),
             value: "+41 79 123 45 67".into(),
             visibility: UiFieldVisibility::Hidden,
+            a11y: None,
         },
     ];
 
@@ -259,6 +266,7 @@ fn field_list_per_group_mode() {
             label: "Work".into(),
             value: "alice@corp.com".into(),
             visibility: UiFieldVisibility::Groups(vec!["Coworkers".into()]),
+            a11y: None,
         },
         FieldDisplay {
             id: "2".into(),
@@ -266,6 +274,7 @@ fn field_list_per_group_mode() {
             label: "Home".into(),
             value: "+41 79 000 00 00".into(),
             visibility: UiFieldVisibility::Groups(vec![]),
+            a11y: None,
         },
     ];
 
@@ -329,6 +338,7 @@ fn card_preview_no_groups() {
             label: "Personal".into(),
             value: "alice@example.com".into(),
             visibility: UiFieldVisibility::Shown,
+            a11y: None,
         },
         FieldDisplay {
             id: "2".into(),
@@ -336,6 +346,7 @@ fn card_preview_no_groups() {
             label: "Mobile".into(),
             value: "+41 79 123 45 67".into(),
             visibility: UiFieldVisibility::Shown,
+            a11y: None,
         },
     ];
 
@@ -373,6 +384,7 @@ fn card_preview_with_groups() {
                 label: "Mobile".into(),
                 value: "+41 79 123 45 67".into(),
                 visibility: UiFieldVisibility::Shown,
+                a11y: None,
             }],
         },
         GroupCardView {
@@ -384,6 +396,7 @@ fn card_preview_with_groups() {
                 label: "Work".into(),
                 value: "asmith@corp.com".into(),
                 visibility: UiFieldVisibility::Shown,
+                a11y: None,
             }],
         },
     ];

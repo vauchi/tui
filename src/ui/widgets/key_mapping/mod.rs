@@ -388,14 +388,17 @@ mod tests {
                         label: "Family".into(),
                         selected: false,
                         subtitle: None,
+                        a11y: None,
                     },
                     ToggleItem {
                         id: "friends".into(),
                         label: "Friends".into(),
                         selected: true,
                         subtitle: None,
+                        a11y: None,
                     },
                 ],
+                a11y: None,
             }],
             vec![],
         );
@@ -430,7 +433,9 @@ mod tests {
                     label: "Family".into(),
                     selected: false,
                     subtitle: None,
+                    a11y: None,
                 }],
+                a11y: None,
             }],
             vec![],
         );
@@ -561,9 +566,11 @@ mod tests {
                     label: "Email".into(),
                     value: "a@b.c".into(),
                     visibility: UiFieldVisibility::Shown,
+                    a11y: None,
                 }],
                 visibility_mode: VisibilityMode::ShowHide,
                 available_groups: vec![],
+                a11y: None,
             }],
             vec![],
         );
@@ -607,6 +614,7 @@ mod tests {
                 text: "Viewing as Alice".into(),
                 action_label: "Exit Preview".into(),
                 action_id: "exit-preview".into(),
+                a11y: None,
             }],
             vec![],
         );
@@ -631,6 +639,7 @@ mod tests {
                 text: "Info only".into(),
                 action_label: String::new(),
                 action_id: String::new(),
+                a11y: None,
             }],
             vec![],
         );
@@ -650,6 +659,7 @@ mod tests {
                 text: "Preview mode".into(),
                 action_label: "Exit".into(),
                 action_id: "exit".into(),
+                a11y: None,
             }],
             vec![],
         );
