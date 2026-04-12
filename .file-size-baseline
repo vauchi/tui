@@ -10,4 +10,5 @@
 # Grew +5 lines from InlineConfirm/Banner key handler tests (2026-03-31)
 # Grew +5 lines from @scenario trace annotations (2026-04-09)
 # Grew +5 lines from a11y: None fields on Component construction sites (2026-04-12)
-src/ui/widgets/key_mapping/mod.rs 724
+# Grew +10 lines from Phase 3 a11y: None on ToggleList/FieldList/Banner (2026-04-12)
+src/ui/widgets/key_mapping/mod.rs 734
