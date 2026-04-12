@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_workflows.rs
+assertion_line: 87
 description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
 expression: output
 ---
@@ -78,5 +79,5 @@ expression: output
 
 
 
-[Enter] Exchange Now  [a] Add Contact  [?] help  [Esc] back  [q] quit
+[Enter] Exchange Now  [a] Add Contact  [Enter] Archived Contacts
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_workflows.rs
+assertion_line: 175
 description: "Contact detail happy path: Contacts → Detail → Edit → Detail"
 expression: output
 ---
@@ -26,7 +27,7 @@ expression: output
 
 
 
-[a] Add Contact  [g] Groups  [?] help  [Esc] back  [q] quit
+[a] Add Contact  [g] Groups  [Enter] Archived Contacts  [Enter] Find Duplicates
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 2 ─ ContactDetail — press Enter on contact ════════

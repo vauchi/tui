@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_screens.rs
+assertion_line: 410
 description: "Contacts → press 'g' (cycle group filter)"
 expression: output
 ---
@@ -25,5 +26,5 @@ expression: output
 
 
  Filter: Family
-[a] Add Contact  [g] Group: Family  [?] help  [Esc] back  [q] quit
+[a] Add Contact  [g] Group: Family  [Enter] Archived Contacts
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

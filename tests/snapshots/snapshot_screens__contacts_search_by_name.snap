@@ -1,5 +1,6 @@
 ---
 source: tests/snapshot_screens.rs
+assertion_line: 378
 description: "Contacts → type search 'Ahmed'"
 expression: output
 ---
@@ -25,5 +26,5 @@ expression: output
 
 
  Search: Ahmed  [Esc] clear
-[a] Add Contact  [g] Groups  [?] help  [Esc] back  [q] quit
+[a] Add Contact  [g] Groups  [Enter] Archived Contacts  [Enter] Find Duplicates
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

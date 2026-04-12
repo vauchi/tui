@@ -1,6 +1,7 @@
 ---
 source: tests/snapshot_screens.rs
-description: "MyInfo → press '3' (Contacts tab)"
+assertion_line: 362
+description: "MyInfo → press '2' (Contacts tab)"
 expression: output
 ---
                                     Contacts
@@ -25,5 +26,5 @@ expression: output
 
 
 
-[a] Add Contact  [g] Groups  [?] help  [Esc] back  [q] quit
+[a] Add Contact  [g] Groups  [Enter] Archived Contacts  [Enter] Find Duplicates
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

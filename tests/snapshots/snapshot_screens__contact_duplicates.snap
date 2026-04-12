@@ -1,11 +1,19 @@
 ---
 source: tests/snapshot_screens.rs
+assertion_line: 811
 description: Contacts → duplicates detected
 expression: output
 ---
                                Duplicate Detection
 
-No duplicate contacts detected.
+4 potential duplicate(s) found
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Andreanne Doyle <-> Andres Raynor  74% similar                           │
+│   • Andreanne Doyle <-> Eduardo Reyes  72% similar                           │
+│   • Andres Raynor <-> Eduardo Reyes  71% similar                             │
+│   • Brady Koss <-> Eduardo Reyes  70% similar                                │
+└──────────────────────────────────────────────────────────────────────────────┘
 
 
 
@@ -18,12 +26,5 @@ No duplicate contacts detected.
 
 
 
-
-
-
-
-
-
-
-[?] help  [Esc] back  [q] quit
+[Enter] Merge  [Enter] Dismiss  [?] help  [Esc] back  [q] quit
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

@@ -82,8 +82,8 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
             }
             app.goto(Screen::ContactDetail);
         }
-        KeyCode::Char('d') => {
-            // Open duplicates screen
+        KeyCode::Char('d') | KeyCode::Char('m') => {
+            // Open duplicates / merge screen ('d' legacy, 'm' for merge)
             match app.app_engine.vauchi().find_duplicates() {
                 Ok(pairs) => {
                     // Look up display names for duplicate pairs
