@@ -8,6 +8,7 @@
 //! Covers global keys, per-screen navigation, and editing mode.
 
 use crossterm::event::KeyCode;
+use rstest::rstest;
 use tempfile::TempDir;
 
 use vauchi_app::ui::AppEngine;
@@ -110,90 +111,42 @@ fn test_handle_key_esc_stays_on_setup() {
 // Home Screen Navigation
 // ============================================================================
 
-#[test]
-fn test_handle_key_home_c_navigates_to_contacts() {
+#[rstest]
+#[case::c_contacts('c', Screen::Contacts)]
+#[case::s_settings('s', Screen::Settings)]
+#[case::d_devices('d', Screen::Devices)]
+#[case::a_add_field('a', Screen::AddField)]
+#[case::g_groups('g', Screen::Groups)]
+#[case::x_exchange('X', Screen::Exchange)]
+fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::MyInfo;
 
-    handle_key(&mut app, KeyCode::Char('c'));
-    assert_eq!(app.screen, Screen::Contacts);
-}
-
-#[test]
-fn test_handle_key_home_s_navigates_to_settings() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::MyInfo;
-
-    handle_key(&mut app, KeyCode::Char('s'));
-    assert_eq!(app.screen, Screen::Settings);
-}
-
-#[test]
-fn test_handle_key_home_d_navigates_to_devices() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::MyInfo;
-
-    handle_key(&mut app, KeyCode::Char('d'));
-    assert_eq!(app.screen, Screen::Devices);
-}
-
-#[test]
-fn test_handle_key_home_a_opens_add_field() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::MyInfo;
-
-    handle_key(&mut app, KeyCode::Char('a'));
-    assert_eq!(app.screen, Screen::AddField);
+    handle_key(&mut app, KeyCode::Char(key));
+    assert_eq!(app.screen, expected);
 }
 
 // ============================================================================
 // Settings Screen Navigation
 // ============================================================================
 
-#[test]
-fn test_handle_key_settings_n_opens_edit_name() {
+#[rstest]
+#[case::n_edit_name('n', Screen::EditName)]
+#[case::u_edit_relay_url('u', Screen::EditRelayUrl)]
+#[case::b_backup('b', Screen::Backup)]
+#[case::p_privacy('p', Screen::Privacy)]
+fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Settings;
 
-    handle_key(&mut app, KeyCode::Char('n'));
-    assert_eq!(app.screen, Screen::EditName);
+    handle_key(&mut app, KeyCode::Char(key));
+    assert_eq!(app.screen, expected);
+    // Engine-driven screens (EditName, EditRelayUrl) stay in Normal mode
     assert_eq!(
         app.input_mode,
         InputMode::Normal,
-        "Edit name is engine-driven, stays in Normal mode"
+        "Settings navigation should stay in Normal mode"
     );
-}
-
-#[test]
-fn test_handle_key_settings_u_opens_edit_relay_url() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Settings;
-
-    handle_key(&mut app, KeyCode::Char('u'));
-    assert_eq!(app.screen, Screen::EditRelayUrl);
-    assert_eq!(
-        app.input_mode,
-        InputMode::Normal,
-        "Edit relay URL is engine-driven, stays in Normal mode"
-    );
-}
-
-#[test]
-fn test_handle_key_settings_b_navigates_to_backup() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Settings;
-
-    handle_key(&mut app, KeyCode::Char('b'));
-    assert_eq!(app.screen, Screen::Backup);
-}
-
-#[test]
-fn test_handle_key_settings_p_navigates_to_privacy() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Settings;
-
-    handle_key(&mut app, KeyCode::Char('p'));
-    assert_eq!(app.screen, Screen::Privacy);
 }
 
 // ============================================================================
@@ -482,36 +435,6 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
 // SP-11: TUI Accessibility Improvements
 // @scenario: accessibility.feature @keyboard @tui
 // ============================================================================
-
-// --- Home screen: Groups shortcut via 'g' key ---
-
-/// @scenario: accessibility.feature @keyboard - All screens reachable via keyboard
-#[test]
-fn test_handle_key_home_g_navigates_to_groups() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::MyInfo;
-
-    handle_key(&mut app, KeyCode::Char('g'));
-    assert_eq!(
-        app.screen,
-        Screen::Groups,
-        "g on Home should navigate to Groups"
-    );
-}
-
-/// @scenario: accessibility.feature @keyboard - All screens reachable via keyboard
-#[test]
-fn test_handle_key_home_uppercase_x_navigates_to_exchange() {
-    let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::MyInfo;
-
-    handle_key(&mut app, KeyCode::Char('X'));
-    assert_eq!(
-        app.screen,
-        Screen::Exchange,
-        "X on Home should navigate to Exchange"
-    );
-}
 
 // --- Sync screen: test connection 't' and refresh 'r' keys ---
 

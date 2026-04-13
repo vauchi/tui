@@ -11,6 +11,7 @@ use std::sync::Once;
 use tempfile::TempDir;
 
 use crossterm::event::KeyCode;
+use rstest::rstest;
 
 use vauchi_app::ui::AppEngine;
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
@@ -99,116 +100,29 @@ fn test_goto_resets_input_mode_to_normal() {
     );
 }
 
-#[test]
-fn test_go_back_from_contacts_returns_to_home() {
+#[rstest]
+#[case::contacts(Screen::Contacts, Screen::MyInfo)]
+#[case::settings(Screen::Settings, Screen::More)]
+#[case::exchange(Screen::Exchange, Screen::MyInfo)]
+#[case::help(Screen::Help, Screen::More)]
+#[case::devices(Screen::Devices, Screen::More)]
+#[case::recovery(Screen::Recovery, Screen::More)]
+#[case::sync(Screen::Sync, Screen::More)]
+#[case::privacy(Screen::Privacy, Screen::Settings)]
+#[case::contact_detail(Screen::ContactDetail, Screen::Contacts)]
+#[case::contact_visibility(Screen::ContactVisibility, Screen::ContactDetail)]
+#[case::add_field(Screen::AddField, Screen::MyInfo)]
+#[case::edit_field(Screen::EditField, Screen::MyInfo)]
+#[case::edit_name(Screen::EditName, Screen::Settings)]
+#[case::edit_relay_url(Screen::EditRelayUrl, Screen::Settings)]
+#[case::backup(Screen::Backup, Screen::More)]
+#[case::groups(Screen::Groups, Screen::MyInfo)]
+#[case::duress(Screen::Duress, Screen::Settings)]
+fn test_go_back_returns_to_expected_screen(#[case] from: Screen, #[case] expected: Screen) {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Contacts);
+    app.goto(from);
     app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
-}
-
-#[test]
-fn test_go_back_from_settings_returns_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Settings);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
-}
-
-#[test]
-fn test_go_back_from_exchange_returns_to_home() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Exchange);
-    app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
-}
-
-#[test]
-fn test_go_back_from_help_returns_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Help);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
-}
-
-#[test]
-fn test_go_back_from_devices_returns_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Devices);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
-}
-
-#[test]
-fn test_go_back_from_recovery_returns_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Recovery);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
-}
-
-#[test]
-fn test_go_back_from_sync_returns_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Sync);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
-}
-
-#[test]
-fn test_go_back_from_privacy_returns_to_settings() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Privacy);
-    app.go_back();
-    assert_eq!(app.screen, Screen::Settings);
-}
-
-#[test]
-fn test_go_back_from_contact_detail_returns_to_contacts() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::ContactDetail);
-    app.go_back();
-    assert_eq!(app.screen, Screen::Contacts);
-}
-
-#[test]
-fn test_go_back_from_contact_visibility_returns_to_detail() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::ContactVisibility);
-    app.go_back();
-    assert_eq!(app.screen, Screen::ContactDetail);
-}
-
-#[test]
-fn test_go_back_from_add_field_returns_to_home() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::AddField);
-    app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
-}
-
-#[test]
-fn test_go_back_from_edit_field_returns_to_home() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::EditField);
-    app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
-}
-
-#[test]
-fn test_go_back_from_edit_name_returns_to_settings() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::EditName);
-    app.go_back();
-    assert_eq!(app.screen, Screen::Settings);
-}
-
-#[test]
-fn test_go_back_from_edit_relay_url_returns_to_settings() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::EditRelayUrl);
-    app.go_back();
-    assert_eq!(app.screen, Screen::Settings);
+    assert_eq!(app.screen, expected);
 }
 
 #[test]
@@ -221,14 +135,6 @@ fn test_go_back_from_setup_stays_on_setup() {
         Screen::SetupWelcome,
         "go_back from SetupWelcome should stay on SetupWelcome"
     );
-}
-
-#[test]
-fn test_go_back_from_backup_with_identity_goes_to_more() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Backup);
-    app.go_back();
-    assert_eq!(app.screen, Screen::More);
 }
 
 #[test]
@@ -295,79 +201,29 @@ fn test_handle_key_esc_goes_back() {
 }
 
 // @scenario: contacts_management:View all contacts
-#[test]
-fn test_handle_key_c_on_home_navigates_to_contacts() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('c'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Contacts);
-}
-
-#[test]
-fn test_handle_key_s_on_home_navigates_to_settings() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('s'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Settings);
-}
-
 // @scenario: sync_updates:Client initiates sync with relay
-#[test]
-fn test_handle_key_n_on_home_navigates_to_sync() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('n'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Sync);
-}
-
 // @scenario: device_management:View linked devices
-#[test]
-fn test_handle_key_d_on_home_navigates_to_devices() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('d'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Devices);
-}
-
 // @scenario: identity_management:View recovery status
-#[test]
-fn test_handle_key_r_on_home_navigates_to_recovery() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('r'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Recovery);
-}
-
 // @scenario: identity_management:Create encrypted identity backup
-#[test]
-fn test_handle_key_b_on_home_navigates_to_backup() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('b'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Backup);
-}
-
 // @scenario: contact_card_management:Add a field to contact card
-#[test]
-fn test_handle_key_a_on_home_navigates_to_add_field() {
+#[rstest]
+#[case::c_contacts('c', Screen::Contacts)]
+#[case::s_settings('s', Screen::Settings)]
+#[case::n_sync('n', Screen::Sync)]
+#[case::d_devices('d', Screen::Devices)]
+#[case::r_recovery('r', Screen::Recovery)]
+#[case::b_backup('b', Screen::Backup)]
+#[case::a_add_field('a', Screen::AddField)]
+#[case::y_delivery('y', Screen::Delivery)]
+#[case::g_groups('g', Screen::Groups)]
+#[case::x_exchange('X', Screen::Exchange)]
+fn test_handle_key_on_home_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::MyInfo);
 
-    let action = handle_key(&mut app, KeyCode::Char('a'));
+    let action = handle_key(&mut app, KeyCode::Char(key));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::AddField);
+    assert_eq!(app.screen, expected);
 }
 
 #[test]
@@ -400,17 +256,6 @@ fn test_app_new_without_identity_starts_on_setup() {
 // ============================================================================
 // Delivery Screen (SP-12b)
 // ============================================================================
-
-// @scenario: message_delivery:Navigate to delivery screen
-#[test]
-fn test_handle_key_y_on_home_navigates_to_delivery() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('y'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Delivery);
-}
 
 // @scenario: message_delivery:Delivery screen esc goes back to home
 #[test]
@@ -466,15 +311,6 @@ fn test_delivery_state_defaults() {
 // ============================================================================
 // Duress screen tests
 // ============================================================================
-
-#[test]
-fn test_go_back_from_duress_returns_to_settings() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Duress);
-    assert_eq!(app.screen, Screen::Duress);
-    app.go_back();
-    assert_eq!(app.screen, Screen::Settings);
-}
 
 #[test]
 fn test_settings_shift_d_navigates_to_duress() {
@@ -738,53 +574,9 @@ fn test_emergency_state_defaults_include_last_broadcast() {
 }
 
 // ============================================================================
-// Contact Groups Tests (@groups feature from contacts_management.feature)
-// ============================================================================
-
-/// Test go_back from Groups screen returns to Home
-#[test]
-fn test_go_back_from_groups_returns_to_home() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Groups);
-    assert_eq!(app.screen, Screen::Groups);
-    app.go_back();
-    assert_eq!(app.screen, Screen::MyInfo);
-}
-
-// ============================================================================
 // SP-11: TUI Accessibility Improvements
 // @scenario: accessibility.feature @keyboard @tui
 // ============================================================================
-
-/// @scenario: accessibility.feature @keyboard - Home 'g' navigates to Groups
-#[test]
-fn test_home_g_navigates_to_groups() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('g'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(
-        app.screen,
-        Screen::Groups,
-        "g on Home should navigate to Groups"
-    );
-}
-
-/// @scenario: accessibility.feature @keyboard - Home 'X' navigates to Exchange
-#[test]
-fn test_home_uppercase_x_navigates_to_exchange() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
-
-    let action = handle_key(&mut app, KeyCode::Char('X'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(
-        app.screen,
-        Screen::Exchange,
-        "X on Home should navigate to Exchange"
-    );
-}
 
 /// @scenario: accessibility.feature @keyboard - Home field delete status includes label
 #[test]
