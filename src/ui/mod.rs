@@ -155,6 +155,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         | Screen::ContactLimit
         | Screen::MyInfoEntryDetail
         | Screen::VerifyFingerprint
+        | Screen::DeviceReplacement
         | Screen::More => {
             render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
         }
@@ -367,6 +368,7 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::Support
         | Screen::Emergency
         | Screen::Duress
+        | Screen::DeviceReplacement
         | Screen::EditRelayUrl => 4,
         _ => 0, // Default to My Card
     };

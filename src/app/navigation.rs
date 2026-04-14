@@ -124,6 +124,7 @@ impl App {
                     },
                 })
             }
+            Screen::DeviceReplacement => Some(AppScreen::DeviceReplacement),
             Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
             Screen::ContactMerge => {
                 let s = &self.merge_state;
@@ -196,6 +197,9 @@ impl App {
             }
             Screen::Devices => {
                 self.device_link_result = None;
+                self.screen = Screen::More;
+            }
+            Screen::DeviceReplacement => {
                 self.screen = Screen::More;
             }
             Screen::Privacy => {
@@ -319,6 +323,7 @@ impl App {
             | Screen::EditRelayUrl
             | Screen::Backup
             | Screen::Devices
+            | Screen::DeviceReplacement
             | Screen::Delivery
             | Screen::Sync
             | Screen::Activity

@@ -148,6 +148,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_app::ui::AppScreen::ActivityLog => {
                         app.screen = Screen::Activity;
                     }
+                    vauchi_app::ui::AppScreen::DeviceReplacement => {
+                        app.screen = Screen::DeviceReplacement;
+                    }
                     _ => {
                         // Unknown AppScreen variant — stay on current screen
                     }

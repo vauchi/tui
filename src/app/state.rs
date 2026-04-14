@@ -87,6 +87,8 @@ pub enum Screen {
     VerifyFingerprint,
     /// Contact import (vCard file path entry)
     ContactImport,
+    /// Device replacement wizard
+    DeviceReplacement,
 }
 
 /// Input mode for text entry.
