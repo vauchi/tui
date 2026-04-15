@@ -5,6 +5,7 @@ expression: output
 ---
                                    Alice Smith
 
+
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
@@ -15,7 +16,6 @@ expression: output
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

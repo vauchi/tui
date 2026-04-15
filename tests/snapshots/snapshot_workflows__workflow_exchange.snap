@@ -1,11 +1,11 @@
 ---
 source: tests/snapshot_workflows.rs
-assertion_line: 87
 description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
 expression: output
 ---
 ═══ Step 1 ─ MyInfo — home screen ══════════════════════════
                                    Alice Smith
+
 
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
@@ -17,7 +17,6 @@ expression: output
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

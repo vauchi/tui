@@ -6,6 +6,7 @@ expression: output
 ═══ Step 1 ─ MyInfo — view card fields ═════════════════════
                                    Alice Smith
 
+
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
@@ -16,7 +17,6 @@ expression: output
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 
@@ -58,6 +58,7 @@ Comment (your eyes only, optional)
 ═══ Step 3 ─ MyInfo — field saved, return to card ══════════
                                    Alice Smith
 
+
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
@@ -68,7 +69,6 @@ Comment (your eyes only, optional)
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 
