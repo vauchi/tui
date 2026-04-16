@@ -1412,6 +1412,10 @@ version = "0.3.95"
 criteria = "safe-to-deploy"
 
 [[exemptions.webpki-roots]]
+version = "1.0.6"
+criteria = "safe-to-deploy"
+
+[[exemptions.webpki-roots]]
 version = "1.0.7"
 criteria = "safe-to-deploy"
 
