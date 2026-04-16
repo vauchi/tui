@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 123
+description: Settings → select Recovery
+expression: output
+---
+                                 Social Recovery
+
+┌ [-] Quorum Status ───────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Trusted Contacts                                                            │
+│  0 of 3                                                                      │
+│                                                                              │
+│  Quorum Met                                                                  │
+│  No                                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Contacts ────────────────────────────────────────────────────────────────────┐
+│  No contacts yet. Use Exchange to add one.                                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+[Enter] Check Status  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

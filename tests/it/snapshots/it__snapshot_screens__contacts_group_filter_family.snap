@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 410
+description: "Contacts → press 'g' (cycle group filter)"
+expression: output
+---
+                                    Contacts
+
+┌ Contacts (3) ────────────────────────────────────────────────────────────────┐
+│▸ AS Abigale Schroeder  +1-200-100-1000                                       │
+│  AN Ahmed Nikolaus  +1-203-107-1013                                          │
+│  AD Andreanne Doyle  +1-206-114-1026                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Filter: Family
+[a] Add Contact  [g] Group: Family  [Enter] Archived Contacts
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

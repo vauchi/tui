@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 37
+description: app_start → no identity detected
+expression: output
+---
+                                Welcome to Vauchi
+                         Privacy-focused contact cards.
+
+┌  ────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [*] Private by design                                                       │
+│      Your data is end-to-end encrypted and never leaves your control.        │
+│                                                                              │
+│  [D] Multi-device                                                            │
+│      Use Vauchi on all your devices with seamless sync.                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Create new identity  [h] I already have an identity  [q] quit

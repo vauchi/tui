@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 136
+description: Settings → select Sync
+expression: output
+---
+                                      Sync
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ✗ Relay: Offline — Changes will sync automatically when connected. Check your│
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ [-] Details ─────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [-] Relay                                                                   │
+│      https://relay.vauchi.app                                                │
+│                                                                              │
+│  [-] Contacts                                                                │
+│      0                                                                       │
+│                                                                              │
+│  [-] Pending Updates                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+[Enter] Retry Connection  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

@@ -1,0 +1,83 @@
+---
+source: tests/it/snapshot_workflows.rs
+assertion_line: 87
+description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
+expression: output
+---
+═══ Step 1 ─ MyInfo — home screen ══════════════════════════
+                                   Alice Smith
+
+
+┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+│                                                                              │
+│  [#] Find someone nearby                                                     │
+│      Share your contact card in person — private and secure.                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+[Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
+
+═══ Step 2 ─ Exchange — press '3' (Exchange tab) ═══════════
+                                  Exchange Mode
+                      Choose how to exchange contact cards
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ • Glance  Requires camera                                                  │
+│   • Bump  Requires BLE, accelerometer                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Hover  Requires camera, microphone, speaker                              │
+│   • Shake  Requires BLE, accelerometer                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Tap tap  Requires BLE, NFC                                               │
+│   • Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerometer   │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Broadcast  Requires camera                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Web  Requires camera, internet                                           │
+│   star.fill Link  Requires internet                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+[?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More
+
+═══ Step 3 ─ Contacts — press '2' (view exchanged contacts) 
+                                    Contacts
+
+┌ [#] No contacts yet ─────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [-] Exchange cards in person                                                │
+│      Meet someone nearby and share your contact card securely.               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Exchange Now  [a] Add Contact  [Enter] Archived Contacts
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

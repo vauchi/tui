@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 779
+description: SetupSecurity → press Next
+expression: output
+---
+                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
+                                Welcome to Vauchi
+                           Your contacts, your rules.
+
+┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [*] Private                                                                 │
+│      End-to-end encrypted contact cards                                      │
+│                                                                              │
+│  [~] Always up to date                                                       │
+│      Update your card and contacts see changes automatically                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+[Enter] Get Started

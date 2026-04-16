@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 859
+description: Contacts → approach contact limit
+expression: output
+---
+                                  Contact Limit
+
+Set a maximum number of contacts to manage storage.
+
+10 contacts (no limit)
+
+Max Contacts
+┌──────────────────────────────────────────────────────────────────────────────┐
+│0                                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+[e] Edit Limit  [?] help  [Esc] back  [q] quit
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

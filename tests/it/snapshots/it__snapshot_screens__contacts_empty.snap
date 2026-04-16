@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 63
+description: "MyInfo → press '2' (Contacts tab)"
+expression: output
+---
+                                    Contacts
+
+┌ [#] No contacts yet ─────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [-] Exchange cards in person                                                │
+│      Meet someone nearby and share your contact card securely.               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Exchange Now  [a] Add Contact  [Enter] Archived Contacts
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

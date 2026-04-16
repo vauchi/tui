@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 50
+description: app_start → identity exists
+expression: output
+---
+                                   Alice Smith
+
+
+┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+│                                                                              │
+│  [#] Find someone nearby                                                     │
+│      Share your contact card in person — private and secure.                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   Email alice@company.com (Work)                                             │
+│   Phone +41 79 123 45 67 (Mobile)                                            │
+│   Website https://alice.example.com (Blog)                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+[Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

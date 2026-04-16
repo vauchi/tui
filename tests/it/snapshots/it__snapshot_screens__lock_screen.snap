@@ -1,0 +1,13 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 623
+description: app_start → app password configured
+expression: output
+---
+                                 Enter Password
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│Password                                                                      │
+│                                                                              │
+│  ○ ○ ○ ○ ○ ○                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘

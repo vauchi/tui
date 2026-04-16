@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 174
+description: Settings → select Backup
+expression: output
+---
+                                Backup & Recovery
+
+┌ [B] Protect your data ───────────────────────────────────────────────────────┐
+│                                                                              │
+│  Backup                                                                      │
+│  Create an encrypted backup of your identity, contacts, and labels.          │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Backup level ────────────────────────────────────────────────────────────────┐
+│ [x] Full backup (recommended)                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

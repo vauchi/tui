@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 497
+description: ContactDetail → select Visibility
+expression: output
+---
+                          Visibility: Abigale Schroeder
+
+Toggle which fields are visible to this contact.
+
+┌ Field Visibility ────────────────────────────────────────────────────────────┐
+│ [x] Mobile                                                                   │
+│ [x] Email                                                                    │
+│ [x] Address                                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Save  [?] help  [Esc] back  [q] quit
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

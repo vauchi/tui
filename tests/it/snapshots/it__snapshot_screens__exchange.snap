@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 291
+description: "MyInfo → press '3' (Exchange tab)"
+expression: output
+---
+                                  Exchange Mode
+                      Choose how to exchange contact cards
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ • Glance  Requires camera                                                  │
+│   • Bump  Requires BLE, accelerometer                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Hover  Requires camera, microphone, speaker                              │
+│   • Shake  Requires BLE, accelerometer                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Tap tap  Requires BLE, NFC                                               │
+│   • Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerometer   │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Broadcast  Requires camera                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│   • Web  Requires camera, internet                                           │
+│   star.fill Link  Requires internet                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+[?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More

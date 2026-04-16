@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 246
+description: Settings → select Display Name
+expression: output
+---
+                                Edit Display Name
+
+Display Name
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│Alice Smith█                                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[EDIT]   [Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

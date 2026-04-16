@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 209
+description: "MyInfo → press 'a' (Add Entry)"
+expression: output
+---
+                               Add Entry to MyInfo
+                                  Select a type
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ • Phone                                                                    │
+│   • Email                                                                    │
+│   • Website                                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+Value
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Any custom info                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Display Name (optional)
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│e.g. Work, Personal, Mobile                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+Comment (your eyes only, optional)
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Only visible to you                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+[EDIT]   [Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

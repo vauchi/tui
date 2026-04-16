@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 344
+description: Settings → select Duress PIN (configured)
+expression: output
+---
+                                 [1/4]  ● ○ ○ ○
+                                   Duress PIN
+
+┌ [S] Duress PIN ──────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  [-] What is a Duress PIN?                                                   │
+│      A secondary PIN that, when entered, silently alerts your chosen contacts│
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Status ──────────────────────────────────────────────────────────────────────┐
+│ [ ] Duress PIN enabled                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Set Up PIN  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

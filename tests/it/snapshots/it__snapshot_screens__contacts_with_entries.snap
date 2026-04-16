@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 362
+description: "MyInfo → press '2' (Contacts tab)"
+expression: output
+---
+                                    Contacts
+
+┌ Contacts (10) ↕ ─────────────────────────────────────────────────────────────┐
+│▸ AS Abigale Schroeder  +1-200-100-1000                                       │
+│  AN Ahmed Nikolaus  +1-203-107-1013                                          │
+│  AD Andreanne Doyle  +1-206-114-1026                                         │
+│  AR Andres Raynor  +1-209-121-1039                                           │
+│  AH Augusta Heller  +1-212-128-1052                                          │
+│  BK Brady Koss  +1-215-135-1065                                              │
+│  CG Carmen Gutierrez  +1-218-142-1078                                        │
+│  DP Diana Patel  +1-221-149-1091                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+[a] Add Contact  [g] Groups  [Enter] Archived Contacts  [Enter] Find Duplicates
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

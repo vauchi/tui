@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 110
+description: Settings → select Devices
+expression: output
+---
+                                     Devices
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ▸ device.current This Device  This device                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Link New Device  [?] help  [Esc] back  [q] quit
+   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

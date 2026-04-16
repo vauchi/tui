@@ -1,0 +1,30 @@
+---
+source: tests/it/snapshot_screens.rs
+assertion_line: 229
+description: MyInfo → press Enter on field
+expression: output
+---
+                                   Edit Field
+
+Editing: Mobile
+
+Value
+┌──────────────────────────────────────────────────────────────────────────────┐
+│+41 79 123 45 67                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Comment (your eyes only, optional)
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Only visible to you                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+[EDIT]   [Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

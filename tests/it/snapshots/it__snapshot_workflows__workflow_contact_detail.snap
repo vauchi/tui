@@ -1,0 +1,109 @@
+---
+source: tests/it/snapshot_workflows.rs
+assertion_line: 175
+description: "Contact detail happy path: Contacts → Detail → Edit → Detail"
+expression: output
+---
+═══ Step 1 ─ Contacts — view contact list ══════════════════
+                                    Contacts
+
+┌ Contacts (5) ────────────────────────────────────────────────────────────────┐
+│▸ AS Abigale Schroeder  +1-200-100-1000                                       │
+│  AN Ahmed Nikolaus  +1-203-107-1013                                          │
+│  AD Andreanne Doyle  +1-206-114-1026                                         │
+│  AR Andres Raynor  +1-209-121-1039                                           │
+│  AH Augusta Heller  +1-212-128-1052                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+[a] Add Contact  [g] Groups  [Enter] Archived Contacts  [Enter] Find Duplicates
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
+
+═══ Step 2 ─ ContactDetail — press Enter on contact ════════
+                                Abigale Schroeder
+
+┌ Perspective ─────────────────────────────────────────────────────────────────┐
+
+┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+  Private note:
+
+┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+[Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
+
+═══ Step 3 ─ ContactEdit — press 'e' (Edit) ════════════════
+                                  [1/3]  ● ○ ○
+                                  Edit Contact
+
+Display Name
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│Abigale Schroeder█                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+┌ Fields (Show/Hide) ──────────────────────────────────────────────────────────┐
+│Type       Label           Value                            Visibility        │
+│                                                                              │
+│Phone      Mobile          +1-200-100-1000                  Shown             │
+│Email      Email           abigale.schroeder@example.com    Shown             │
+│Address    Address         100 Main St, Springfield         Shown             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+[Enter] Continue  [?] help  [Esc] back  [q] quit
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
+
+═══ Step 4 ─ ContactDetail — press Esc (back from edit) ════
+                                Abigale Schroeder
+
+┌ Perspective ─────────────────────────────────────────────────────────────────┐
+
+┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+  Private note for this field:
+
+  Private note:
+
+┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+[Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
+   1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
