@@ -58,6 +58,7 @@ fn create_test_app_no_identity() -> (App, TempDir) {
 // Global Keys
 // ============================================================================
 
+// @internal
 #[test]
 fn test_handle_key_q_returns_quit_from_home() {
     let (mut app, _tmp) = create_test_app();
@@ -67,6 +68,7 @@ fn test_handle_key_q_returns_quit_from_home() {
     assert!(matches!(action, Action::Quit), "q should quit from Home");
 }
 
+// @internal
 #[test]
 fn test_handle_key_question_mark_navigates_to_help() {
     let (mut app, _tmp) = create_test_app();
@@ -80,6 +82,7 @@ fn test_handle_key_question_mark_navigates_to_help() {
     assert_eq!(app.screen, Screen::Help, "? should navigate to Help");
 }
 
+// @internal
 #[test]
 fn test_handle_key_esc_goes_back_from_contacts() {
     let (mut app, _tmp) = create_test_app();
@@ -94,6 +97,7 @@ fn test_handle_key_esc_goes_back_from_contacts() {
     );
 }
 
+// @internal
 #[test]
 fn test_handle_key_esc_stays_on_setup() {
     let (mut app, _tmp) = create_test_app_no_identity();
@@ -111,6 +115,7 @@ fn test_handle_key_esc_stays_on_setup() {
 // Home Screen Navigation
 // ============================================================================
 
+// @internal
 #[rstest]
 #[case::c_contacts('c', Screen::Contacts)]
 #[case::s_settings('s', Screen::Settings)]
@@ -130,6 +135,7 @@ fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected:
 // Settings Screen Navigation
 // ============================================================================
 
+// @internal
 #[rstest]
 #[case::n_edit_name('n', Screen::EditName)]
 #[case::u_edit_relay_url('u', Screen::EditRelayUrl)]
@@ -153,6 +159,7 @@ fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expec
 // Help Screen
 // ============================================================================
 
+// @internal
 #[test]
 fn test_handle_key_help_q_quits() {
     let (mut app, _tmp) = create_test_app();
@@ -167,6 +174,7 @@ fn test_handle_key_help_q_quits() {
     );
 }
 
+// @internal
 #[test]
 fn test_handle_key_help_enter_selects_faq_item() {
     let (mut app, _tmp) = create_test_app();
@@ -185,6 +193,7 @@ fn test_handle_key_help_enter_selects_faq_item() {
 // Editing Mode
 // ============================================================================
 
+// @internal
 #[test]
 fn test_handle_key_editing_esc_returns_to_normal() {
     let (mut app, _tmp) = create_test_app();
@@ -199,6 +208,7 @@ fn test_handle_key_editing_esc_returns_to_normal() {
     );
 }
 
+// @internal
 #[test]
 fn test_handle_key_editing_char_appends_to_input_buffer() {
     let (mut app, _tmp) = create_test_app();
@@ -214,6 +224,7 @@ fn test_handle_key_editing_char_appends_to_input_buffer() {
     );
 }
 
+// @internal
 #[test]
 fn test_handle_key_editing_backspace_removes_from_input_buffer() {
     let (mut app, _tmp) = create_test_app();
@@ -225,6 +236,7 @@ fn test_handle_key_editing_backspace_removes_from_input_buffer() {
     assert_eq!(app.input_buffer, "ab");
 }
 
+// @internal
 #[test]
 fn test_handle_key_editing_enter_returns_to_normal() {
     let (mut app, _tmp) = create_test_app();
@@ -266,6 +278,7 @@ fn test_handle_key_engine_onboarding_enter_advances() {
     );
 }
 
+// @internal
 #[test]
 fn test_handle_key_setup_i_opens_backup_import() {
     let (mut app, _tmp) = create_test_app_no_identity();
@@ -313,6 +326,7 @@ fn test_handle_key_search_mode_typing_updates_query() {
     assert_eq!(app.contact_search_query, "al");
 }
 
+// @internal
 #[test]
 fn test_handle_key_search_mode_esc_exits_search() {
     let (mut app, _tmp) = create_test_app();
@@ -323,6 +337,7 @@ fn test_handle_key_search_mode_esc_exits_search() {
     assert!(!app.contact_search_mode, "Esc should exit search mode");
 }
 
+// @internal
 #[test]
 fn test_handle_key_search_mode_backspace_removes_char() {
     let (mut app, _tmp) = create_test_app();
@@ -338,6 +353,7 @@ fn test_handle_key_search_mode_backspace_removes_char() {
 // Home Screen Field Navigation
 // ============================================================================
 
+// @internal
 #[test]
 fn test_handle_key_home_j_increments_selected_field() {
     let (mut app, _tmp) = create_test_app();
@@ -364,6 +380,7 @@ fn test_handle_key_home_j_increments_selected_field() {
     assert_eq!(app.screen, Screen::MyInfo, "should stay on MyInfo");
 }
 
+// @internal
 #[test]
 fn test_handle_key_home_k_decrements_selected_field() {
     let (mut app, _tmp) = create_test_app();
@@ -374,6 +391,7 @@ fn test_handle_key_home_k_decrements_selected_field() {
     assert_eq!(app.screen, Screen::MyInfo, "should stay on MyInfo");
 }
 
+// @internal
 #[test]
 fn test_handle_key_home_k_stays_at_zero() {
     let (mut app, _tmp) = create_test_app();
@@ -388,6 +406,7 @@ fn test_handle_key_home_k_stays_at_zero() {
 // Search mode blocks global keys
 // ============================================================================
 
+// @internal
 #[test]
 fn test_handle_key_search_mode_q_does_not_quit() {
     let (mut app, _tmp) = create_test_app();

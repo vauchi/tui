@@ -75,6 +75,7 @@ fn create_app_without_identity() -> (App, TempDir) {
 // tui-F-024: goto, go_back, set_status, clear_status
 // ============================================================================
 
+// @internal
 #[test]
 fn test_goto_changes_screen() {
     let (mut app, _dir) = create_app_with_identity();
@@ -87,6 +88,7 @@ fn test_goto_changes_screen() {
     assert_eq!(app.screen, Screen::Settings);
 }
 
+// @internal
 #[test]
 fn test_goto_resets_input_mode_to_normal() {
     let (mut app, _dir) = create_app_with_identity();
@@ -100,6 +102,7 @@ fn test_goto_resets_input_mode_to_normal() {
     );
 }
 
+// @internal
 #[rstest]
 #[case::contacts(Screen::Contacts, Screen::MyInfo)]
 #[case::settings(Screen::Settings, Screen::More)]
@@ -125,6 +128,7 @@ fn test_go_back_returns_to_expected_screen(#[case] from: Screen, #[case] expecte
     assert_eq!(app.screen, expected);
 }
 
+// @internal
 #[test]
 fn test_go_back_from_setup_stays_on_setup() {
     let (mut app, _dir) = create_app_without_identity();
@@ -137,6 +141,7 @@ fn test_go_back_from_setup_stays_on_setup() {
     );
 }
 
+// @internal
 #[test]
 fn test_go_back_from_backup_without_identity_goes_to_setup() {
     let (mut app, _dir) = create_app_without_identity();
@@ -145,6 +150,7 @@ fn test_go_back_from_backup_without_identity_goes_to_setup() {
     assert_eq!(app.screen, Screen::SetupWelcome);
 }
 
+// @internal
 #[test]
 fn test_set_status_and_clear_status() {
     let (mut app, _dir) = create_app_with_identity();
@@ -161,6 +167,7 @@ fn test_set_status_and_clear_status() {
 // CRIT-09: handle_key dispatch tests
 // ============================================================================
 
+// @internal
 #[test]
 fn test_handle_key_q_on_home_quits() {
     let (mut app, _dir) = create_app_with_identity();
@@ -170,6 +177,7 @@ fn test_handle_key_q_on_home_quits() {
     assert!(matches!(action, Action::Quit));
 }
 
+// @internal
 #[test]
 fn test_handle_key_q_is_global_quit() {
     let (mut app, _dir) = create_app_with_identity();
@@ -180,6 +188,7 @@ fn test_handle_key_q_is_global_quit() {
     assert!(matches!(action, Action::Quit));
 }
 
+// @internal
 #[test]
 fn test_handle_key_question_mark_navigates_to_help() {
     let (mut app, _dir) = create_app_with_identity();
@@ -190,6 +199,7 @@ fn test_handle_key_question_mark_navigates_to_help() {
     assert_eq!(app.screen, Screen::Help);
 }
 
+// @internal
 #[test]
 fn test_handle_key_esc_goes_back() {
     let (mut app, _dir) = create_app_with_identity();
@@ -226,6 +236,7 @@ fn test_handle_key_on_home_navigates_to_screen(#[case] key: char, #[case] expect
     assert_eq!(app.screen, expected);
 }
 
+// @internal
 #[test]
 fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
     let (mut app, _dir) = create_app_with_identity();
@@ -241,12 +252,14 @@ fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
 // App::new initial screen selection
 // ============================================================================
 
+// @internal
 #[test]
 fn test_app_new_with_identity_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
     assert_eq!(app.screen, Screen::MyInfo);
 }
 
+// @internal
 #[test]
 fn test_app_new_without_identity_starts_on_setup() {
     let (app, _dir) = create_app_without_identity();
@@ -312,6 +325,7 @@ fn test_delivery_state_defaults() {
 // Duress screen tests
 // ============================================================================
 
+// @internal
 #[test]
 fn test_settings_shift_d_navigates_to_duress() {
     let (mut app, _dir) = create_app_with_identity();
@@ -321,6 +335,7 @@ fn test_settings_shift_d_navigates_to_duress() {
     assert_eq!(app.screen, Screen::Duress);
 }
 
+// @internal
 #[test]
 fn test_duress_state_defaults() {
     let (app, _dir) = create_app_with_identity();
@@ -331,6 +346,7 @@ fn test_duress_state_defaults() {
     assert_eq!(app.duress_state.alert_contact_count, 0);
 }
 
+// @internal
 #[test]
 fn test_duress_esc_in_status_goes_back() {
     let (mut app, _dir) = create_app_with_identity();
@@ -345,6 +361,7 @@ fn test_duress_esc_in_status_goes_back() {
 // Feature: duress_pin.feature @unlock
 // ============================================================================
 
+// @internal
 #[test]
 fn test_lock_screen_no_password_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
@@ -352,6 +369,7 @@ fn test_lock_screen_no_password_starts_on_home() {
     assert_eq!(app.screen, Screen::MyInfo);
 }
 
+// @internal
 #[test]
 fn test_lock_screen_q_does_not_quit() {
     let (mut app, _dir) = create_app_with_identity();
@@ -363,6 +381,7 @@ fn test_lock_screen_q_does_not_quit() {
     assert_eq!(app.lock_state.pin_input, "q");
 }
 
+// @internal
 #[test]
 fn test_lock_screen_esc_does_not_navigate() {
     let (mut app, _dir) = create_app_with_identity();
@@ -373,6 +392,7 @@ fn test_lock_screen_esc_does_not_navigate() {
     assert_eq!(app.screen, Screen::Lock);
 }
 
+// @internal
 #[test]
 fn test_lock_screen_char_input_accumulates() {
     let (mut app, _dir) = create_app_with_identity();
@@ -383,6 +403,7 @@ fn test_lock_screen_char_input_accumulates() {
     assert_eq!(app.lock_state.pin_input, "123");
 }
 
+// @internal
 #[test]
 fn test_lock_screen_backspace_removes_char() {
     let (mut app, _dir) = create_app_with_identity();
@@ -393,6 +414,7 @@ fn test_lock_screen_backspace_removes_char() {
     assert_eq!(app.lock_state.pin_input, "a");
 }
 
+// @internal
 #[test]
 fn test_lock_screen_empty_enter_does_nothing() {
     let (mut app, _dir) = create_app_with_identity();
@@ -403,6 +425,7 @@ fn test_lock_screen_empty_enter_does_nothing() {
     assert_eq!(app.lock_state.attempts, 0);
 }
 
+// @internal
 #[test]
 fn test_lock_screen_wrong_pin_increments_attempts() {
     let (mut app, _dir) = create_app_with_identity();
@@ -425,6 +448,7 @@ fn test_lock_screen_wrong_pin_increments_attempts() {
     assert!(app.lock_state.pin_input.is_empty()); // cleared after failure
 }
 
+// @internal
 #[test]
 fn test_lock_screen_correct_pin_unlocks() {
     let (mut app, _dir) = create_app_with_identity();
@@ -441,6 +465,7 @@ fn test_lock_screen_correct_pin_unlocks() {
     assert!(!app.lock_state.error);
 }
 
+// @internal
 #[test]
 fn test_lock_state_defaults() {
     let (app, _dir) = create_app_with_identity();
@@ -449,6 +474,7 @@ fn test_lock_state_defaults() {
     assert!(!app.lock_state.error);
 }
 
+// @internal
 #[test]
 fn test_lock_go_back_stays_on_lock() {
     let (mut app, _dir) = create_app_with_identity();
@@ -462,6 +488,7 @@ fn test_lock_go_back_stays_on_lock() {
 // ================================================================
 
 /// Feature: emergency_broadcast.feature @trigger @confirmation
+// @internal
 #[test]
 fn test_emergency_send_without_config_shows_error() {
     let (mut app, _dir) = create_app_with_identity();
@@ -473,6 +500,7 @@ fn test_emergency_send_without_config_shows_error() {
 }
 
 /// Feature: emergency_broadcast.feature @trigger @confirmation
+// @internal
 #[test]
 fn test_emergency_send_enters_confirm_mode() {
     let (mut app, _dir) = create_app_with_identity();
@@ -491,6 +519,7 @@ fn test_emergency_send_enters_confirm_mode() {
 }
 
 /// Feature: emergency_broadcast.feature @trigger @confirmation
+// @internal
 #[test]
 fn test_emergency_confirm_cancel_returns_to_status() {
     let (mut app, _dir) = create_app_with_identity();
@@ -504,6 +533,7 @@ fn test_emergency_confirm_cancel_returns_to_status() {
 }
 
 /// Feature: emergency_broadcast.feature @trigger @confirmation
+// @internal
 #[test]
 fn test_emergency_confirm_esc_cancels() {
     let (mut app, _dir) = create_app_with_identity();
@@ -517,6 +547,7 @@ fn test_emergency_confirm_esc_cancels() {
 }
 
 /// Feature: emergency_broadcast.feature @edge @rate-limiting
+// @internal
 #[test]
 fn test_emergency_rate_limit_blocks_rapid_resend() {
     let (mut app, _dir) = create_app_with_identity();
@@ -542,6 +573,7 @@ fn test_emergency_rate_limit_blocks_rapid_resend() {
 }
 
 /// Feature: emergency_broadcast.feature @edge @rate-limiting
+// @internal
 #[test]
 fn test_emergency_rate_limit_allows_after_cooldown() {
     let (mut app, _dir) = create_app_with_identity();
@@ -565,6 +597,7 @@ fn test_emergency_rate_limit_allows_after_cooldown() {
     assert_eq!(app.emergency_state.focus, EmergencyFocus::Confirm);
 }
 
+// @internal
 #[test]
 fn test_emergency_state_defaults_include_last_broadcast() {
     let state = EmergencyState::default();

@@ -72,6 +72,7 @@ fn test_snapshot_contacts_empty() {
 // Settings
 // =============================================================
 
+// @internal
 #[test]
 fn test_snapshot_settings() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -89,6 +90,7 @@ fn test_snapshot_settings() {
 // Help
 // =============================================================
 
+// @internal
 #[test]
 fn test_snapshot_help() {
     let (mut app, _tmp) = create_app_with_identity();
@@ -251,6 +253,7 @@ fn test_snapshot_edit_name_dialog() {
     );
 }
 
+// @internal
 #[test]
 fn test_snapshot_edit_relay_url_dialog() {
     let (mut app, _tmp) = create_app_with_identity();
