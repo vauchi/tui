@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! Shared helpers for TUI snapshot tests.
-#![allow(dead_code)] // Not all test binaries use every helper
 
 use std::sync::Once;
 
