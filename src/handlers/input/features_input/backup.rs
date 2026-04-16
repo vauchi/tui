@@ -47,15 +47,15 @@ pub(in crate::handlers::input) fn handle_backup_keys(app: &mut App, key: KeyCode
                 // Validate password strength
                 match validate_password(&app.backup_state.password) {
                     Ok(_) => {
-                        // Password is strong enough, proceed with export
+                        // Password is strong enough, proceed with full backup export
                         match app
                             .app_engine
                             .vauchi()
-                            .export_backup(&app.backup_state.password)
+                            .export_full_backup(&app.backup_state.password)
                         {
                             Ok(data) => {
                                 app.set_status(format!(
-                                    "Backup: {}...",
+                                    "Full backup: {}...",
                                     &data[..50.min(data.len())]
                                 ));
                                 app.backup_state.mode = BackupMode::Menu;
@@ -96,13 +96,12 @@ pub(in crate::handlers::input) fn handle_backup_keys(app: &mut App, key: KeyCode
             KeyCode::Enter => {
                 if !app.backup_state.backup_data.is_empty() && !app.backup_state.password.is_empty()
                 {
-                    match app
-                        .app_engine
-                        .vauchi_mut()
-                        .import_backup(&app.backup_state.backup_data, &app.backup_state.password)
-                    {
+                    match app.app_engine.vauchi_mut().import_full_backup(
+                        &app.backup_state.backup_data,
+                        &app.backup_state.password,
+                    ) {
                         Ok(()) => {
-                            app.set_status("Backup imported successfully!");
+                            app.set_status("Full backup imported successfully!");
                             app.backup_state = Default::default();
                             app.go_back();
                         }
