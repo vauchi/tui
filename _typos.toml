@@ -5,9 +5,12 @@
 [default.extend-words]
 # Terminal snapshots contain truncated words at screen boundaries
 devic = "devic"
+wil = "wil"
 # Ratatui is the TUI framework crate name
 Ratatui = "Ratatui"
 # Intentional garbled text check for corrupted storage detection
 ecryption = "ecryption"
 # Crate name used in cargo-vet supply-chain/config.toml
 flate = "flate"
+# Crate name in cargo-vet supply-chain/config.toml
+writeable = "writeable"

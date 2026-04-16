@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 839
 description: ContactDuplicates → select duplicate pair
 expression: output
 ---
