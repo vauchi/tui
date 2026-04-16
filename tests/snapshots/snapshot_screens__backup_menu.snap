@@ -8,11 +8,11 @@ expression: output
 ┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
 │  Backup                                                                      │
-│  Create an encrypted backup of your identity. To preserve contacts, use devic│
+│  Create an encrypted backup of your identity, contacts, and labels.          │
 └──────────────────────────────────────────────────────────────────────────────┘
-
-
-
+┌ Backup level ────────────────────────────────────────────────────────────────┐
+│ [x] Full backup (recommended)                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
 
 
 
