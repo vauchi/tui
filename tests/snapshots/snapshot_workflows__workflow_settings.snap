@@ -1,6 +1,5 @@
 ---
 source: tests/snapshot_workflows.rs
-assertion_line: 217
 description: "Settings navigation: Settings → Privacy → Backup"
 expression: output
 ---
@@ -88,11 +87,11 @@ expression: output
 ┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
 │  Backup                                                                      │
-│  Create an encrypted backup of your identity. To preserve contacts, use devic│
+│  Create an encrypted backup of your identity, contacts, and labels.          │
 └──────────────────────────────────────────────────────────────────────────────┘
-
-
-
+┌ Backup level ────────────────────────────────────────────────────────────────┐
+│ [x] Full backup (recommended)                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
 
 
 
