@@ -1,16 +1,12 @@
 ---
 source: tests/it/snapshot_screens.rs
+assertion_line: 761
 description: GroupsSetup → press Skip
 expression: output
 ---
                                  [3/4]  ○ ○ ● ○
                                 Add contact info
-Add phone, email, social profiles, and more to your card. You can always add or
-
-┌ Fields ──────────────────────────────────────────────────────────────────────┐
-│  No fields added yet.                                                        │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+                       Optional — you can add more later.
 
 
 
@@ -26,4 +22,9 @@ Add phone, email, social profiles, and more to your card. You can always add or
 
 
 
-[Space] toggle  [Enter] Add Entry  [Enter] Continue  [s] Skip  [?] help
+
+
+
+
+
+[Enter] Add phone number  [Enter] Add email address  [Enter] Add social profile

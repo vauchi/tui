@@ -1,5 +1,6 @@
 ---
 source: tests/it/snapshot_workflows.rs
+assertion_line: 79
 description: "Onboarding happy path: first launch → identity creation → what-next"
 expression: output
 ---
@@ -84,12 +85,7 @@ Add a custom group
 ═══ Step 4 ─ ContactInfo — press 'Skip' ════════════════════
                                  [3/4]  ○ ○ ● ○
                                 Add contact info
-Add phone, email, social profiles, and more to your card. You can always add or
-
-┌ Fields ──────────────────────────────────────────────────────────────────────┐
-│  No fields added yet.                                                        │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+                       Optional — you can add more later.
 
 
 
@@ -105,7 +101,12 @@ Add phone, email, social profiles, and more to your card. You can always add or
 
 
 
-[Space] toggle  [Enter] Add Entry  [Enter] Continue  [s] Skip  [q] quit
+
+
+
+
+
+[Enter] Add phone number  [Enter] Add email address  [Enter] Add social profile
 
 ═══ Step 5 ─ WhatNext — press 'Continue' ═══════════════════
                                  [4/4]  ○ ○ ○ ●
