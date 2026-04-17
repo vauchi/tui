@@ -124,14 +124,33 @@ pub fn sync_owned(req: SyncRequest) -> SyncResult {
 }
 
 /// Tests the relay connection by attempting an HTTP health check.
+///
+/// # Privacy caveat — this probe reveals the caller's IP to the relay.
+///
+/// The reachability check cannot run over OHTTP: a successful OHTTP call
+/// only proves that the OHTTP gateway is up, not that the underlying
+/// relay is reachable. The TUI setup wizard therefore shells this
+/// function out exactly once, at URL-configuration time, with a visible
+/// user-facing warning (see `tui::ui::setup::RELAY_PROBE_WARNING`).
+///
+/// The function is **not** called during steady-state sync; if that
+/// invariant is broken, the `HttpTransport::direct_fallback_count`
+/// gauge will tick and surface the regression.
+///
+/// See the "Bootstrap Exceptions" section of
+/// `docs/docs/developers/threat-model.md` and problem record
+/// `_private/docs/problems/2026-04-17-ohttp-allow-direct-fallback/`.
 pub fn test_relay_connection(relay_url: &str) -> anyhow::Result<bool> {
     use vauchi_core::network::{HttpTransport, HttpTransportConfig, ProxyConfig};
 
+    // Documented exception to the no-`allow_direct: true` rule — see the
+    // function-level docstring for the privacy rationale. The CI
+    // `check-no-allow-direct` lint's allow-list names this line.
     let transport = HttpTransport::new(HttpTransportConfig {
         relay_url: relay_url.to_string(),
         timeout_ms: 5000,
         proxy: ProxyConfig::None,
-        allow_direct: true,
+        allow_direct: true, // ALLOW-DIRECT-REACHABILITY-PROBE
         pinned_certs: vauchi_core::api::RelayConfig::default_pins(),
     });
     transport
