@@ -1,20 +1,14 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 734
-description: SetupCreateIdentity → enter name + press Next
+description: GroupsSetup → press Skip
 expression: output
 ---
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
+                                 [3/4]  ○ ○ ● ○
+                                Add contact info
+Add phone, email, social profiles, and more to your card. You can always add or
 
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+│  No fields added yet.                                                        │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -27,4 +21,9 @@ expression: output
 
 
 
-[Enter] Get Started  [?] help  [Esc] back  [q] quit
+
+
+
+
+
+[Space] toggle  [Enter] Add Entry  [Enter] Continue  [s] Skip  [?] help

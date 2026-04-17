@@ -1,0 +1,29 @@
+---
+source: tests/it/snapshot_screens.rs
+description: DefaultName → enter name + press Continue
+expression: output
+---
+                                 [2/4]  ○ ● ○ ○
+                               Choose your groups
+Groups let you share different info with different people. Use [Space] to select
+
+Groups are optional, but we strongly recommend them. They let you control exactl
+
+┌ Suggested groups ────────────────────────────────────────────────────────────┐
+│ [ ] Family                                                                   │
+│ [ ] Friends                                                                  │
+│ [ ] Coworkers                                                                │
+│ [ ] Business                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+Add a custom group
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Type a group name and press Enter                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+[Enter] Continue  [s] Skip  [?] help  [Esc] back  [q] quit

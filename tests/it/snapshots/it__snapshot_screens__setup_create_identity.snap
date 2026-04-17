@@ -1,21 +1,17 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 705
 description: SetupWelcome → press Enter (Get Started)
 expression: output
 ---
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
+                                 [1/4]  ● ○ ○ ○
+                                What's your name?
+                       This is how contacts will see you.
 
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
-│                                                                              │
+Enter the name you'd like to show on your contact card.
+
+Display name
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Enter your name                                                               │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -27,4 +23,7 @@ expression: output
 
 
 
-[Enter] Get Started  [?] help  [Esc] back  [q] quit
+
+
+
+[?] help  [Esc] back  [q] quit

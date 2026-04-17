@@ -19,37 +19,62 @@ use common::{
 // @internal
 #[test]
 fn test_workflow_onboarding() {
+    use vauchi_app::ui::{UserAction, WorkflowEngine};
     let (mut app, _tmp) = create_app_without_identity();
     let mut steps = Vec::new();
 
-    // Step 1: Welcome screen (auto-shown when no identity)
+    // Step 1: IdentityCheck (auto-shown when no identity)
     steps.push(workflow_step(
         1,
-        "SetupWelcome — no identity detected",
+        "IdentityCheck — no identity detected",
         &mut app,
     ));
 
-    // Step 2-5: Advance through onboarding engine
-    let step_labels = [
-        "IdentityCheck → press 'Create New'",
-        "LinkChoice → press 'Get Started'",
-        "Welcome → press 'Next'",
-        "CreateIdentity → enter name + press 'Next'",
+    // Each entry: (label, actions to apply before rendering)
+    let flow: &[(&str, &[UserAction])] = &[
+        (
+            "DefaultName — press 'Create New'",
+            &[UserAction::ActionPressed {
+                action_id: "create_new".to_string(),
+            }],
+        ),
+        (
+            "GroupsSetup — enter name + press 'Continue'",
+            &[
+                UserAction::TextChanged {
+                    component_id: "display_name".to_string(),
+                    value: "Alice".to_string(),
+                },
+                UserAction::ActionPressed {
+                    action_id: "continue".to_string(),
+                },
+            ],
+        ),
+        (
+            "ContactInfo — press 'Skip'",
+            &[UserAction::ActionPressed {
+                action_id: "skip".to_string(),
+            }],
+        ),
+        (
+            "WhatNext — press 'Continue'",
+            &[UserAction::ActionPressed {
+                action_id: "continue".to_string(),
+            }],
+        ),
     ];
-    let actions = ["create_new", "next", "next", "next"];
-    for (i, (label, action_id)) in step_labels.iter().zip(actions.iter()).enumerate() {
-        use vauchi_app::ui::WorkflowEngine;
+    for (i, (label, actions)) in flow.iter().enumerate() {
         if let Some(engine) = &mut app.onboarding_engine {
-            let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-                action_id: action_id.to_string(),
-            });
+            for action in actions.iter() {
+                let _ = engine.handle_action(action.clone());
+            }
         }
         steps.push(workflow_step(i + 2, label, &mut app));
     }
 
     let output = steps.join("\n\n");
     insta::with_settings!({
-        description => "Onboarding happy path: first launch → identity creation → ready",
+        description => "Onboarding happy path: first launch → identity creation → what-next",
     }, {
         insta::assert_snapshot!("workflow_onboarding", output);
     });

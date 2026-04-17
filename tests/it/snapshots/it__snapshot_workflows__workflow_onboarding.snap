@@ -1,10 +1,9 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 53
-description: "Onboarding happy path: first launch → identity creation → ready"
+description: "Onboarding happy path: first launch → identity creation → what-next"
 expression: output
 ---
-═══ Step 1 ─ SetupWelcome — no identity detected ═══════════
+═══ Step 1 ─ IdentityCheck — no identity detected ══════════
                                 Welcome to Vauchi
                          Privacy-focused contact cards.
 
@@ -30,18 +29,65 @@ expression: output
 
 [Enter] Create new identity  [h] I already have an identity  [q] quit
 
-═══ Step 2 ─ IdentityCheck → press 'Create New' ════════════
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
+═══ Step 2 ─ DefaultName — press 'Create New' ══════════════
+                                 [1/4]  ● ○ ○ ○
+                                What's your name?
+                       This is how contacts will see you.
 
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
+Enter the name you'd like to show on your contact card.
+
+Display name
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Enter your name                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+[q] quit
+
+═══ Step 3 ─ GroupsSetup — enter name + press 'Continue' ═══
+                                 [2/4]  ○ ● ○ ○
+                               Choose your groups
+Groups let you share different info with different people. Use [Space] to select
+
+Groups are optional, but we strongly recommend them. They let you control exactl
+
+┌ Suggested groups ────────────────────────────────────────────────────────────┐
+│ [ ] Family                                                                   │
+│ [ ] Friends                                                                  │
+│ [ ] Coworkers                                                                │
+│ [ ] Business                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+Add a custom group
+┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
+│Type a group name and press Enter                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+[Enter] Continue  [s] Skip  [q] quit
+
+═══ Step 4 ─ ContactInfo — press 'Skip' ════════════════════
+                                 [3/4]  ○ ○ ● ○
+                                Add contact info
+Add phone, email, social profiles, and more to your card. You can always add or
+
+┌ Fields ──────────────────────────────────────────────────────────────────────┐
+│  No fields added yet.                                                        │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 
@@ -54,22 +100,16 @@ expression: output
 
 
 
-[Enter] Get Started  [q] quit
 
-═══ Step 3 ─ LinkChoice → press 'Get Started' ══════════════
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
 
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+[Space] toggle  [Enter] Add Entry  [Enter] Continue  [s] Skip  [q] quit
+
+═══ Step 5 ─ WhatNext — press 'Continue' ═══════════════════
+                                 [4/4]  ○ ○ ○ ●
+                           What would you like to do?
 
 
 
@@ -80,22 +120,6 @@ expression: output
 
 
 
-[Enter] Get Started  [q] quit
-
-═══ Step 4 ─ Welcome → press 'Next' ════════════════════════
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
-
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
 
 
 
@@ -106,30 +130,5 @@ expression: output
 
 
 
-[Enter] Get Started  [q] quit
 
-═══ Step 5 ─ CreateIdentity → enter name + press 'Next' ════
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
-
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
-
-
-
-[Enter] Get Started  [q] quit
+[Enter] Exchange cards  [Enter] Import existing contacts

@@ -685,101 +685,105 @@ fn test_snapshot_group_detail_empty() {
 // Onboarding Wizard
 // =============================================================
 
-// @scenario: identity_management:Onboarding create identity step
+// @scenario: identity_management:Onboarding default name step (DefaultName)
 #[test]
 fn test_snapshot_setup_create_identity() {
     let (mut app, _tmp) = create_app_without_identity();
-    // Advance onboarding to CreateIdentity step
     app.screen = Screen::SetupCreateIdentity;
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
-        // Navigate through IdentityCheck -> LinkChoice -> Welcome -> CreateIdentity
+        // IdentityCheck → DefaultName
         let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
-        });
-        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-            action_id: "next".to_string(),
-        });
-        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-            action_id: "next".to_string(),
         });
     }
     let output = render_to_string(&mut app);
     assert_snap!(
         "setup_create_identity",
-        "SetupWelcome",
-        "press Enter (Get Started)",
+        "IdentityCheck",
+        "press 'Create New'",
         output
     );
 }
 
-// @scenario: identity_management:Onboarding add fields step
+// @scenario: identity_management:Onboarding groups setup step (GroupsSetup)
+#[test]
+fn test_snapshot_setup_groups_setup() {
+    let (mut app, _tmp) = create_app_without_identity();
+    app.screen = Screen::SetupCreateIdentity;
+    if let Some(engine) = &mut app.onboarding_engine {
+        use vauchi_app::ui::WorkflowEngine;
+        // IdentityCheck → DefaultName
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
+            action_id: "create_new".to_string(),
+        });
+        // DefaultName: enter name then continue → GroupsSetup
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::TextChanged {
+            component_id: "display_name".to_string(),
+            value: "Alice".to_string(),
+        });
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
+            action_id: "continue".to_string(),
+        });
+    }
+    let output = render_to_string(&mut app);
+    assert_snap!(
+        "setup_groups_setup",
+        "DefaultName",
+        "enter name + press Continue",
+        output
+    );
+}
+
+// @scenario: identity_management:Onboarding contact info step (ContactInfo, formerly AddFields)
 #[test]
 fn test_snapshot_setup_add_fields() {
     let (mut app, _tmp) = create_app_without_identity();
     app.screen = Screen::SetupAddFields;
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
+        // IdentityCheck → DefaultName → GroupsSetup → ContactInfo
         let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
         });
-        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-            action_id: "next".to_string(),
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::TextChanged {
+            component_id: "display_name".to_string(),
+            value: "Alice".to_string(),
         });
         let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-            action_id: "next".to_string(),
+            action_id: "continue".to_string(),
         });
         let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-            action_id: "next".to_string(),
+            action_id: "skip".to_string(),
         });
     }
     let output = render_to_string(&mut app);
-    assert_snap!(
-        "setup_add_fields",
-        "SetupCreateIdentity",
-        "enter name + press Next",
-        output
-    );
+    assert_snap!("setup_add_fields", "GroupsSetup", "press Skip", output);
 }
 
-// @scenario: identity_management:Onboarding security step
-#[test]
-fn test_snapshot_setup_security() {
-    let (mut app, _tmp) = create_app_without_identity();
-    app.screen = Screen::SetupSecurity;
-    if let Some(engine) = &mut app.onboarding_engine {
-        use vauchi_app::ui::WorkflowEngine;
-        let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-            action_id: "create_new".to_string(),
-        });
-        for _ in 0..4 {
-            let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-                action_id: "next".to_string(),
-            });
-        }
-    }
-    let output = render_to_string(&mut app);
-    assert_snap!("setup_security", "SetupAddFields", "press Next", output);
-}
-
-// @scenario: identity_management:Onboarding ready step
+// @scenario: identity_management:Onboarding what-next step (WhatNext, formerly Ready)
 #[test]
 fn test_snapshot_setup_ready() {
     let (mut app, _tmp) = create_app_without_identity();
     app.screen = Screen::SetupReady;
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
+        // IdentityCheck → DefaultName → GroupsSetup → ContactInfo → WhatNext
         let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
             action_id: "create_new".to_string(),
         });
-        for _ in 0..5 {
+        let _ = engine.handle_action(vauchi_app::ui::UserAction::TextChanged {
+            component_id: "display_name".to_string(),
+            value: "Alice".to_string(),
+        });
+        for _ in 0..3 {
             let _ = engine.handle_action(vauchi_app::ui::UserAction::ActionPressed {
-                action_id: "next".to_string(),
+                action_id: "continue".to_string(),
             });
         }
     }
     let output = render_to_string(&mut app);
-    assert_snap!("setup_ready", "SetupSecurity", "press Next", output);
+    assert_snap!("setup_ready", "ContactInfo", "press Continue", output);
 }
 
 // =============================================================

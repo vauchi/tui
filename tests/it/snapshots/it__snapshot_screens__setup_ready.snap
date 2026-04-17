@@ -1,22 +1,10 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 779
-description: SetupSecurity → press Next
+description: ContactInfo → press Continue
 expression: output
 ---
-                            [1/9]  ● ○ ○ ○ ○ ○ ○ ○ ○
-                                Welcome to Vauchi
-                           Your contacts, your rules.
-
-┌ Why Vauchi? ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [*] Private                                                                 │
-│      End-to-end encrypted contact cards                                      │
-│                                                                              │
-│  [~] Always up to date                                                       │
-│      Update your card and contacts see changes automatically                 │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+                                 [4/4]  ○ ○ ○ ●
+                           What would you like to do?
 
 
 
@@ -27,4 +15,15 @@ expression: output
 
 
 
-[Enter] Get Started
+
+
+
+
+
+
+
+
+
+
+
+[Enter] Exchange cards  [Enter] Import existing contacts
