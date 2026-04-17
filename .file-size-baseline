@@ -11,4 +11,5 @@
 # Grew +5 lines from @scenario trace annotations (2026-04-09)
 # Grew +5 lines from a11y: None fields on Component construction sites (2026-04-12)
 # Grew +10 lines from Phase 3 a11y: None on ToggleList/FieldList/Banner (2026-04-12)
-src/ui/widgets/key_mapping/mod.rs 734
+# Grew +6 lines from info_key: None on TextInput/ToggleItem (2026-04-17)
+src/ui/widgets/key_mapping/mod.rs 740
