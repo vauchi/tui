@@ -1,12 +1,18 @@
 ---
 source: tests/it/snapshot_screens.rs
+assertion_line: 99
 description: "MyInfo → press '5' (More tab) → Help"
 expression: output
 ---
                                    Help & FAQ
 
+Search
+┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
+│█                                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ • How do I add a contact?                                                  │
+│   • How do I add a contact?                                                  │
 │   • How do I create a backup?                                                │
 │   • How do I exchange contact cards?                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -19,11 +25,6 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │   • Report a Bug                                                             │
-│   • Suggest an Idea                                                          │
-│   • Known Issues                                                             │
 └──────────────────────────────────────────────────────────────────────────────┘
-
-
-
 [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

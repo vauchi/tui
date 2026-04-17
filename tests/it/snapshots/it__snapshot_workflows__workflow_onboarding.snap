@@ -33,7 +33,7 @@ expression: output
 ═══ Step 2 ─ DefaultName — press 'Create New' ══════════════
                                  [1/4]  ● ○ ○ ○
                                 What's your name?
-                       This is how contacts will see you.
+                           How you appear to contacts
 
 Enter the name you'd like to show on your contact card.
 
@@ -59,7 +59,7 @@ Display name
 ═══ Step 3 ─ GroupsSetup — enter name + press 'Continue' ═══
                                  [2/4]  ○ ● ○ ○
                                Choose your groups
-Groups let you share different info with different people. Use [Space] to select
+                             Organize who sees what
 
 Groups are optional, but we strongly recommend them. They let you control exactl
 
@@ -111,7 +111,7 @@ Add a custom group
 ═══ Step 5 ─ WhatNext — press 'Continue' ═══════════════════
                                  [4/4]  ○ ○ ○ ●
                            What would you like to do?
-
+                         This is what contacts will see
 
 
 

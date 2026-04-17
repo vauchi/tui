@@ -131,6 +131,7 @@ fn toggle_list_mixed_selection() {
             selected: true,
             subtitle: Some("Close relatives".into()),
             a11y: None,
+            info_key: None,
         },
         ToggleItem {
             id: "friends".into(),
@@ -138,6 +139,7 @@ fn toggle_list_mixed_selection() {
             selected: false,
             subtitle: None,
             a11y: None,
+            info_key: None,
         },
         ToggleItem {
             id: "work".into(),
@@ -145,6 +147,7 @@ fn toggle_list_mixed_selection() {
             selected: true,
             subtitle: Some("Professional contacts".into()),
             a11y: None,
+            info_key: None,
         },
     ];
 
@@ -179,6 +182,7 @@ fn toggle_list_unfocused() {
             selected: false,
             subtitle: None,
             a11y: None,
+            info_key: None,
         },
         ToggleItem {
             id: "b".into(),
@@ -186,6 +190,7 @@ fn toggle_list_unfocused() {
             selected: true,
             subtitle: None,
             a11y: None,
+            info_key: None,
         },
     ];
 

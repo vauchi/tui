@@ -1,11 +1,12 @@
 ---
 source: tests/it/snapshot_screens.rs
+assertion_line: 786
 description: ContactInfo → press Continue
 expression: output
 ---
                                  [4/4]  ○ ○ ○ ●
                            What would you like to do?
-
+                         This is what contacts will see
 
 
 

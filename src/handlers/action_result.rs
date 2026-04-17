@@ -198,7 +198,11 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                 }
             }
         }
-        ActionResult::ShowAlert { title, message } => {
+        ActionResult::ShowAlert { title, message }
+        | ActionResult::ShowInfoOverlay {
+            title,
+            body: message,
+        } => {
             app.alert_message = Some((title, message));
         }
         ActionResult::ValidationError {

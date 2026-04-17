@@ -178,6 +178,7 @@ mod tests {
             validation_error: None,
             input_type: InputType::Text,
             a11y: None,
+            info_key: None,
         }
     }
 
@@ -325,6 +326,7 @@ mod tests {
                 validation_error: None,
                 input_type: InputType::Text,
                 a11y: None,
+                info_key: None,
             }],
             vec![],
         );
@@ -356,6 +358,7 @@ mod tests {
                 validation_error: None,
                 input_type: InputType::Text,
                 a11y: None,
+                info_key: None,
             }],
             vec![],
         );
@@ -389,6 +392,7 @@ mod tests {
                         selected: false,
                         subtitle: None,
                         a11y: None,
+                        info_key: None,
                     },
                     ToggleItem {
                         id: "friends".into(),
@@ -396,6 +400,7 @@ mod tests {
                         selected: true,
                         subtitle: None,
                         a11y: None,
+                        info_key: None,
                     },
                 ],
                 a11y: None,
@@ -434,6 +439,7 @@ mod tests {
                     selected: false,
                     subtitle: None,
                     a11y: None,
+                    info_key: None,
                 }],
                 a11y: None,
             }],

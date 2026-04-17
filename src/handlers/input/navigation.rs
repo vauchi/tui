@@ -92,7 +92,8 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
 
 pub(super) fn handle_help_keys(app: &mut App, key: KeyCode) {
     match key {
-        KeyCode::Char('q') | KeyCode::Esc | KeyCode::Enter => {
+        // Enter is handled by the engine (FAQ selection → ShowInfoOverlay)
+        KeyCode::Char('q') | KeyCode::Esc => {
             app.go_back();
         }
         _ => {}

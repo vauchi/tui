@@ -1,11 +1,12 @@
 ---
 source: tests/it/snapshot_screens.rs
-description: SetupWelcome → press Enter (Get Started)
+assertion_line: 701
+description: "IdentityCheck → press 'Create New'"
 expression: output
 ---
                                  [1/4]  ● ○ ○ ○
                                 What's your name?
-                       This is how contacts will see you.
+                           How you appear to contacts
 
 Enter the name you'd like to show on your contact card.
 
