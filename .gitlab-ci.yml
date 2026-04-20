@@ -74,9 +74,7 @@ lint:clippy:
   needs: []
   before_script:
     - !reference [.self-hosted, before_script]
-    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
-    - python3 ../themes/scripts/generate.py
-    - ls ../themes/generated/tokens_ansi.json
+    - !reference [.clone-themes, before_script]
 
 # Duplicate dependency check (advisory)
 lint:duplicates:
@@ -100,12 +98,12 @@ test:unit:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
-    - python3 ../themes/scripts/generate.py
-    - ls ../themes/generated/tokens_ansi.json
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
+    - !reference [.clone-locales, before_script]
+    - !reference [.clone-themes, before_script]
+  variables:
+    VAUCHI_LOCALES_DIR: "../locales"
   script:
-    - VAUCHI_LOCALES_DIR="/tmp/locales-${CI_JOB_ID}" cargo nextest run --profile ci --all-targets
+    - cargo nextest run --profile ci --all-targets
   artifacts:
     when: always
     reports:
@@ -125,7 +123,7 @@ test:snapshots:record:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
+    - !reference [.clone-locales, before_script]
   script:
     - echo "📸 Recording insta snapshot baselines..."
     - |
@@ -133,7 +131,7 @@ test:snapshots:record:
       # so fixed names risk EACCES from a foreign-owned leftover file.
       CARGO_LOG="/tmp/cargo-record-${CI_JOB_ID}.log"
       set +e
-      INSTA_UPDATE=always VAUCHI_LOCALES_DIR="/tmp/locales-${CI_JOB_ID}" cargo test --all-targets 2>&1 | tee "$CARGO_LOG"
+      INSTA_UPDATE=always VAUCHI_LOCALES_DIR="../locales" cargo test --all-targets 2>&1 | tee "$CARGO_LOG"
       CARGO_EXIT=$?
       set -e
       if [ "$CARGO_EXIT" -ne 0 ]; then
@@ -192,15 +190,13 @@ coverage:workspace:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
-    - python3 ../themes/scripts/generate.py
-    - ls ../themes/generated/tokens_ansi.json
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
+    - !reference [.clone-locales, before_script]
+    - !reference [.clone-themes, before_script]
     - rustup component add llvm-tools-preview 2>/dev/null || true
   variables:
     COVERAGE_REPO_LABEL: "tui"
     COVERAGE_USE_NEXTEST: "true"
-    VAUCHI_LOCALES_DIR: "/tmp/locales-${CI_JOB_ID}"
+    VAUCHI_LOCALES_DIR: "../locales"
 
 # Binary size tracking (main merges + release tags)
 perf:binary-size:
@@ -293,9 +289,11 @@ dev:test:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
+    - !reference [.clone-locales, before_script]
+  variables:
+    VAUCHI_LOCALES_DIR: "../locales"
   script:
-    - VAUCHI_LOCALES_DIR="/tmp/locales-${CI_JOB_ID}" cargo nextest run --profile ci --all-targets
+    - cargo nextest run --profile ci --all-targets
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+-dev\.\d+$/
   artifacts:
@@ -332,11 +330,11 @@ rc:test:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
+    - !reference [.clone-locales, before_script]
     - rustup component add llvm-tools-preview 2>/dev/null || true
   variables:
     COVERAGE_REPO_LABEL: "tui"
-    VAUCHI_LOCALES_DIR: "/tmp/locales-${CI_JOB_ID}"
+    VAUCHI_LOCALES_DIR: "../locales"
 
 rc:mutation:
   extends: [.mutation-nightly, .rust-runner, .timeout-extended]
@@ -362,12 +360,12 @@ verify:upstream-compat:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
-    - python3 ../themes/scripts/generate.py
-    - ls ../themes/generated/tokens_ansi.json
+    - !reference [.clone-locales, before_script]
+    - !reference [.clone-themes, before_script]
+  variables:
+    VAUCHI_LOCALES_DIR: "../locales"
   script:
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
-    - VAUCHI_LOCALES_DIR="/tmp/locales-${CI_JOB_ID}" cargo nextest run --profile ci --all-targets
+    - cargo nextest run --profile ci --all-targets
 
 # Runs when core creates a dev/RC tag and triggers this repo.
 # Verifies this repo builds and tests pass against the core tag.
@@ -378,12 +376,12 @@ verify:upstream-prerelease:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - rm -rf ../themes && git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/themes.git" ../themes
-    - python3 ../themes/scripts/generate.py
-    - ls ../themes/generated/tokens_ansi.json
-    - rm -rf "/tmp/locales-${CI_JOB_ID}"; git clone --depth=1 "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/vauchi/locales.git" "/tmp/locales-${CI_JOB_ID}" || true
+    - !reference [.clone-locales, before_script]
+    - !reference [.clone-themes, before_script]
+  variables:
+    VAUCHI_LOCALES_DIR: "../locales"
   script:
-    - VAUCHI_LOCALES_DIR="/tmp/locales-${CI_JOB_ID}" cargo nextest run --profile ci --all-targets
+    - cargo nextest run --profile ci --all-targets
 
 # ============================================================
 # Deploy Stage — Badge Pages
