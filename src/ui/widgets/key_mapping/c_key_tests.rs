@@ -26,6 +26,7 @@ fn test_c_key_triggers_create_new_when_action_exists() {
             label: "Create New Identity".into(),
             style: ActionStyle::Primary,
             enabled: true,
+            a11y: None,
         }],
     );
 
@@ -63,6 +64,7 @@ fn test_c_key_unhandled_when_no_create_new_action() {
             label: "Add Field".into(),
             style: ActionStyle::Secondary,
             enabled: true,
+            a11y: None,
         }],
     );
 
@@ -90,6 +92,7 @@ fn test_c_key_unhandled_when_create_new_disabled() {
             label: "Create New Identity".into(),
             style: ActionStyle::Primary,
             enabled: false,
+            a11y: None,
         }],
     );
 

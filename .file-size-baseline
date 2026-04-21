@@ -12,4 +12,5 @@
 # Grew +5 lines from a11y: None fields on Component construction sites (2026-04-12)
 # Grew +10 lines from Phase 3 a11y: None on ToggleList/FieldList/Banner (2026-04-12)
 # Grew +6 lines from info_key: None on TextInput/ToggleItem (2026-04-17)
-src/ui/widgets/key_mapping/mod.rs 740
+# Grew +4 lines from a11y: None on ScreenAction test constructors (2026-04-21)
+src/ui/widgets/key_mapping/mod.rs 744

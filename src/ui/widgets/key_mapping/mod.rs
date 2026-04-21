@@ -476,12 +476,14 @@ mod tests {
                     label: "Continue".into(),
                     style: ActionStyle::Primary,
                     enabled: true,
+                    a11y: None,
                 },
                 ScreenAction {
                     id: "skip".into(),
                     label: "Skip".into(),
                     style: ActionStyle::Secondary,
                     enabled: true,
+                    a11y: None,
                 },
             ],
         );
@@ -513,6 +515,7 @@ mod tests {
                 label: "Skip".into(),
                 style: ActionStyle::Secondary,
                 enabled: true,
+                a11y: None,
             }],
         );
 
@@ -543,6 +546,7 @@ mod tests {
                 label: "Continue".into(),
                 style: ActionStyle::Primary,
                 enabled: false,
+                a11y: None,
             }],
         );
 
