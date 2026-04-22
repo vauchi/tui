@@ -1,6 +1,6 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 811
+assertion_line: 818
 description: Contacts → duplicates detected
 expression: output
 ---
@@ -26,5 +26,5 @@ expression: output
 
 
 
-[Enter] Merge  [Enter] Dismiss  [?] help  [Esc] back  [q] quit
+[?] help  [Esc] back  [q] quit
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

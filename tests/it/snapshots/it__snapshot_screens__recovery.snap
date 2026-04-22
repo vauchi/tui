@@ -1,30 +1,30 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 123
+assertion_line: 125
 description: Settings → select Recovery
 expression: output
 ---
                                  Social Recovery
 
-┌ [-] Quorum Status ───────────────────────────────────────────────────────────┐
+┌ [-] Lost Your Device? ───────────────────────────────────────────────────────┐
 │                                                                              │
-│  Trusted Contacts                                                            │
-│  0 of 3                                                                      │
 │                                                                              │
-│  Quorum Met                                                                  │
-│  No                                                                          │
+│  You can recover your contact relationships through social vouching.         │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌ Contacts ────────────────────────────────────────────────────────────────────┐
-│  No contacts yet. Use Exchange to add one.                                   │
+┌ Recovery Settings ───────────────────────────────────────────────────────────┐
 │                                                                              │
+│  Required vouchers                                                           │
+│  3                                                                           │
 └──────────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
-
-[Enter] Check Status  [?] help  [Esc] back  [q] quit
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ warning Not enough trusted contacts — Mark 3 more contact(s) as trusted for r│
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ How it works ────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  1. Create New Identity                                                      │
+│  First, create a new identity on your new device.                            │
+│                                                                              │
+│  2. Generate Recovery Claim                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+[?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
