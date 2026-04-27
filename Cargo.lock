@@ -1570,9 +1570,9 @@ dependencies = [
 
 [[package]]
 name = "idna_adapter"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3acae9609540aa318d1bc588455225fb2085b9ed0c4f6bd0d9d5bcd86f1a0344"
+checksum = "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
@@ -3500,7 +3500,7 @@ dependencies = [
 [[package]]
 name = "vauchi-app"
 version = "0.27.2"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#c131e1bce79a84eaa6b19d5b2a18ae6b483382b4"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#e810cffa2fb26ba3700527ab427f3c774c4425d6"
 dependencies = [
  "base64",
  "hex",
@@ -3520,7 +3520,7 @@ dependencies = [
 [[package]]
 name = "vauchi-core"
 version = "0.27.2"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#c131e1bce79a84eaa6b19d5b2a18ae6b483382b4"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#e810cffa2fb26ba3700527ab427f3c774c4425d6"
 dependencies = [
  "argon2",
  "async-trait",
@@ -3564,7 +3564,7 @@ dependencies = [
 [[package]]
 name = "vauchi-protocol"
 version = "0.27.2"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#c131e1bce79a84eaa6b19d5b2a18ae6b483382b4"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#e810cffa2fb26ba3700527ab427f3c774c4425d6"
 dependencies = [
  "serde",
  "serde_json",
