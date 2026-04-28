@@ -1,6 +1,6 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 454
+assertion_line: 457
 description: Contacts → press Enter on contact
 expression: output
 ---
@@ -13,7 +13,6 @@ expression: output
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
   Private note for this field:
-
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
   Private note for this field:
@@ -23,8 +22,9 @@ expression: output
   Private note for this field:
 
   Private note:
-
 ┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Recovery ────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
 [Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

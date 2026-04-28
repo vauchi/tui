@@ -1,6 +1,6 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 657
+assertion_line: 660
 description: Groups → press Enter on group
 expression: output
 ---
@@ -10,19 +10,19 @@ expression: output
 │                                                                              │
 │  [-] Members                                                                 │
 │      3                                                                       │
+│                                                                              │
+│  [o] Visible Fields                                                          │
+│      0                                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Field Visibility ────────────────────────────────────────────────────────────┐
+│ [ ] Work                                                                     │
+│     alice@company.com                                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts (3) ────────────────────────────────────────────────────────────────┐
 │▸ AS Abigale Schroeder                                                        │
 │  AN Ahmed Nikolaus                                                           │
 │  AD Andreanne Doyle                                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
 
 
 

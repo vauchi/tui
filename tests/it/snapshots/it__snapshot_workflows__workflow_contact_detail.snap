@@ -1,6 +1,6 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 175
+assertion_line: 204
 description: "Contact detail happy path: Contacts → Detail → Edit → Detail"
 expression: output
 ---
@@ -40,7 +40,6 @@ expression: output
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
   Private note for this field:
-
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
   Private note for this field:
@@ -50,8 +49,9 @@ expression: output
   Private note for this field:
 
   Private note:
-
 ┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Recovery ────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
 [Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More
@@ -92,7 +92,6 @@ Display Name
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
   Private note for this field:
-
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
   Private note for this field:
@@ -102,8 +101,9 @@ Display Name
   Private note for this field:
 
   Private note:
-
 ┌ Trust & Permissions ─────────────────────────────────────────────────────────┐
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Recovery ────────────────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
 [Space] select  [e] Edit  [Enter] Verify Fingerprint  [Enter] What do they see?
    1 My Card    │ 2 ★ Contacts  │  3 Exchange   │   4 Groups    │    5 More

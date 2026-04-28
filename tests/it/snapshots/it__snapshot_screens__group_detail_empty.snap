@@ -1,6 +1,6 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 673
+assertion_line: 676
 description: Groups → press Enter on empty group
 expression: output
 ---
@@ -10,21 +10,21 @@ expression: output
 │                                                                              │
 │  [-] Members                                                                 │
 │      0                                                                       │
+│                                                                              │
+│  [o] Visible Fields                                                          │
+│      0                                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Field Visibility ────────────────────────────────────────────────────────────┐
+│ [ ] Work                                                                     │
+│     alice@company.com                                                        │
+│ [ ] Mobile                                                                   │
+│     +41 79 123 45 67                                                         │
+│ [ ] Blog                                                                     │
+│     https://alice.example.com                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
 │  No contacts yet. Use Exchange to add one.                                   │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-
-
-
-
-
-
-
-
-
-
-
 [Enter] Rename  [Enter] Delete Group  [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │  4 ★ Groups   │    5 More
