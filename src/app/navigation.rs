@@ -206,133 +206,116 @@ impl App {
     }
 
     /// Go back to the previous screen.
+    ///
+    /// All arms route through `goto()` (single sync path), so AppEngine
+    /// always reflects the new screen. Setup wizard, Lock, and the
+    /// ActionMenu overlay are TUI-only states that AppEngine doesn't
+    /// know about and so dispatch directly. Per-screen state struct
+    /// resets are kept inline; Phase 2 of the plan removes those
+    /// structs and these resets with them.
     pub fn go_back(&mut self) {
         match self.screen {
-            // Can't go back from onboarding until identity is configured
-            Screen::SetupWelcome => {
-                // Stay on setup screen
+            // TUI-only states (no AppEngine navigation).
+            Screen::SetupWelcome | Screen::Lock => {} // stay
+            Screen::SetupCreateIdentity => self.goto(Screen::SetupWelcome),
+            Screen::SetupAddFields => self.goto(Screen::SetupCreateIdentity),
+            Screen::SetupSecurity => self.goto(Screen::SetupAddFields),
+            Screen::SetupReady => self.goto(Screen::SetupSecurity),
+            Screen::ActionMenu => {
+                self.action_menu_state = ActionMenuState::default();
+                self.goto(Screen::ContactDetail);
             }
-            Screen::SetupCreateIdentity => {
-                self.screen = Screen::SetupWelcome;
-            }
-            Screen::SetupAddFields => {
-                self.screen = Screen::SetupCreateIdentity;
-            }
-            Screen::SetupSecurity => {
-                self.screen = Screen::SetupAddFields;
-            }
-            Screen::SetupReady => {
-                self.screen = Screen::SetupSecurity;
-            }
-            Screen::ContactDuplicates => {
-                self.screen = Screen::Contacts;
-                self.duplicates_state = DuplicatesState::default();
-            }
-            Screen::ContactMerge => {
-                self.screen = Screen::ContactDuplicates;
-                self.merge_state = MergeState::default();
-            }
-            Screen::ContactLimit => {
-                self.screen = Screen::Contacts;
-                self.contact_limit_state = ContactLimitState::default();
-            }
-            // Can't escape the lock screen — must enter PIN
-            Screen::Lock => {
-                // Stay on lock screen
-            }
-            Screen::Contacts | Screen::Exchange | Screen::More => {
-                self.screen = Screen::MyInfo;
-            }
+
+            // Engine-driven screens — `goto()` navigates AppEngine.
+            Screen::Contacts | Screen::Exchange | Screen::More => self.goto(Screen::MyInfo),
             Screen::Settings
             | Screen::Help
             | Screen::Recovery
             | Screen::Sync
             | Screen::Activity
-            | Screen::Delivery => {
-                self.screen = Screen::More;
-            }
+            | Screen::Delivery => self.goto(Screen::More),
             Screen::Devices => {
                 self.device_link_result = None;
-                self.screen = Screen::More;
+                self.goto(Screen::More);
             }
-            Screen::DeviceReplacement => {
-                self.screen = Screen::More;
-            }
+            Screen::DeviceReplacement => self.goto(Screen::More),
             Screen::Privacy => {
-                self.screen = Screen::Settings;
                 self.privacy_state = PrivacyState::default();
+                self.goto(Screen::Settings);
             }
-            Screen::Support => self.screen = Screen::Settings,
+            Screen::Support => self.goto(Screen::Settings),
             Screen::Emergency => {
-                self.screen = Screen::Settings;
                 self.emergency_state = EmergencyState::default();
+                self.goto(Screen::Settings);
             }
             Screen::Duress => {
-                self.screen = Screen::Settings;
                 self.duress_state = DuressState::default();
+                self.goto(Screen::Settings);
             }
-            // From Backup, go back to onboarding/setup if no identity, otherwise More
             Screen::Backup => {
                 if self.app_engine.vauchi().has_identity() {
-                    self.screen = Screen::More;
+                    self.goto(Screen::More);
                 } else {
-                    self.screen = Screen::SetupWelcome;
+                    self.goto(Screen::SetupWelcome);
                 }
             }
             Screen::ContactDetail => {
                 self.selected_contact_id = None;
-                self.screen = Screen::Contacts;
+                self.goto(Screen::Contacts);
             }
             Screen::ContactEdit => {
-                // Back from edit goes to detail
-                self.screen = Screen::ContactDetail;
-                self.render_state = Default::default();
+                self.render_state = ScreenRenderState::default();
+                self.goto(Screen::ContactDetail);
             }
             Screen::ContactVisibility => {
-                self.screen = Screen::ContactDetail;
                 self.visibility_state = VisibilityState::default();
+                self.goto(Screen::ContactDetail);
             }
-            Screen::VerifyFingerprint => {
-                self.screen = Screen::ContactDetail;
-            }
+            Screen::VerifyFingerprint => self.goto(Screen::ContactDetail),
             Screen::AddField => {
-                // Return to onboarding wizard if we came from there
-                self.screen = if self.onboarding_state.identity_created {
+                self.add_field_state = AddFieldState::default();
+                let target = if self.onboarding_state.identity_created {
                     Screen::SetupAddFields
                 } else {
                     Screen::MyInfo
                 };
-                self.add_field_state = AddFieldState::default();
+                self.goto(target);
             }
             Screen::EditField => {
-                self.screen = Screen::MyInfo;
                 self.edit_field_state = EditFieldState::default();
+                self.goto(Screen::MyInfo);
             }
             Screen::EditName => {
-                self.screen = Screen::Settings;
                 self.edit_name_state = EditNameState::default();
+                self.goto(Screen::Settings);
             }
             Screen::EditRelayUrl => {
-                self.screen = Screen::Settings;
                 self.edit_relay_url_state = EditRelayUrlState::default();
+                self.goto(Screen::Settings);
             }
             Screen::Groups => {
-                self.screen = Screen::MyInfo;
                 self.groups_state = GroupsState::default();
+                self.goto(Screen::MyInfo);
             }
             Screen::GroupDetail => {
-                self.screen = Screen::Groups;
                 self.groups_state.show_group_detail = false;
                 self.groups_state.selected_contact_in_group = 0;
+                self.goto(Screen::Groups);
             }
-            Screen::ActionMenu => {
-                self.screen = Screen::ContactDetail;
-                self.action_menu_state = ActionMenuState::default();
+            Screen::ContactDuplicates => {
+                self.duplicates_state = DuplicatesState::default();
+                self.goto(Screen::Contacts);
+            }
+            Screen::ContactMerge => {
+                self.merge_state = MergeState::default();
+                self.goto(Screen::ContactDuplicates);
+            }
+            Screen::ContactLimit => {
+                self.contact_limit_state = ContactLimitState::default();
+                self.goto(Screen::Contacts);
             }
             _ => {}
         }
-        self.input_mode = InputMode::Normal;
-        self.sync_nav_index();
     }
 
     /// Keep `focus.nav_index` in sync with the current screen so that
