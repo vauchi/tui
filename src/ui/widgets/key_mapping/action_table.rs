@@ -43,8 +43,7 @@ impl Matcher {
 }
 
 /// One binding row: a key (or `None` for Enter-hint-only entries),
-/// the action matcher, and the footer hint string. The hint string is
-/// what the action bar displays for any action matching `matcher`.
+/// the action matcher, the footer hint string, and a dispatch flag.
 struct Binding {
     /// Dedicated key that dispatches to this action. `None` means the
     /// action is reached only via Enter's role-based primary handler.
@@ -52,6 +51,15 @@ struct Binding {
     matcher: Matcher,
     /// Footer hint shown for any matching action.
     hint: &'static str,
+    /// Whether this binding is dispatched by the generic
+    /// [`action_for_key`] resolver. Some keys advertise hints in the
+    /// action bar but are still claimed by per-screen handlers (e.g.
+    /// `'b'` on the Settings screen navigates to Backup via TUI
+    /// goto, not via a `UserAction::ActionPressed`). Such rows have
+    /// `dispatchable: false` so the tidy preserves Phase-0 behavior.
+    /// Phase 3 of the TUI humble-UI plan flips these to `true` as the
+    /// per-screen handlers retire.
+    dispatchable: bool,
 }
 
 /// Default hint when no row matches an `action_id`.
@@ -68,194 +76,241 @@ static BINDINGS: &[Binding] = &[
         key: None,
         matcher: Matcher::Exact("get_started"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("continue"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("continue_setup"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("start"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("confirm"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("unlock"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("done"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("save"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: None,
         matcher: Matcher::Exact("toggle_view"),
         hint: "Enter",
+        dispatchable: false,
     },
-    // -- Dedicated-key bindings.
+    // -- 'b': dispatchable for restore/setup backup; "backup" is hint-only
+    //    (Settings screen claims it via per-screen handler -> goto Backup).
     Binding {
         key: Some(KeyCode::Char('b')),
         matcher: Matcher::Exact("restore_backup"),
         hint: "b",
+        dispatchable: true,
     },
     Binding {
         key: Some(KeyCode::Char('b')),
         matcher: Matcher::Exact("setup_backup"),
         hint: "b",
+        dispatchable: true,
     },
     Binding {
         key: Some(KeyCode::Char('b')),
         matcher: Matcher::Exact("backup"),
         hint: "b",
+        dispatchable: false,
     },
+    // -- 's': dispatchable.
     Binding {
         key: Some(KeyCode::Char('s')),
         matcher: Matcher::Exact("skip"),
         hint: "s",
+        dispatchable: true,
     },
     Binding {
         key: Some(KeyCode::Char('s')),
         matcher: Matcher::Exact("skip_to_finish"),
         hint: "s",
+        dispatchable: true,
     },
+    // -- 'e': dispatchable.
     Binding {
         key: Some(KeyCode::Char('e')),
         matcher: Matcher::Exact("edit"),
         hint: "e",
+        dispatchable: true,
     },
+    // -- 'a': hint-only (per-screen handlers claim it for navigation).
     Binding {
         key: Some(KeyCode::Char('a')),
         matcher: Matcher::Exact("add_contact"),
         hint: "a",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('a')),
         matcher: Matcher::Exact("add_field"),
         hint: "a",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('a')),
         matcher: Matcher::Exact("add"),
         hint: "a",
+        dispatchable: false,
     },
+    // -- 'v': hint-only.
     Binding {
         key: Some(KeyCode::Char('v')),
         matcher: Matcher::Exact("view_all"),
         hint: "v",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('v')),
         matcher: Matcher::Exact("view"),
         hint: "v",
+        dispatchable: false,
     },
+    // -- 'r': hint-only.
     Binding {
         key: Some(KeyCode::Char('r')),
         matcher: Matcher::Exact("retry"),
         hint: "r",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('r')),
         matcher: Matcher::Exact("retry_all"),
         hint: "r",
+        dispatchable: false,
     },
+    // -- Esc: hint-only (back-navigation is handled in handlers/input/navigation.rs).
     Binding {
         key: Some(KeyCode::Esc),
         matcher: Matcher::Exact("cancel"),
         hint: "Esc",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Esc),
         matcher: Matcher::Exact("back"),
         hint: "Esc",
+        dispatchable: false,
     },
+    // -- 'h': dispatchable.
     Binding {
         key: Some(KeyCode::Char('h')),
         matcher: Matcher::Exact("have_identity"),
         hint: "h",
+        dispatchable: true,
     },
+    // -- 'x' / 'd': hint-only.
     Binding {
         key: Some(KeyCode::Char('x')),
         matcher: Matcher::Exact("delete"),
         hint: "x",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('x')),
         matcher: Matcher::Exact("wipe"),
         hint: "x",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('x')),
         matcher: Matcher::Exact("emergency_wipe"),
         hint: "x",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('d')),
         matcher: Matcher::Exact("delete_contact"),
         hint: "d",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('d')),
         matcher: Matcher::Exact("archive_contact"),
         hint: "d",
+        dispatchable: false,
     },
+    // -- 'S': dispatchable.
     Binding {
         key: Some(KeyCode::Char('S')),
         matcher: Matcher::Exact("scan"),
         hint: "S",
+        dispatchable: true,
     },
+    // -- 't': hint-only.
     Binding {
         key: Some(KeyCode::Char('t')),
         matcher: Matcher::Exact("enable"),
         hint: "t",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('t')),
         matcher: Matcher::Exact("disable"),
         hint: "t",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('t')),
         matcher: Matcher::Exact("toggle"),
         hint: "t",
+        dispatchable: false,
     },
     // -- Hybrid: dedicated key AND footer-Enter advertisement.
     //    `create_new` is dispatched by 'c' but the footer says
-    //    "Enter" because Enter's primary handler also triggers it
-    //    (it's the primary action on the create-identity screen).
-    //    Order matters: the "Enter" row must precede the 'c' row so
-    //    `key_for_action` returns "Enter" first.
+    //    "Enter" because Enter's primary handler also triggers it.
+    //    Order matters: the Enter (key=None) row must precede the 'c'
+    //    row so `key_for_action` returns "Enter" first.
     Binding {
         key: None,
         matcher: Matcher::Exact("create_new"),
         hint: "Enter",
+        dispatchable: false,
     },
     Binding {
         key: Some(KeyCode::Char('c')),
         matcher: Matcher::Exact("create_new"),
         hint: "Enter",
+        dispatchable: true,
     },
-    // -- Pattern bindings.
+    // -- 'g': hint-only.
     Binding {
         key: Some(KeyCode::Char('g')),
         matcher: Matcher::Prefix("filter_group"),
         hint: "g",
+        dispatchable: false,
     },
 ];
 
@@ -281,7 +336,7 @@ pub fn key_for_action(action_id: &str) -> &'static str {
 pub fn action_for_key<'a>(key: KeyCode, actions: &'a [ScreenAction]) -> Option<&'a ScreenAction> {
     let candidates = BINDINGS
         .iter()
-        .filter(|b| b.key == Some(key))
+        .filter(|b| b.dispatchable && b.key == Some(key))
         .collect::<Vec<_>>();
     if candidates.is_empty() {
         return None;
@@ -309,11 +364,14 @@ mod tests {
 
     #[test]
     fn round_trip_dedicated_keys_dispatch_and_hint_match() {
-        // For every dedicated-key binding, dispatching the key against
-        // a screen carrying that exact action returns that action, and
-        // the hint advertises a sensible string (the key's char, or
-        // "Enter" / "Esc").
-        for b in BINDINGS.iter().filter(|b| b.key.is_some()) {
+        // For every dispatchable dedicated-key binding, dispatching
+        // the key against a screen carrying that exact action returns
+        // that action, and the hint advertises a sensible string (the
+        // key's char, or "Enter" / "Esc").
+        for b in BINDINGS
+            .iter()
+            .filter(|b| b.dispatchable && b.key.is_some())
+        {
             let key = b.key.unwrap();
             let id = match b.matcher {
                 Matcher::Exact(s) => s.to_string(),
@@ -404,11 +462,18 @@ mod tests {
     }
 
     #[test]
-    fn prefix_matcher_dispatches_for_any_suffix() {
-        let actions = vec![mk("filter_group_friends"), mk("filter_group_work")];
-        let resolved = action_for_key(KeyCode::Char('g'), &actions);
-        assert!(resolved.is_some());
-        assert_eq!(resolved.unwrap().id, "filter_group_friends");
+    fn prefix_matcher_hint_for_any_suffix() {
+        // 'g'/filter_group is hint-only in Phase 0 — the per-screen
+        // contacts handler claims the key. Verify the hint side of the
+        // bidirectional table here; dispatch is exercised by the
+        // dispatchable flag in `round_trip_dedicated_keys_dispatch_and_hint_match`.
+        assert_eq!(key_for_action("filter_group_friends"), "g");
+        assert_eq!(key_for_action("filter_group_work"), "g");
+        let actions = vec![mk("filter_group_friends")];
+        assert!(
+            action_for_key(KeyCode::Char('g'), &actions).is_none(),
+            "filter_group is hint-only in Phase 0 — generic resolver must not claim 'g'"
+        );
     }
 
     #[test]
