@@ -43,11 +43,12 @@ impl App {
     }
 
     /// Navigate to a screen.
+    ///
+    /// Thin wrapper: updates `self.screen`, navigates AppEngine when the
+    /// target maps to an `AppScreen`, ensures any non-AppEngine engine
+    /// (Onboarding, Lock) exists, and resets render state.
     pub fn goto(&mut self, screen: Screen) {
-        if self.screen == Screen::Contacts && screen != Screen::Contacts {
-            self.contact_search_mode = false;
-            self.contact_search_query.clear();
-        }
+        self.clear_contact_search_if_leaving(screen);
         self.screen = screen;
         self.input_mode = InputMode::Normal;
         self.sync_nav_index();
@@ -56,7 +57,20 @@ impl App {
             self.app_engine.navigate_to(app_screen);
             self.render_state = ScreenRenderState::default();
         }
+        self.ensure_screen_engine(screen);
+    }
 
+    fn clear_contact_search_if_leaving(&mut self, target: Screen) {
+        if self.screen == Screen::Contacts && target != Screen::Contacts {
+            self.contact_search_mode = false;
+            self.contact_search_query.clear();
+        }
+    }
+
+    /// Lazily creates the dedicated engines that don't live on AppEngine
+    /// (Onboarding, Lock). Resets render state when an engine-backed
+    /// screen is entered so the renderer starts on a clean slate.
+    fn ensure_screen_engine(&mut self, screen: Screen) {
         match screen {
             Screen::SetupWelcome => {
                 if self.onboarding_engine.is_none() {
