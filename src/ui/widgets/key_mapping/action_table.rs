@@ -362,6 +362,7 @@ mod tests {
         }
     }
 
+    // @internal
     #[test]
     fn round_trip_dedicated_keys_dispatch_and_hint_match() {
         // For every dispatchable dedicated-key binding, dispatching
@@ -407,6 +408,7 @@ mod tests {
         }
     }
 
+    // @internal
     #[test]
     fn enter_hint_group_falls_through_to_default_dispatch() {
         // Enter-hint-only bindings (key = None) should produce the
@@ -426,6 +428,7 @@ mod tests {
         }
     }
 
+    // @internal
     #[test]
     fn dispatch_skips_disabled_actions() {
         let actions = vec![
@@ -443,6 +446,7 @@ mod tests {
         assert_eq!(resolved.unwrap().id, "skip_to_finish");
     }
 
+    // @internal
     #[test]
     fn dispatch_returns_none_for_unbound_key() {
         let actions = vec![mk("skip")];
@@ -452,6 +456,7 @@ mod tests {
         );
     }
 
+    // @internal
     #[test]
     fn dispatch_returns_none_when_no_action_matches() {
         let actions = vec![mk("unrelated_action")];
@@ -461,6 +466,7 @@ mod tests {
         );
     }
 
+    // @internal
     #[test]
     fn prefix_matcher_hint_for_any_suffix() {
         // 'g'/filter_group is hint-only in Phase 0 — the per-screen
@@ -476,6 +482,7 @@ mod tests {
         );
     }
 
+    // @internal
     #[test]
     fn hint_for_create_new_is_enter_via_hybrid_row_order() {
         // Hybrid case: create_new has both a 'c' dispatch row and an
@@ -487,12 +494,14 @@ mod tests {
         assert_eq!(resolved.map(|a| a.id.clone()), Some("create_new".into()));
     }
 
+    // @internal
     #[test]
     fn hint_falls_back_to_default_for_unknown_action() {
         assert_eq!(key_for_action("nonexistent_action_id"), DEFAULT_HINT);
         assert_eq!(DEFAULT_HINT, "Enter");
     }
 
+    // @internal
     #[test]
     fn hint_for_filter_group_prefix() {
         assert_eq!(key_for_action("filter_group_friends"), "g");
