@@ -251,30 +251,10 @@ pub(super) fn render_qr_code(
 }
 
 /// Map action IDs to keyboard hints (public accessor for footer rendering).
+///
+/// Delegates to the unified action↔key table in
+/// `crate::ui::widgets::key_mapping::action_table` so footer hints
+/// and dispatch share one source of truth.
 pub fn action_key_hint_pub(action_id: &str) -> &'static str {
-    action_key_hint(action_id)
-}
-
-/// Map action IDs to keyboard hints.
-fn action_key_hint(action_id: &str) -> &'static str {
-    match action_id {
-        "get_started" | "continue" | "continue_setup" | "start" | "confirm" | "unlock" | "done"
-        | "save" => "Enter",
-        "restore_backup" | "setup_backup" | "backup" => "b",
-        "skip" | "skip_to_finish" => "s",
-        "edit" => "e",
-        "add_contact" | "add_field" | "add" => "a",
-        "view_all" | "view" => "v",
-        "retry" | "retry_all" => "r",
-        "cancel" | "back" => "Esc",
-        "create_new" => "Enter",
-        "have_identity" => "h",
-        "delete" | "wipe" | "emergency_wipe" => "x",
-        "delete_contact" | "archive_contact" => "d",
-        "scan" => "S",
-        "enable" | "disable" | "toggle" => "t",
-        "toggle_view" => "Enter",
-        id if id.starts_with("filter_group") => "g",
-        _ => "Enter",
-    }
+    crate::ui::widgets::key_mapping::action_table::key_for_action(action_id)
 }
