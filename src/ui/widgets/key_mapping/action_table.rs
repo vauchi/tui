@@ -333,7 +333,7 @@ pub fn key_for_action(action_id: &str) -> &'static str {
 /// - `key` has no row in [`BINDINGS`] (e.g., Enter — handled by the
 ///   role-based primary dispatcher in `action_keys`).
 /// - No enabled action on the screen matches any binding for `key`.
-pub fn action_for_key<'a>(key: KeyCode, actions: &'a [ScreenAction]) -> Option<&'a ScreenAction> {
+pub fn action_for_key(key: KeyCode, actions: &[ScreenAction]) -> Option<&ScreenAction> {
     let candidates = BINDINGS
         .iter()
         .filter(|b| b.dispatchable && b.key == Some(key))
