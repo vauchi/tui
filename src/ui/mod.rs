@@ -198,13 +198,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
 /// Build action items for the current screen from the engine ScreenModel.
 fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> {
-    let screen_model = match app.screen {
-        Screen::SetupWelcome
-        | Screen::SetupCreateIdentity
-        | Screen::SetupAddFields
-        | Screen::SetupSecurity
-        | Screen::SetupReady => cached.onboarding.as_ref(),
-        Screen::Lock => cached.lock.as_ref(),
+    let screen_model = match app.current_app_screen() {
+        AppScreen::Onboarding => cached.onboarding.as_ref(),
+        AppScreen::Lock => cached.lock.as_ref(),
         _ => cached.app.as_ref(),
     };
 
