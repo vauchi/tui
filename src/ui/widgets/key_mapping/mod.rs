@@ -6,6 +6,7 @@
 //! the current `ScreenModel` and render state.
 
 mod action_keys;
+pub(crate) mod action_table;
 mod component_keys;
 
 use crossterm::event::KeyCode;
