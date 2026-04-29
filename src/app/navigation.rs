@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! Screen navigation — `goto()`, `go_back()`, `to_app_screen()`, and nav-index sync.
+//! Screen navigation — `goto()`, `go_back()`, and nav-index sync.
 
 use vauchi_app::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
 
@@ -14,21 +14,15 @@ impl App {
     /// The live `AppScreen` from the engine perspective.
     ///
     /// For engine-driven screens this returns the engine's truth
-    /// (`app_engine.current_app_screen()` cloned). For TUI-only states
-    /// where no engine navigation has happened (the onboarding wizard
-    /// steps, the action-menu/import overlays), this synthesizes a
-    /// best-fit `AppScreen` so callers can branch on `AppScreen`
-    /// instead of reading the legacy `Screen` enum.
-    ///
-    /// Phase 1 of the TUI humble-UI plan: callers progressively
-    /// migrate from `app.screen == Screen::X` to
-    /// `app.current_app_screen() == AppScreen::X`. Once nothing reads
-    /// `app.screen` for engine-mapped variants, the redundant
-    /// mirror-writes in `handlers/action_result.rs` can be deleted.
+    /// (`app_engine.current_app_screen()` cloned). The Setup wizard and
+    /// Lock screen run on dedicated engines that don't navigate
+    /// AppEngine, so their `AppScreen` is synthesized from `self.screen`.
+    /// As a fallback (writers that bypass `goto` — notably tests and
+    /// `go_back()` — leave the engine out of sync), the per-screen
+    /// state is also synthesized from `self.screen`. Once `go_back`
+    /// migrates to engine-driven back-nav (Phase 1 T1.4), this fallback
+    /// can be deleted.
     pub fn current_app_screen(&self) -> AppScreen {
-        // Setup wizard variants don't navigate AppEngine — synthesize
-        // the engine-side `Onboarding` so consumers don't need to
-        // special-case them via the legacy `Screen` enum.
         if matches!(
             self.screen,
             Screen::SetupWelcome
@@ -39,28 +33,17 @@ impl App {
         ) {
             return AppScreen::Onboarding;
         }
-
-        // The lock screen is driven by `LockScreenEngine`, not
-        // AppEngine. `goto(Screen::Lock)` creates the engine but does
-        // not navigate AppEngine, so the engine still reports its
-        // pre-lock screen. Synthesize `AppScreen::Lock` here.
         if matches!(self.screen, Screen::Lock) {
             return AppScreen::Lock;
         }
-
-        // ActionMenu and ContactImport overlay on top of an
-        // engine-driven screen. The underlying engine screen is the
-        // right answer for "what AppScreen are we on?".
-        if let Some(app_screen) = self.to_app_screen() {
+        if let Some(app_screen) = self.engine_target_for_screen(self.screen) {
             return app_screen;
         }
-
         self.app_engine.current_app_screen().clone()
     }
 
     /// Navigate to a screen.
     pub fn goto(&mut self, screen: Screen) {
-        // Clear contact search when leaving Contacts screen
         if self.screen == Screen::Contacts && screen != Screen::Contacts {
             self.contact_search_mode = false;
             self.contact_search_query.clear();
@@ -69,13 +52,11 @@ impl App {
         self.input_mode = InputMode::Normal;
         self.sync_nav_index();
 
-        // Navigate AppEngine for engine-driven screens
-        if let Some(app_screen) = self.to_app_screen() {
+        if let Some(app_screen) = self.engine_target_for_screen(screen) {
             self.app_engine.navigate_to(app_screen);
             self.render_state = ScreenRenderState::default();
         }
 
-        // Create engines for engine-backed screens
         match screen {
             Screen::SetupWelcome => {
                 if self.onboarding_engine.is_none() {
@@ -95,28 +76,25 @@ impl App {
         }
     }
 
-    /// Reconcile AppEngine with TUI's `self.screen` if they have
-    /// diverged. Engine-driven render paths and key dispatchers call
-    /// this just before reading the engine's `ScreenModel`, so
-    /// background-state changes that bypassed `goto` (e.g.
-    /// `app.screen = Screen::*` written directly inside an
-    /// `ActionResult` handler) still take effect on the next frame.
-    ///
-    /// Phase 1 of the TUI humble-UI plan: once every consumer reads
-    /// the engine via `current_app_screen()` and every writer routes
-    /// through `goto`, this synthesis can be deleted alongside the
-    /// `Screen → AppScreen` mapping.
+    /// Reconcile AppEngine with `self.screen` after writers that bypass
+    /// `goto` (notably `go_back()`'s direct `self.screen = Screen::*`
+    /// assignments). Once `go_back` migrates to engine-driven back-nav
+    /// (Phase 1 T1.4), this can be deleted.
     pub fn ensure_engine_synced(&mut self) {
-        if let Some(target) = self.to_app_screen()
+        if let Some(target) = self.engine_target_for_screen(self.screen)
             && *self.app_engine.current_app_screen() != target
         {
             self.app_engine.navigate_to(target);
         }
     }
 
-    /// Maps TUI Screen to core AppScreen for engine-driven screens.
-    pub(super) fn to_app_screen(&self) -> Option<AppScreen> {
-        match self.screen {
+    /// Computes the `AppScreen` that AppEngine should be navigated to for
+    /// a given TUI `Screen`. Returns `None` for screens that don't map to
+    /// an engine-driven AppScreen (Setup wizard steps, Lock, ActionMenu,
+    /// ContactImport, MyInfoEntryDetail — engine already has the right
+    /// state for the latter).
+    fn engine_target_for_screen(&self, screen: Screen) -> Option<AppScreen> {
+        match screen {
             Screen::MyInfo => Some(AppScreen::MyInfo),
             Screen::Contacts => Some(AppScreen::Contacts),
             Screen::Exchange => Some(AppScreen::Exchange),
@@ -182,7 +160,6 @@ impl App {
                 },
             }),
             Screen::AddField => {
-                // Load available groups for the add field form
                 let groups = self.app_engine.available_groups().into_iter().collect();
                 Some(AppScreen::FormDialog {
                     dialog_type: FormDialogType::AddField {
@@ -209,7 +186,6 @@ impl App {
                         contact_id: id.clone(),
                     })
             }
-            // MyInfoEntryDetail is engine-driven; AppEngine already has the right screen
             Screen::MyInfoEntryDetail => None,
             _ => None,
         }

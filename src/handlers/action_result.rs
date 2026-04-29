@@ -87,7 +87,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     }
                     vauchi_app::ui::AppScreen::FormDialog { dialog_type } => {
                         // Map form dialog types to the corresponding TUI screens,
-                        // syncing legacy TUI state so to_app_screen() stays consistent.
+                        // syncing legacy TUI state so engine_target_for_screen() stays consistent.
                         use crate::app::{EditFieldState, EditNameState, EditRelayUrlState};
                         use vauchi_app::ui::FormDialogType;
                         match dialog_type {
