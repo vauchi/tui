@@ -118,68 +118,32 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Sync content focus state so components dim when bar zones are active
     app.render_state.content_has_focus = app.focus.zone == FocusZone::Content;
 
-    // Content (chunk[0] — header removed)
-    match app.screen {
-        // Engine-driven screens — rendered via AppEngine ScreenModel
-        Screen::MyInfo
-        | Screen::Contacts
-        | Screen::ContactDetail
-        | Screen::ContactEdit
-        | Screen::ContactVisibility
-        | Screen::Exchange
-        | Screen::Settings
-        | Screen::Help
-        | Screen::Devices
-        | Screen::Recovery
-        | Screen::Sync
-        | Screen::Activity
-        | Screen::Delivery
-        | Screen::Backup
-        | Screen::Privacy
-        | Screen::Support
-        | Screen::Emergency
-        | Screen::Duress
-        | Screen::Groups
-        | Screen::GroupDetail
-        | Screen::AddField
-        | Screen::EditField
-        | Screen::EditName
-        | Screen::EditRelayUrl
-        | Screen::ContactDuplicates
-        | Screen::ContactMerge
-        | Screen::ContactLimit
-        | Screen::MyInfoEntryDetail
-        | Screen::VerifyFingerprint
-        | Screen::DeviceReplacement
-        | Screen::More => {
-            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
-        }
-        Screen::Lock => {
-            if let Some(model) = &cached.lock {
-                screen_renderer::render_screen(f, chunks[0], model, &app.render_state, &app.theme);
-            }
-        }
-        Screen::ActionMenu => {
-            // Draw engine-driven contact detail underneath, then overlay action menu
-            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
-            draw_action_menu(f, chunks[0], app);
-        }
-        Screen::ContactImport => {
-            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
-            draw_import_dialog(f, chunks[0], app);
-        }
-        // SP-21 Onboarding wizard — engine-driven rendering
-        Screen::SetupWelcome
-        | Screen::SetupCreateIdentity
-        | Screen::SetupAddFields
-        | Screen::SetupSecurity
-        | Screen::SetupReady => {
+    // Content (chunk[0] — header removed). Engine-driven base layer
+    // chosen by `current_app_screen()`; TUI-only overlays (ActionMenu,
+    // ContactImport) layer on top via the legacy `Screen` enum until
+    // they migrate to dedicated overlay state in a follow-up.
+    match current {
+        AppScreen::Onboarding => {
             if let Some(model) = &cached.onboarding {
                 screen_renderer::render_screen(f, chunks[0], model, &app.render_state, &app.theme);
             } else {
                 unreachable!("OnboardingEngine always initialized for setup screens");
             }
         }
+        AppScreen::Lock => {
+            if let Some(model) = &cached.lock {
+                screen_renderer::render_screen(f, chunks[0], model, &app.render_state, &app.theme);
+            }
+        }
+        _ => {
+            render_cached_screen(f, chunks[0], cached.app.as_ref(), app);
+        }
+    }
+    // TUI-only overlays on top of the engine screen.
+    match app.screen {
+        Screen::ActionMenu => draw_action_menu(f, chunks[0], app),
+        Screen::ContactImport => draw_import_dialog(f, chunks[0], app),
+        _ => {}
     }
 
     // Status message or search indicator (conditional)
