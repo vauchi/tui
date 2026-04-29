@@ -40,6 +40,14 @@ impl App {
             return AppScreen::Onboarding;
         }
 
+        // The lock screen is driven by `LockScreenEngine`, not
+        // AppEngine. `goto(Screen::Lock)` creates the engine but does
+        // not navigate AppEngine, so the engine still reports its
+        // pre-lock screen. Synthesize `AppScreen::Lock` here.
+        if matches!(self.screen, Screen::Lock) {
+            return AppScreen::Lock;
+        }
+
         // ActionMenu and ContactImport overlay on top of an
         // engine-driven screen. The underlying engine screen is the
         // right answer for "what AppScreen are we on?".

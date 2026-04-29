@@ -20,6 +20,7 @@ use crate::ui::focus::FocusZone;
 use crate::ui::widgets::action_bar::{ActionBarWidget, ActionItem};
 use crate::ui::widgets::nav_bar::{NavBarWidget, NavItem};
 use crate::ui::widgets::screen_renderer;
+use vauchi_app::ui::AppScreen;
 
 /// Cached screen models computed once per frame to avoid redundant allocations.
 struct FrameScreenModels {
@@ -79,17 +80,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         lock: app.lock_engine.as_ref().map(|e| e.current_screen()),
     };
 
-    let has_search = app.screen == Screen::Contacts && !app.contact_search_query.is_empty();
+    let current = app.current_app_screen();
+    let has_search = current == AppScreen::Contacts && !app.contact_search_query.is_empty();
     let has_status = app.status_message.is_some() || has_search;
-    let is_onboarding = matches!(
-        app.screen,
-        Screen::SetupWelcome
-            | Screen::SetupCreateIdentity
-            | Screen::SetupAddFields
-            | Screen::SetupSecurity
-            | Screen::SetupReady
-    );
-    let show_nav_bar = !is_onboarding && app.screen != Screen::Lock;
+    let is_onboarding = current == AppScreen::Onboarding;
+    let show_nav_bar = !is_onboarding && current != AppScreen::Lock;
 
     let mut constraints = vec![
         Constraint::Min(0), // Content
@@ -270,10 +265,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
         let mut action_items: Vec<ActionItem> = Vec::new();
 
         // Mode indicator for form screens
-        let is_form = matches!(
-            app.screen,
-            Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl
-        );
+        let is_form = matches!(app.current_app_screen(), AppScreen::FormDialog { .. });
         if is_form {
             action_items.push(ActionItem::new("EDIT", "").with_active(true));
         }
