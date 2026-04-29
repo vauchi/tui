@@ -2,117 +2,55 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! Screen-level action key mapping — maps shortcut keys (`Enter`, `s`, `b`, etc.)
-//! to `ScreenAction`s advertised by the current screen.
+//! Screen-level action key mapping — maps shortcut keys (`Enter`,
+//! `s`, `b`, etc.) to `ScreenAction`s advertised by the current
+//! screen.
+//!
+//! `Enter` is special: it dispatches by *role* (the action with
+//! `ActionStyle::Primary`, falling back to the first enabled
+//! action). All other keys delegate to the unified table in
+//! [`super::action_table`], which keeps dispatch and footer hints
+//! in sync.
 
 use crossterm::event::KeyCode;
 
-use vauchi_app::ui::{ScreenModel, UserAction};
+use vauchi_app::ui::{ActionStyle, ScreenModel, UserAction};
 
 use super::KeyResult;
+use super::action_table::action_for_key;
 
-/// Map a key to a screen-level action (Enter for primary, `s` for skip, etc.).
+/// Map a key to a screen-level action (Enter for primary, `s` for
+/// skip, etc.).
 pub(super) fn map_action_key(key: KeyCode, screen: &ScreenModel) -> KeyResult {
     if screen.actions.is_empty() {
         return KeyResult::Unhandled;
     }
 
-    match key {
-        KeyCode::Enter => {
-            // Find the primary action, or the first enabled action
-            let action = screen
-                .actions
-                .iter()
-                .find(|a| a.enabled && matches!(a.style, vauchi_app::ui::ActionStyle::Primary))
-                .or_else(|| screen.actions.iter().find(|a| a.enabled));
+    if matches!(key, KeyCode::Enter) {
+        return enter_dispatch(screen);
+    }
 
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        KeyCode::Char('s') => {
-            // Look for skip/secondary action
-            let action = screen
-                .actions
-                .iter()
-                .find(|a| a.enabled && (a.id == "skip" || a.id == "skip_to_finish"));
+    match action_for_key(key, &screen.actions) {
+        Some(action) => KeyResult::Action(UserAction::ActionPressed {
+            action_id: action.id.clone(),
+        }),
+        None => KeyResult::Unhandled,
+    }
+}
 
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        KeyCode::Char('b') => {
-            let action = screen
-                .actions
-                .iter()
-                .find(|a| a.enabled && (a.id == "restore_backup" || a.id == "setup_backup"));
+/// Enter dispatches the primary action, falling back to the first
+/// enabled action. Role-based — not driven by `action_id`.
+fn enter_dispatch(screen: &ScreenModel) -> KeyResult {
+    let action = screen
+        .actions
+        .iter()
+        .find(|a| a.enabled && matches!(a.style, ActionStyle::Primary))
+        .or_else(|| screen.actions.iter().find(|a| a.enabled));
 
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        KeyCode::Char('e') => {
-            let action = screen.actions.iter().find(|a| a.enabled && a.id == "edit");
-
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        KeyCode::Char('S') => {
-            let action = screen.actions.iter().find(|a| a.enabled && a.id == "scan");
-
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        KeyCode::Char('c') => {
-            let action = screen
-                .actions
-                .iter()
-                .find(|a| a.enabled && a.id == "create_new");
-
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        KeyCode::Char('h') => {
-            let action = screen
-                .actions
-                .iter()
-                .find(|a| a.enabled && a.id == "have_identity");
-
-            if let Some(action) = action {
-                KeyResult::Action(UserAction::ActionPressed {
-                    action_id: action.id.clone(),
-                })
-            } else {
-                KeyResult::Unhandled
-            }
-        }
-        _ => KeyResult::Unhandled,
+    match action {
+        Some(a) => KeyResult::Action(UserAction::ActionPressed {
+            action_id: a.id.clone(),
+        }),
+        None => KeyResult::Unhandled,
     }
 }
