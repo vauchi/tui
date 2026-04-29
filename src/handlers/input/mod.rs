@@ -347,11 +347,7 @@ fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
 /// (e.g., TUI-specific navigation shortcuts like 's' for Settings).
 fn handle_engine_keys(app: &mut App, key: KeyCode) {
     // Ensure AppEngine is synced to the current TUI screen
-    if let Some(target) = app.to_app_screen()
-        && *app.app_engine.current_app_screen() != target
-    {
-        app.app_engine.navigate_to(target);
-    }
+    app.ensure_engine_synced();
 
     // Get the current screen model from AppEngine
     let screen_model = app.app_engine.current_screen();

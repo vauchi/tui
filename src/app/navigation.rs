@@ -95,8 +95,27 @@ impl App {
         }
     }
 
+    /// Reconcile AppEngine with TUI's `self.screen` if they have
+    /// diverged. Engine-driven render paths and key dispatchers call
+    /// this just before reading the engine's `ScreenModel`, so
+    /// background-state changes that bypassed `goto` (e.g.
+    /// `app.screen = Screen::*` written directly inside an
+    /// `ActionResult` handler) still take effect on the next frame.
+    ///
+    /// Phase 1 of the TUI humble-UI plan: once every consumer reads
+    /// the engine via `current_app_screen()` and every writer routes
+    /// through `goto`, this synthesis can be deleted alongside the
+    /// `Screen → AppScreen` mapping.
+    pub fn ensure_engine_synced(&mut self) {
+        if let Some(target) = self.to_app_screen()
+            && *self.app_engine.current_app_screen() != target
+        {
+            self.app_engine.navigate_to(target);
+        }
+    }
+
     /// Maps TUI Screen to core AppScreen for engine-driven screens.
-    pub fn to_app_screen(&self) -> Option<AppScreen> {
+    pub(super) fn to_app_screen(&self) -> Option<AppScreen> {
         match self.screen {
             Screen::MyInfo => Some(AppScreen::MyInfo),
             Screen::Contacts => Some(AppScreen::Contacts),
