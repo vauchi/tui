@@ -10,7 +10,7 @@ mod features_input;
 mod navigation;
 
 use crossterm::event::KeyCode;
-use vauchi_app::ui::{Component, UserAction, WorkflowEngine};
+use vauchi_app::ui::{AppScreen, Component, UserAction, WorkflowEngine};
 
 use crate::app::{App, InputMode, Screen};
 use crate::handlers::action_result::handle_action_result;
@@ -57,7 +57,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Lock screen bypasses ALL global keys — PIN chars include 'q', Esc, etc.
-    if app.screen == Screen::Lock {
+    if app.current_app_screen() == AppScreen::Lock {
         handle_lock_keys(app, key);
         return Action::Continue;
     }
@@ -75,16 +75,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Engine-driven onboarding bypasses global keys (engine handles text input)
-    if app.onboarding_engine.is_some()
-        && matches!(
-            app.screen,
-            Screen::SetupWelcome
-                | Screen::SetupCreateIdentity
-                | Screen::SetupAddFields
-                | Screen::SetupSecurity
-                | Screen::SetupReady
-        )
-    {
+    if app.onboarding_engine.is_some() && app.current_app_screen() == AppScreen::Onboarding {
         if let Some(action) = navigation::handle_onboarding_engine_keys(app, key) {
             return action;
         }
@@ -98,10 +89,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Engine-driven form dialogs bypass global keys (text input uses 'q', etc.)
-    if matches!(
-        app.screen,
-        Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField
-    ) {
+    if matches!(app.current_app_screen(), AppScreen::FormDialog { .. }) {
         if key == KeyCode::Esc {
             // Send cancel to engine — it handles dirty detection and
             // shows InlineConfirm if the form has unsaved changes (ADR-022).
@@ -116,13 +104,13 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Engine-driven contact limit bypasses global keys when editing (digits are input)
-    if app.screen == Screen::ContactLimit {
+    if app.current_app_screen() == AppScreen::ContactLimit {
         handle_engine_keys(app, key);
         return Action::Continue;
     }
 
     // Don't process global keys if in contact search mode
-    if app.contact_search_mode && app.screen == Screen::Contacts {
+    if app.contact_search_mode && app.current_app_screen() == AppScreen::Contacts {
         handle_contacts_keys(app, key);
         return Action::Continue;
     }
@@ -372,10 +360,8 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
     match key_mapping::map_key(key, &screen_model, &mut app.render_state) {
         KeyResult::Action(action) => {
             // On form dialog screens, "cancel" action means go back (don't forward to engine)
-            if matches!(
-                app.screen,
-                Screen::AddField | Screen::EditName | Screen::EditField | Screen::EditRelayUrl
-            ) && let UserAction::ActionPressed { ref action_id } = action
+            if matches!(app.current_app_screen(), AppScreen::FormDialog { .. })
+                && let UserAction::ActionPressed { ref action_id } = action
                 && action_id == "cancel"
             {
                 app.go_back();
