@@ -6,7 +6,8 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, EditNameState, EditRelayUrlState, PrivacyState, Screen};
+use crate::app::{App, PrivacyState, Screen};
+use vauchi_app::ui::FormDialogType;
 
 use super::duress::refresh_duress_state;
 use super::emergency::refresh_emergency_state;
@@ -14,20 +15,12 @@ use super::emergency::refresh_emergency_state;
 pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('n') | KeyCode::Enter => {
-            // Edit display name — engine-driven via FormDialogEngine
             let current_name = app.display_name().unwrap_or("").to_string();
-            app.edit_name_state = EditNameState {
-                new_name: current_name,
-            };
-            app.goto(Screen::EditName);
+            app.goto_form_dialog(FormDialogType::EditName { current_name });
         }
         KeyCode::Char('u') => {
-            // Edit relay URL — engine-driven via FormDialogEngine
             let current_url = app.relay_url.clone();
-            app.edit_relay_url_state = EditRelayUrlState {
-                new_url: current_url,
-            };
-            app.goto(Screen::EditRelayUrl);
+            app.goto_form_dialog(FormDialogType::EditRelayUrl { current_url });
         }
         KeyCode::Char('b') => app.goto(Screen::Backup),
         KeyCode::Char('d') => app.goto(Screen::Devices),

@@ -12,10 +12,7 @@
 //!
 //! Tests here focus on the standalone state structs and enums.
 
-use vauchi_tui::app::{
-    AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState, InputMode, Screen,
-    SyncState,
-};
+use vauchi_tui::app::{BackupFocus, BackupMode, BackupState, InputMode, Screen, SyncState};
 
 // ============================================================================
 // Screen Enum Tests
@@ -102,39 +99,6 @@ fn test_input_mode_variants() {
 fn test_input_mode_normal_is_initial() {
     let mode = InputMode::Normal;
     assert_eq!(mode, InputMode::Normal);
-}
-
-// ============================================================================
-// AddFieldState Tests
-// ============================================================================
-
-/// Test: AddFieldState default values
-// @internal
-#[test]
-fn test_add_field_state_default() {
-    let state = AddFieldState::default();
-    assert_eq!(state.field_type_index, 0);
-    assert!(state.label.is_empty());
-    assert!(state.value.is_empty());
-    assert_eq!(state.focus, AddFieldFocus::Type);
-}
-
-/// Test: AddFieldFocus variants
-// @internal
-#[test]
-fn test_add_field_focus_variants() {
-    assert_eq!(AddFieldFocus::default(), AddFieldFocus::Type);
-    let _ = AddFieldFocus::Label;
-    let _ = AddFieldFocus::Value;
-}
-
-/// Test: AddFieldFocus equality
-// @internal
-#[test]
-fn test_add_field_focus_equality() {
-    assert_eq!(AddFieldFocus::Type, AddFieldFocus::Type);
-    assert_ne!(AddFieldFocus::Type, AddFieldFocus::Label);
-    assert_ne!(AddFieldFocus::Label, AddFieldFocus::Value);
 }
 
 // ============================================================================
@@ -226,23 +190,6 @@ fn test_sync_state_modification() {
 // ============================================================================
 // State Struct Field Access Tests
 // ============================================================================
-
-/// Test: AddFieldState fields are accessible and modifiable
-// @internal
-#[test]
-fn test_add_field_state_fields() {
-    let state = AddFieldState {
-        field_type_index: 2,
-        label: "Work Email".to_string(),
-        value: "alice@work.com".to_string(),
-        focus: AddFieldFocus::Value,
-    };
-
-    assert_eq!(state.field_type_index, 2);
-    assert_eq!(state.label, "Work Email");
-    assert_eq!(state.value, "alice@work.com");
-    assert_eq!(state.focus, AddFieldFocus::Value);
-}
 
 /// Test: BackupState fields are accessible and modifiable
 // @internal

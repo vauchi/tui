@@ -9,7 +9,7 @@
 
 use crate::common;
 
-use vauchi_tui::app::{AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState, Screen};
+use vauchi_tui::app::{BackupFocus, BackupMode, BackupState, Screen};
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity, workflow_step,
@@ -126,14 +126,11 @@ fn test_workflow_add_field() {
     app.screen = Screen::MyInfo;
     steps.push(workflow_step(1, "MyInfo — view card fields", &mut app));
 
-    // Step 2: Add field dialog
-    app.screen = Screen::AddField;
-    app.add_field_state = AddFieldState {
-        field_type_index: 0,
-        label: String::new(),
-        value: String::new(),
-        focus: AddFieldFocus::Type,
-    };
+    // Step 2: Add field dialog (engine-driven)
+    use vauchi_app::ui::FormDialogType;
+    app.goto_form_dialog(FormDialogType::AddField {
+        available_groups: Vec::new(),
+    });
     steps.push(workflow_step(
         2,
         "AddField — press 'a' (Add Entry)",
@@ -141,8 +138,7 @@ fn test_workflow_add_field() {
     ));
 
     // Step 3: Back to MyInfo (field added)
-    app.screen = Screen::MyInfo;
-    app.add_field_state = AddFieldState::default();
+    app.goto(Screen::MyInfo);
     steps.push(workflow_step(
         3,
         "MyInfo — field saved, return to card",

@@ -104,14 +104,6 @@ pub struct App {
     pub selected_contact_field: usize,
     /// Text input buffer
     pub input_buffer: String,
-    /// Add field state
-    pub add_field_state: AddFieldState,
-    /// Edit field state
-    pub edit_field_state: EditFieldState,
-    /// Edit name state
-    pub edit_name_state: EditNameState,
-    /// Edit relay URL state
-    pub edit_relay_url_state: EditRelayUrlState,
     /// Visibility screen state
     pub visibility_state: VisibilityState,
     /// Backup screen state
@@ -249,10 +241,6 @@ impl App {
             selected_field: 0,
             selected_contact_field: 0,
             input_buffer: String::new(),
-            add_field_state: AddFieldState::default(),
-            edit_field_state: EditFieldState::default(),
-            edit_name_state: EditNameState::default(),
-            edit_relay_url_state: EditRelayUrlState::default(),
             visibility_state: VisibilityState::default(),
             backup_state: BackupState::default(),
             selected_device: 0,

@@ -42,6 +42,30 @@ impl App {
         self.app_engine.current_app_screen().clone()
     }
 
+    /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
+    ///
+    /// Bypasses the legacy `Screen → AppScreen` mapping so callers no
+    /// longer need to populate per-form state structs (`add_field_state`,
+    /// `edit_field_state`, etc.) before navigation. The engine's
+    /// `FormDialogEngine` owns the form values and is now the single
+    /// source of truth for these dialogs.
+    pub fn goto_form_dialog(&mut self, dialog_type: FormDialogType) {
+        let screen = match &dialog_type {
+            FormDialogType::AddField { .. } => Screen::AddField,
+            FormDialogType::EditField { .. } => Screen::EditField,
+            FormDialogType::EditName { .. } => Screen::EditName,
+            FormDialogType::EditRelayUrl { .. } => Screen::EditRelayUrl,
+            _ => return,
+        };
+        self.clear_contact_search_if_leaving(screen);
+        self.screen = screen;
+        self.input_mode = InputMode::Normal;
+        self.sync_nav_index();
+        self.app_engine
+            .navigate_to(AppScreen::FormDialog { dialog_type });
+        self.render_state = ScreenRenderState::default();
+    }
+
     /// Navigate to a screen.
     ///
     /// Thin wrapper: updates `self.screen`, navigates AppEngine when the
@@ -155,32 +179,9 @@ impl App {
             }
             Screen::Privacy => Some(AppScreen::Privacy),
             Screen::Support => Some(AppScreen::Support),
-            Screen::EditName => Some(AppScreen::FormDialog {
-                dialog_type: FormDialogType::EditName {
-                    current_name: self.edit_name_state.new_name.clone(),
-                },
-            }),
-            Screen::EditField => Some(AppScreen::FormDialog {
-                dialog_type: FormDialogType::EditField {
-                    field_id: self.edit_field_state.field_id.clone(),
-                    field_label: self.edit_field_state.field_label.clone(),
-                    current_value: self.edit_field_state.new_value.clone(),
-                    current_note: None,
-                },
-            }),
-            Screen::EditRelayUrl => Some(AppScreen::FormDialog {
-                dialog_type: FormDialogType::EditRelayUrl {
-                    current_url: self.edit_relay_url_state.new_url.clone(),
-                },
-            }),
-            Screen::AddField => {
-                let groups = self.app_engine.available_groups().into_iter().collect();
-                Some(AppScreen::FormDialog {
-                    dialog_type: FormDialogType::AddField {
-                        available_groups: groups,
-                    },
-                })
-            }
+            // FormDialog screens (AddField, EditField, EditName, EditRelayUrl)
+            // are entered via `goto_form_dialog(FormDialogType)` which carries
+            // its own data; they don't pass through this mapper.
             Screen::DeviceReplacement => Some(AppScreen::DeviceReplacement),
             Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
             Screen::ContactMerge => {
@@ -273,7 +274,6 @@ impl App {
             }
             Screen::VerifyFingerprint => self.goto(Screen::ContactDetail),
             Screen::AddField => {
-                self.add_field_state = AddFieldState::default();
                 let target = if self.onboarding_state.identity_created {
                     Screen::SetupAddFields
                 } else {
@@ -281,18 +281,8 @@ impl App {
                 };
                 self.goto(target);
             }
-            Screen::EditField => {
-                self.edit_field_state = EditFieldState::default();
-                self.goto(Screen::MyInfo);
-            }
-            Screen::EditName => {
-                self.edit_name_state = EditNameState::default();
-                self.goto(Screen::Settings);
-            }
-            Screen::EditRelayUrl => {
-                self.edit_relay_url_state = EditRelayUrlState::default();
-                self.goto(Screen::Settings);
-            }
+            Screen::EditField => self.goto(Screen::MyInfo),
+            Screen::EditName | Screen::EditRelayUrl => self.goto(Screen::Settings),
             Screen::Groups => {
                 self.groups_state = GroupsState::default();
                 self.goto(Screen::MyInfo);

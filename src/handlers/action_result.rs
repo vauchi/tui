@@ -86,44 +86,16 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.screen = Screen::ContactVisibility;
                     }
                     vauchi_app::ui::AppScreen::FormDialog { dialog_type } => {
-                        // Map form dialog types to the corresponding TUI screens,
-                        // syncing legacy TUI state so engine_target_for_screen() stays consistent.
-                        use crate::app::{EditFieldState, EditNameState, EditRelayUrlState};
+                        // Map form dialog types to the corresponding TUI Screen.
+                        // FormDialogEngine owns the form values; no local mirror.
                         use vauchi_app::ui::FormDialogType;
-                        match dialog_type {
-                            FormDialogType::AddField { .. } => {
-                                app.screen = Screen::AddField;
-                            }
-                            FormDialogType::EditField {
-                                field_id,
-                                field_label,
-                                current_value,
-                                current_note: _,
-                            } => {
-                                app.edit_field_state = EditFieldState {
-                                    field_id: field_id.clone(),
-                                    field_label: field_label.clone(),
-                                    new_value: current_value.clone(),
-                                    ..Default::default()
-                                };
-                                app.screen = Screen::EditField;
-                            }
-                            FormDialogType::EditName { current_name } => {
-                                app.edit_name_state = EditNameState {
-                                    new_name: current_name.clone(),
-                                };
-                                app.screen = Screen::EditName;
-                            }
-                            FormDialogType::EditRelayUrl { current_url } => {
-                                app.edit_relay_url_state = EditRelayUrlState {
-                                    new_url: current_url.clone(),
-                                };
-                                app.screen = Screen::EditRelayUrl;
-                            }
-                            _ => {
-                                // Unknown FormDialogType — ignore
-                            }
-                        }
+                        app.screen = match dialog_type {
+                            FormDialogType::AddField { .. } => Screen::AddField,
+                            FormDialogType::EditField { .. } => Screen::EditField,
+                            FormDialogType::EditName { .. } => Screen::EditName,
+                            FormDialogType::EditRelayUrl { .. } => Screen::EditRelayUrl,
+                            _ => app.screen, // unknown variant — stay
+                        };
                     }
                     vauchi_app::ui::AppScreen::ContactEdit { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());

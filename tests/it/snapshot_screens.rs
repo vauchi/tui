@@ -13,10 +13,9 @@ use crate::common;
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
 use vauchi_tui::app::{
-    ActionMenuState, AddFieldFocus, AddFieldState, BackupFocus, BackupMode, BackupState,
-    ContactLimitState, DeliveryState, DuplicateEntry, DuplicatesState, DuressState, EditFieldState,
-    EditNameState, EditRelayUrlState, EmergencyState, LockState, MergeState, PrivacyState, Screen,
-    SyncState,
+    ActionMenuState, BackupFocus, BackupMode, BackupState, ContactLimitState, DeliveryState,
+    DuplicateEntry, DuplicatesState, DuressState, EmergencyState, LockState, MergeState,
+    PrivacyState, Screen, SyncState,
 };
 
 use common::{
@@ -199,14 +198,11 @@ fn test_snapshot_backup_export() {
 // @scenario: contact_card_management:Add a field to contact card
 #[test]
 fn test_snapshot_add_field_dialog() {
+    use vauchi_app::ui::FormDialogType;
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::AddField;
-    app.add_field_state = AddFieldState {
-        field_type_index: 0,
-        label: String::new(),
-        value: String::new(),
-        focus: AddFieldFocus::Type,
-    };
+    app.goto_form_dialog(FormDialogType::AddField {
+        available_groups: Vec::new(),
+    });
     let output = render_to_string(&mut app);
     assert_snap!(
         "add_field_dialog",
@@ -219,14 +215,14 @@ fn test_snapshot_add_field_dialog() {
 // @scenario: contact_card_management:Edit an existing field value
 #[test]
 fn test_snapshot_edit_field_dialog() {
+    use vauchi_app::ui::FormDialogType;
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::EditField;
-    app.edit_field_state = EditFieldState {
+    app.goto_form_dialog(FormDialogType::EditField {
         field_id: "field_001".to_string(),
         field_label: "Mobile".to_string(),
-        field_type: "Phone".to_string(),
-        new_value: "+41 79 123 45 67".to_string(),
-    };
+        current_value: "+41 79 123 45 67".to_string(),
+        current_note: None,
+    });
     let output = render_to_string(&mut app);
     assert_snap!(
         "edit_field_dialog",
@@ -239,11 +235,11 @@ fn test_snapshot_edit_field_dialog() {
 // @scenario: contact_card_management:Update display name
 #[test]
 fn test_snapshot_edit_name_dialog() {
+    use vauchi_app::ui::FormDialogType;
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::EditName;
-    app.edit_name_state = EditNameState {
-        new_name: "Alice Smith".to_string(),
-    };
+    app.goto_form_dialog(FormDialogType::EditName {
+        current_name: "Alice Smith".to_string(),
+    });
     let output = render_to_string(&mut app);
     assert_snap!(
         "edit_name_dialog",
@@ -256,11 +252,11 @@ fn test_snapshot_edit_name_dialog() {
 // @internal
 #[test]
 fn test_snapshot_edit_relay_url_dialog() {
+    use vauchi_app::ui::FormDialogType;
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::EditRelayUrl;
-    app.edit_relay_url_state = EditRelayUrlState {
-        new_url: "wss://relay.vauchi.app".to_string(),
-    };
+    app.goto_form_dialog(FormDialogType::EditRelayUrl {
+        current_url: "wss://relay.vauchi.app".to_string(),
+    });
     let output = render_to_string(&mut app);
     assert_snap!(
         "edit_relay_url_dialog",

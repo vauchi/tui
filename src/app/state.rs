@@ -215,45 +215,6 @@ pub struct LockState {
     pub error: bool,
 }
 
-/// State for the add field dialog (legacy — engine-driven path handles most logic).
-#[derive(Debug, Default)]
-pub struct AddFieldState {
-    pub field_type_index: usize,
-    pub label: String,
-    pub value: String,
-    pub focus: AddFieldFocus,
-}
-
-/// Tracks which input field is focused in the add-field dialog.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum AddFieldFocus {
-    #[default]
-    Type,
-    Label,
-    Value,
-}
-
-/// State for the edit field dialog.
-#[derive(Debug, Default)]
-pub struct EditFieldState {
-    pub field_id: String,
-    pub field_label: String,
-    pub field_type: String,
-    pub new_value: String,
-}
-
-/// State for the edit name dialog.
-#[derive(Debug, Default)]
-pub struct EditNameState {
-    pub new_name: String,
-}
-
-/// State for the edit relay URL dialog.
-#[derive(Debug, Default)]
-pub struct EditRelayUrlState {
-    pub new_url: String,
-}
-
 /// State for the visibility screen.
 #[derive(Debug, Default)]
 pub struct VisibilityState {

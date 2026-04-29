@@ -6,10 +6,16 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{AddFieldFocus, App, BackupFocus, InputMode, Screen};
+use crate::app::{App, BackupFocus, InputMode, Screen};
 
 use super::Action;
 
+/// Editing-mode handler.
+///
+/// FormDialog screens (AddField, EditField, EditName, EditRelayUrl) are
+/// engine-driven via `handle_engine_keys` and never reach this path.
+/// This handler covers ContactImport, Backup, and the legacy
+/// `input_buffer` fallback.
 pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
     match key {
         KeyCode::Esc => {
@@ -28,24 +34,6 @@ pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
             Screen::ContactImport => {
                 app.import_state.file_path.pop();
             }
-            Screen::AddField => match app.add_field_state.focus {
-                AddFieldFocus::Label => {
-                    app.add_field_state.label.pop();
-                }
-                AddFieldFocus::Value => {
-                    app.add_field_state.value.pop();
-                }
-                _ => {}
-            },
-            Screen::EditField => {
-                app.edit_field_state.new_value.pop();
-            }
-            Screen::EditName => {
-                app.edit_name_state.new_name.pop();
-            }
-            Screen::EditRelayUrl => {
-                app.edit_relay_url_state.new_url.pop();
-            }
             Screen::Backup => match app.backup_state.focus {
                 BackupFocus::Password => {
                     app.backup_state.password.pop();
@@ -62,14 +50,6 @@ pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
             }
         },
         KeyCode::Char(c) => match app.screen {
-            Screen::AddField => match app.add_field_state.focus {
-                AddFieldFocus::Label => app.add_field_state.label.push(c),
-                AddFieldFocus::Value => app.add_field_state.value.push(c),
-                _ => {}
-            },
-            Screen::EditField => app.edit_field_state.new_value.push(c),
-            Screen::EditName => app.edit_name_state.new_name.push(c),
-            Screen::EditRelayUrl => app.edit_relay_url_state.new_url.push(c),
             Screen::ContactImport => app.import_state.file_path.push(c),
             Screen::Backup => match app.backup_state.focus {
                 BackupFocus::Password => app.backup_state.password.push(c),

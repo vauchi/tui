@@ -6,13 +6,11 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{
-    App, BackupFocus, BackupMode, EditFieldState, InputMode, OnboardingState, Screen,
-};
+use crate::app::{App, BackupFocus, BackupMode, InputMode, OnboardingState, Screen};
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use super::Action;
-use vauchi_app::ui::{ActionResult, AppScreen, WorkflowEngine};
+use vauchi_app::ui::{ActionResult, AppScreen, FormDialogType, WorkflowEngine};
 use vauchi_core::types::AhaMomentType;
 
 pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
@@ -27,22 +25,19 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('g') => app.goto(Screen::Groups),
         KeyCode::Char('X') => app.goto(Screen::Exchange),
         KeyCode::Char('a') => {
-            app.add_field_state = Default::default();
-            app.goto(Screen::AddField);
+            let available_groups = app.app_engine.available_groups().into_iter().collect();
+            app.goto_form_dialog(FormDialogType::AddField { available_groups });
         }
         KeyCode::Char('e') | KeyCode::Enter => {
-            // Edit selected field
             if let Ok(Some(card)) = app.app_engine.vauchi().own_card() {
                 if let Some(field) = card.fields().get(app.selected_field) {
-                    app.edit_field_state = EditFieldState {
+                    app.goto_form_dialog(FormDialogType::EditField {
                         field_id: field.id().to_string(),
                         field_label: field.label().to_string(),
-                        field_type: format!("{:?}", field.field_type()),
-                        new_value: field.value().to_string(),
-                    };
-                    app.goto(Screen::EditField);
+                        current_value: field.value().to_string(),
+                        current_note: None,
+                    });
                 } else {
-                    // No fields, open Exchange
                     app.goto(Screen::Exchange);
                 }
             }
@@ -315,8 +310,8 @@ pub(super) fn handle_setup_add_fields_keys(app: &mut App, key: KeyCode) {
     }
     match key {
         KeyCode::Char('a') => {
-            app.add_field_state = Default::default();
-            app.goto(Screen::AddField);
+            let available_groups = app.app_engine.available_groups().into_iter().collect();
+            app.goto_form_dialog(FormDialogType::AddField { available_groups });
         }
         KeyCode::Char('s') | KeyCode::Enter => {
             app.goto(Screen::SetupSecurity);
