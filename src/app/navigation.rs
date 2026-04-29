@@ -11,6 +11,45 @@ use super::state::*;
 use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
 impl App {
+    /// The live `AppScreen` from the engine perspective.
+    ///
+    /// For engine-driven screens this returns the engine's truth
+    /// (`app_engine.current_app_screen()` cloned). For TUI-only states
+    /// where no engine navigation has happened (the onboarding wizard
+    /// steps, the action-menu/import overlays), this synthesizes a
+    /// best-fit `AppScreen` so callers can branch on `AppScreen`
+    /// instead of reading the legacy `Screen` enum.
+    ///
+    /// Phase 1 of the TUI humble-UI plan: callers progressively
+    /// migrate from `app.screen == Screen::X` to
+    /// `app.current_app_screen() == AppScreen::X`. Once nothing reads
+    /// `app.screen` for engine-mapped variants, the redundant
+    /// mirror-writes in `handlers/action_result.rs` can be deleted.
+    pub fn current_app_screen(&self) -> AppScreen {
+        // Setup wizard variants don't navigate AppEngine — synthesize
+        // the engine-side `Onboarding` so consumers don't need to
+        // special-case them via the legacy `Screen` enum.
+        if matches!(
+            self.screen,
+            Screen::SetupWelcome
+                | Screen::SetupCreateIdentity
+                | Screen::SetupAddFields
+                | Screen::SetupSecurity
+                | Screen::SetupReady
+        ) {
+            return AppScreen::Onboarding;
+        }
+
+        // ActionMenu and ContactImport overlay on top of an
+        // engine-driven screen. The underlying engine screen is the
+        // right answer for "what AppScreen are we on?".
+        if let Some(app_screen) = self.to_app_screen() {
+            return app_screen;
+        }
+
+        self.app_engine.current_app_screen().clone()
+    }
+
     /// Navigate to a screen.
     pub fn goto(&mut self, screen: Screen) {
         // Clear contact search when leaving Contacts screen
