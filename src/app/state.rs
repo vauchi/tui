@@ -115,27 +115,6 @@ pub struct SyncState {
     pub sync_log: Vec<String>,
 }
 
-/// Delivery status state for the UI.
-#[derive(Debug, Clone, Default)]
-pub struct DeliveryState {
-    /// Number of queued deliveries.
-    pub queued: usize,
-    /// Number of sent deliveries.
-    pub sent: usize,
-    /// Number of stored deliveries.
-    pub stored: usize,
-    /// Number of delivered messages.
-    pub delivered: usize,
-    /// Number of failed deliveries.
-    pub failed: usize,
-    /// Number of pending retries.
-    pub pending_retries: usize,
-    /// Offline queue depth.
-    pub offline_queue_depth: usize,
-    /// Last action result message.
-    pub last_result: Option<String>,
-}
-
 /// Emergency broadcast screen state.
 #[derive(Debug, Clone, Default)]
 pub struct EmergencyState {
@@ -289,42 +268,6 @@ pub struct OnboardingState {
     pub identity_created: bool,
 }
 
-/// A duplicate pair for the UI.
-#[derive(Debug, Clone)]
-pub struct DuplicateEntry {
-    pub id1: String,
-    pub name1: String,
-    pub id2: String,
-    pub name2: String,
-    pub similarity: f64,
-}
-
-/// State for the contact duplicates screen (SP-12a).
-#[derive(Debug, Default)]
-pub struct DuplicatesState {
-    /// Detected duplicate pairs.
-    pub pairs: Vec<DuplicateEntry>,
-    /// Currently selected pair index.
-    pub selected: usize,
-}
-
-/// State for the contact merge preview screen (SP-12a).
-#[derive(Debug, Default, Clone)]
-pub struct MergeState {
-    /// Primary contact ID.
-    pub primary_id: String,
-    /// Primary contact name.
-    pub primary_name: String,
-    /// Primary contact fields.
-    pub primary_fields: Vec<String>,
-    /// Secondary contact ID.
-    pub secondary_id: String,
-    /// Secondary contact name.
-    pub secondary_name: String,
-    /// Secondary contact fields.
-    pub secondary_fields: Vec<String>,
-}
-
 /// State for the contact import screen.
 #[derive(Debug, Default)]
 pub struct ImportState {
@@ -334,19 +277,6 @@ pub struct ImportState {
     pub result_message: Option<String>,
     /// Whether the import succeeded (for styling).
     pub success: bool,
-}
-
-/// State for the contact limit screen (SP-12a).
-#[derive(Debug, Default)]
-pub struct ContactLimitState {
-    /// Current contact limit.
-    pub current_limit: usize,
-    /// Current contact count.
-    pub current_count: usize,
-    /// New limit input buffer.
-    pub limit_input: String,
-    /// Whether editing is active.
-    pub editing: bool,
 }
 
 /// Activity log screen state (Phase 2.4).

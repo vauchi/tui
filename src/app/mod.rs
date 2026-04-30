@@ -119,8 +119,6 @@ pub struct App {
     pub contact_search_mode: bool,
     /// Sync state
     pub sync_state: SyncState,
-    /// Delivery state
-    pub delivery_state: DeliveryState,
     /// Privacy/GDPR screen state
     pub privacy_state: PrivacyState,
     /// Action menu state (popup for field actions)
@@ -147,12 +145,6 @@ pub struct App {
     pub render_state: ScreenRenderState,
     /// Focus manager for keyboard navigation across Content/ActionBar/NavBar zones.
     pub focus: FocusManager,
-    /// Duplicates detection state (SP-12a)
-    pub duplicates_state: DuplicatesState,
-    /// Merge preview state (SP-12a)
-    pub merge_state: MergeState,
-    /// Contact limit state (SP-12a)
-    pub contact_limit_state: ContactLimitState,
     /// Contact import state
     pub import_state: ImportState,
     /// Activity log state
@@ -247,7 +239,6 @@ impl App {
             contact_search_query: String::new(),
             contact_search_mode: false,
             sync_state: SyncState::default(),
-            delivery_state: DeliveryState::default(),
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
             emergency_state: EmergencyState::default(),
@@ -260,9 +251,6 @@ impl App {
             lock_engine,
             render_state: ScreenRenderState::default(),
             focus: FocusManager::new(),
-            duplicates_state: DuplicatesState::default(),
-            merge_state: MergeState::default(),
-            contact_limit_state: ContactLimitState::default(),
             import_state: ImportState::default(),
             activity_state: ActivityState::default(),
             i18n: detect_locale(),

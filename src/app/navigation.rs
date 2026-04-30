@@ -184,15 +184,11 @@ impl App {
             // its own data; they don't pass through this mapper.
             Screen::DeviceReplacement => Some(AppScreen::DeviceReplacement),
             Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
-            Screen::ContactMerge => {
-                let s = &self.merge_state;
-                Some(AppScreen::ContactMerge {
-                    primary_name: s.primary_name.clone(),
-                    primary_fields: s.primary_fields.clone(),
-                    secondary_name: s.secondary_name.clone(),
-                    secondary_fields: s.secondary_fields.clone(),
-                })
-            }
+            // ContactMerge is engine-driven: action_result.rs syncs
+            // `app.screen = Screen::ContactMerge` from
+            // `AppScreen::ContactMerge { ... }`. No local mirror needed
+            // — engine has the primary/secondary contact data.
+            Screen::ContactMerge => None,
             Screen::ContactLimit => Some(AppScreen::ContactLimit),
             Screen::VerifyFingerprint => {
                 self.selected_contact_id
@@ -292,18 +288,9 @@ impl App {
                 self.groups_state.selected_contact_in_group = 0;
                 self.goto(Screen::Groups);
             }
-            Screen::ContactDuplicates => {
-                self.duplicates_state = DuplicatesState::default();
-                self.goto(Screen::Contacts);
-            }
-            Screen::ContactMerge => {
-                self.merge_state = MergeState::default();
-                self.goto(Screen::ContactDuplicates);
-            }
-            Screen::ContactLimit => {
-                self.contact_limit_state = ContactLimitState::default();
-                self.goto(Screen::Contacts);
-            }
+            Screen::ContactDuplicates => self.goto(Screen::Contacts),
+            Screen::ContactMerge => self.goto(Screen::ContactDuplicates),
+            Screen::ContactLimit => self.goto(Screen::Contacts),
             _ => {}
         }
     }

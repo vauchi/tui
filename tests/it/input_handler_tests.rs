@@ -290,9 +290,10 @@ fn test_delivery_r_runs_retry() {
     let action = handle_key(&mut app, KeyCode::Char('r'));
     assert!(matches!(action, Action::Continue));
     assert_eq!(app.screen, Screen::Delivery);
-    assert!(
-        app.delivery_state.last_result.is_some(),
-        "Retry should set last_result"
+    assert_eq!(
+        app.status_message.as_deref(),
+        Some("Delivery retries processed"),
+        "Retry should set status message"
     );
 }
 
@@ -305,20 +306,11 @@ fn test_delivery_c_runs_cleanup() {
     let action = handle_key(&mut app, KeyCode::Char('c'));
     assert!(matches!(action, Action::Continue));
     assert_eq!(app.screen, Screen::Delivery);
-    assert!(
-        app.delivery_state.last_result.is_some(),
-        "Cleanup should set last_result"
+    assert_eq!(
+        app.status_message.as_deref(),
+        Some("Delivery cleanup complete"),
+        "Cleanup should set status message"
     );
-}
-
-// @scenario: message_delivery:Delivery state has correct defaults
-#[test]
-fn test_delivery_state_defaults() {
-    let (app, _dir) = create_app_with_identity();
-    assert_eq!(app.delivery_state.queued, 0);
-    assert_eq!(app.delivery_state.delivered, 0);
-    assert_eq!(app.delivery_state.failed, 0);
-    assert!(app.delivery_state.last_result.is_none());
 }
 
 // ============================================================================

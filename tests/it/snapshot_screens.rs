@@ -13,8 +13,7 @@ use crate::common;
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
 use vauchi_tui::app::{
-    ActionMenuState, BackupFocus, BackupMode, BackupState, ContactLimitState, DeliveryState,
-    DuplicateEntry, DuplicatesState, DuressState, EmergencyState, LockState, MergeState,
+    ActionMenuState, BackupFocus, BackupMode, BackupState, DuressState, EmergencyState, LockState,
     PrivacyState, Screen, SyncState,
 };
 
@@ -523,16 +522,6 @@ fn test_snapshot_support() {
 fn test_snapshot_delivery() {
     let (mut app, _tmp) = create_app_with_identity();
     app.goto(Screen::Delivery);
-    app.delivery_state = DeliveryState {
-        queued: 2,
-        sent: 5,
-        stored: 3,
-        delivered: 10,
-        failed: 1,
-        pending_retries: 1,
-        offline_queue_depth: 0,
-        last_result: None,
-    };
     let output = render_to_string(&mut app);
     assert_snap!("delivery", "Settings", "select Delivery", output);
 }
@@ -790,25 +779,6 @@ fn test_snapshot_setup_ready() {
 #[test]
 fn test_snapshot_contact_duplicates() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.duplicates_state = DuplicatesState {
-        pairs: vec![
-            DuplicateEntry {
-                id1: "id1".to_string(),
-                name1: "Ahmed Nikolaus".to_string(),
-                id2: "id2".to_string(),
-                name2: "Ahmed N.".to_string(),
-                similarity: 0.92,
-            },
-            DuplicateEntry {
-                id1: "id3".to_string(),
-                name1: "Brady Koss".to_string(),
-                id2: "id4".to_string(),
-                name2: "Brady K.".to_string(),
-                similarity: 0.85,
-            },
-        ],
-        selected: 0,
-    };
     app.goto(Screen::ContactDuplicates);
     let output = render_to_string(&mut app);
     assert_snap!(
@@ -822,22 +792,23 @@ fn test_snapshot_contact_duplicates() {
 // @scenario: contacts_management:Merge duplicate contacts
 #[test]
 fn test_snapshot_contact_merge() {
+    use vauchi_app::ui::AppScreen;
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.merge_state = MergeState {
-        primary_id: "id1".to_string(),
+    // Engine drives ContactMerge navigation (no local mirror state any more);
+    // navigate it directly with the same fixture values the old test used.
+    app.app_engine.navigate_to(AppScreen::ContactMerge {
         primary_name: "Ahmed Nikolaus".to_string(),
         primary_fields: vec![
             "+1-203-107-1013".to_string(),
             "ahmed.nikolaus@example.com".to_string(),
         ],
-        secondary_id: "id2".to_string(),
         secondary_name: "Ahmed N.".to_string(),
         secondary_fields: vec![
             "+1-203-107-1013".to_string(),
             "ahmed.n@example.com".to_string(),
         ],
-    };
-    app.goto(Screen::ContactMerge);
+    });
+    app.screen = Screen::ContactMerge;
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_merge",
@@ -851,12 +822,6 @@ fn test_snapshot_contact_merge() {
 #[test]
 fn test_snapshot_contact_limit() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.contact_limit_state = ContactLimitState {
-        current_limit: 150,
-        current_count: 10,
-        limit_input: String::new(),
-        editing: false,
-    };
     app.goto(Screen::ContactLimit);
     let output = render_to_string(&mut app);
     assert_snap!(

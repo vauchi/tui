@@ -7,10 +7,7 @@
 use crossterm::event::KeyCode;
 use vauchi_app::ui::{UserAction, WorkflowEngine};
 
-use crate::app::{
-    ActionMenuState, App, ContactLimitState, DuplicateEntry, DuplicatesState, ImportState,
-    InputMode, Screen,
-};
+use crate::app::{ActionMenuState, App, ImportState, InputMode, Screen};
 use crate::helpers;
 
 pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
@@ -83,52 +80,21 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
             app.goto(Screen::ContactDetail);
         }
         KeyCode::Char('d') | KeyCode::Char('m') => {
-            // Open duplicates / merge screen ('d' legacy, 'm' for merge)
+            // Open duplicates / merge screen ('d' legacy, 'm' for merge).
+            // Engine builds the duplicate list from `find_duplicates()`;
+            // the renderer reads from the engine's ScreenModel.
             match app.app_engine.vauchi().find_duplicates() {
-                Ok(pairs) => {
-                    // Look up display names for duplicate pairs
-                    let contacts = app.app_engine.vauchi().list_contacts().unwrap_or_default();
-                    let find_name = |id: &str| -> String {
-                        contacts
-                            .iter()
-                            .find(|c| c.id() == id)
-                            .map(|c| c.display_name().to_string())
-                            .unwrap_or_else(|| id.to_string())
-                    };
-                    app.duplicates_state = DuplicatesState {
-                        pairs: pairs
-                            .into_iter()
-                            .map(|p| DuplicateEntry {
-                                name1: find_name(&p.id1),
-                                id1: p.id1,
-                                name2: find_name(&p.id2),
-                                id2: p.id2,
-                                similarity: p.similarity,
-                            })
-                            .collect(),
-                        selected: 0,
-                    };
-                    app.goto(Screen::ContactDuplicates);
-                }
+                Ok(_) => app.goto(Screen::ContactDuplicates),
                 Err(e) => app.set_status(format!("Error: {}", e)),
             }
         }
         KeyCode::Char('i') => {
-            // Open contact import screen
             app.import_state = ImportState::default();
             app.input_mode = InputMode::Editing;
             app.goto(Screen::ContactImport);
         }
         KeyCode::Char('L') => {
-            // Open contact limit screen
-            let limit = app.app_engine.vauchi().get_contact_limit().unwrap_or(500);
-            let count = app.app_engine.vauchi().contact_count().unwrap_or(0);
-            app.contact_limit_state = ContactLimitState {
-                current_limit: limit,
-                current_count: count,
-                limit_input: limit.to_string(),
-                editing: false,
-            };
+            // Engine owns current_limit / current_count via ContactLimit screen.
             app.goto(Screen::ContactLimit);
         }
         _ => {}
