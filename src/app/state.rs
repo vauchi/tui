@@ -215,13 +215,6 @@ pub struct LockState {
     pub error: bool,
 }
 
-/// State for the visibility screen.
-#[derive(Debug, Default)]
-pub struct VisibilityState {
-    pub contact_id: Option<String>,
-    pub selected_field: usize,
-}
-
 /// State for the backup screen.
 #[derive(Debug, Default)]
 pub struct BackupState {

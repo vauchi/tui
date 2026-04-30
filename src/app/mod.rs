@@ -104,8 +104,9 @@ pub struct App {
     pub selected_contact_field: usize,
     /// Text input buffer
     pub input_buffer: String,
-    /// Visibility screen state
-    pub visibility_state: VisibilityState,
+    /// Selected field index in the ContactVisibility screen (terminal-only).
+    /// Contact id comes from `app_engine.current_app_screen()`.
+    pub selected_visibility_field: usize,
     /// Backup screen state
     pub backup_state: BackupState,
     /// Selected device index
@@ -116,8 +117,6 @@ pub struct App {
     pub contact_search_query: String,
     /// Contact search mode active
     pub contact_search_mode: bool,
-    /// Current exchange QR data (for expiration tracking)
-    pub current_qr: Option<vauchi_core::api::ExchangeQrData>,
     /// Sync state
     pub sync_state: SyncState,
     /// Delivery state
@@ -241,13 +240,12 @@ impl App {
             selected_field: 0,
             selected_contact_field: 0,
             input_buffer: String::new(),
-            visibility_state: VisibilityState::default(),
+            selected_visibility_field: 0,
             backup_state: BackupState::default(),
             selected_device: 0,
             device_link_result: None,
             contact_search_query: String::new(),
             contact_search_mode: false,
-            current_qr: None,
             sync_state: SyncState::default(),
             delivery_state: DeliveryState::default(),
             privacy_state: PrivacyState::default(),

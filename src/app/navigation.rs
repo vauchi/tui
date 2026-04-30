@@ -269,7 +269,7 @@ impl App {
                 self.goto(Screen::ContactDetail);
             }
             Screen::ContactVisibility => {
-                self.visibility_state = VisibilityState::default();
+                self.selected_visibility_field = 0;
                 self.goto(Screen::ContactDetail);
             }
             Screen::VerifyFingerprint => self.goto(Screen::ContactDetail),

@@ -340,12 +340,14 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('v') => {
-            // Open visibility settings for this contact
+            // Open visibility settings for this contact. The engine's
+            // AppScreen::ContactVisibility carries the contact_id; locally
+            // we only track the selected field index.
             if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
                 && let Some(contact) = contacts.get(app.selected_contact)
             {
-                app.visibility_state.contact_id = Some(contact.id().to_string());
-                app.visibility_state.selected_field = 0;
+                app.selected_contact_id = Some(contact.id().to_string());
+                app.selected_visibility_field = 0;
                 app.goto(Screen::ContactVisibility);
             }
         }
@@ -509,28 +511,33 @@ pub(super) fn handle_action_menu_keys(app: &mut App, key: KeyCode) {
 pub(super) fn handle_visibility_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
-            // Count own card fields for navigation bounds
             if let Ok(Some(card)) = app.app_engine.vauchi().own_card()
-                && app.visibility_state.selected_field < card.fields().len().saturating_sub(1)
+                && app.selected_visibility_field < card.fields().len().saturating_sub(1)
             {
-                app.visibility_state.selected_field += 1;
+                app.selected_visibility_field += 1;
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
-            if app.visibility_state.selected_field > 0 {
-                app.visibility_state.selected_field -= 1;
+            if app.selected_visibility_field > 0 {
+                app.selected_visibility_field -= 1;
             }
         }
         KeyCode::Char(' ') | KeyCode::Enter => {
-            if let Some(ref contact_id) = app.visibility_state.contact_id
+            let contact_id = match app.app_engine.current_app_screen() {
+                vauchi_app::ui::AppScreen::ContactVisibility { contact_id } => {
+                    Some(contact_id.clone())
+                }
+                _ => app.selected_contact_id.clone(),
+            };
+            if let Some(contact_id) = contact_id
                 && let Ok(Some(card)) = app.app_engine.vauchi().own_card()
-                && let Some(field) = card.fields().get(app.visibility_state.selected_field)
+                && let Some(field) = card.fields().get(app.selected_visibility_field)
             {
                 let field_label = field.label().to_string();
                 match app
                     .app_engine
                     .vauchi()
-                    .toggle_field_visibility(contact_id, &field_label)
+                    .toggle_field_visibility(&contact_id, &field_label)
                 {
                     Ok(now_visible) => {
                         let status = if now_visible {
