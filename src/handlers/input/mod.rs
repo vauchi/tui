@@ -233,7 +233,12 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Settings => handle_settings_keys(app, key),
         Screen::Help => handle_help_keys(app, key),
         // Form dialogs: handled by engine guard above when app_engine is present
-        Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl => {
+        Screen::AddField
+        | Screen::EditField
+        | Screen::EditName
+        | Screen::EditRelayUrl
+        | Screen::CreateGroup
+        | Screen::RenameGroup => {
             eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
         }
         Screen::Devices => handle_devices_keys(app, key),

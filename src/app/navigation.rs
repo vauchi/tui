@@ -55,6 +55,8 @@ impl App {
             FormDialogType::EditField { .. } => Screen::EditField,
             FormDialogType::EditName { .. } => Screen::EditName,
             FormDialogType::EditRelayUrl { .. } => Screen::EditRelayUrl,
+            FormDialogType::CreateGroup => Screen::CreateGroup,
+            FormDialogType::RenameGroup { .. } => Screen::RenameGroup,
             _ => return,
         };
         self.clear_contact_search_if_leaving(screen);
@@ -283,6 +285,8 @@ impl App {
                 self.groups_state.selected_contact_in_group = 0;
                 self.goto(Screen::Groups);
             }
+            Screen::CreateGroup => self.goto(Screen::Groups),
+            Screen::RenameGroup => self.goto(Screen::GroupDetail),
             Screen::ContactDuplicates => self.goto(Screen::Contacts),
             Screen::ContactMerge => self.goto(Screen::ContactDuplicates),
             Screen::ContactLimit => self.goto(Screen::Contacts),
@@ -322,7 +326,9 @@ impl App {
             // 2: Exchange
             Screen::Exchange => Some(2),
             // 3: Groups and sub-screens
-            Screen::Groups | Screen::GroupDetail => Some(3),
+            Screen::Groups | Screen::GroupDetail | Screen::CreateGroup | Screen::RenameGroup => {
+                Some(3)
+            }
             // 4: More and all infrastructure screens
             Screen::More
             | Screen::Settings

@@ -5,7 +5,7 @@
 //! Contact-related input handlers: contact list, detail, actions, visibility.
 
 use crossterm::event::KeyCode;
-use vauchi_app::ui::{UserAction, WorkflowEngine};
+use vauchi_app::ui::{FormDialogType, UserAction, WorkflowEngine};
 
 use crate::app::{ActionMenuState, App, ImportState, InputMode, Screen};
 use crate::helpers;
@@ -133,9 +133,8 @@ pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
             app.groups_state.selected_group = 0;
         }
         KeyCode::Char('n') => {
-            // Start creating a new group
-            app.groups_state.edit_mode = true;
-            app.groups_state.group_name_input.clear();
+            // Engine-driven: route through FormDialogEngine.
+            app.goto_form_dialog(FormDialogType::CreateGroup);
         }
         KeyCode::Char('j') | KeyCode::Down => {
             if let Ok(groups) = app.app_engine.vauchi().list_groups() {
@@ -172,30 +171,6 @@ pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
 
 /// Handle input for the group detail screen.
 pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
-    if app.groups_state.edit_mode {
-        match key {
-            KeyCode::Esc => {
-                app.groups_state.edit_mode = false;
-                app.groups_state.group_name_input.clear();
-            }
-            KeyCode::Enter => {
-                // Save the group name (create or rename)
-                app.groups_state.edit_mode = false;
-                app.groups_state.group_name_input.clear();
-            }
-            KeyCode::Backspace => {
-                app.groups_state.group_name_input.pop();
-            }
-            KeyCode::Char(c) => {
-                if app.groups_state.group_name_input.len() < 50 {
-                    app.groups_state.group_name_input.push(c);
-                }
-            }
-            _ => {}
-        }
-        return;
-    }
-
     match key {
         KeyCode::Char('j') | KeyCode::Down => {
             if let Ok(groups) = app.app_engine.vauchi().list_groups()
@@ -212,12 +187,23 @@ pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Char('r') => {
-            // Start renaming
-            app.groups_state.edit_mode = true;
-            if let Ok(groups) = app.app_engine.vauchi().list_groups()
-                && let Some(group) = groups.get(app.groups_state.selected_group)
+            // Engine-driven rename. The engine knows which group via
+            // `AppScreen::GroupDetail { group_id }`; we read its name
+            // for the FormDialog initial value.
+            let group_info = if let vauchi_app::ui::AppScreen::GroupDetail { group_id } =
+                app.app_engine.current_app_screen().clone()
+                && let Ok(groups) = app.app_engine.vauchi().list_groups()
+                && let Some(group) = groups.iter().find(|g| g.id() == group_id)
             {
-                app.groups_state.group_name_input = group.name().to_string();
+                Some((group_id, group.name().to_string()))
+            } else {
+                None
+            };
+            if let Some((group_id, current_name)) = group_info {
+                app.goto_form_dialog(FormDialogType::RenameGroup {
+                    group_id,
+                    current_name,
+                });
             }
         }
         _ => {}

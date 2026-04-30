@@ -63,6 +63,10 @@ pub enum Screen {
     Groups,
     /// Group detail view
     GroupDetail,
+    /// Create-group form dialog (FormDialogType::CreateGroup).
+    CreateGroup,
+    /// Rename-group form dialog (FormDialogType::RenameGroup).
+    RenameGroup,
     // -- SP-21 Onboarding Wizard --
     /// Welcome screen with privacy highlights
     SetupWelcome,
@@ -239,20 +243,13 @@ pub struct ActionMenuState {
 }
 
 /// State for the groups management screen — terminal-only navigation
-/// state. The engine owns group identity (`AppScreen::GroupDetail
-/// { group_id }`) and create/rename via `FormDialogEngine`
-/// (`FormDialogType::CreateGroup`, `RenameGroup`).
+/// state. Group identity comes from `AppScreen::GroupDetail
+/// { group_id }`; create/rename go through `FormDialogEngine` via
+/// `goto_form_dialog(FormDialogType::CreateGroup | RenameGroup)`.
 #[derive(Debug, Default)]
 pub struct GroupsState {
     /// Currently selected group index in the list.
     pub selected_group: usize,
-    /// Group edit mode (for creating/renaming).
-    /// TODO: migrate to `FormDialogEngine` (CreateGroup/RenameGroup);
-    /// requires Screen variants for the dialogs.
-    pub edit_mode: bool,
-    /// Input buffer for group name (when creating or renaming).
-    /// TODO: migrate alongside `edit_mode`.
-    pub group_name_input: String,
     /// Currently selected contact index in group detail view.
     pub selected_contact_in_group: usize,
     /// Search query for filtering groups.

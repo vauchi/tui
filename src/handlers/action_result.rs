@@ -95,6 +95,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                             FormDialogType::EditField { .. } => Screen::EditField,
                             FormDialogType::EditName { .. } => Screen::EditName,
                             FormDialogType::EditRelayUrl { .. } => Screen::EditRelayUrl,
+                            FormDialogType::CreateGroup => Screen::CreateGroup,
+                            FormDialogType::RenameGroup { .. } => Screen::RenameGroup,
                             _ => app.screen, // unknown variant — stay
                         };
                     }
@@ -135,6 +137,8 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                 Screen::EditField => app.set_status("Entry updated"),
                 Screen::EditName => app.set_status("Name updated"),
                 Screen::EditRelayUrl => app.set_status("Relay URL updated"),
+                Screen::CreateGroup => app.set_status("Group created"),
+                Screen::RenameGroup => app.set_status("Group renamed"),
                 _ => {}
             }
         }
