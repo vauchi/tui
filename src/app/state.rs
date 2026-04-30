@@ -238,18 +238,20 @@ pub struct ActionMenuState {
     pub selected: usize,
 }
 
-/// State for the groups management screen.
+/// State for the groups management screen — terminal-only navigation
+/// state. The engine owns group identity (`AppScreen::GroupDetail
+/// { group_id }`) and create/rename via `FormDialogEngine`
+/// (`FormDialogType::CreateGroup`, `RenameGroup`).
 #[derive(Debug, Default)]
 pub struct GroupsState {
     /// Currently selected group index in the list.
     pub selected_group: usize,
-    /// ID of the currently selected group (for engine routing).
-    pub selected_group_id: Option<String>,
-    /// Whether to show group detail view.
-    pub show_group_detail: bool,
     /// Group edit mode (for creating/renaming).
+    /// TODO: migrate to `FormDialogEngine` (CreateGroup/RenameGroup);
+    /// requires Screen variants for the dialogs.
     pub edit_mode: bool,
     /// Input buffer for group name (when creating or renaming).
+    /// TODO: migrate alongside `edit_mode`.
     pub group_name_input: String,
     /// Currently selected contact index in group detail view.
     pub selected_contact_in_group: usize,

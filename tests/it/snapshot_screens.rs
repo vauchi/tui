@@ -632,15 +632,16 @@ fn test_snapshot_groups() {
 // @scenario: contacts_management:View group detail
 #[test]
 fn test_snapshot_group_detail() {
+    use vauchi_app::ui::AppScreen;
     let (mut app, _tmp) = create_app_with_contacts(10);
-    // Get first group ID
     let groups = app.app_engine.vauchi().list_groups().expect("list groups");
     let group_id = groups
         .first()
         .map(|g| g.id().to_string())
         .expect("has groups");
-    app.groups_state.selected_group_id = Some(group_id);
-    app.goto(Screen::GroupDetail);
+    app.app_engine
+        .navigate_to(AppScreen::GroupDetail { group_id });
+    app.screen = Screen::GroupDetail;
     let output = render_to_string(&mut app);
     assert_snap!("group_detail", "Groups", "press Enter on group", output);
 }
@@ -648,15 +649,17 @@ fn test_snapshot_group_detail() {
 // @scenario: contacts_management:View empty group detail
 #[test]
 fn test_snapshot_group_detail_empty() {
+    use vauchi_app::ui::AppScreen;
     let (mut app, _tmp) = create_app_with_identity();
-    // Create a group with no contacts
     let group = app
         .app_engine
         .vauchi()
         .create_group("Empty Group")
         .expect("create group");
-    app.groups_state.selected_group_id = Some(group.id().to_string());
-    app.goto(Screen::GroupDetail);
+    app.app_engine.navigate_to(AppScreen::GroupDetail {
+        group_id: group.id().to_string(),
+    });
+    app.screen = Screen::GroupDetail;
     let output = render_to_string(&mut app);
     assert_snap!(
         "group_detail_empty",

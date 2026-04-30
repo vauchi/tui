@@ -159,7 +159,9 @@ pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
             }
         }
         KeyCode::Enter => {
-            app.groups_state.show_group_detail = true;
+            // Engine drives Groups → GroupDetail navigation via the action bar
+            // (Groups WorkflowEngine emits NavigateTo(GroupDetail{group_id})).
+            // Local screen is synced via action_result.rs::NavigateTo.
             app.goto(Screen::GroupDetail);
         }
         // 'd' for group deletion is handled by core's InlineConfirm via the action bar

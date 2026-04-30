@@ -398,10 +398,13 @@ fn navigate_to_syncs_group_detail_screen() {
     });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::GroupDetail);
-    assert_eq!(
-        app.groups_state.selected_group_id.as_deref(),
-        Some("g1"),
-        "selected_group_id should be set"
+    // Engine carries group_id on its current AppScreen — no local mirror.
+    assert!(
+        matches!(
+            app.app_engine.current_app_screen(),
+            AppScreen::GroupDetail { group_id } if group_id == "g1"
+        ),
+        "engine should carry group_id on AppScreen::GroupDetail"
     );
 }
 

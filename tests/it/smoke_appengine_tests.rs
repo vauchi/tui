@@ -280,8 +280,11 @@ fn smoke_support_screen_renders_via_engine() {
 // @internal
 #[test]
 fn smoke_group_detail_screen_renders_via_engine() {
+    use vauchi_app::ui::AppScreen;
     let (mut app, _dir) = create_app_with_identity();
-    app.groups_state.selected_group_id = Some("test-group".into());
+    app.app_engine.navigate_to(AppScreen::GroupDetail {
+        group_id: "test-group".into(),
+    });
     app.screen = Screen::GroupDetail;
     let output = render_to_string(&mut app, 80, 24);
     assert!(

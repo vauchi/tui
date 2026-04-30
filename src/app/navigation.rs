@@ -162,14 +162,10 @@ impl App {
             Screen::Recovery => Some(AppScreen::Recovery),
             Screen::More => Some(AppScreen::More),
             Screen::Groups => Some(AppScreen::Groups),
-            Screen::GroupDetail => {
-                self.groups_state
-                    .selected_group_id
-                    .as_ref()
-                    .map(|id| AppScreen::GroupDetail {
-                        group_id: id.clone(),
-                    })
-            }
+            // GroupDetail is engine-driven: the Groups WorkflowEngine
+            // emits `NavigateTo(GroupDetail { group_id })` when the user
+            // picks a group, and `action_result.rs` syncs `app.screen`.
+            Screen::GroupDetail => None,
             Screen::ContactVisibility => {
                 self.selected_contact_id
                     .as_ref()
@@ -284,7 +280,6 @@ impl App {
                 self.goto(Screen::MyInfo);
             }
             Screen::GroupDetail => {
-                self.groups_state.show_group_detail = false;
                 self.groups_state.selected_contact_in_group = 0;
                 self.goto(Screen::Groups);
             }

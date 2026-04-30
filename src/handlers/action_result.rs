@@ -77,8 +77,9 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     vauchi_app::ui::AppScreen::More => app.screen = Screen::More,
                     vauchi_app::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
                     vauchi_app::ui::AppScreen::Support => app.screen = Screen::Support,
-                    vauchi_app::ui::AppScreen::GroupDetail { group_id } => {
-                        app.groups_state.selected_group_id = Some(group_id.clone());
+                    vauchi_app::ui::AppScreen::GroupDetail { .. } => {
+                        // Engine carries the group_id on its current AppScreen;
+                        // renderers and handlers read it from there.
                         app.screen = Screen::GroupDetail;
                     }
                     vauchi_app::ui::AppScreen::ContactVisibility { contact_id } => {
