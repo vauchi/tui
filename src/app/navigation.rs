@@ -202,12 +202,19 @@ impl App {
 
     /// Go back to the previous screen.
     ///
-    /// All arms route through `goto()` (single sync path), so AppEngine
-    /// always reflects the new screen. Setup wizard, Lock, and the
+    /// Engine-driven screens delegate to `app_engine.navigate_back()`,
+    /// which pops `nav_history` and restores the prior `AppScreen`. The
+    /// resulting `AppScreen` is reverse-mapped onto `self.screen` via
+    /// `sync_screen_from_engine`. Setup wizard, Lock, and the
     /// ActionMenu overlay are TUI-only states that AppEngine doesn't
-    /// know about and so dispatch directly. Per-screen state struct
-    /// resets are kept inline; Phase 2 of the plan removes those
-    /// structs and these resets with them.
+    /// know about, so they keep explicit dispatch.
+    ///
+    /// Per-screen state-struct resets that the inline arms used to do
+    /// (PrivacyState::default, EmergencyState::default, etc.) live on
+    /// the engine side now — the engine rebuilds the parent screen
+    /// fresh after `navigate_back`. Local UI-only resets that don't
+    /// roundtrip through the engine (`selected_contact_id`,
+    /// `selected_visibility_field`, `device_link_result`) clear here.
     pub fn go_back(&mut self) {
         match self.screen {
             // TUI-only states (no AppEngine navigation).
@@ -221,77 +228,108 @@ impl App {
                 self.goto(Screen::ContactDetail);
             }
 
-            // Engine-driven screens — `goto()` navigates AppEngine.
-            Screen::Contacts | Screen::Exchange | Screen::More => self.goto(Screen::MyInfo),
-            Screen::Settings
-            | Screen::Help
-            | Screen::Recovery
-            | Screen::Sync
-            | Screen::Activity
-            | Screen::Delivery => self.goto(Screen::More),
-            Screen::Devices => {
-                self.device_link_result = None;
-                self.goto(Screen::More);
+            // Setup-time `Backup` and `AddField` retain their explicit
+            // arms because the bootstrap flow has no engine history to
+            // pop back to — the parent is the in-progress wizard step,
+            // which AppEngine doesn't track.
+            Screen::Backup if !self.app_engine.vauchi().has_identity() => {
+                self.goto(Screen::SetupWelcome);
             }
-            Screen::DeviceReplacement => self.goto(Screen::More),
-            Screen::Privacy => {
-                self.privacy_state = PrivacyState::default();
-                self.goto(Screen::Settings);
+            Screen::AddField if self.onboarding_state.identity_created => {
+                self.goto(Screen::SetupAddFields);
             }
-            Screen::Support => self.goto(Screen::Settings),
-            Screen::Emergency => {
-                self.emergency_state = EmergencyState::default();
-                self.goto(Screen::Settings);
+
+            // Engine-driven screens — delegate to AppEngine.
+            _ => {
+                // Local UI-only state resets that don't survive a parent
+                // re-render. These are TUI presentation state, not data.
+                self.clear_screen_local_state();
+
+                self.app_engine.navigate_back();
+                self.sync_screen_from_engine();
             }
-            Screen::Duress => {
-                self.duress_state = DuressState::default();
-                self.goto(Screen::Settings);
-            }
-            Screen::Backup => {
-                if self.app_engine.vauchi().has_identity() {
-                    self.goto(Screen::More);
-                } else {
-                    self.goto(Screen::SetupWelcome);
-                }
-            }
-            Screen::ContactDetail => {
-                self.selected_contact_id = None;
-                self.goto(Screen::Contacts);
-            }
-            Screen::ContactEdit => {
-                self.render_state = ScreenRenderState::default();
-                self.goto(Screen::ContactDetail);
-            }
-            Screen::ContactVisibility => {
-                self.selected_visibility_field = 0;
-                self.goto(Screen::ContactDetail);
-            }
-            Screen::VerifyFingerprint => self.goto(Screen::ContactDetail),
-            Screen::AddField => {
-                let target = if self.onboarding_state.identity_created {
-                    Screen::SetupAddFields
-                } else {
-                    Screen::MyInfo
-                };
-                self.goto(target);
-            }
-            Screen::EditField => self.goto(Screen::MyInfo),
-            Screen::EditName | Screen::EditRelayUrl => self.goto(Screen::Settings),
-            Screen::Groups => {
-                self.groups_state = GroupsState::default();
-                self.goto(Screen::MyInfo);
-            }
-            Screen::GroupDetail => {
-                self.groups_state.selected_contact_in_group = 0;
-                self.goto(Screen::Groups);
-            }
-            Screen::CreateGroup => self.goto(Screen::Groups),
-            Screen::RenameGroup => self.goto(Screen::GroupDetail),
-            Screen::ContactDuplicates => self.goto(Screen::Contacts),
-            Screen::ContactMerge => self.goto(Screen::ContactDuplicates),
-            Screen::ContactLimit => self.goto(Screen::Contacts),
+        }
+    }
+
+    /// Clear TUI-presentation-only state for the screen we're leaving
+    /// via engine-driven back-navigation. Mirrors the inline resets the
+    /// old arm-based `go_back` did before delegating to `goto()`.
+    fn clear_screen_local_state(&mut self) {
+        match self.screen {
+            Screen::ContactDetail => self.selected_contact_id = None,
+            Screen::ContactEdit => self.render_state = ScreenRenderState::default(),
+            Screen::ContactVisibility => self.selected_visibility_field = 0,
+            Screen::Devices => self.device_link_result = None,
+            Screen::Privacy => self.privacy_state = PrivacyState::default(),
+            Screen::Emergency => self.emergency_state = EmergencyState::default(),
+            Screen::Duress => self.duress_state = DuressState::default(),
+            Screen::Groups => self.groups_state = GroupsState::default(),
+            Screen::GroupDetail => self.groups_state.selected_contact_in_group = 0,
             _ => {}
         }
+    }
+
+    /// Reverse map `app_engine.current_app_screen()` onto `self.screen`
+    /// after engine-driven navigation (`navigate_back`,
+    /// engine-emitted `NavigateTo` results). Inverse of
+    /// `engine_target_for_screen`. Falls back to MyInfo for screens
+    /// AppEngine has but TUI doesn't (or hasn't migrated yet).
+    pub(crate) fn sync_screen_from_engine(&mut self) {
+        let new_screen = match self.app_engine.current_app_screen() {
+            AppScreen::MyInfo => Screen::MyInfo,
+            AppScreen::Contacts => Screen::Contacts,
+            AppScreen::Exchange => Screen::Exchange,
+            AppScreen::Settings => Screen::Settings,
+            AppScreen::Help => Screen::Help,
+            AppScreen::Backup => Screen::Backup,
+            AppScreen::DeliveryStatus => Screen::Delivery,
+            AppScreen::DeviceManagement => Screen::Devices,
+            AppScreen::DuressPin => Screen::Duress,
+            AppScreen::EmergencyShred => Screen::Emergency,
+            AppScreen::ContactDetail { contact_id } => {
+                self.selected_contact_id = Some(contact_id.clone());
+                Screen::ContactDetail
+            }
+            AppScreen::ContactEdit { contact_id } => {
+                self.selected_contact_id = Some(contact_id.clone());
+                Screen::ContactEdit
+            }
+            AppScreen::Sync => Screen::Sync,
+            AppScreen::ActivityLog => Screen::Activity,
+            AppScreen::Recovery => Screen::Recovery,
+            AppScreen::More => Screen::More,
+            AppScreen::Groups => Screen::Groups,
+            AppScreen::GroupDetail { .. } => Screen::GroupDetail,
+            AppScreen::ContactVisibility { contact_id } => {
+                self.selected_contact_id = Some(contact_id.clone());
+                Screen::ContactVisibility
+            }
+            AppScreen::Privacy => Screen::Privacy,
+            AppScreen::Support => Screen::Support,
+            AppScreen::DeviceReplacement => Screen::DeviceReplacement,
+            AppScreen::ContactDuplicates => Screen::ContactDuplicates,
+            AppScreen::ContactMerge { .. } => Screen::ContactMerge,
+            AppScreen::ContactLimit => Screen::ContactLimit,
+            AppScreen::VerifyFingerprint { contact_id } => {
+                self.selected_contact_id = Some(contact_id.clone());
+                Screen::VerifyFingerprint
+            }
+            AppScreen::Onboarding => Screen::SetupWelcome,
+            AppScreen::Lock => Screen::Lock,
+            // FormDialog / DeepLinkConsent: TUI doesn't render these as
+            // top-level screens; AppEngine pops back through them
+            // automatically. Stay on whatever the next non-overlay
+            // screen is — for now fall back to MyInfo.
+            AppScreen::FormDialog { .. } | AppScreen::DeepLinkConsent { .. } => Screen::MyInfo,
+            // `AppScreen` is `#[non_exhaustive]` — any future variant
+            // not yet wired into TUI lands on MyInfo until the migration
+            // catches up.
+            _ => Screen::MyInfo,
+        };
+        self.screen = new_screen;
+        self.input_mode = InputMode::Normal;
+        self.sync_nav_index();
+        self.render_state = ScreenRenderState::default();
     }
 
     /// Keep `focus.nav_index` in sync with the current screen so that

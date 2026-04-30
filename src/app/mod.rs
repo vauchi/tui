@@ -189,7 +189,12 @@ impl App {
             }
         };
 
-        // Navigate AppEngine to the correct initial screen
+        // Bootstrap AppEngine to the correct initial screen.
+        //
+        // `set_initial_screen` (core!737) does NOT push the prior screen
+        // (`AppScreen::Onboarding`) to `nav_history`. Without it, the
+        // user's first `navigate_back` lands on Onboarding instead of
+        // their expected parent. Only call this once, during bootstrap.
         let mut app_engine = app_engine;
         if has_identity {
             let target = match initial_screen {
@@ -197,7 +202,7 @@ impl App {
                 Screen::Contacts => AppScreen::Contacts,
                 _ => AppScreen::MyInfo,
             };
-            app_engine.navigate_to(target);
+            app_engine.set_initial_screen(target);
         }
 
         // Create engines for initial screen
