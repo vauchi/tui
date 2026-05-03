@@ -1,13 +1,12 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 581
 description: ContactDetail → press Enter on field
 expression: output
 ---
                                 Abigale Schroeder
 
 ┌ Perspective ─────────────────────────────────────────────────────────────────┐
-
+  [Avatar: AS]
 ┌ Abigale Schroeder ───────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Fields ──────────────────────────────────────────────────────────────────────┐

@@ -1,12 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 50
 description: app_start → identity exists
 expression: output
 ---
                                    Alice Smith
 
-
+  [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │

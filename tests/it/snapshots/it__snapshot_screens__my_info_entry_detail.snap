@@ -1,12 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 880
 description: MyInfo → press Enter on entry
 expression: output
 ---
                                    Alice Smith
 
-
+  [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │

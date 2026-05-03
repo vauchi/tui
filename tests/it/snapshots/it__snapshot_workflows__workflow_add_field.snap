@@ -1,13 +1,12 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 128
 description: "Add field happy path: MyInfo → AddField → MyInfo"
 expression: output
 ---
 ═══ Step 1 ─ MyInfo — view card fields ═════════════════════
                                    Alice Smith
 
-
+  [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
@@ -59,7 +58,7 @@ Comment (your eyes only, optional)
 ═══ Step 3 ─ MyInfo — field saved, return to card ══════════
                                    Alice Smith
 
-
+  [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
