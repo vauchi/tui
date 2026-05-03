@@ -735,6 +735,10 @@ criteria = "safe-to-deploy"
 version = "0.25.0"
 criteria = "safe-to-deploy"
 
+[[exemptions.imageproc]]
+version = "0.25.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.indoc]]
 version = "2.0.7"
 criteria = "safe-to-deploy"
