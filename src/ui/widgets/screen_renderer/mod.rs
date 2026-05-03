@@ -245,6 +245,8 @@ fn render_components(
             Component::EditableText { .. } => Constraint::Length(3),
             Component::Banner { .. } => Constraint::Length(2),
             Component::Dropdown { .. } => Constraint::Length(1),
+            Component::AvatarPreview { .. } => Constraint::Length(1),
+            Component::Slider { .. } => Constraint::Length(1),
             _ => Constraint::Length(1),
         })
         .collect();
@@ -479,8 +481,23 @@ fn render_components(
                 let para = Paragraph::new(line);
                 f.render_widget(para, chunk);
             }
+            Component::AvatarPreview { initials, .. } => {
+                let text = format!("  [Avatar: {}]", initials);
+                f.render_widget(
+                    Paragraph::new(text).style(Style::default().fg(theme.fg)),
+                    chunk,
+                );
+            }
+            Component::Slider { label, value, .. } => {
+                let text = format!("  {}: {:.2}", label, value);
+                f.render_widget(
+                    Paragraph::new(text).style(Style::default().fg(theme.fg)),
+                    chunk,
+                );
+            }
             _ => {
-                // Unknown component variant — skip rendering
+                // Future Component variants — caught by CC-22 reachability
+                // test (F5 in 2026-05-03-tui-cli-next-work-audit.md).
             }
         }
     }
