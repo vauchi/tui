@@ -213,20 +213,17 @@ fn resolve_relay_url(data_dir: &Path) -> String {
         .unwrap_or_else(|| DEFAULT_RELAY_URL.to_string())
 }
 
-/// Derives a per-data-dir keychain key name using FNV-1a hash.
+/// Derives a stable per-install keychain key name from the install_id stored
+/// at `<data_dir>/install_id`.
 ///
-/// Ensures that TUI instances with different `--data-dir` values get
-/// separate OS keychain entries, preventing key collisions (T-M4).
-#[cfg(feature = "secure-storage")]
-fn keychain_key_name(data_dir: &Path) -> String {
-    let path_str = data_dir.to_string_lossy();
-    // FNV-1a hash — stable, well-defined algorithm (matches CLI implementation)
-    let mut hash: u64 = 0xcbf29ce484222325; // FNV offset basis
-    for byte in path_str.as_bytes() {
-        hash ^= *byte as u64;
-        hash = hash.wrapping_mul(0x100000001b3); // FNV prime
-    }
-    format!("storage_key_{:016x}", hash)
+/// The install_id moves with the data directory on rename — so the OS keychain
+/// entry stays reachable even if the user relocates `data_dir`. Two installs
+/// with distinct data directories get distinct ids and distinct keychain
+/// entries.
+#[cfg_attr(not(feature = "secure-storage"), allow(dead_code))]
+fn keychain_key_name(data_dir: &Path) -> Result<String> {
+    let install_id = vauchi_core::install_id::read_or_create_install_id(data_dir)?;
+    Ok(format!("storage_key_{install_id}"))
 }
 
 /// Loads or generates a per-installation random fallback key from `data_dir/.fallback-key`.
@@ -270,25 +267,18 @@ fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
 
 /// Loads or creates the storage encryption key using SecureStorage.
 ///
-/// When the `secure-storage` feature is enabled, uses the OS keychain
-/// with a per-data-dir key name (FNV-1a hash of the path) to prevent
-/// collisions between TUI instances with different `--data-dir` values.
-/// Migrates from the legacy fixed `"storage_key"` entry if present.
-///
+/// When the `secure-storage` feature is enabled, uses the OS keychain with a
+/// key name derived from the install_id stored next to the data directory.
 /// Otherwise, falls back to encrypted file storage.
 #[allow(unused_variables)]
 fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
     /// Key name for non-keychain (file-based) storage.
     const KEY_NAME: &str = "storage_key";
 
-    /// Legacy fixed keychain key name (pre per-data-dir fix).
-    #[cfg(feature = "secure-storage")]
-    const LEGACY_KEY_NAME: &str = "storage_key";
-
     #[cfg(feature = "secure-storage")]
     {
         let storage = PlatformKeyring::new("vauchi-tui");
-        let key_name = keychain_key_name(data_dir);
+        let key_name = keychain_key_name(data_dir)?;
 
         match storage.load_key(&key_name) {
             Ok(Some(bytes)) if bytes.len() == 32 => {
@@ -300,21 +290,6 @@ fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
                 anyhow::bail!("Invalid storage key length in keychain");
             }
             Ok(None) => {
-                // Try migrating from the old fixed key name
-                if let Ok(Some(legacy_bytes)) = storage.load_key(LEGACY_KEY_NAME) {
-                    if legacy_bytes.len() == 32 {
-                        // Migrate: save under new per-dir name, delete legacy entry
-                        storage.save_key(&key_name, &legacy_bytes).map_err(|e| {
-                            anyhow::anyhow!("Failed to migrate keychain key: {}", e)
-                        })?;
-                        let _ = storage.delete_key(LEGACY_KEY_NAME);
-                        let mut arr = [0u8; 32];
-                        arr.copy_from_slice(&legacy_bytes);
-                        return Ok(SymmetricKey::from_bytes(arr));
-                    }
-                }
-
-                // No existing key — generate a new one
                 let key = SymmetricKey::generate();
                 storage
                     .save_key(&key_name, key.as_bytes())
@@ -498,5 +473,51 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
                 handlers::Action::Continue => {}
             }
         }
+    }
+}
+
+// INLINE_TEST_REQUIRED: keychain_key_name is a private helper of the binary;
+// exposing it via tui's lib.rs purely for tests would over-widen the API.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    // @internal
+    #[test]
+    fn keychain_key_name_is_stable_across_calls() {
+        let temp_dir = tempdir().unwrap();
+        let name1 = keychain_key_name(temp_dir.path()).unwrap();
+        let name2 = keychain_key_name(temp_dir.path()).unwrap();
+        assert_eq!(name1, name2);
+    }
+
+    // @internal
+    #[test]
+    fn keychain_key_name_survives_data_dir_rename() {
+        // Regression: pre-fix, the key name was derived from `fnv1a(data_dir)`,
+        // so renaming the data directory orphaned the OS keychain entry. Now
+        // the name is derived from the install_id file, which moves with the
+        // data — rename is invisible to the keychain lookup.
+        let parent = tempdir().unwrap();
+        let original = parent.path().join("original");
+        std::fs::create_dir_all(&original).unwrap();
+        let name_before = keychain_key_name(&original).unwrap();
+
+        let renamed = parent.path().join("renamed");
+        std::fs::rename(&original, &renamed).unwrap();
+        let name_after = keychain_key_name(&renamed).unwrap();
+
+        assert_eq!(name_before, name_after);
+    }
+
+    // @internal
+    #[test]
+    fn keychain_key_name_differs_per_data_dir() {
+        let dir_a = tempdir().unwrap();
+        let dir_b = tempdir().unwrap();
+        let name_a = keychain_key_name(dir_a.path()).unwrap();
+        let name_b = keychain_key_name(dir_b.path()).unwrap();
+        assert_ne!(name_a, name_b);
     }
 }
