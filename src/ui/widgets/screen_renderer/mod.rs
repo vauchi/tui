@@ -592,4 +592,78 @@ mod tests {
         tokens.spacing.sm = 48;
         assert_eq!(component_padding_lines(&tokens), 3);
     }
+
+    /// Render `components` into a fresh `TestBackend` of size
+    /// `width × height` and return the buffer text. Mirrors the helper
+    /// in `dropdown.rs` so renderer dispatch can be exercised in isolation.
+    fn render_components_to_text(width: u16, height: u16, components: &[Component]) -> String {
+        use ratatui::Terminal;
+        use ratatui::backend::TestBackend;
+
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let theme = TuiTheme::default();
+        let tokens = DesignTokens::default();
+        let state = ScreenRenderState::default();
+        terminal
+            .draw(|f| {
+                render_components(f, f.area(), components, &state, &theme, &tokens);
+            })
+            .unwrap();
+        let buf = terminal.backend().buffer().clone();
+        let mut out = String::new();
+        for y in 0..buf.area.height {
+            for x in 0..buf.area.width {
+                out.push_str(buf[(x, y)].symbol());
+            }
+            out.push('\n');
+        }
+        out
+    }
+
+    /// `Component::AvatarPreview` must render *something* identifiable
+    /// — historically dropped by the catch-all `_` arm in render_components.
+    /// For TUI a placeholder showing the initials is acceptable.
+    // @internal
+    #[test]
+    fn render_avatar_preview_emits_visible_initials() {
+        let components = vec![Component::AvatarPreview {
+            id: "avatar".into(),
+            image_data: None,
+            initials: "AB".into(),
+            bg_color: None,
+            brightness: 0.0,
+            editable: false,
+            a11y: None,
+        }];
+        let text = render_components_to_text(40, 3, &components);
+        assert!(
+            text.contains("AB") || text.contains("Avatar"),
+            "expected avatar surface, got: {text:?}"
+        );
+    }
+
+    /// `Component::Slider` must render label + current value — historically
+    /// dropped by the catch-all `_` arm in render_components.
+    // @internal
+    #[test]
+    fn render_slider_emits_label_and_value() {
+        let components = vec![Component::Slider {
+            id: "brightness".into(),
+            label: "Brightness".into(),
+            value: 0.5,
+            min: 0.0,
+            max: 1.0,
+            step: 0.1,
+            min_icon: None,
+            max_icon: None,
+            a11y: None,
+        }];
+        let text = render_components_to_text(40, 3, &components);
+        assert!(text.contains("Brightness"), "expected label, got: {text:?}");
+        assert!(
+            text.contains("0.5") || text.contains("0.50"),
+            "expected current value, got: {text:?}"
+        );
+    }
 }
