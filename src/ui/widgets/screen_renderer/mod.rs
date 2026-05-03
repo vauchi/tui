@@ -18,6 +18,7 @@ use vauchi_app::DesignTokens;
 use vauchi_app::ui::{Component, ScreenModel, TextStyle};
 
 use super::card_preview::CardPreviewWidget;
+use super::dropdown::DropdownWidget;
 use super::field_list::FieldListWidget;
 use super::info_panel::InfoPanelWidget;
 use super::text_input::TextInputWidget;
@@ -243,6 +244,7 @@ fn render_components(
             Component::InlineConfirm { .. } => Constraint::Length(4),
             Component::EditableText { .. } => Constraint::Length(3),
             Component::Banner { .. } => Constraint::Length(2),
+            Component::Dropdown { .. } => Constraint::Length(1),
             _ => Constraint::Length(1),
         })
         .collect();
@@ -434,6 +436,21 @@ fn render_components(
                 };
                 let para = Paragraph::new(text).style(style);
                 f.render_widget(para, chunk);
+            }
+            Component::Dropdown {
+                label,
+                selected,
+                options,
+                ..
+            } => {
+                DropdownWidget {
+                    label,
+                    selected: selected.as_deref(),
+                    options,
+                    focused: is_focused,
+                    theme,
+                }
+                .render(f, chunk);
             }
             Component::Banner {
                 text,
