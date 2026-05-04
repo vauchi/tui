@@ -194,9 +194,6 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::StartDeviceLink => {
             app.screen = Screen::Devices;
         }
-        ActionResult::StartBackupImport => {
-            app.screen = Screen::Backup;
-        }
         ActionResult::RequestCamera => {
             // TUI can't open camera — show status message
             app.set_status("Camera not supported in terminal mode");

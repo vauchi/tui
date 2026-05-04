@@ -195,14 +195,6 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
             app.onboarding_state = OnboardingState::default();
             app.goto(Screen::MyInfo);
         }
-        ActionResult::StartBackupImport => {
-            app.backup_state.mode = BackupMode::Import;
-            app.backup_state.backup_data.clear();
-            app.backup_state.password.clear();
-            app.backup_state.focus = BackupFocus::Data;
-            app.input_mode = InputMode::Editing;
-            app.goto(Screen::Backup);
-        }
         ActionResult::ValidationError {
             component_id,
             message,

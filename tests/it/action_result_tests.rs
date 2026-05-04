@@ -87,14 +87,6 @@ fn start_device_link_sets_devices_screen() {
     assert_eq!(app.screen, Screen::Devices);
 }
 
-// @internal
-#[test]
-fn start_backup_import_sets_backup_screen() {
-    let mut app = create_app_with_identity();
-    handle_action_result(&mut app, ActionResult::StartBackupImport);
-    assert_eq!(app.screen, Screen::Backup);
-}
-
 // --- Status message variants ---
 
 // @internal
