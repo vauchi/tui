@@ -117,37 +117,37 @@ pub(super) fn map_component_key(
             }
         }
 
-        Component::CardPreview {
-            group_views,
-            selected_group,
+        Component::Preview {
+            variants,
+            selected_variant,
             ..
         } => match key {
             KeyCode::Left | KeyCode::Char('[') | KeyCode::Right | KeyCode::Char(']') => {
-                if group_views.is_empty() {
+                if variants.is_empty() {
                     return KeyResult::Consumed;
                 }
                 // Find current index and cycle to next/previous
-                let current_idx = selected_group
+                let current_idx = selected_variant
                     .as_ref()
-                    .and_then(|sg| group_views.iter().position(|g| &g.group_name == sg))
+                    .and_then(|sv| variants.iter().position(|v| &v.variant_id == sv))
                     .unwrap_or(0);
                 let next_idx = if matches!(key, KeyCode::Left | KeyCode::Char('[')) {
                     if current_idx == 0 {
-                        group_views.len() - 1
+                        variants.len() - 1
                     } else {
                         current_idx - 1
                     }
                 } else {
-                    (current_idx + 1) % group_views.len()
+                    (current_idx + 1) % variants.len()
                 };
                 KeyResult::Action(UserAction::GroupViewSelected {
-                    group_name: Some(group_views[next_idx].group_name.clone()),
+                    group_name: Some(variants[next_idx].variant_id.clone()),
                 })
             }
             _ => KeyResult::Unhandled,
         },
 
-        Component::ContactList { id, contacts, .. } => {
+        Component::List { id, items, .. } => {
             let idx = state.focused_component;
             let sel = state.selection_for(idx);
             match key {
@@ -161,7 +161,7 @@ pub(super) fn map_component_key(
                     }
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
-                    if sel < contacts.len().saturating_sub(1) {
+                    if sel < items.len().saturating_sub(1) {
                         state.component_selections[idx] = sel + 1;
                         state.ensure_visible(idx, 10);
                         KeyResult::Consumed
@@ -170,10 +170,10 @@ pub(super) fn map_component_key(
                     }
                 }
                 KeyCode::Enter => {
-                    if let Some(contact) = contacts.get(sel) {
+                    if let Some(item) = items.get(sel) {
                         KeyResult::Action(UserAction::ListItemSelected {
                             component_id: id.clone(),
-                            item_id: contact.id.clone(),
+                            item_id: item.id.clone(),
                         })
                     } else {
                         KeyResult::Consumed

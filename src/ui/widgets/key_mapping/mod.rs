@@ -571,7 +571,7 @@ mod tests {
         let screen = make_screen(
             vec![Component::FieldList {
                 id: "fields".into(),
-                fields: vec![FieldDisplay {
+                fields: vec![Field {
                     id: "field_0".into(),
                     field_type: "Email".into(),
                     label: "Email".into(),

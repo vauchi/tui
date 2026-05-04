@@ -12,11 +12,11 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Row, Table};
 
 use crate::theme::TuiTheme;
-use vauchi_app::ui::{FieldDisplay, UiFieldVisibility, VisibilityMode};
+use vauchi_app::ui::{Field, UiFieldVisibility, VisibilityMode};
 
 /// State needed to render a field list component.
 pub struct FieldListWidget<'a> {
-    pub fields: &'a [FieldDisplay],
+    pub fields: &'a [Field],
     pub visibility_mode: &'a VisibilityMode,
     pub available_groups: &'a [String],
     pub selected_index: usize,

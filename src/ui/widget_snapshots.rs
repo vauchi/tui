@@ -11,7 +11,7 @@ use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 
 use vauchi_app::ui::{
-    FieldDisplay, GroupCardView, InfoItem, ToggleItem, UiFieldVisibility, VisibilityMode,
+    Field, InfoItem, PreviewVariant, ToggleItem, UiFieldVisibility, VisibilityMode,
 };
 
 use crate::theme::TuiTheme;
@@ -221,7 +221,7 @@ fn toggle_list_unfocused() {
 fn field_list_show_hide_mode() {
     let theme = test_theme();
     let fields = vec![
-        FieldDisplay {
+        Field {
             id: "1".into(),
             field_type: "Email".into(),
             label: "Personal".into(),
@@ -229,7 +229,7 @@ fn field_list_show_hide_mode() {
             visibility: UiFieldVisibility::Shown,
             a11y: None,
         },
-        FieldDisplay {
+        Field {
             id: "2".into(),
             field_type: "Phone".into(),
             label: "Mobile".into(),
@@ -265,7 +265,7 @@ fn field_list_show_hide_mode() {
 fn field_list_per_group_mode() {
     let theme = test_theme();
     let fields = vec![
-        FieldDisplay {
+        Field {
             id: "1".into(),
             field_type: "Email".into(),
             label: "Work".into(),
@@ -273,7 +273,7 @@ fn field_list_per_group_mode() {
             visibility: UiFieldVisibility::Groups(vec!["Coworkers".into()]),
             a11y: None,
         },
-        FieldDisplay {
+        Field {
             id: "2".into(),
             field_type: "Phone".into(),
             label: "Home".into(),
@@ -337,7 +337,7 @@ fn field_list_empty() {
 fn card_preview_no_groups() {
     let theme = test_theme();
     let fields = vec![
-        FieldDisplay {
+        Field {
             id: "1".into(),
             field_type: "Email".into(),
             label: "Personal".into(),
@@ -345,7 +345,7 @@ fn card_preview_no_groups() {
             visibility: UiFieldVisibility::Shown,
             a11y: None,
         },
-        FieldDisplay {
+        Field {
             id: "2".into(),
             field_type: "Phone".into(),
             label: "Mobile".into(),
@@ -364,8 +364,8 @@ fn card_preview_no_groups() {
             CardPreviewWidget {
                 name: "Alice",
                 fields: &fields,
-                group_views: &[],
-                selected_group: None,
+                variants: &[],
+                selected_variant: None,
                 theme: &theme,
             }
             .render(f, area);
@@ -379,11 +379,11 @@ fn card_preview_no_groups() {
 #[test]
 fn card_preview_with_groups() {
     let theme = test_theme();
-    let group_views = vec![
-        GroupCardView {
-            group_name: "Family".into(),
+    let variants = vec![
+        PreviewVariant {
+            variant_id: "Family".into(),
             display_name: "Alice".into(),
-            visible_fields: vec![FieldDisplay {
+            visible_fields: vec![Field {
                 id: "1".into(),
                 field_type: "Phone".into(),
                 label: "Mobile".into(),
@@ -392,10 +392,10 @@ fn card_preview_with_groups() {
                 a11y: None,
             }],
         },
-        GroupCardView {
-            group_name: "Coworkers".into(),
+        PreviewVariant {
+            variant_id: "Coworkers".into(),
             display_name: "A. Smith".into(),
-            visible_fields: vec![FieldDisplay {
+            visible_fields: vec![Field {
                 id: "2".into(),
                 field_type: "Email".into(),
                 label: "Work".into(),
@@ -415,8 +415,8 @@ fn card_preview_with_groups() {
             CardPreviewWidget {
                 name: "Alice",
                 fields: &[],
-                group_views: &group_views,
-                selected_group: Some("Coworkers"),
+                variants: &variants,
+                selected_variant: Some("Coworkers"),
                 theme: &theme,
             }
             .render(f, area);
@@ -440,8 +440,8 @@ fn card_preview_no_fields() {
             CardPreviewWidget {
                 name: "Empty User",
                 fields: &[],
-                group_views: &[],
-                selected_group: None,
+                variants: &[],
+                selected_variant: None,
                 theme: &theme,
             }
             .render(f, area);

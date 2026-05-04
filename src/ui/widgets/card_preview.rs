@@ -2,30 +2,30 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! CardPreview widget — renders a `Component::CardPreview` as a Ratatui widget.
+//! CardPreview widget — renders a `Component::Preview` as a Ratatui widget.
 //!
 //! Shows a bordered box with card content. `[`/`]` or arrow keys switch between
-//! group views when available.
+//! preview variants when available.
 
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Tabs};
 
 use crate::theme::TuiTheme;
-use vauchi_app::ui::{FieldDisplay, GroupCardView};
+use vauchi_app::ui::{Field, PreviewVariant};
 
 /// State needed to render a card preview component.
 pub struct CardPreviewWidget<'a> {
     pub name: &'a str,
-    pub fields: &'a [FieldDisplay],
-    pub group_views: &'a [GroupCardView],
-    pub selected_group: Option<&'a str>,
+    pub fields: &'a [Field],
+    pub variants: &'a [PreviewVariant],
+    pub selected_variant: Option<&'a str>,
     pub theme: &'a TuiTheme,
 }
 
 impl<'a> CardPreviewWidget<'a> {
     /// Render the card preview into the given area.
     pub fn render(self, f: &mut Frame, area: Rect) {
-        let has_groups = !self.group_views.is_empty();
+        let has_groups = !self.variants.is_empty();
 
         let chunks = if has_groups {
             Layout::default()
@@ -42,17 +42,17 @@ impl<'a> CardPreviewWidget<'a> {
                 .split(area)
         };
 
-        // Group tabs (if applicable)
+        // Variant tabs (if applicable)
         let (card_area, display_name, display_fields) = if has_groups {
             let tab_titles: Vec<&str> = self
-                .group_views
+                .variants
                 .iter()
-                .map(|g| g.group_name.as_str())
+                .map(|v| v.variant_id.as_str())
                 .collect();
 
             let selected_idx = self
-                .selected_group
-                .and_then(|sg| tab_titles.iter().position(|t| *t == sg))
+                .selected_variant
+                .and_then(|sv| tab_titles.iter().position(|t| *t == sv))
                 .unwrap_or(0);
 
             let tabs = Tabs::new(
@@ -72,7 +72,7 @@ impl<'a> CardPreviewWidget<'a> {
 
             f.render_widget(tabs, chunks[0]);
 
-            let view = &self.group_views[selected_idx];
+            let view = &self.variants[selected_idx];
             (
                 chunks[1],
                 view.display_name.as_str(),

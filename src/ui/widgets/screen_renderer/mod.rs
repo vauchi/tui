@@ -221,15 +221,15 @@ fn render_components(
             Component::FieldList { fields, .. } => {
                 Constraint::Length((fields.len() as u16 + 2 + chrome).min(area.height / 2))
             }
-            Component::CardPreview { group_views, .. } => {
-                let extra = if group_views.is_empty() { 0 } else { chrome };
+            Component::Preview { variants, .. } => {
+                let extra = if variants.is_empty() { 0 } else { chrome };
                 Constraint::Min(8 + extra)
             }
             Component::InfoPanel { items, .. } => {
                 Constraint::Length((items.len() as u16 * 3 + chrome).min(area.height / 2))
             }
-            Component::ContactList { contacts, .. } => {
-                Constraint::Length((contacts.len() as u16 + chrome).min(area.height / 2).max(4))
+            Component::List { items, .. } => {
+                Constraint::Length((items.len() as u16 + chrome).min(area.height / 2).max(4))
             }
             Component::SettingsGroup { items, .. } => {
                 Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
@@ -312,18 +312,18 @@ fn render_components(
                 }
                 .render(f, chunk);
             }
-            Component::CardPreview {
+            Component::Preview {
                 name,
                 fields,
-                group_views,
-                selected_group,
+                variants,
+                selected_variant,
                 ..
             } => {
                 CardPreviewWidget {
                     name,
                     fields,
-                    group_views,
-                    selected_group: selected_group.as_deref(),
+                    variants,
+                    selected_variant: selected_variant.as_deref(),
                     theme,
                 }
                 .render(f, chunk);
@@ -339,15 +339,13 @@ fn render_components(
                 }
                 .render(f, chunk);
             }
-            Component::ContactList {
-                contacts,
-                searchable,
-                ..
+            Component::List {
+                items, searchable, ..
             } => {
                 render_lists::render_contact_list(
                     f,
                     chunk,
-                    contacts,
+                    items,
                     *searchable,
                     is_focused,
                     state,
@@ -690,8 +688,8 @@ mod tests {
     /// `every_known_component_variant_renders_non_empty` below.
     fn every_known_component() -> Vec<Component> {
         use vauchi_app::ui::{
-            ActionListItem, ContactItem, DropdownOption, FieldDisplay, InfoItem, InputType, QrMode,
-            SettingsItem, SettingsItemKind, Status, ToggleItem, UiFieldVisibility, VisibilityMode,
+            ActionListItem, DropdownOption, Field, InfoItem, InputType, Item, QrMode, SettingsItem,
+            SettingsItemKind, Status, ToggleItem, UiFieldVisibility, VisibilityMode,
         };
         vec![
             Component::Text {
@@ -725,7 +723,7 @@ mod tests {
             },
             Component::FieldList {
                 id: "fields".into(),
-                fields: vec![FieldDisplay {
+                fields: vec![Field {
                     id: "email".into(),
                     field_type: "email".into(),
                     label: "Email".into(),
@@ -737,11 +735,11 @@ mod tests {
                 available_groups: vec![],
                 a11y: None,
             },
-            Component::CardPreview {
+            Component::Preview {
                 name: "Alice".into(),
                 fields: vec![],
-                group_views: vec![],
-                selected_group: None,
+                variants: vec![],
+                selected_variant: None,
                 visible_fields: vec![],
                 avatar_data: None,
                 a11y: None,
@@ -757,15 +755,14 @@ mod tests {
                 }],
                 a11y: None,
             },
-            Component::ContactList {
+            Component::List {
                 id: "contacts".into(),
-                contacts: vec![ContactItem {
+                items: vec![Item {
                     id: "c1".into(),
                     name: "Bob".into(),
                     subtitle: None,
                     avatar_initials: "B".into(),
                     status: None,
-                    searchable_fields: vec![],
                     actions: vec![],
                     a11y: None,
                 }],

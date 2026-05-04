@@ -12,19 +12,19 @@ use vauchi_app::ui::SettingsItemKind;
 
 use super::ScreenRenderState;
 
-/// Render a contact list component with scrolling and selection indicator.
+/// Render a list component (e.g. `Component::List`) with scrolling and selection indicator.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn render_contact_list(
     f: &mut Frame,
     area: Rect,
-    contacts: &[vauchi_app::ui::ContactItem],
+    items_data: &[vauchi_app::ui::Item],
     _searchable: bool,
     is_focused: bool,
     state: &ScreenRenderState,
     component_idx: usize,
     theme: &TuiTheme,
 ) {
-    if contacts.is_empty() {
+    if items_data.is_empty() {
         let empty = Paragraph::new("  No contacts yet. Use Exchange to add one.")
             .style(Style::default().fg(theme.fg_secondary))
             .block(
@@ -52,22 +52,19 @@ pub(super) fn render_contact_list(
         }
     };
 
-    let total = contacts.len();
+    let total = items_data.len();
     let end = (scroll + visible_count).min(total);
 
-    let items: Vec<ListItem> = contacts[scroll..end]
+    let items: Vec<ListItem> = items_data[scroll..end]
         .iter()
         .enumerate()
-        .map(|(vi, contact)| {
+        .map(|(vi, item)| {
             let actual_idx = scroll + vi;
             let prefix = if actual_idx == selected { "▸" } else { " " };
-            let line = if let Some(sub) = &contact.subtitle {
-                format!(
-                    "{} {} {}  {}",
-                    prefix, contact.avatar_initials, contact.name, sub
-                )
+            let line = if let Some(sub) = &item.subtitle {
+                format!("{} {} {}  {}", prefix, item.avatar_initials, item.name, sub)
             } else {
-                format!("{} {} {}", prefix, contact.avatar_initials, contact.name)
+                format!("{} {} {}", prefix, item.avatar_initials, item.name)
             };
             let style = if actual_idx == selected && is_focused {
                 Style::default()
