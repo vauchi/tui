@@ -136,7 +136,7 @@ fn contract_contact_card_new_with_display_name() {
 #[test]
 fn contract_contact_card_add_field() {
     let mut card = ContactCard::new("TuiCard");
-    let field = ContactField::new(FieldType::Phone, "Mobile", "+1234567890");
+    let field = ContactField::new(FieldType::Phone, "Mobile", "+1234567890", 0);
     card.add_field(field).unwrap();
     assert_eq!(card.fields().len(), 1);
     assert_eq!(card.fields()[0].label(), "Mobile");
@@ -146,7 +146,7 @@ fn contract_contact_card_add_field() {
 #[test]
 fn contract_contact_card_serde_roundtrip() {
     let mut card = ContactCard::new("TuiCard");
-    card.add_field(ContactField::new(FieldType::Email, "Work", "a@b.com"))
+    card.add_field(ContactField::new(FieldType::Email, "Work", "a@b.com", 0))
         .unwrap();
 
     let json = serde_json::to_string(&card).unwrap();
@@ -176,7 +176,7 @@ fn contract_field_type_variants_exist() {
 // @internal
 #[test]
 fn contract_contact_field_accessors() {
-    let field = ContactField::new(FieldType::Social, "LinkedIn", "linkedin.com/in/test");
+    let field = ContactField::new(FieldType::Social, "LinkedIn", "linkedin.com/in/test", 0);
     assert_eq!(field.field_type(), FieldType::Social);
     assert_eq!(field.label(), "LinkedIn");
     assert_eq!(field.value(), "linkedin.com/in/test");
@@ -227,7 +227,7 @@ fn contract_contact_has_expected_accessors() {
 // @internal
 #[test]
 fn contract_phone_secondary_actions_include_sms() {
-    let field = ContactField::new(FieldType::Phone, "Mobile", "+41791234567");
+    let field = ContactField::new(FieldType::Phone, "Mobile", "+41791234567", 0);
     let actions = field.to_secondary_actions();
 
     assert!(
@@ -246,7 +246,7 @@ fn contract_phone_secondary_actions_include_sms() {
 // @internal
 #[test]
 fn contract_address_secondary_actions_include_directions() {
-    let field = ContactField::new(FieldType::Address, "Home", "Bahnhofstrasse 1, Zurich");
+    let field = ContactField::new(FieldType::Address, "Home", "Bahnhofstrasse 1, Zurich", 0);
     let actions = field.to_secondary_actions();
 
     assert!(
@@ -267,7 +267,7 @@ fn contract_get_directions_variant_exists() {
 // @internal
 #[test]
 fn contract_to_directions_uri_returns_some_for_address() {
-    let field = ContactField::new(FieldType::Address, "Office", "Limmatquai 1, Zurich");
+    let field = ContactField::new(FieldType::Address, "Office", "Limmatquai 1, Zurich", 0);
     let uri = field.to_directions_uri();
     assert!(
         uri.is_some(),

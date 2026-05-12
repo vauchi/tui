@@ -65,6 +65,7 @@ pub fn create_app_with_identity() -> (App, TempDir) {
             FieldType::Email,
             "Work",
             "alice@company.com",
+            0,
         ))
         .expect("add email");
     app_engine
@@ -73,6 +74,7 @@ pub fn create_app_with_identity() -> (App, TempDir) {
             FieldType::Phone,
             "Mobile",
             "+41 79 123 45 67",
+            0,
         ))
         .expect("add phone");
     app_engine
@@ -81,6 +83,7 @@ pub fn create_app_with_identity() -> (App, TempDir) {
             FieldType::Website,
             "Blog",
             "https://alice.example.com",
+            0,
         ))
         .expect("add website");
     let app = App::new(
@@ -219,9 +222,9 @@ pub fn seed_contacts(vauchi: &Vauchi, count: usize) {
         let email = format!("{}@example.com", name.to_lowercase().replace(' ', "."));
 
         let mut card = ContactCard::new(name);
-        card.add_field(ContactField::new(FieldType::Phone, "Mobile", &phone))
+        card.add_field(ContactField::new(FieldType::Phone, "Mobile", &phone, 0))
             .expect("add phone");
-        card.add_field(ContactField::new(FieldType::Email, "Email", &email))
+        card.add_field(ContactField::new(FieldType::Email, "Email", &email, 0))
             .expect("add email");
 
         // Address for ~40%
@@ -230,6 +233,7 @@ pub fn seed_contacts(vauchi: &Vauchi, count: usize) {
                 FieldType::Address,
                 "Address",
                 &format!("{} Main St, Springfield", 100 + i * 10),
+                0,
             ))
             .expect("add address");
         }
@@ -272,6 +276,7 @@ pub fn create_app_with_contacts(count: usize) -> (App, TempDir) {
             FieldType::Email,
             "Work",
             "alice@company.com",
+            0,
         ))
         .expect("add email");
 

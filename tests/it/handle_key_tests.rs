@@ -361,11 +361,16 @@ fn test_handle_key_home_j_increments_selected_field() {
     // Add two fields so navigation works
     app.app_engine
         .vauchi()
-        .add_own_field(ContactField::new(FieldType::Email, "Work", "a@b.com"))
+        .add_own_field(ContactField::new(FieldType::Email, "Work", "a@b.com", 0))
         .unwrap();
     app.app_engine
         .vauchi()
-        .add_own_field(ContactField::new(FieldType::Phone, "Mobile", "+1234567890"))
+        .add_own_field(ContactField::new(
+            FieldType::Phone,
+            "Mobile",
+            "+1234567890",
+            0,
+        ))
         .unwrap();
 
     // Engine-driven: j navigates within the focused component's selections
@@ -518,6 +523,7 @@ fn test_handle_key_home_delete_announces_field_label() {
             FieldType::Email,
             "Work Email",
             "test@example.com",
+            0,
         ))
         .unwrap();
     app.selected_field = 0;

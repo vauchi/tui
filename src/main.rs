@@ -353,8 +353,9 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
         (FieldType::Email, "Work", "demo@vauchi.app"),
         (FieldType::Website, "Website", "https://vauchi.app"),
     ];
+    let now = vauchi.clock().unix_seconds();
     for (ft, label, value) in own_fields {
-        let _ = vauchi.add_own_field(ContactField::new(ft, label, value));
+        let _ = vauchi.add_own_field(ContactField::new(ft, label, value, now));
     }
 
     // Create groups
@@ -402,7 +403,7 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
         for item in field_templates.iter().take(num_fields) {
             let (ref ft, label, template) = *item;
             let value = template.replace("{}", &name.to_lowercase());
-            let _ = card.add_field(ContactField::new(ft.clone(), label, &value));
+            let _ = card.add_field(ContactField::new(ft.clone(), label, &value, now));
         }
 
         let shared_key = SymmetricKey::generate();

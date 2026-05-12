@@ -693,7 +693,12 @@ fn test_home_field_delete_status_includes_label() {
     // Add a field
     app.app_engine
         .vauchi()
-        .add_own_field(ContactField::new(FieldType::Phone, "Mobile", "+1234567890"))
+        .add_own_field(ContactField::new(
+            FieldType::Phone,
+            "Mobile",
+            "+1234567890",
+            0,
+        ))
         .expect("add field");
     app.selected_field = 0;
 
