@@ -409,7 +409,12 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
         let shared_key = SymmetricKey::generate();
         let extra_key = SymmetricKey::generate();
         let pubkey: [u8; 32] = *extra_key.as_bytes();
-        let contact = Contact::from_exchange(pubkey, card, shared_key);
+        let contact = Contact::from_exchange(
+            pubkey,
+            card,
+            shared_key,
+            vauchi_core::clock::SystemClock::shared().unix_seconds(),
+        );
         let contact_id = contact.id().to_string();
         if vauchi.add_contact(contact).is_err() {
             continue;

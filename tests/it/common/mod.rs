@@ -245,7 +245,12 @@ pub fn seed_contacts(vauchi: &Vauchi, count: usize) {
             *byte = ((i * 7 + j) & 0xFF) as u8;
         }
 
-        let contact = Contact::from_exchange(pk, card, SymmetricKey::generate());
+        let contact = Contact::from_exchange(
+            pk,
+            card,
+            SymmetricKey::generate(),
+            vauchi_core::clock::SystemClock::shared().unix_seconds(),
+        );
         let cid = contact.id().to_string();
         vauchi.add_contact(contact).expect("add contact");
 

@@ -36,7 +36,10 @@ fn contract_storage_save_and_load_identity() {
     let key = SymmetricKey::generate();
     let storage = Storage::open(db_path.to_str().unwrap(), key).unwrap();
 
-    let identity = Identity::create("TuiContractTest");
+    let identity = Identity::create(
+        "TuiContractTest",
+        vauchi_core::clock::SystemClock::shared().unix_seconds(),
+    );
     let backup_data = b"test-backup-data".to_vec();
     storage
         .save_identity(&backup_data, identity.display_name())
@@ -84,14 +87,20 @@ fn contract_storage_list_contacts_returns_vec() {
 // @internal
 #[test]
 fn contract_identity_create_returns_identity_with_name() {
-    let identity = Identity::create("ContractTui");
+    let identity = Identity::create(
+        "ContractTui",
+        vauchi_core::clock::SystemClock::shared().unix_seconds(),
+    );
     assert_eq!(identity.display_name(), "ContractTui");
 }
 
 // @internal
 #[test]
 fn contract_identity_has_public_id() {
-    let identity = Identity::create("ContractTui");
+    let identity = Identity::create(
+        "ContractTui",
+        vauchi_core::clock::SystemClock::shared().unix_seconds(),
+    );
     let pid = identity.public_id();
     assert!(!pid.is_empty());
 }
@@ -99,7 +108,10 @@ fn contract_identity_has_public_id() {
 // @internal
 #[test]
 fn contract_identity_has_device_id() {
-    let identity = Identity::create("ContractTui");
+    let identity = Identity::create(
+        "ContractTui",
+        vauchi_core::clock::SystemClock::shared().unix_seconds(),
+    );
     let did = identity.device_id();
     assert!(!did.is_empty());
 }
@@ -107,7 +119,10 @@ fn contract_identity_has_device_id() {
 // @internal
 #[test]
 fn contract_identity_has_signing_public_key() {
-    let identity = Identity::create("ContractTui");
+    let identity = Identity::create(
+        "ContractTui",
+        vauchi_core::clock::SystemClock::shared().unix_seconds(),
+    );
     let spk = identity.signing_public_key();
     assert!(!spk.is_empty());
 }
@@ -115,7 +130,10 @@ fn contract_identity_has_signing_public_key() {
 // @internal
 #[test]
 fn contract_identity_set_display_name() {
-    let mut identity = Identity::create("OldName");
+    let mut identity = Identity::create(
+        "OldName",
+        vauchi_core::clock::SystemClock::shared().unix_seconds(),
+    );
     identity.set_display_name("NewName");
     assert_eq!(identity.display_name(), "NewName");
 }
