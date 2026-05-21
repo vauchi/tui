@@ -314,14 +314,18 @@ fn render_components(
             }
             Component::Preview {
                 name,
-                fields,
+                visible_fields,
                 variants,
                 selected_variant,
                 ..
             } => {
+                // ADR-021/043 + 2026-05-21 audit: render the pre-filtered
+                // `visible_fields` list from core. The raw `fields` list
+                // (still on the wire pending core removal) contains
+                // Hidden-visibility entries and must not be rendered.
                 CardPreviewWidget {
                     name,
-                    fields,
+                    fields: visible_fields,
                     variants,
                     selected_variant: selected_variant.as_deref(),
                     theme,
