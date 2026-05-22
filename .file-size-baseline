@@ -14,4 +14,5 @@
 # Grew +6 lines from info_key: None on TextInput/ToggleItem (2026-04-17)
 # Grew +4 lines from a11y: None on ScreenAction test constructors (2026-04-21)
 # Grew +1 line from `pub(crate) mod action_table;` declaration (2026-04-29)
-src/ui/widgets/key_mapping/mod.rs 745
+# Grew +1 line from `icon: String::new()` on Field literal — core 0.51.11 cascade (2026-05-22)
+src/ui/widgets/key_mapping/mod.rs 746

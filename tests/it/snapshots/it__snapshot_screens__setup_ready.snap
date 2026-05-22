@@ -1,6 +1,6 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 786
+assertion_line: 774
 description: ContactInfo → press Continue
 expression: output
 ---
@@ -27,4 +27,4 @@ expression: output
 
 
 
-[Enter] Exchange cards  [Enter] Import existing contacts
+[Enter] Start using the app  [Enter] Exchange cards

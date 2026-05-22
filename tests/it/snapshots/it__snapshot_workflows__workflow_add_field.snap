@@ -1,5 +1,6 @@
 ---
 source: tests/it/snapshot_workflows.rs
+assertion_line: 152
 description: "Add field happy path: MyInfo → AddField → MyInfo"
 expression: output
 ---
@@ -30,29 +31,29 @@ expression: output
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 2 ─ AddField — press 'a' (Add Entry) ══════════════
-                               Add Entry to MyInfo
+                                Add to your card
                                   Select a type
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ ▸ • Phone                                                                    │
 │   • Email                                                                    │
 │   • Website                                                                  │
-└──────────────────────────────────────────────────────────────────────────────┘
-Value
-┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
-│Any custom info                                                               │
-└──────────────────────────────────────────────────────────────────────────────┘
-
-Display Name (optional)
-┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
-│e.g. Work, Personal, Mobile                                                   │
-└──────────────────────────────────────────────────────────────────────────────┘
-Comment (your eyes only, optional)
-┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
-│Only visible to you                                                           │
+│   bandcamp Bandcamp                                                          │
+│   behance Behance                                                            │
+│   bitbucket Bitbucket                                                        │
+│   bluesky Bluesky                                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-[EDIT]   [Enter] Save  [Esc] Cancel  [?] help  [Esc] back  [q] quit
+
+
+
+
+
+
+
+
+
+[EDIT]   [Esc] Cancel  [?] help  [Esc] back  [q] quit
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 3 ─ MyInfo — field saved, return to card ══════════
