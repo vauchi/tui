@@ -732,6 +732,7 @@ mod tests {
                     field_type: "email".into(),
                     label: "Email".into(),
                     value: "a@b.com".into(),
+                    icon: String::new(),
                     visibility: UiFieldVisibility::Shown,
                     a11y: None,
                 }],
