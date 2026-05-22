@@ -270,22 +270,6 @@ impl App {
         }
     }
 
-    /// Performs a full sync with the relay server (blocking).
-    #[allow(dead_code)]
-    pub fn sync(&mut self) -> SyncResult {
-        if !self.app_engine.vauchi().has_identity() {
-            return SyncResult::error("No identity");
-        }
-        let vauchi = self.app_engine.vauchi_mut();
-        crate::sync_service::sync(vauchi)
-    }
-
-    /// Tests the relay connection (blocking — prefer background thread).
-    #[allow(dead_code)]
-    pub fn test_relay_connection(&self) -> anyhow::Result<bool> {
-        crate::sync_service::test_relay_connection(&self.relay_url)
-    }
-
     /// Builds an owned `SyncRequest` that can be sent to a background thread.
     ///
     /// Returns `None` if there is no identity or storage key.
