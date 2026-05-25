@@ -1840,9 +1840,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.29"
+version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
+checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
 
 [[package]]
 name = "lru"
@@ -3499,8 +3499,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-app"
-version = "0.51.11"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#cd2ca8d450eb82381b2bfaad6ab99c1d812d6285"
+version = "0.51.14"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#cc1b773050a479691cfb6cd2049553bc464b4d3c"
 dependencies = [
  "base64",
  "hex",
@@ -3519,8 +3519,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-core"
-version = "0.51.11"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#cd2ca8d450eb82381b2bfaad6ab99c1d812d6285"
+version = "0.51.14"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#cc1b773050a479691cfb6cd2049553bc464b4d3c"
 dependencies = [
  "argon2",
  "async-trait",
@@ -3563,8 +3563,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-protocol"
-version = "0.51.11"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#cd2ca8d450eb82381b2bfaad6ab99c1d812d6285"
+version = "0.51.14"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#cc1b773050a479691cfb6cd2049553bc464b4d3c"
 dependencies = [
  "serde",
  "serde_json",
