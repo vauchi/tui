@@ -247,6 +247,14 @@ fn render_components(
             Component::Dropdown { .. } => Constraint::Length(1),
             Component::AvatarPreview { .. } => Constraint::Length(1),
             Component::Slider { .. } => Constraint::Length(1),
+            Component::Indicator { .. } => Constraint::Length(1),
+            Component::SectionedActionList { sections, .. } => {
+                let item_lines: usize = sections
+                    .iter()
+                    .map(|s| 1 /* header */ + s.items.len())
+                    .sum();
+                Constraint::Length(((item_lines as u16) + chrome).max(4))
+            }
             _ => Constraint::Length(1),
         })
         .collect();
@@ -497,6 +505,27 @@ fn render_components(
                     chunk,
                 );
             }
+            Component::Indicator {
+                label,
+                kind,
+                action_id,
+                ..
+            } => {
+                render_misc::render_indicator(
+                    f,
+                    chunk,
+                    label,
+                    kind,
+                    action_id.is_some(),
+                    is_focused,
+                    theme,
+                );
+            }
+            Component::SectionedActionList { sections, .. } => {
+                render_lists::render_sectioned_action_list(
+                    f, chunk, sections, is_focused, state, i, theme,
+                );
+            }
             _ => {
                 // Future Component variants — caught by CC-22 reachability
                 // test (F5 in 2026-05-03-tui-cli-next-work-audit.md).
@@ -686,14 +715,93 @@ mod tests {
         );
     }
 
+    /// `Component::Indicator` must render its label visibly and pick
+    /// a kind-driven glyph. Mirrors the iOS chip semantics (filled
+    /// checkmark / warning / circle / progress) at terminal granularity.
+    // @internal
+    #[test]
+    fn render_indicator_emits_label_and_kind_glyph() {
+        use vauchi_app::ui::IndicatorKind;
+        for (kind, expected_any_of) in [
+            (IndicatorKind::Active, vec!["●", "✓"]),
+            (IndicatorKind::Error, vec!["✗", "⚠"]),
+            (IndicatorKind::Neutral, vec!["○"]),
+            (IndicatorKind::Busy, vec!["◉", "…"]),
+        ] {
+            let components = vec![Component::Indicator {
+                id: "ind".into(),
+                label: "Syncing".into(),
+                kind,
+                action_id: None,
+                a11y: None,
+            }];
+            let text = render_components_to_text(40, 3, &components);
+            assert!(
+                text.contains("Syncing"),
+                "Indicator({kind:?}): expected label, got: {text:?}"
+            );
+            assert!(
+                expected_any_of.iter().any(|g| text.contains(g)),
+                "Indicator({kind:?}): expected one of {expected_any_of:?}, got: {text:?}"
+            );
+        }
+    }
+
+    /// `Component::SectionedActionList` must render every section
+    /// label plus every item label — losing a section header degrades
+    /// the rendering to a flat `ActionList` and the discriminant becomes
+    /// invisible to the user.
+    // @internal
+    #[test]
+    fn render_sectioned_action_list_emits_all_sections_and_items() {
+        use vauchi_app::ui::{ActionListItem, Section};
+        let components = vec![Component::SectionedActionList {
+            id: "more".into(),
+            sections: vec![
+                Section {
+                    id: "primary".into(),
+                    label: "Primary".into(),
+                    items: vec![ActionListItem {
+                        id: "profile".into(),
+                        label: "Profile".into(),
+                        icon: None,
+                        detail: None,
+                        a11y: None,
+                        info_key: None,
+                    }],
+                },
+                Section {
+                    id: "data".into(),
+                    label: "Data".into(),
+                    items: vec![ActionListItem {
+                        id: "backup".into(),
+                        label: "Backup".into(),
+                        icon: None,
+                        detail: None,
+                        a11y: None,
+                        info_key: None,
+                    }],
+                },
+            ],
+        }];
+        let text = render_components_to_text(60, 10, &components);
+        for needle in ["Primary", "Profile", "Data", "Backup"] {
+            assert!(
+                text.contains(needle),
+                "SectionedActionList: expected {needle:?}, got: {text:?}"
+            );
+        }
+    }
+
     /// Build one labelled instance of every currently-known
     /// `Component` variant. Mirrors the enum in
     /// `core/vauchi-app/src/ui/component.rs` — keep in sync with
     /// `every_known_component_variant_renders_non_empty` below.
     fn every_known_component() -> Vec<Component> {
         use vauchi_app::ui::{
-            ActionListItem, DropdownOption, Field, InfoItem, InputType, Item, QrMode, SettingsItem,
-            SettingsItemKind, Status, ToggleItem, UiFieldVisibility, VisibilityMode,
+            ActionListItem, DropdownOption, Field, IndicatorKind, InfoItem, InputType, Item,
+            QrMode, Section, SettingsItem, SettingsItemKind, Status, ToggleItem, UiFieldVisibility,
+            VisibilityMode,
         };
         vec![
             Component::Text {
@@ -874,6 +982,28 @@ mod tests {
                 min_icon: None,
                 max_icon: None,
                 a11y: None,
+            },
+            Component::Indicator {
+                id: "indicator".into(),
+                label: "Connected".into(),
+                kind: IndicatorKind::Active,
+                action_id: None,
+                a11y: None,
+            },
+            Component::SectionedActionList {
+                id: "sectioned".into(),
+                sections: vec![Section {
+                    id: "primary".into(),
+                    label: "Primary".into(),
+                    items: vec![ActionListItem {
+                        id: "a1".into(),
+                        label: "Profile".into(),
+                        icon: None,
+                        detail: None,
+                        a11y: None,
+                        info_key: None,
+                    }],
+                }],
             },
         ]
     }

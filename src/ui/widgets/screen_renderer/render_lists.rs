@@ -162,6 +162,77 @@ pub(super) fn render_settings_group(
     f.render_widget(list, area);
 }
 
+/// Render a sectioned action list component — grouped action rows with
+/// section headers (`Section.label` in dim/bold), each item indented
+/// underneath. Selection cursors across the full flat item index so
+/// up/down navigation crosses section boundaries naturally.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn render_sectioned_action_list(
+    f: &mut Frame,
+    area: Rect,
+    sections: &[vauchi_app::ui::Section],
+    is_focused: bool,
+    state: &ScreenRenderState,
+    component_idx: usize,
+    theme: &TuiTheme,
+) {
+    let selected = state.selection_for(component_idx);
+
+    // Flatten sections into renderable lines: header → items → header → items.
+    // Track the cumulative item index (across sections) so the selected
+    // cursor lines up with the flat `UserAction::ListItemSelected` index.
+    let mut list_items: Vec<ListItem> = Vec::new();
+    let mut flat_item_idx: usize = 0;
+    for section in sections {
+        // Section header — dim + bold.
+        let header = format!(" {}", section.label);
+        list_items.push(
+            ListItem::new(header).style(
+                Style::default()
+                    .fg(theme.fg_secondary)
+                    .add_modifier(Modifier::BOLD),
+            ),
+        );
+
+        for item in &section.items {
+            let icon = item.icon.as_deref().unwrap_or("•");
+            let detail = item
+                .detail
+                .as_ref()
+                .map(|d| format!("  {}", d))
+                .unwrap_or_default();
+            let prefix = if flat_item_idx == selected && is_focused {
+                "▸"
+            } else {
+                " "
+            };
+            let text = format!("   {} {} {}{}", prefix, icon, item.label, detail);
+            let style = if flat_item_idx == selected && is_focused {
+                Style::default()
+                    .fg(theme.bg)
+                    .bg(theme.accent)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(theme.fg)
+            };
+            list_items.push(ListItem::new(text).style(style));
+            flat_item_idx += 1;
+        }
+    }
+
+    let border_color = if is_focused {
+        theme.accent
+    } else {
+        theme.border
+    };
+    let list = List::new(list_items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color)),
+    );
+    f.render_widget(list, area);
+}
+
 /// Render an action list component.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn render_action_list(

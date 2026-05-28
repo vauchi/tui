@@ -9,7 +9,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
-use vauchi_app::ui::{QrMode, Status};
+use vauchi_app::ui::{IndicatorKind, QrMode, Status};
 
 /// Render the step progress indicator.
 pub(super) fn render_progress(
@@ -70,6 +70,51 @@ pub(super) fn render_title(
     }
 
     let para = Paragraph::new(lines).alignment(Alignment::Center);
+    f.render_widget(para, area);
+}
+
+/// Render an `Indicator` component — single-line chrome chip with a
+/// kind-driven glyph, label, and optional "press" hint when tappable.
+///
+/// Semantic mapping mirrors the iOS chip:
+/// - `Active`  → ● (success / emphasis)
+/// - `Error`   → ✗ (error / attention-required)
+/// - `Neutral` → ○ (muted / informational)
+/// - `Busy`    → ◉ (animated counterpart at terminal granularity)
+pub(super) fn render_indicator(
+    f: &mut Frame,
+    area: Rect,
+    label: &str,
+    kind: &IndicatorKind,
+    tappable: bool,
+    is_focused: bool,
+    theme: &TuiTheme,
+) {
+    let (glyph, color) = match kind {
+        IndicatorKind::Active => ("●", theme.success),
+        IndicatorKind::Error => ("✗", theme.error),
+        IndicatorKind::Neutral => ("○", theme.fg_secondary),
+        IndicatorKind::Busy => ("◉", theme.accent),
+        _ => ("•", theme.fg_secondary),
+    };
+
+    let mut style = Style::default().fg(color);
+    if tappable {
+        style = style.add_modifier(Modifier::BOLD);
+    }
+    if is_focused && tappable {
+        style = style.bg(theme.bg_secondary);
+    }
+
+    let mut line_spans = vec![Span::styled(format!(" {glyph} "), style)];
+    line_spans.push(Span::styled(label.to_string(), style));
+    if tappable {
+        line_spans.push(Span::styled(
+            "  [Enter]".to_string(),
+            Style::default().fg(theme.fg_secondary),
+        ));
+    }
+    let para = Paragraph::new(Line::from(line_spans));
     f.render_widget(para, area);
 }
 
