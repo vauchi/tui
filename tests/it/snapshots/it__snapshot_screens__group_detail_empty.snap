@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 676
 description: Groups → press Enter on empty group
 expression: output
 ---
                                    Empty Group
 
+ ○ Sync  [Enter]
 ┌ [#] Group Info ──────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] Members                                                                 │
@@ -19,8 +19,7 @@ expression: output
 │     alice@company.com                                                        │
 │ [ ] Mobile                                                                   │
 │     +41 79 123 45 67                                                         │
-│ [ ] Blog                                                                     │
-│     https://alice.example.com                                                │
+│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Contacts ────────────────────────────────────────────────────────────────────┐
 │  No contacts yet. Use Exchange to add one.                                   │

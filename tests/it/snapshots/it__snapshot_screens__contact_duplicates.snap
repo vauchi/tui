@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 818
 description: Contacts → duplicates detected
 expression: output
 ---
                                Duplicate Detection
 
+ ○ Sync  [Enter]
 4 potential duplicate(s) found
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -14,7 +14,6 @@ expression: output
 │   • Andres Raynor <-> Eduardo Reyes  71% similar                             │
 │   • Brady Koss <-> Eduardo Reyes  70% similar                                │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

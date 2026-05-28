@@ -1,16 +1,15 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 246
 description: Settings → select Display Name
 expression: output
 ---
                                 Edit Display Name
 
+ ○ Sync  [Enter]
 Display Name
-┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
-│Alice Smith█                                                                  │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│Alice Smith                                                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

@@ -1,12 +1,12 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 152
 description: "Add field happy path: MyInfo → AddField → MyInfo"
 expression: output
 ---
 ═══ Step 1 ─ MyInfo — view card fields ═════════════════════
                                    Alice Smith
 
+ ○ Sync  [Enter]
   [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
@@ -26,7 +26,6 @@ expression: output
 
 
 
-
 [Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
@@ -34,8 +33,9 @@ expression: output
                                 Add to your card
                                   Select a type
 
+ ○ Sync  [Enter]
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ • Phone                                                                    │
+│   • Phone                                                                    │
 │   • Email                                                                    │
 │   • Website                                                                  │
 │   bandcamp Bandcamp                                                          │
@@ -52,13 +52,13 @@ expression: output
 
 
 
-
 [EDIT]   [Esc] Cancel  [?] help  [Esc] back  [q] quit
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
 ═══ Step 3 ─ MyInfo — field saved, return to card ══════════
                                    Alice Smith
 
+ ○ Sync  [Enter]
   [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
@@ -70,7 +70,6 @@ expression: output
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

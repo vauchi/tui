@@ -1,16 +1,15 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 262
 description: Settings → select Relay URL
 expression: output
 ---
                                  Edit Relay URL
 
+ ○ Sync  [Enter]
 Relay URL
-┌ ✎ editing ───────────────────────────────────────────────────────────────────┐
-│wss://relay.vauchi.app█                                                       │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│wss://relay.vauchi.app                                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

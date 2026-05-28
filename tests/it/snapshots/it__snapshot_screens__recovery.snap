@@ -1,20 +1,16 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 125
 description: Settings → select Recovery
 expression: output
 ---
                                  Social Recovery
 
+ ○ Sync  [Enter]
 ┌ [-] Lost Your Device? ───────────────────────────────────────────────────────┐
 │                                                                              │
-│                                                                              │
-│  You can recover your contact relationships through social vouching.         │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌ Recovery Settings ───────────────────────────────────────────────────────────┐
 │                                                                              │
-│  Required vouchers                                                           │
-│  3                                                                           │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ warning Not enough trusted contacts — Mark 3 more contact(s) as trusted for r│
@@ -25,6 +21,9 @@ expression: output
 │  First, create a new identity on your new device.                            │
 │                                                                              │
 │  2. Generate Recovery Claim                                                  │
+│  Create a claim using your OLD public key from your lost identity.           │
+│                                                                              │
+│  3. Collect Vouchers                                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

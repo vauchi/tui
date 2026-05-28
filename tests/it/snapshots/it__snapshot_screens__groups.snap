@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 641
 description: MyInfo → press Enter (Group View)
 expression: output
 ---
                                      Groups
 
+ ○ Sync  [Enter]
 ┌ View Mode ───────────────────────────────────────────────────────────────────┐
 │ [x] Members                                                                  │
 │     Which contacts are in each group                                         │
@@ -25,6 +25,5 @@ expression: output
 
 
 
-
-[Space] select  [Enter] New Group  [Enter] Rename Group  [Enter] Delete Group
+[Enter] New Group  [Enter] Rename Group  [Enter] Delete Group
    1 My Card    │  2 Contacts   │  3 Exchange   │  4 ★ Groups   │    5 More

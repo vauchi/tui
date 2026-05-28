@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 174
 description: Settings → select Backup
 expression: output
 ---
                                 Backup & Recovery
 
+ ○ Sync  [Enter]
 ┌ [B] Protect your data ───────────────────────────────────────────────────────┐
 │                                                                              │
 │  Backup                                                                      │
@@ -14,7 +14,6 @@ expression: output
 ┌ Backup level ────────────────────────────────────────────────────────────────┐
 │ [x] Full backup (recommended)                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

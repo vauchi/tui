@@ -5,6 +5,7 @@ expression: output
 ---
                                    Alice Smith
 
+ ○ Sync  [Enter]
   [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
@@ -16,7 +17,6 @@ expression: output
 │   Phone +41 79 123 45 67 (Mobile)                                            │
 │   Website https://alice.example.com (Blog)                                   │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

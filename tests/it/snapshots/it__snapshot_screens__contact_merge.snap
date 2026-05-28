@@ -5,6 +5,7 @@ expression: output
 ---
                                  Merge Contacts
 
+ ○ Sync  [Enter]
 Ahmed Nikolaus (keep) <- Ahmed N. (remove)
 
 ┌ Ahmed Nikolaus (keep) ───────────────────────────────────────────────────────┐
@@ -21,7 +22,6 @@ Ahmed Nikolaus (keep) <- Ahmed N. (remove)
 │                                                                              │
 │                                                                              │
 │  ahmed.n@example.com                                                         │
-│                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 Unique fields from the secondary will be added to the primary. The secondary wil
 

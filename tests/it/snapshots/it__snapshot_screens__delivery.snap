@@ -1,14 +1,13 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 538
 description: Settings → select Delivery
 expression: output
 ---
                                  Delivery Status
 
+ ○ Sync  [Enter]
 ┌ [-] All Delivered ───────────────────────────────────────────────────────────┐
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

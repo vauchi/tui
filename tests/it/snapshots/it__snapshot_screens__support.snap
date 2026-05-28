@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 515
 description: Settings → select Support
 expression: output
 ---
                                  Support Vauchi
 
+ ○ Sync  [Enter]
 ┌ [-] Support the Project ─────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] GitHub Sponsors                                                         │
@@ -14,7 +14,6 @@ expression: output
 │  [-] Liberapay                                                               │
 │      https://liberapay.com/vauchi                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

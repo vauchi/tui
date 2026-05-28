@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 229
 description: MyInfo → press Enter on field
 expression: output
 ---
                                    Edit Field
 
+ ○ Sync  [Enter]
 Editing: Mobile
 
 Value
@@ -17,7 +17,6 @@ Comment (your eyes only, optional)
 ┌ ⌨ type here ─────────────────────────────────────────────────────────────────┐
 │Only visible to you                                                           │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

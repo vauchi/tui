@@ -1,15 +1,14 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 110
 description: Settings → select Devices
 expression: output
 ---
                                      Devices
 
+ ○ Sync  [Enter]
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ device.current This Device  This device                                    │
+│   device.current This Device  This device                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 660
 description: Groups → press Enter on group
 expression: output
 ---
                                      Family
 
+ ○ Sync  [Enter]
 ┌ [#] Group Info ──────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] Members                                                                 │
@@ -23,7 +23,6 @@ expression: output
 │  AN Ahmed Nikolaus                                                           │
 │  AD Andreanne Doyle                                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 [Enter] Preview as Abigale Schroeder  [Enter] Preview as Ahmed Nikolaus

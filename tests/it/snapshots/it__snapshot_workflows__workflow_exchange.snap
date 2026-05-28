@@ -6,6 +6,7 @@ expression: output
 ═══ Step 1 ─ MyInfo — home screen ══════════════════════════
                                    Alice Smith
 
+ ○ Sync  [Enter]
   [Avatar: AS]
 ┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
@@ -25,7 +26,6 @@ expression: output
 
 
 
-
 [Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More
 
@@ -33,8 +33,9 @@ expression: output
                                   Exchange Mode
                       Choose how to exchange contact cards
 
+ ○ Sync  [Enter]
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ • Glance  Requires camera                                                  │
+│   • Glance  Requires camera                                                  │
 │   • Bump  Requires BLE, accelerometer                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -50,7 +51,6 @@ expression: output
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │   • Web  Requires camera, internet                                           │
-│   star.fill Link  Requires internet                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
 [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More
@@ -58,12 +58,12 @@ expression: output
 ═══ Step 3 ─ Contacts — press '2' (view exchanged contacts) 
                                     Contacts
 
+ ○ Sync  [Enter]
 ┌ [#] No contacts yet ─────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] Exchange cards in person                                                │
 │      Meet someone nearby and share your contact card securely.               │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

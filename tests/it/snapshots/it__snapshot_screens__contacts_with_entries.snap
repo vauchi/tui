@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 362
 description: "MyInfo → press '2' (Contacts tab)"
 expression: output
 ---
                                     Contacts
 
+ ○ Sync  [Enter]
 ┌ Contacts (10) ↕ ─────────────────────────────────────────────────────────────┐
 │▸ AS Abigale Schroeder  +1-200-100-1000                                       │
 │  AN Ahmed Nikolaus  +1-203-107-1013                                          │
@@ -16,7 +16,6 @@ expression: output
 │  CG Carmen Gutierrez  +1-218-142-1078                                        │
 │  DP Diana Patel  +1-221-149-1091                                             │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

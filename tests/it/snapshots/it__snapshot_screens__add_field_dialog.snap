@@ -1,14 +1,14 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 206
 description: "MyInfo → press 'a' (Add Entry)"
 expression: output
 ---
                                 Add to your card
                                   Select a type
 
+ ○ Sync  [Enter]
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ▸ • Phone                                                                    │
+│   • Phone                                                                    │
 │   • Email                                                                    │
 │   • Website                                                                  │
 │   bandcamp Bandcamp                                                          │
@@ -16,7 +16,6 @@ expression: output
 │   bitbucket Bitbucket                                                        │
 │   bluesky Bluesky                                                            │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

@@ -1,16 +1,15 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 394
 description: "Contacts → type search 'carmen'"
 expression: output
 ---
                                     Contacts
 
+ ○ Sync  [Enter]
 ┌ Contacts (1) ────────────────────────────────────────────────────────────────┐
 │▸ CG Carmen Gutierrez  +1-218-142-1078                                        │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

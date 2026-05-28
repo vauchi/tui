@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 497
 description: ContactDetail → select Visibility
 expression: output
 ---
                           Visibility: Abigale Schroeder
 
+ ○ Sync  [Enter]
 Toggle which fields are visible to this contact.
 
 ┌ Field Visibility ────────────────────────────────────────────────────────────┐
@@ -13,7 +13,6 @@ Toggle which fields are visible to this contact.
 │ [x] Email                                                                    │
 │ [x] Address                                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

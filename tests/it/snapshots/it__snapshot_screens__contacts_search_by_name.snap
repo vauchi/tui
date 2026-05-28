@@ -1,16 +1,15 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 378
 description: "Contacts → type search 'Ahmed'"
 expression: output
 ---
                                     Contacts
 
+ ○ Sync  [Enter]
 ┌ Contacts (1) ────────────────────────────────────────────────────────────────┐
 │▸ AN Ahmed Nikolaus  +1-203-107-1013                                          │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

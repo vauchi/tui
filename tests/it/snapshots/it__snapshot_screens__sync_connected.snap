@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 156
 description: Sync → sync completed successfully
 expression: output
 ---
                                       Sync
 
+ ○ Sync  [Enter]
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ ✗ Relay: Offline — Changes will sync automatically when connected. Check your│
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -19,7 +19,6 @@ expression: output
 │                                                                              │
 │  [-] Pending Updates                                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

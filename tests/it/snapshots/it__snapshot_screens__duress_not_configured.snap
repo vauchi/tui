@@ -1,12 +1,12 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 321
 description: Settings → select Duress PIN
 expression: output
 ---
                                  [1/4]  ● ○ ○ ○
                                    Duress PIN
 
+ ○ Sync  [Enter]
 ┌ [S] Duress PIN ──────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  [-] What is a Duress PIN?                                                   │
@@ -15,7 +15,6 @@ expression: output
 ┌ Status ──────────────────────────────────────────────────────────────────────┐
 │ [ ] Duress PIN enabled                                                       │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

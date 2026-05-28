@@ -1,11 +1,11 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 859
 description: Contacts → approach contact limit
 expression: output
 ---
                                   Contact Limit
 
+ ○ Sync  [Enter]
 Set a maximum number of contacts to manage storage.
 
 10 contacts (no limit)
@@ -14,7 +14,6 @@ Max Contacts
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │0                                                                             │
 └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 
