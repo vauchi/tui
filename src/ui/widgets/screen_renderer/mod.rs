@@ -742,6 +742,7 @@ mod tests {
             },
             Component::Preview {
                 name: "Alice".into(),
+                initials: "A".into(),
                 fields: vec![],
                 variants: vec![],
                 selected_variant: None,
