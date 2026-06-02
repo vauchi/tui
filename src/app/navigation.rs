@@ -220,7 +220,7 @@ impl App {
     /// the engine side now — the engine rebuilds the parent screen
     /// fresh after `navigate_back`. Local UI-only resets that don't
     /// roundtrip through the engine (`selected_contact_id`,
-    /// `selected_visibility_field`, `device_link_result`) clear here.
+    /// `selected_visibility_field`) clear here.
     pub fn go_back(&mut self) {
         match self.screen {
             // TUI-only states (no AppEngine navigation).
@@ -278,7 +278,6 @@ impl App {
             Screen::ContactDetail => self.selected_contact_id = None,
             Screen::ContactEdit => self.render_state = ScreenRenderState::default(),
             Screen::ContactVisibility => self.selected_visibility_field = 0,
-            Screen::Devices => self.device_link_result = None,
             Screen::Privacy => self.privacy_state = PrivacyState::default(),
             _ => {}
         }

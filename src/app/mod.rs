@@ -10,7 +10,6 @@ pub mod state;
 pub use state::*;
 
 use vauchi_app::ui::{AppEngine, AppScreen, LockScreenEngine, OnboardingEngine};
-use vauchi_core::api::DeviceLinkResult;
 
 use crate::i18n::I18n;
 use crate::sync_service::SyncResult;
@@ -107,10 +106,6 @@ pub struct App {
     /// Selected field index in the ContactVisibility screen (terminal-only).
     /// Contact id comes from `app_engine.current_app_screen()`.
     pub selected_visibility_field: usize,
-    /// Selected device index
-    pub selected_device: usize,
-    /// Device link result (shown as overlay on Devices screen)
-    pub device_link_result: Option<DeviceLinkResult>,
     /// Contact search query
     pub contact_search_query: String,
     /// Contact search mode active
@@ -228,8 +223,6 @@ impl App {
             selected_contact_field: 0,
             input_buffer: String::new(),
             selected_visibility_field: 0,
-            selected_device: 0,
-            device_link_result: None,
             contact_search_query: String::new(),
             contact_search_mode: false,
             sync_state: SyncState::default(),

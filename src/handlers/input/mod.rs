@@ -23,8 +23,8 @@ use contacts_input::{
 };
 use editing::handle_editing_mode;
 use features_input::{
-    handle_devices_keys, handle_exchange_keys, handle_lock_keys, handle_privacy_keys,
-    handle_settings_keys, handle_sync_keys,
+    handle_exchange_keys, handle_lock_keys, handle_privacy_keys, handle_settings_keys,
+    handle_sync_keys,
 };
 use navigation::{
     handle_my_info_keys, handle_setup_add_fields_keys, handle_setup_create_identity_keys,
@@ -255,7 +255,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::FormDialog => {
             eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
         }
-        Screen::Devices => handle_devices_keys(app, key),
         Screen::Sync => handle_sync_keys(app, key),
         Screen::Privacy => handle_privacy_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
@@ -287,6 +286,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::Delivery
         | Screen::Recovery
         | Screen::Support
+        | Screen::Devices
         | Screen::More
         | Screen::Activity => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
@@ -437,7 +437,6 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                         app.go_back();
                     }
                 }
-                Screen::Devices => handle_devices_keys(app, key),
                 // Duress: engine-driven; Esc exits the flow (ADR-021/043)
                 Screen::Duress => {
                     if key == KeyCode::Esc {
@@ -457,7 +456,8 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 | Screen::Help
                 | Screen::Delivery
                 | Screen::Recovery
-                | Screen::Support => {
+                | Screen::Support
+                | Screen::Devices => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }
