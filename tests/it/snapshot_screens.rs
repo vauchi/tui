@@ -12,7 +12,7 @@ use crate::common;
 
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
-use vauchi_tui::app::{ActionMenuState, LockState, PrivacyState, Screen, SyncState};
+use vauchi_tui::app::{ActionMenuState, LockState, Screen, SyncState};
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity,
@@ -244,7 +244,6 @@ fn test_snapshot_edit_relay_url_dialog() {
 fn test_snapshot_privacy() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::Privacy;
-    app.privacy_state = PrivacyState::default();
     let output = render_to_string(&mut app);
     assert_snap!("privacy", "Settings", "select Privacy & Data", output);
 }

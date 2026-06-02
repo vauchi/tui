@@ -278,7 +278,6 @@ impl App {
             Screen::ContactDetail => self.selected_contact_id = None,
             Screen::ContactEdit => self.render_state = ScreenRenderState::default(),
             Screen::ContactVisibility => self.selected_visibility_field = 0,
-            Screen::Privacy => self.privacy_state = PrivacyState::default(),
             _ => {}
         }
     }

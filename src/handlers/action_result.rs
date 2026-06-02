@@ -212,6 +212,15 @@ pub(crate) fn handle_action_result_with(
                 Err(_) => app.set_status("Backup created (clipboard unavailable)"),
             }
         }
+        ActionResult::GdprExportComplete { json } => {
+            // The engine produced the GDPR export JSON; the TUI writes it to
+            // a file under the data dir (mirrors the retired bespoke handler).
+            let path = app.data_dir.join("gdpr_export.json");
+            match std::fs::write(&path, &json) {
+                Ok(()) => app.set_status(format!("Data exported to {}", path.display())),
+                Err(e) => app.set_status(format!("Export failed: {e}")),
+            }
+        }
         ActionResult::StartDeviceLink => {
             app.screen = Screen::Devices;
         }

@@ -113,7 +113,6 @@ pub struct App {
     /// Sync state
     pub sync_state: SyncState,
     /// Privacy/GDPR screen state
-    pub privacy_state: PrivacyState,
     /// Action menu state (popup for field actions)
     pub action_menu_state: ActionMenuState,
     /// Lock screen state
@@ -226,7 +225,6 @@ impl App {
             contact_search_query: String::new(),
             contact_search_mode: false,
             sync_state: SyncState::default(),
-            privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
             lock_state: LockState::default(),
             onboarding_state: OnboardingState::default(),

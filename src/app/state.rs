@@ -122,13 +122,6 @@ pub struct LockState {
     pub error: bool,
 }
 
-/// State for the privacy/GDPR screen.
-#[derive(Debug, Default)]
-pub struct PrivacyState {
-    /// Currently selected section index (0=Export, 1=Deletion, 2..=Consent items).
-    pub selected_item: usize,
-}
-
 /// State for the action menu popup.
 #[derive(Debug, Default)]
 pub struct ActionMenuState {

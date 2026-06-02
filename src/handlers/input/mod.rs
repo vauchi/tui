@@ -23,8 +23,7 @@ use contacts_input::{
 };
 use editing::handle_editing_mode;
 use features_input::{
-    handle_exchange_keys, handle_lock_keys, handle_privacy_keys, handle_settings_keys,
-    handle_sync_keys,
+    handle_exchange_keys, handle_lock_keys, handle_settings_keys, handle_sync_keys,
 };
 use navigation::{
     handle_my_info_keys, handle_setup_add_fields_keys, handle_setup_create_identity_keys,
@@ -256,7 +255,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
         }
         Screen::Sync => handle_sync_keys(app, key),
-        Screen::Privacy => handle_privacy_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Lock => {
             eprintln!("WARNING: Lock screen reached legacy handler unexpectedly");
@@ -288,7 +286,8 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::Support
         | Screen::Devices
         | Screen::More
-        | Screen::Activity => {
+        | Screen::Activity
+        | Screen::Privacy => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
         }
         Screen::ContactImport => {
@@ -457,13 +456,13 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 | Screen::Delivery
                 | Screen::Recovery
                 | Screen::Support
-                | Screen::Devices => {
+                | Screen::Devices
+                | Screen::Privacy => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }
                 }
                 Screen::ContactVisibility => handle_visibility_keys(app, key),
-                Screen::Privacy => handle_privacy_keys(app, key),
                 // Form dialogs: Esc goes back (engine handles chars/Enter via key_mapping)
                 Screen::FormDialog => {
                     if key == KeyCode::Esc {

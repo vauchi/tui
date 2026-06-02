@@ -376,6 +376,26 @@ fn navigate_to_syncs_privacy_screen() {
 
 // @internal
 #[test]
+fn gdpr_export_complete_writes_json_to_data_dir() {
+    let mut app = create_app_with_identity();
+    let json = r#"{"identity":"Test User","contacts":[]}"#.to_string();
+
+    handle_action_result(
+        &mut app,
+        ActionResult::GdprExportComplete { json: json.clone() },
+    );
+
+    let path = app.data_dir.join("gdpr_export.json");
+    let written = std::fs::read_to_string(&path).expect("export file written");
+    assert_eq!(written, json);
+    assert_eq!(
+        app.status_message.as_deref(),
+        Some(format!("Data exported to {}", path.display()).as_str())
+    );
+}
+
+// @internal
+#[test]
 fn navigate_to_syncs_support_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Support);

@@ -166,6 +166,13 @@ static BINDINGS: &[Binding] = &[
         hint: "e",
         dispatchable: true,
     },
+    // -- 'e': Privacy data export (engine `GdprExportComplete`).
+    Binding {
+        key: Some(KeyCode::Char('e')),
+        matcher: Matcher::Exact("export"),
+        hint: "e",
+        dispatchable: true,
+    },
     // -- 'a': hint-only (per-screen handlers claim it for navigation).
     Binding {
         key: Some(KeyCode::Char('a')),
@@ -231,13 +238,24 @@ static BINDINGS: &[Binding] = &[
         hint: "h",
         dispatchable: true,
     },
-    // -- 'x' / 'd': hint-only.
+    // -- 'x': dispatchable for Privacy delete/execute (engine-driven since
+    //    the bespoke `handle_privacy_keys` retired in G3 slice 2). `delete`
+    //    (schedule, when no deletion pending) and `execute_deletion` (Delete
+    //    Now, when the grace period has elapsed) are mutually exclusive on the
+    //    Privacy overview, so both share 'x'.
     Binding {
         key: Some(KeyCode::Char('x')),
         matcher: Matcher::Exact("delete"),
         hint: "x",
-        dispatchable: false,
+        dispatchable: true,
     },
+    Binding {
+        key: Some(KeyCode::Char('x')),
+        matcher: Matcher::Exact("execute_deletion"),
+        hint: "x",
+        dispatchable: true,
+    },
+    // -- 'x': hint-only (other screens claim it via per-screen handlers).
     Binding {
         key: Some(KeyCode::Char('x')),
         matcher: Matcher::Exact("wipe"),
@@ -318,6 +336,21 @@ static BINDINGS: &[Binding] = &[
         key: Some(KeyCode::Char('n')),
         matcher: Matcher::Exact("new_group"),
         hint: "n",
+        dispatchable: true,
+    },
+    // -- 'c': Privacy cancel a scheduled deletion (engine-driven, shown only
+    //    while a deletion is pending). Distinct screen from `create_new`'s 'c'.
+    Binding {
+        key: Some(KeyCode::Char('c')),
+        matcher: Matcher::Exact("cancel_deletion"),
+        hint: "c",
+        dispatchable: true,
+    },
+    // -- '!': Privacy panic shred — emergency wipe with no grace period.
+    Binding {
+        key: Some(KeyCode::Char('!')),
+        matcher: Matcher::Exact("panic_shred"),
+        hint: "!",
         dispatchable: true,
     },
 ];
