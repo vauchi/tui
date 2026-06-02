@@ -125,8 +125,6 @@ pub struct App {
     pub action_menu_state: ActionMenuState,
     /// Emergency broadcast state
     pub emergency_state: EmergencyState,
-    /// Duress PIN and alert state
-    pub duress_state: DuressState,
     /// Lock screen state
     pub lock_state: LockState,
     /// Groups management state
@@ -247,7 +245,6 @@ impl App {
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
             emergency_state: EmergencyState::default(),
-            duress_state: DuressState::default(),
             lock_state: LockState::default(),
             groups_state: GroupsState::default(),
             onboarding_state: OnboardingState::default(),

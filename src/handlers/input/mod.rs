@@ -23,9 +23,9 @@ use contacts_input::{
 };
 use editing::handle_editing_mode;
 use features_input::{
-    handle_backup_keys, handle_delivery_keys, handle_devices_keys, handle_duress_keys,
-    handle_emergency_keys, handle_exchange_keys, handle_lock_keys, handle_privacy_keys,
-    handle_recovery_keys, handle_settings_keys, handle_support_keys, handle_sync_keys,
+    handle_backup_keys, handle_delivery_keys, handle_devices_keys, handle_emergency_keys,
+    handle_exchange_keys, handle_lock_keys, handle_privacy_keys, handle_recovery_keys,
+    handle_settings_keys, handle_support_keys, handle_sync_keys,
 };
 use navigation::{
     handle_help_keys, handle_my_info_keys, handle_setup_add_fields_keys,
@@ -105,6 +105,13 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
 
     // Engine-driven contact limit bypasses global keys when editing (digits are input)
     if app.current_app_screen() == AppScreen::ContactLimit {
+        handle_engine_keys(app, key);
+        return Action::Continue;
+    }
+
+    // Engine-driven duress PIN bypasses global keys — the PinInput consumes
+    // digits 1–9 that would otherwise hit the global tab-switch shortcuts.
+    if app.current_app_screen() == AppScreen::DuressPin {
         handle_engine_keys(app, key);
         return Action::Continue;
     }
@@ -250,7 +257,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Support => handle_support_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Emergency => handle_emergency_keys(app, key),
-        Screen::Duress => handle_duress_keys(app, key),
         Screen::Groups => handle_groups_keys(app, key),
         Screen::GroupDetail => handle_group_detail_keys(app, key),
         Screen::Lock => {
@@ -272,6 +278,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::MyInfoEntryDetail
         | Screen::VerifyFingerprint
         | Screen::DeviceReplacement
+        | Screen::Duress
         | Screen::More
         | Screen::Activity => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
@@ -418,7 +425,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Backup => handle_backup_keys(app, key),
                 Screen::Delivery => handle_delivery_keys(app, key),
                 Screen::Devices => handle_devices_keys(app, key),
-                Screen::Duress => handle_duress_keys(app, key),
+                // Duress: engine-driven; Esc exits the flow (ADR-021/043)
+                Screen::Duress => {
+                    if key == KeyCode::Esc {
+                        app.go_back();
+                    }
+                }
                 Screen::Emergency => handle_emergency_keys(app, key),
                 Screen::Sync => handle_sync_keys(app, key),
                 Screen::Recovery => handle_recovery_keys(app, key),

@@ -13,8 +13,8 @@ use crate::common;
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
 use vauchi_tui::app::{
-    ActionMenuState, BackupFocus, BackupMode, BackupState, DuressState, EmergencyState, LockState,
-    PrivacyState, Screen, SyncState,
+    ActionMenuState, BackupFocus, BackupMode, BackupState, EmergencyState, LockState, PrivacyState,
+    Screen, SyncState,
 };
 
 use common::{
@@ -305,47 +305,11 @@ fn test_snapshot_backup_import() {
     assert_snap!("backup_import", "Backup", "select Restore Backup", output);
 }
 
-// @scenario: duress:View duress configuration
-#[test]
-fn test_snapshot_duress_not_configured() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Duress;
-    app.duress_state = DuressState {
-        password_enabled: false,
-        enabled: false,
-        ..DuressState::default()
-    };
-    let output = render_to_string(&mut app);
-    assert_snap!(
-        "duress_not_configured",
-        "Settings",
-        "select Duress PIN",
-        output
-    );
-}
-
-// @scenario: duress:View duress enabled state
-#[test]
-fn test_snapshot_duress_enabled() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Duress;
-    app.duress_state = DuressState {
-        password_enabled: true,
-        enabled: true,
-        contact_ids_input: "abc123, def456".to_string(),
-        message_input: "Duress alert — contact may be under coercion".to_string(),
-        include_location: true,
-        alert_contact_count: 2,
-        ..DuressState::default()
-    };
-    let output = render_to_string(&mut app);
-    assert_snap!(
-        "duress_enabled",
-        "Settings",
-        "select Duress PIN (configured)",
-        output
-    );
-}
+// Duress screens are engine-driven (core `DuressPinEngine`); the TUI renders
+// their `ScreenModel` through the shared `screen_renderer`. Behavioral
+// coverage lives in `duress_humble_tests.rs`; the engine's own screens are
+// golden-fixture tested in core (`engine_golden_fixtures.rs`). The former
+// bespoke-widget snapshots were removed with the bespoke duress handler.
 
 // =============================================================
 // Contacts with Seeded Data

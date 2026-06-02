@@ -152,41 +152,6 @@ pub enum EmergencyFocus {
     Confirm,
 }
 
-/// Duress PIN and alert configuration screen state.
-#[derive(Debug, Clone, Default)]
-pub struct DuressState {
-    /// Whether an app password is configured (required for duress).
-    pub password_enabled: bool,
-    /// Whether duress mode is enabled.
-    pub enabled: bool,
-    /// PIN input for setup.
-    pub pin_input: String,
-    /// Trusted contact IDs (comma-separated in input).
-    pub contact_ids_input: String,
-    /// Alert message.
-    pub message_input: String,
-    /// Whether to include location in alerts.
-    pub include_location: bool,
-    /// Number of alert contacts (for display).
-    pub alert_contact_count: usize,
-    /// Current input focus.
-    pub focus: DuressFocus,
-}
-
-/// Focus states for the duress screen.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum DuressFocus {
-    #[default]
-    /// Viewing status (not editing).
-    Status,
-    /// Entering a new duress PIN.
-    PinSetup,
-    /// Editing alert contact IDs.
-    ContactIds,
-    /// Editing alert message.
-    Message,
-}
-
 /// Lock screen state for PIN entry on startup.
 #[derive(Debug, Clone, Default)]
 pub struct LockState {

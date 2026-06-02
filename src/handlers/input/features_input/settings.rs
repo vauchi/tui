@@ -9,7 +9,6 @@ use crossterm::event::KeyCode;
 use crate::app::{App, PrivacyState, Screen};
 use vauchi_app::ui::FormDialogType;
 
-use super::duress::refresh_duress_state;
 use super::emergency::refresh_emergency_state;
 
 pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCode) {
@@ -36,8 +35,7 @@ pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCo
             app.goto(Screen::Emergency);
         }
         KeyCode::Char('D') => {
-            // Open Duress PIN screen
-            refresh_duress_state(app);
+            // Open Duress PIN screen — engine loads config on navigate.
             app.goto(Screen::Duress);
         }
         KeyCode::Char('s') => {

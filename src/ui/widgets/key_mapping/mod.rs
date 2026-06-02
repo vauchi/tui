@@ -35,6 +35,12 @@ fn is_focusable(component: &Component) -> bool {
         Component::Text { .. }
             | Component::InfoPanel { .. }
             | Component::StatusIndicator { .. }
+            // Sync-chrome `Indicator` is injected at index 0 on every online
+            // screen (`apply_sync_chrome_overlay`). It is chrome, not content —
+            // it must not capture initial keyboard focus, or it would swallow
+            // input meant for the screen's first real component (e.g. the
+            // duress PIN field). The TUI surfaces sync via other affordances.
+            | Component::Indicator { .. }
             | Component::QrCode { .. }
             | Component::Divider
     )
@@ -73,11 +79,18 @@ fn find_first_focusable(components: &[Component]) -> Option<usize> {
 pub fn map_key(key: KeyCode, screen: &ScreenModel, state: &mut ScreenRenderState) -> KeyResult {
     state.ensure_capacity(screen.components.len());
 
-    // Auto-focus first interactive component if current focus is non-interactive
-    if let Some(current) = screen.components.get(state.focused_component)
-        && !is_focusable(current)
-        && let Some(idx) = find_first_focusable(&screen.components)
-    {
+    // Auto-focus the first interactive component when the current focus is
+    // non-interactive OR out of range. The latter happens when an engine
+    // sub-step transition shrinks the component list (e.g. the duress
+    // overview has two components, the following PIN screen has one) without
+    // resetting `focused_component`; a stale out-of-range index would route
+    // every key to the action fallback instead of the focused component.
+    let needs_refocus = screen
+        .components
+        .get(state.focused_component)
+        .map(|current| !is_focusable(current))
+        .unwrap_or(true);
+    if needs_refocus && let Some(idx) = find_first_focusable(&screen.components) {
         state.focused_component = idx;
     }
 

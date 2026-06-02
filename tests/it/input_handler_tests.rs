@@ -404,17 +404,6 @@ fn test_settings_shift_d_navigates_to_duress() {
 
 // @internal
 #[test]
-fn test_duress_state_defaults() {
-    let (app, _dir) = create_app_with_identity();
-    assert!(!app.duress_state.enabled);
-    assert!(!app.duress_state.password_enabled);
-    assert!(app.duress_state.pin_input.is_empty());
-    assert!(app.duress_state.contact_ids_input.is_empty());
-    assert_eq!(app.duress_state.alert_contact_count, 0);
-}
-
-// @internal
-#[test]
 fn test_duress_esc_in_status_goes_back() {
     let (mut app, _dir) = create_app_with_identity();
     // Engine-driven back-nav pops `nav_history`, so the test must
