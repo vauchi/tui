@@ -27,7 +27,6 @@ pub(in crate::handlers::input) fn handle_sync_keys(app: &mut App, key: KeyCode) 
 
             // Mark as syncing before spawning
             app.sync_state.is_syncing = true;
-            app.sync_state.sync_log.push("Starting sync...".to_string());
             app.set_status("Syncing...");
 
             let (tx, rx) = std::sync::mpsc::channel();

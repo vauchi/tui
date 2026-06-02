@@ -97,19 +97,18 @@ pub enum InputMode {
     Editing,
 }
 
-/// Sync status for the UI.
+/// Terminal-only sync status. The Sync screen renders from the engine's
+/// `ScreenModel`; these are the only fields the TUI reads — a concurrency
+/// guard and an on-demand pending count. The former `connected`,
+/// `last_result`, and `sync_log` fields were write-only mirror state and
+/// were removed (G2).
 #[derive(Debug, Clone, Default)]
 pub struct SyncState {
-    /// Whether currently connected to the relay.
-    pub connected: bool,
-    /// Whether a sync operation is in progress.
+    /// Whether a sync operation is in progress (concurrency guard).
     pub is_syncing: bool,
-    /// Number of pending outbound updates.
+    /// Number of pending outbound updates (shown on demand via the Sync
+    /// screen 'r' refresh; not otherwise rendered).
     pub pending_updates: u32,
-    /// Last sync result message.
-    pub last_result: Option<String>,
-    /// Log of sync operations.
-    pub sync_log: Vec<String>,
 }
 
 /// Lock screen state for PIN entry on startup.

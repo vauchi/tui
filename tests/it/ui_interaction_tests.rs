@@ -12,7 +12,7 @@
 //!
 //! Tests here focus on the standalone state structs and enums.
 
-use vauchi_tui::app::{InputMode, Screen, SyncState};
+use vauchi_tui::app::{InputMode, Screen};
 
 // ============================================================================
 // Screen Enum Tests
@@ -100,40 +100,6 @@ fn test_input_mode_normal_is_initial() {
 
 // Backup is engine-driven (core `BackupRecoveryEngine`); the bespoke
 // BackupState/BackupMode/BackupFocus unit tests were removed with the state.
-
-// ============================================================================
-// SyncState Tests
-// ============================================================================
-
-/// Test: SyncState default values
-// @internal
-#[test]
-fn test_sync_state_default() {
-    let state = SyncState::default();
-    assert!(!state.connected);
-    assert!(!state.is_syncing);
-    assert_eq!(state.pending_updates, 0);
-    assert!(state.last_result.is_none());
-    assert!(state.sync_log.is_empty());
-}
-
-/// Test: SyncState can be modified
-// @internal
-#[test]
-fn test_sync_state_modification() {
-    let state = SyncState {
-        connected: true,
-        is_syncing: true,
-        pending_updates: 5,
-        sync_log: vec!["Test log entry".to_string()],
-        ..Default::default()
-    };
-
-    assert!(state.connected);
-    assert!(state.is_syncing);
-    assert_eq!(state.pending_updates, 5);
-    assert_eq!(state.sync_log.len(), 1);
-}
 
 // ============================================================================
 // State Struct Field Access Tests

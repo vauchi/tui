@@ -138,16 +138,11 @@ fn test_snapshot_sync_idle() {
 fn test_snapshot_sync_connected() {
     let (mut app, _tmp) = create_app_with_identity();
     app.screen = Screen::Sync;
+    // Sync screen renders from the engine's ScreenModel; sync_state is not
+    // read by the renderer, so this setup is inert (output == sync_idle).
     app.sync_state = SyncState {
-        connected: true,
         is_syncing: false,
         pending_updates: 3,
-        last_result: Some("Synced: 2 contacts, 1 update".to_string()),
-        sync_log: vec![
-            "Connected to relay".to_string(),
-            "Received 2 contacts".to_string(),
-            "Sent 1 update".to_string(),
-        ],
     };
     let output = render_to_string(&mut app);
     assert_snap!(

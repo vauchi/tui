@@ -349,15 +349,10 @@ impl App {
         self.sync_state.is_syncing = false;
 
         if result.success {
-            self.sync_state.connected = true;
             let summary = format!(
                 "{} received, {} sent, {} acked",
                 result.cards_updated, result.updates_sent, result.acknowledged
             );
-            self.sync_state.last_result = Some(summary.clone());
-            self.sync_state
-                .sync_log
-                .push(format!("Sync complete: {}", summary));
             self.set_status(format!("Sync complete: {}", summary));
 
             // Update pending count
@@ -385,12 +380,7 @@ impl App {
             // Invalidate cached screens since sync may have changed contacts/cards
             self.invalidate_engines();
         } else {
-            self.sync_state.connected = false;
             let error_msg = result.error.unwrap_or_else(|| "Unknown error".to_string());
-            self.sync_state.last_result = Some(format!("Failed: {}", error_msg));
-            self.sync_state
-                .sync_log
-                .push(format!("Sync failed: {}", error_msg));
             self.set_status(format!(
                 "Sync failed: {}. Changes saved locally and will sync when connected.",
                 error_msg
@@ -402,17 +392,9 @@ impl App {
     pub fn apply_relay_test_result(&mut self, result: anyhow::Result<bool>) {
         match result {
             Ok(true) => {
-                self.sync_state.connected = true;
-                self.sync_state
-                    .sync_log
-                    .push("Relay connection test: OK".to_string());
                 self.set_status("Relay connection successful!");
             }
             Ok(false) | Err(_) => {
-                self.sync_state.connected = false;
-                self.sync_state
-                    .sync_log
-                    .push("Relay connection test: FAILED".to_string());
                 self.set_status(
                     "Relay connection failed. Check your network or relay URL in Settings.",
                 );
