@@ -12,10 +12,7 @@ use crate::common;
 
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
-use vauchi_tui::app::{
-    ActionMenuState, BackupFocus, BackupMode, BackupState, LockState, PrivacyState, Screen,
-    SyncState,
-};
+use vauchi_tui::app::{ActionMenuState, LockState, PrivacyState, Screen, SyncState};
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity,
@@ -165,30 +162,8 @@ fn test_snapshot_sync_connected() {
 // Backup
 // =============================================================
 
-// @scenario: identity_management:Create encrypted identity backup
-#[test]
-fn test_snapshot_backup_menu() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Backup;
-    let output = render_to_string(&mut app);
-    assert_snap!("backup_menu", "Settings", "select Backup", output);
-}
-
-// @scenario: identity_management:Create encrypted identity backup
-#[test]
-fn test_snapshot_backup_export() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Backup;
-    app.backup_state = BackupState {
-        mode: BackupMode::Export,
-        password: String::new(),
-        confirm_password: String::new(),
-        backup_data: String::new(),
-        focus: BackupFocus::Password,
-    };
-    let output = render_to_string(&mut app);
-    assert_snap!("backup_export", "Backup", "select Create Backup", output);
-}
+// Backup is engine-driven (core `BackupRecoveryEngine`); bespoke-widget
+// snapshots removed. Coverage via backup_humble_tests + core fixtures.
 
 // =============================================================
 // Dialogs
@@ -287,22 +262,6 @@ fn test_snapshot_exchange() {
     // ADR-031: QR image contains ephemeral keys — redacted by redact_dynamic_values in render_to_string
     let output = render_to_string(&mut app);
     assert_snap!("exchange", "MyInfo", "press '3' (Exchange tab)", output);
-}
-
-// @scenario: identity_management:Restore identity from backup
-#[test]
-fn test_snapshot_backup_import() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Backup;
-    app.backup_state = BackupState {
-        mode: BackupMode::Import,
-        password: String::new(),
-        confirm_password: String::new(),
-        backup_data: String::new(),
-        focus: BackupFocus::Data,
-    };
-    let output = render_to_string(&mut app);
-    assert_snap!("backup_import", "Backup", "select Restore Backup", output);
 }
 
 // Duress screens are engine-driven (core `DuressPinEngine`); the TUI renders

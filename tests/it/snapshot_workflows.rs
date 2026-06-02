@@ -9,7 +9,7 @@
 
 use crate::common;
 
-use vauchi_tui::app::{BackupFocus, BackupMode, BackupState, Screen};
+use vauchi_tui::app::Screen;
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity, workflow_step,
@@ -244,43 +244,5 @@ fn test_workflow_settings() {
     });
 }
 
-// @workflow: backup flow — Settings → Backup → Export
-// @internal
-#[test]
-fn test_workflow_backup() {
-    let (mut app, _tmp) = create_app_with_identity();
-    let mut steps = Vec::new();
-
-    // Step 1: Settings
-    app.goto(Screen::Settings);
-    steps.push(workflow_step(
-        1,
-        "Settings — press '5' (More tab) → Settings",
-        &mut app,
-    ));
-
-    // Step 2: Backup menu
-    app.goto(Screen::Backup);
-    steps.push(workflow_step(2, "Backup — select Backup", &mut app));
-
-    // Step 3: Export form
-    app.backup_state = BackupState {
-        mode: BackupMode::Export,
-        password: String::new(),
-        confirm_password: String::new(),
-        backup_data: String::new(),
-        focus: BackupFocus::Password,
-    };
-    steps.push(workflow_step(
-        3,
-        "BackupExport — select Create Backup",
-        &mut app,
-    ));
-
-    let output = steps.join("\n\n");
-    insta::with_settings!({
-        description => "Backup happy path: Settings → Backup menu → Export form",
-    }, {
-        insta::assert_snapshot!("workflow_backup", output);
-    });
-}
+// Backup is engine-driven (core `BackupRecoveryEngine`); the bespoke
+// export-form workflow snapshot was removed with the bespoke state.

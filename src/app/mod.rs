@@ -107,8 +107,6 @@ pub struct App {
     /// Selected field index in the ContactVisibility screen (terminal-only).
     /// Contact id comes from `app_engine.current_app_screen()`.
     pub selected_visibility_field: usize,
-    /// Backup screen state
-    pub backup_state: BackupState,
     /// Selected device index
     pub selected_device: usize,
     /// Device link result (shown as overlay on Devices screen)
@@ -234,7 +232,6 @@ impl App {
             selected_contact_field: 0,
             input_buffer: String::new(),
             selected_visibility_field: 0,
-            backup_state: BackupState::default(),
             selected_device: 0,
             device_link_result: None,
             contact_search_query: String::new(),

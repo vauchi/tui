@@ -12,7 +12,7 @@
 //!
 //! Tests here focus on the standalone state structs and enums.
 
-use vauchi_tui::app::{BackupFocus, BackupMode, BackupState, InputMode, Screen, SyncState};
+use vauchi_tui::app::{InputMode, Screen, SyncState};
 
 // ============================================================================
 // Screen Enum Tests
@@ -101,57 +101,8 @@ fn test_input_mode_normal_is_initial() {
     assert_eq!(mode, InputMode::Normal);
 }
 
-// ============================================================================
-// BackupState Tests
-// ============================================================================
-
-/// Test: BackupState default values
-// @internal
-#[test]
-fn test_backup_state_default() {
-    let state = BackupState::default();
-    assert_eq!(state.mode, BackupMode::Menu);
-    assert!(state.password.is_empty());
-    assert!(state.confirm_password.is_empty());
-    assert!(state.backup_data.is_empty());
-    assert_eq!(state.focus, BackupFocus::Password);
-}
-
-/// Test: BackupMode variants
-// @internal
-#[test]
-fn test_backup_mode_variants() {
-    assert_eq!(BackupMode::default(), BackupMode::Menu);
-    let _ = BackupMode::Export;
-    let _ = BackupMode::Import;
-}
-
-/// Test: BackupMode equality
-// @internal
-#[test]
-fn test_backup_mode_equality() {
-    assert_eq!(BackupMode::Menu, BackupMode::Menu);
-    assert_ne!(BackupMode::Menu, BackupMode::Export);
-    assert_ne!(BackupMode::Export, BackupMode::Import);
-}
-
-/// Test: BackupFocus variants
-// @internal
-#[test]
-fn test_backup_focus_variants() {
-    assert_eq!(BackupFocus::default(), BackupFocus::Password);
-    let _ = BackupFocus::Confirm;
-    let _ = BackupFocus::Data;
-}
-
-/// Test: BackupFocus equality
-// @internal
-#[test]
-fn test_backup_focus_equality() {
-    assert_eq!(BackupFocus::Password, BackupFocus::Password);
-    assert_ne!(BackupFocus::Password, BackupFocus::Confirm);
-    assert_ne!(BackupFocus::Confirm, BackupFocus::Data);
-}
+// Backup is engine-driven (core `BackupRecoveryEngine`); the bespoke
+// BackupState/BackupMode/BackupFocus unit tests were removed with the state.
 
 // ============================================================================
 // SyncState Tests
@@ -190,22 +141,3 @@ fn test_sync_state_modification() {
 // ============================================================================
 // State Struct Field Access Tests
 // ============================================================================
-
-/// Test: BackupState fields are accessible and modifiable
-// @internal
-#[test]
-fn test_backup_state_fields() {
-    let state = BackupState {
-        mode: BackupMode::Export,
-        password: "secret123".to_string(),
-        confirm_password: "secret123".to_string(),
-        backup_data: "abcdef1234567890".to_string(),
-        focus: BackupFocus::Data,
-    };
-
-    assert_eq!(state.mode, BackupMode::Export);
-    assert_eq!(state.password, "secret123");
-    assert_eq!(state.confirm_password, "secret123");
-    assert_eq!(state.backup_data, "abcdef1234567890");
-    assert_eq!(state.focus, BackupFocus::Data);
-}

@@ -6,7 +6,7 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, BackupFocus, InputMode, Screen};
+use crate::app::{App, InputMode, Screen};
 
 use super::Action;
 
@@ -34,28 +34,12 @@ pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
             Screen::ContactImport => {
                 app.import_state.file_path.pop();
             }
-            Screen::Backup => match app.backup_state.focus {
-                BackupFocus::Password => {
-                    app.backup_state.password.pop();
-                }
-                BackupFocus::Confirm => {
-                    app.backup_state.confirm_password.pop();
-                }
-                BackupFocus::Data => {
-                    app.backup_state.backup_data.pop();
-                }
-            },
             _ => {
                 app.input_buffer.pop();
             }
         },
         KeyCode::Char(c) => match app.screen {
             Screen::ContactImport => app.import_state.file_path.push(c),
-            Screen::Backup => match app.backup_state.focus {
-                BackupFocus::Password => app.backup_state.password.push(c),
-                BackupFocus::Confirm => app.backup_state.confirm_password.push(c),
-                BackupFocus::Data => app.backup_state.backup_data.push(c),
-            },
             _ => app.input_buffer.push(c),
         },
         _ => {}

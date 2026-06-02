@@ -8,6 +8,7 @@
 #[macro_use]
 mod common;
 mod action_result_tests;
+mod backup_humble_tests;
 mod contract_core_api_tests;
 mod duress_humble_tests;
 mod emergency_humble_tests;

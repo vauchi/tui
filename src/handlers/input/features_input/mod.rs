@@ -8,7 +8,6 @@
 //! Duress is fully engine-driven (core `DuressPinEngine`); the TUI renders
 //! its `ScreenModel` and forwards input — no per-screen handler here.
 
-mod backup;
 mod delivery;
 mod devices;
 mod exchange;
@@ -19,7 +18,6 @@ mod settings;
 mod support;
 mod sync;
 
-pub(super) use backup::handle_backup_keys;
 pub(super) use delivery::handle_delivery_keys;
 pub(super) use devices::handle_devices_keys;
 pub(super) use exchange::handle_exchange_keys;

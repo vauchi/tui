@@ -6,7 +6,7 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, BackupFocus, BackupMode, InputMode, OnboardingState, Screen};
+use crate::app::{App, InputMode, OnboardingState, Screen};
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use super::Action;
@@ -135,11 +135,8 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Opti
             {
                 let screen_id = engine.current_screen().screen_id;
                 if screen_id == "welcome" || screen_id == "identity_check" {
-                    app.backup_state.mode = BackupMode::Import;
-                    app.backup_state.backup_data.clear();
-                    app.backup_state.password.clear();
-                    app.backup_state.focus = BackupFocus::Data;
-                    app.input_mode = InputMode::Editing;
+                    // Engine-driven: the Backup choose screen lets the user
+                    // pick Restore (paste-restore via BackupRecoveryEngine).
                     app.goto(Screen::Backup);
                 }
             }
@@ -242,11 +239,8 @@ pub(super) fn handle_setup_welcome_keys(app: &mut App, key: KeyCode) {
             app.input_mode = InputMode::Editing;
         }
         KeyCode::Char('i') => {
-            app.backup_state.mode = BackupMode::Import;
-            app.backup_state.backup_data.clear();
-            app.backup_state.password.clear();
-            app.backup_state.focus = BackupFocus::Data;
-            app.input_mode = InputMode::Editing;
+            // Engine-driven: the Backup choose screen lets the user pick
+            // Restore (paste-restore via BackupRecoveryEngine).
             app.goto(Screen::Backup);
         }
         _ => {}

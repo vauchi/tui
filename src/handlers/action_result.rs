@@ -191,6 +191,14 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
         ActionResult::Complete => {
             // AppEngine handles completion routing internally
         }
+        ActionResult::BackupExportComplete { data } => {
+            // The engine produced the backup blob; the TUI surfaces it by
+            // copying to the clipboard (it is too long to display inline).
+            match crate::helpers::copy_to_clipboard(&data) {
+                Ok(_) => app.set_status("Backup created — copied to clipboard"),
+                Err(_) => app.set_status("Backup created (clipboard unavailable)"),
+            }
+        }
         ActionResult::StartDeviceLink => {
             app.screen = Screen::Devices;
         }

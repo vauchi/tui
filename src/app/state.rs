@@ -130,34 +130,6 @@ pub struct LockState {
     pub error: bool,
 }
 
-/// State for the backup screen.
-#[derive(Debug, Default)]
-pub struct BackupState {
-    pub mode: BackupMode,
-    pub password: String,
-    pub confirm_password: String,
-    pub backup_data: String,
-    pub focus: BackupFocus,
-}
-
-/// Which backup sub-screen is active: top-level menu, export, or import.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum BackupMode {
-    #[default]
-    Menu,
-    Export,
-    Import,
-}
-
-/// Tracks which input field is focused in the backup export/import form.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum BackupFocus {
-    #[default]
-    Password,
-    Confirm,
-    Data,
-}
-
 /// State for the privacy/GDPR screen.
 #[derive(Debug, Default)]
 pub struct PrivacyState {
