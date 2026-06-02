@@ -13,8 +13,8 @@ use crate::common;
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
 use vauchi_tui::app::{
-    ActionMenuState, BackupFocus, BackupMode, BackupState, EmergencyState, LockState, PrivacyState,
-    Screen, SyncState,
+    ActionMenuState, BackupFocus, BackupMode, BackupState, LockState, PrivacyState, Screen,
+    SyncState,
 };
 
 use common::{
@@ -535,26 +535,9 @@ fn test_snapshot_action_menu() {
     );
 }
 
-// =============================================================
-// Emergency
-// =============================================================
-
-// @scenario: emergency:View emergency broadcast screen
-#[test]
-fn test_snapshot_emergency() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    app.emergency_state = EmergencyState {
-        configured: false,
-        contact_ids_input: String::new(),
-        message_input: String::new(),
-        include_location: false,
-        trusted_count: 0,
-        ..EmergencyState::default()
-    };
-    let output = render_to_string(&mut app);
-    assert_snap!("emergency", "Settings", "select Emergency Wipe", output);
-}
+// Emergency broadcast is engine-driven (core `EmergencyBroadcastEngine`); the
+// bespoke-widget snapshot was removed with the bespoke handler. Coverage now
+// via emergency_humble_tests + core engine_golden_fixtures.
 
 // =============================================================
 // Lock Screen

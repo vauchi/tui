@@ -318,9 +318,11 @@ fn navigate_to_syncs_duress_pin_to_duress_screen() {
 
 // @internal
 #[test]
-fn navigate_to_syncs_emergency_shred_to_emergency_screen() {
+fn navigate_to_syncs_emergency_broadcast_to_emergency_screen() {
+    // The TUI Emergency screen is the broadcast screen (the prior mapping to
+    // EmergencyShred was the bug corrected by the humble migration).
     let mut app = create_app_with_identity();
-    app.app_engine.navigate_to(AppScreen::EmergencyShred);
+    app.app_engine.navigate_to(AppScreen::EmergencyBroadcast);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
     assert_eq!(app.screen, Screen::Emergency);
 }

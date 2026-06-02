@@ -144,7 +144,7 @@ impl App {
             Screen::Delivery => Some(AppScreen::DeliveryStatus),
             Screen::Devices => Some(AppScreen::DeviceManagement),
             Screen::Duress => Some(AppScreen::DuressPin),
-            Screen::Emergency => Some(AppScreen::EmergencyShred),
+            Screen::Emergency => Some(AppScreen::EmergencyBroadcast),
             Screen::ContactDetail => {
                 self.selected_contact_id
                     .as_ref()
@@ -261,7 +261,6 @@ impl App {
             Screen::ContactVisibility => self.selected_visibility_field = 0,
             Screen::Devices => self.device_link_result = None,
             Screen::Privacy => self.privacy_state = PrivacyState::default(),
-            Screen::Emergency => self.emergency_state = EmergencyState::default(),
             Screen::Groups => self.groups_state = GroupsState::default(),
             Screen::GroupDetail => self.groups_state.selected_contact_in_group = 0,
             _ => {}
@@ -284,7 +283,7 @@ impl App {
             AppScreen::DeliveryStatus => Screen::Delivery,
             AppScreen::DeviceManagement => Screen::Devices,
             AppScreen::DuressPin => Screen::Duress,
-            AppScreen::EmergencyShred => Screen::Emergency,
+            AppScreen::EmergencyBroadcast => Screen::Emergency,
             AppScreen::ContactDetail { contact_id } => {
                 self.selected_contact_id = Some(contact_id.clone());
                 Screen::ContactDetail

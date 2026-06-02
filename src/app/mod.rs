@@ -123,8 +123,6 @@ pub struct App {
     pub privacy_state: PrivacyState,
     /// Action menu state (popup for field actions)
     pub action_menu_state: ActionMenuState,
-    /// Emergency broadcast state
-    pub emergency_state: EmergencyState,
     /// Lock screen state
     pub lock_state: LockState,
     /// Groups management state
@@ -244,7 +242,6 @@ impl App {
             sync_state: SyncState::default(),
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
-            emergency_state: EmergencyState::default(),
             lock_state: LockState::default(),
             groups_state: GroupsState::default(),
             onboarding_state: OnboardingState::default(),

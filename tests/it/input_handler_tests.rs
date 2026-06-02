@@ -15,7 +15,7 @@ use rstest::rstest;
 
 use vauchi_app::ui::AppEngine;
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
-use vauchi_tui::app::{App, EmergencyFocus, EmergencyState, InputMode, Screen};
+use vauchi_tui::app::{App, InputMode, Screen};
 use vauchi_tui::handlers::{Action, handle_key};
 
 static INIT_LOCALES: Once = Once::new();
@@ -545,128 +545,10 @@ fn test_lock_go_back_stays_on_lock() {
     assert_eq!(app.screen, Screen::Lock);
 }
 
-// ================================================================
-// Emergency Broadcast Send + Confirmation Tests
-// ================================================================
-
-/// Feature: emergency_broadcast.feature @trigger @confirmation
-// @internal
-#[test]
-fn test_emergency_send_without_config_shows_error() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    // Not configured — pressing 's' should show error
-    handle_key(&mut app, KeyCode::Char('s'));
-    assert_eq!(app.emergency_state.focus, EmergencyFocus::Status);
-    assert!(app.status_message.is_some());
-}
-
-/// Feature: emergency_broadcast.feature @trigger @confirmation
-// @internal
-#[test]
-fn test_emergency_send_enters_confirm_mode() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    // Configure emergency broadcast
-    app.app_engine
-        .vauchi_mut()
-        .configure_emergency_broadcast(vec!["alice".to_string()], "Help me!".to_string(), false)
-        .unwrap();
-    app.emergency_state.configured = true;
-    app.emergency_state.trusted_count = 1;
-
-    // Press 's' to send
-    handle_key(&mut app, KeyCode::Char('s'));
-    assert_eq!(app.emergency_state.focus, EmergencyFocus::Confirm);
-}
-
-/// Feature: emergency_broadcast.feature @trigger @confirmation
-// @internal
-#[test]
-fn test_emergency_confirm_cancel_returns_to_status() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    app.emergency_state.configured = true;
-    app.emergency_state.focus = EmergencyFocus::Confirm;
-
-    // Press 'n' to cancel
-    handle_key(&mut app, KeyCode::Char('n'));
-    assert_eq!(app.emergency_state.focus, EmergencyFocus::Status);
-}
-
-/// Feature: emergency_broadcast.feature @trigger @confirmation
-// @internal
-#[test]
-fn test_emergency_confirm_esc_cancels() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    app.emergency_state.configured = true;
-    app.emergency_state.focus = EmergencyFocus::Confirm;
-
-    // Press Esc to cancel
-    handle_key(&mut app, KeyCode::Esc);
-    assert_eq!(app.emergency_state.focus, EmergencyFocus::Status);
-}
-
-/// Feature: emergency_broadcast.feature @edge @rate-limiting
-// @internal
-#[test]
-fn test_emergency_rate_limit_blocks_rapid_resend() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    app.app_engine
-        .vauchi_mut()
-        .configure_emergency_broadcast(vec!["alice".to_string()], "Help me!".to_string(), false)
-        .unwrap();
-    app.emergency_state.configured = true;
-    app.emergency_state.trusted_count = 1;
-
-    // Simulate a recent broadcast (now - 30 seconds)
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    app.emergency_state.last_broadcast_time = Some(now - 30);
-
-    // Press 's' — should be rate-limited, not enter Confirm
-    handle_key(&mut app, KeyCode::Char('s'));
-    assert_eq!(app.emergency_state.focus, EmergencyFocus::Status);
-    assert!(app.status_message.is_some());
-}
-
-/// Feature: emergency_broadcast.feature @edge @rate-limiting
-// @internal
-#[test]
-fn test_emergency_rate_limit_allows_after_cooldown() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
-    app.app_engine
-        .vauchi_mut()
-        .configure_emergency_broadcast(vec!["alice".to_string()], "Help me!".to_string(), false)
-        .unwrap();
-    app.emergency_state.configured = true;
-    app.emergency_state.trusted_count = 1;
-
-    // Simulate a broadcast 61 seconds ago (past cooldown)
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    app.emergency_state.last_broadcast_time = Some(now - 61);
-
-    // Press 's' — should enter Confirm (past cooldown)
-    handle_key(&mut app, KeyCode::Char('s'));
-    assert_eq!(app.emergency_state.focus, EmergencyFocus::Confirm);
-}
-
-// @internal
-#[test]
-fn test_emergency_state_defaults_include_last_broadcast() {
-    let state = EmergencyState::default();
-    assert!(!state.configured);
-    assert!(state.last_broadcast_time.is_none());
-    assert_eq!(state.focus, EmergencyFocus::Status);
-}
+// Emergency broadcast is engine-driven (core `EmergencyBroadcastEngine`);
+// behavioral coverage lives in `emergency_humble_tests.rs` and the core
+// engine tests. The bespoke send/confirm/rate-limit tests were removed with
+// the bespoke handler.
 
 // ============================================================================
 // SP-11: TUI Accessibility Improvements

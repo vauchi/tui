@@ -119,39 +119,6 @@ pub struct SyncState {
     pub sync_log: Vec<String>,
 }
 
-/// Emergency broadcast screen state.
-#[derive(Debug, Clone, Default)]
-pub struct EmergencyState {
-    /// Whether a config is currently saved.
-    pub configured: bool,
-    /// Trusted contact IDs (comma-separated in input).
-    pub contact_ids_input: String,
-    /// Alert message.
-    pub message_input: String,
-    /// Whether to include location.
-    pub include_location: bool,
-    /// Number of trusted contacts (for display).
-    pub trusted_count: usize,
-    /// Current input focus.
-    pub focus: EmergencyFocus,
-    /// Timestamp of last broadcast (for rate limiting).
-    pub last_broadcast_time: Option<u64>,
-}
-
-/// Focus states for the emergency screen.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum EmergencyFocus {
-    #[default]
-    /// Viewing status (not editing).
-    Status,
-    /// Editing contact IDs.
-    ContactIds,
-    /// Editing message.
-    Message,
-    /// Confirmation before sending broadcast.
-    Confirm,
-}
-
 /// Lock screen state for PIN entry on startup.
 #[derive(Debug, Clone, Default)]
 pub struct LockState {

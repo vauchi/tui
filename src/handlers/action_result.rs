@@ -69,7 +69,7 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     }
                     vauchi_app::ui::AppScreen::DeviceLinking => app.screen = Screen::Devices,
                     vauchi_app::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
-                    vauchi_app::ui::AppScreen::EmergencyShred => app.screen = Screen::Emergency,
+                    vauchi_app::ui::AppScreen::EmergencyBroadcast => app.screen = Screen::Emergency,
                     vauchi_app::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
                     vauchi_app::ui::AppScreen::Sync => app.screen = Screen::Sync,
                     vauchi_app::ui::AppScreen::Recovery => app.screen = Screen::Recovery,

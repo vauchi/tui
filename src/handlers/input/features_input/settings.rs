@@ -9,8 +9,6 @@ use crossterm::event::KeyCode;
 use crate::app::{App, PrivacyState, Screen};
 use vauchi_app::ui::FormDialogType;
 
-use super::emergency::refresh_emergency_state;
-
 pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('n') | KeyCode::Enter => {
@@ -30,8 +28,7 @@ pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCo
             app.goto(Screen::Privacy);
         }
         KeyCode::Char('e') => {
-            // Open Emergency Broadcast screen
-            refresh_emergency_state(app);
+            // Open Emergency Broadcast screen — engine loads config on navigate.
             app.goto(Screen::Emergency);
         }
         KeyCode::Char('D') => {
