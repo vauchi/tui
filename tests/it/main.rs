@@ -12,6 +12,7 @@ mod backup_humble_tests;
 mod contract_core_api_tests;
 mod duress_humble_tests;
 mod emergency_humble_tests;
+mod group_detail_humble_tests;
 mod handle_key_tests;
 mod helpers_test;
 mod input_handler_tests;

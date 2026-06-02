@@ -169,47 +169,6 @@ pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-/// Handle input for the group detail screen.
-pub(super) fn handle_group_detail_keys(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Char('j') | KeyCode::Down => {
-            if let Ok(groups) = app.app_engine.vauchi().list_groups()
-                && let Some(group) = groups.get(app.groups_state.selected_group)
-                && let Ok(contacts) = app.app_engine.vauchi().get_group_members(group.id())
-                && app.groups_state.selected_contact_in_group < contacts.len().saturating_sub(1)
-            {
-                app.groups_state.selected_contact_in_group += 1;
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            if app.groups_state.selected_contact_in_group > 0 {
-                app.groups_state.selected_contact_in_group -= 1;
-            }
-        }
-        KeyCode::Char('r') => {
-            // Engine-driven rename. The engine knows which group via
-            // `AppScreen::GroupDetail { group_id }`; we read its name
-            // for the FormDialog initial value.
-            let group_info = if let vauchi_app::ui::AppScreen::GroupDetail { group_id } =
-                app.app_engine.current_app_screen().clone()
-                && let Ok(groups) = app.app_engine.vauchi().list_groups()
-                && let Some(group) = groups.iter().find(|g| g.id() == group_id)
-            {
-                Some((group_id, group.name().to_string()))
-            } else {
-                None
-            };
-            if let Some((group_id, current_name)) = group_info {
-                app.goto_form_dialog(FormDialogType::RenameGroup {
-                    group_id,
-                    current_name,
-                });
-            }
-        }
-        _ => {}
-    }
-}
-
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
     // Resolve the correct contact index from selected_contact_id if available.
     // The engine path sets selected_contact_id (String), but all legacy operations

@@ -154,8 +154,6 @@ pub struct ActionMenuState {
 pub struct GroupsState {
     /// Currently selected group index in the list.
     pub selected_group: usize,
-    /// Currently selected contact index in group detail view.
-    pub selected_contact_in_group: usize,
     /// Search query for filtering groups.
     pub group_search_query: String,
     /// Whether group search mode is active.

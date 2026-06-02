@@ -18,8 +18,8 @@ use crate::ui::focus::FocusZone;
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use contacts_input::{
-    handle_action_menu_keys, handle_contact_detail_keys, handle_contacts_keys,
-    handle_group_detail_keys, handle_groups_keys, handle_visibility_keys,
+    handle_action_menu_keys, handle_contact_detail_keys, handle_contacts_keys, handle_groups_keys,
+    handle_visibility_keys,
 };
 use editing::handle_editing_mode;
 use features_input::{
@@ -272,7 +272,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Support => handle_support_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Groups => handle_groups_keys(app, key),
-        Screen::GroupDetail => handle_group_detail_keys(app, key),
         Screen::Lock => {
             eprintln!("WARNING: Lock screen reached legacy handler unexpectedly");
         }
@@ -295,6 +294,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::Duress
         | Screen::Emergency
         | Screen::Backup
+        | Screen::GroupDetail
         | Screen::More
         | Screen::Activity => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
@@ -461,7 +461,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Sync => handle_sync_keys(app, key),
                 Screen::Recovery => handle_recovery_keys(app, key),
                 Screen::Groups => handle_groups_keys(app, key),
-                Screen::GroupDetail => handle_group_detail_keys(app, key),
+                // GroupDetail: engine-driven (members List + rename action); Esc backs out.
+                Screen::GroupDetail => {
+                    if key == KeyCode::Esc {
+                        app.go_back();
+                    }
+                }
                 Screen::ContactVisibility => handle_visibility_keys(app, key),
                 Screen::Privacy => handle_privacy_keys(app, key),
                 Screen::Support => handle_support_keys(app, key),

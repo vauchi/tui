@@ -262,7 +262,6 @@ impl App {
             Screen::Devices => self.device_link_result = None,
             Screen::Privacy => self.privacy_state = PrivacyState::default(),
             Screen::Groups => self.groups_state = GroupsState::default(),
-            Screen::GroupDetail => self.groups_state.selected_contact_in_group = 0,
             _ => {}
         }
     }
