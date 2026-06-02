@@ -172,12 +172,3 @@ pub struct ImportState {
     /// Whether the import succeeded (for styling).
     pub success: bool,
 }
-
-/// Activity log screen state (Phase 2.4).
-#[derive(Debug, Default)]
-pub struct ActivityState {
-    /// Activity log entries.
-    pub entries: Vec<vauchi_core::storage::ActivityLogRow>,
-    /// Selected entry index.
-    pub selected: usize,
-}

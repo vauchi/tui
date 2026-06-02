@@ -141,8 +141,6 @@ pub struct App {
     pub focus: FocusManager,
     /// Contact import state
     pub import_state: ImportState,
-    /// Activity log state
-    pub activity_state: ActivityState,
     /// Internationalization
     pub i18n: I18n,
     /// Active theme
@@ -248,7 +246,6 @@ impl App {
             render_state: ScreenRenderState::default(),
             focus: FocusManager::new(),
             import_state: ImportState::default(),
-            activity_state: ActivityState::default(),
             i18n: detect_locale(),
             theme,
             theme_index,
