@@ -52,7 +52,7 @@ expression: output
 
 
 
-[Enter] Export Data  [x] Delete Identity  [?] help  [Esc] back  [q] quit
+[Enter] Export Data  [x] Delete Identity  [Enter] Panic Shred  [?] help
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 3 ─ Settings — press Esc (back) ═══════════════════
