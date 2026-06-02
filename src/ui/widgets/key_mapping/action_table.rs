@@ -312,6 +312,14 @@ static BINDINGS: &[Binding] = &[
         hint: "g",
         dispatchable: false,
     },
+    // -- 'n': dispatchable — create a new group (Groups screen). Replaces
+    //    the bespoke `handle_groups_keys` 'n' shortcut retired in G3.
+    Binding {
+        key: Some(KeyCode::Char('n')),
+        matcher: Matcher::Exact("new_group"),
+        hint: "n",
+        dispatchable: true,
+    },
 ];
 
 /// Footer hint for an `action_id`. Returns [`DEFAULT_HINT`] when no

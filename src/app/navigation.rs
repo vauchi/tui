@@ -280,7 +280,6 @@ impl App {
             Screen::ContactVisibility => self.selected_visibility_field = 0,
             Screen::Devices => self.device_link_result = None,
             Screen::Privacy => self.privacy_state = PrivacyState::default(),
-            Screen::Groups => self.groups_state = GroupsState::default(),
             _ => {}
         }
     }

@@ -123,8 +123,6 @@ pub struct App {
     pub action_menu_state: ActionMenuState,
     /// Lock screen state
     pub lock_state: LockState,
-    /// Groups management state
-    pub groups_state: GroupsState,
     /// Onboarding wizard state (SP-21)
     pub onboarding_state: OnboardingState,
     // -- Core-driven workflow engines --
@@ -238,7 +236,6 @@ impl App {
             privacy_state: PrivacyState::default(),
             action_menu_state: ActionMenuState::default(),
             lock_state: LockState::default(),
-            groups_state: GroupsState::default(),
             onboarding_state: OnboardingState::default(),
             app_engine,
             onboarding_engine,

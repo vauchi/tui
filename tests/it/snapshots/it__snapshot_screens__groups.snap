@@ -25,5 +25,5 @@ expression: output
 
 
 
-[Enter] New Group  [Enter] Rename Group  [Enter] Delete Group
+[n] New Group  [Enter] Rename Group  [Enter] Delete Group  [Enter] Merge Groups
    1 My Card    │  2 Contacts   │  3 Exchange   │  4 ★ Groups   │    5 More

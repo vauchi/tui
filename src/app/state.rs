@@ -138,20 +138,6 @@ pub struct ActionMenuState {
     pub selected: usize,
 }
 
-/// State for the groups management screen — terminal-only navigation
-/// state. Group identity comes from `AppScreen::GroupDetail
-/// { group_id }`; create/rename go through `FormDialogEngine` via
-/// `goto_form_dialog(FormDialogType::CreateGroup | RenameGroup)`.
-#[derive(Debug, Default)]
-pub struct GroupsState {
-    /// Currently selected group index in the list.
-    pub selected_group: usize,
-    /// Search query for filtering groups.
-    pub group_search_query: String,
-    /// Whether group search mode is active.
-    pub group_search_mode: bool,
-}
-
 /// State for the onboarding wizard (SP-21).
 #[derive(Debug, Default)]
 pub struct OnboardingState {

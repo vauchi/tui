@@ -5,7 +5,7 @@
 //! Contact-related input handlers: contact list, detail, actions, visibility.
 
 use crossterm::event::KeyCode;
-use vauchi_app::ui::{FormDialogType, UserAction, WorkflowEngine};
+use vauchi_app::ui::{UserAction, WorkflowEngine};
 
 use crate::app::{ActionMenuState, App, ImportState, InputMode, Screen};
 use crate::helpers;
@@ -100,75 +100,6 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         _ => {}
     }
 }
-
-/// Handle input for the groups list screen.
-pub(super) fn handle_groups_keys(app: &mut App, key: KeyCode) {
-    // Handle search mode
-    if app.groups_state.group_search_mode {
-        match key {
-            KeyCode::Esc => {
-                app.groups_state.group_search_mode = false;
-            }
-            KeyCode::Enter => {
-                app.groups_state.group_search_mode = false;
-            }
-            KeyCode::Backspace => {
-                app.groups_state.group_search_query.pop();
-                app.groups_state.selected_group = 0;
-            }
-            KeyCode::Char(c) => {
-                app.groups_state.group_search_query.push(c);
-                app.groups_state.selected_group = 0;
-            }
-            _ => {}
-        }
-        return;
-    }
-
-    // Normal navigation mode
-    match key {
-        KeyCode::Char('/') => {
-            app.groups_state.group_search_mode = true;
-            app.groups_state.group_search_query.clear();
-            app.groups_state.selected_group = 0;
-        }
-        KeyCode::Char('n') => {
-            // Engine-driven: route through FormDialogEngine.
-            app.goto_form_dialog(FormDialogType::CreateGroup);
-        }
-        KeyCode::Char('j') | KeyCode::Down => {
-            if let Ok(groups) = app.app_engine.vauchi().list_groups() {
-                let filtered_count = if app.groups_state.group_search_query.is_empty() {
-                    groups.len()
-                } else {
-                    let query = app.groups_state.group_search_query.to_lowercase();
-                    groups
-                        .iter()
-                        .filter(|g| g.name().to_lowercase().contains(&query))
-                        .count()
-                };
-                if app.groups_state.selected_group < filtered_count.saturating_sub(1) {
-                    app.groups_state.selected_group += 1;
-                }
-            }
-        }
-        KeyCode::Char('k') | KeyCode::Up => {
-            if app.groups_state.selected_group > 0 {
-                app.groups_state.selected_group -= 1;
-            }
-        }
-        KeyCode::Enter => {
-            // Engine drives Groups → GroupDetail navigation via the action bar
-            // (Groups WorkflowEngine emits NavigateTo(GroupDetail{group_id})).
-            // Local screen is synced via action_result.rs::NavigateTo.
-            app.goto(Screen::GroupDetail);
-        }
-        // 'd' for group deletion is handled by core's InlineConfirm via the action bar
-        KeyCode::Char('d') => {}
-        _ => {}
-    }
-}
-
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
     // Resolve the correct contact index from selected_contact_id if available.
     // The engine path sets selected_contact_id (String), but all legacy operations
