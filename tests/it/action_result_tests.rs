@@ -5,7 +5,7 @@
 //! Tests for `handle_action_result` — verifies that each `ActionResult` variant
 //! produces the correct TUI state change.
 
-use vauchi_app::ui::{ActionResult, AppEngine, AppScreen, ScreenModel};
+use vauchi_app::ui::{ActionResult, AppEngine, AppScreen, ScreenModel, UserAction, WorkflowEngine};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, Screen};
 use vauchi_tui::handlers::action_result::handle_action_result;
@@ -81,10 +81,14 @@ fn open_contact_sets_contact_detail_screen() {
 
 // @internal
 #[test]
-fn start_device_link_sets_devices_screen() {
+fn start_device_link_raw_navigates_to_device_linking() {
+    // Raw StartDeviceLink (Onboarding / DeviceReplacement) drives the engine
+    // to the device-link screen so the QR shows there too. The Devices path
+    // is intercepted in core and arrives as NavigateTo(DeviceLinking).
     let mut app = create_app_with_identity();
     handle_action_result(&mut app, ActionResult::StartDeviceLink);
-    assert_eq!(app.screen, Screen::Devices);
+    assert_eq!(app.screen, Screen::DeviceLinking);
+    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
 }
 
 // --- Status message variants ---
@@ -300,11 +304,43 @@ fn navigate_to_syncs_lock_screen() {
 
 // @internal
 #[test]
-fn navigate_to_syncs_device_linking_to_devices_screen() {
+fn navigate_to_syncs_device_linking_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::DeviceLinking);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.screen, Screen::Devices);
+    assert_eq!(app.screen, Screen::DeviceLinking);
+}
+
+// @internal
+#[test]
+fn link_device_reaches_device_linking_and_survives_resync() {
+    // Regression: AppScreen::DeviceLinking used to collapse to Screen::Devices,
+    // so ensure_engine_synced (run every draw) snapped the engine back to
+    // DeviceManagement (engine_target_for_screen(Devices) = DeviceManagement)
+    // and the device-link QR screen never rendered.
+    let mut app = create_app_with_identity();
+    app.app_engine.navigate_to(AppScreen::DeviceManagement);
+    app.screen = Screen::Devices;
+
+    // "Link New Device" is the Primary action on the DeviceManagement screen.
+    let result = app.app_engine.handle_action(UserAction::ActionPressed {
+        action_id: "link_device".into(),
+    });
+    handle_action_result(&mut app, result);
+    assert_eq!(app.screen, Screen::DeviceLinking);
+
+    // Simulate the next frame's sync — it must NOT revert the engine.
+    app.ensure_engine_synced();
+    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
+
+    // The rendered screen is a device-link screen (QR display or pending),
+    // not the device-management list it was snapped back to before the fix.
+    let model = app.app_engine.current_screen();
+    assert!(
+        model.screen_id.starts_with("link_"),
+        "expected a device-link screen, got {:?}",
+        model.screen_id
+    );
 }
 
 // @internal

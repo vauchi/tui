@@ -187,6 +187,7 @@ impl App {
             // navigates the engine to `AppScreen::FormDialog { dialog_type }`
             // directly; it carries its own data and falls through to `None`.
             Screen::DeviceReplacement => Some(AppScreen::DeviceReplacement),
+            Screen::DeviceLinking => Some(AppScreen::DeviceLinking),
             Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
             // ContactMerge is engine-driven: action_result.rs syncs
             // `app.screen = Screen::ContactMerge` from
@@ -320,6 +321,7 @@ impl App {
             AppScreen::Privacy => Screen::Privacy,
             AppScreen::Support => Screen::Support,
             AppScreen::DeviceReplacement => Screen::DeviceReplacement,
+            AppScreen::DeviceLinking => Screen::DeviceLinking,
             AppScreen::ContactDuplicates => Screen::ContactDuplicates,
             AppScreen::ContactMerge { .. } => Screen::ContactMerge,
             AppScreen::ContactLimit => Screen::ContactLimit,
@@ -389,6 +391,7 @@ impl App {
             | Screen::Backup
             | Screen::Devices
             | Screen::DeviceReplacement
+            | Screen::DeviceLinking
             | Screen::Delivery
             | Screen::Sync
             | Screen::Activity

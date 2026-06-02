@@ -236,6 +236,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::MyInfoEntryDetail
             | Screen::Activity
             | Screen::DeviceReplacement
+            | Screen::DeviceLinking
             | Screen::More
     ) {
         handle_engine_keys(app, key);
@@ -275,6 +276,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::MyInfoEntryDetail
         | Screen::VerifyFingerprint
         | Screen::DeviceReplacement
+        | Screen::DeviceLinking
         | Screen::Duress
         | Screen::Emergency
         | Screen::Backup

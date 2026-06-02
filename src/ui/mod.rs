@@ -314,7 +314,8 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::Support
         | Screen::Emergency
         | Screen::Duress
-        | Screen::DeviceReplacement => 4,
+        | Screen::DeviceReplacement
+        | Screen::DeviceLinking => 4,
         _ => 0, // Default to My Card
     };
 

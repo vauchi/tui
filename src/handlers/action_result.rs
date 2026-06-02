@@ -86,7 +86,7 @@ pub(crate) fn handle_action_result_with(
                         }
                         app.screen = Screen::Lock;
                     }
-                    vauchi_app::ui::AppScreen::DeviceLinking => app.screen = Screen::Devices,
+                    vauchi_app::ui::AppScreen::DeviceLinking => app.screen = Screen::DeviceLinking,
                     vauchi_app::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
                     vauchi_app::ui::AppScreen::EmergencyBroadcast => app.screen = Screen::Emergency,
                     vauchi_app::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
@@ -222,7 +222,15 @@ pub(crate) fn handle_action_result_with(
             }
         }
         ActionResult::StartDeviceLink => {
-            app.screen = Screen::Devices;
+            // The Devices (DeviceManagement) path is intercepted in core and
+            // arrives as NavigateTo(DeviceLinking). StartDeviceLink only
+            // reaches the TUI raw from Onboarding / DeviceReplacement, which
+            // have no separate native link flow here — drive the engine to
+            // the device-link screen so the QR shows there too.
+            app.app_engine
+                .navigate_to(vauchi_app::ui::AppScreen::DeviceLinking);
+            app.screen = Screen::DeviceLinking;
+            app.render_state = Default::default();
         }
         ActionResult::RequestCamera => {
             // TUI can't open camera — show status message

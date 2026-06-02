@@ -86,6 +86,8 @@ pub enum Screen {
     ContactImport,
     /// Device replacement wizard
     DeviceReplacement,
+    /// Device-link QR display (engine-driven device-link flow)
+    DeviceLinking,
 }
 
 /// Input mode for text entry.
