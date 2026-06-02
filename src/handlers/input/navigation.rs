@@ -85,16 +85,6 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
     }
 }
 
-pub(super) fn handle_help_keys(app: &mut App, key: KeyCode) {
-    match key {
-        // Enter is handled by the engine (FAQ selection → ShowInfoOverlay)
-        KeyCode::Char('q') | KeyCode::Esc => {
-            app.go_back();
-        }
-        _ => {}
-    }
-}
-
 // ── SP-21 Onboarding Wizard Handlers ──
 // Engine-driven: delegate to OnboardingEngine via key_mapping
 

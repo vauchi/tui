@@ -209,7 +209,7 @@ static BINDINGS: &[Binding] = &[
         key: Some(KeyCode::Char('r')),
         matcher: Matcher::Exact("retry_all"),
         hint: "r",
-        dispatchable: false,
+        dispatchable: true,
     },
     // -- Esc: hint-only (back-navigation is handled in handlers/input/navigation.rs).
     Binding {

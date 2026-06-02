@@ -414,38 +414,6 @@ fn test_delivery_esc_goes_back_to_more() {
     assert_eq!(app.screen, Screen::More);
 }
 
-// @scenario: message_delivery:Delivery retry key sets status
-#[test]
-fn test_delivery_r_runs_retry() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Delivery);
-
-    let action = handle_key(&mut app, KeyCode::Char('r'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Delivery);
-    assert_eq!(
-        app.status_message.as_deref(),
-        Some("Delivery retries processed"),
-        "Retry should set status message"
-    );
-}
-
-// @scenario: message_delivery:Delivery cleanup key sets status
-#[test]
-fn test_delivery_c_runs_cleanup() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Delivery);
-
-    let action = handle_key(&mut app, KeyCode::Char('c'));
-    assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Delivery);
-    assert_eq!(
-        app.status_message.as_deref(),
-        Some("Delivery cleanup complete"),
-        "Cleanup should set status message"
-    );
-}
-
 // ============================================================================
 // Duress screen tests
 // ============================================================================

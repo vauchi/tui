@@ -23,14 +23,12 @@ use contacts_input::{
 };
 use editing::handle_editing_mode;
 use features_input::{
-    handle_delivery_keys, handle_devices_keys, handle_exchange_keys, handle_lock_keys,
-    handle_privacy_keys, handle_recovery_keys, handle_settings_keys, handle_support_keys,
-    handle_sync_keys,
+    handle_devices_keys, handle_exchange_keys, handle_lock_keys, handle_privacy_keys,
+    handle_settings_keys, handle_sync_keys,
 };
 use navigation::{
-    handle_help_keys, handle_my_info_keys, handle_setup_add_fields_keys,
-    handle_setup_create_identity_keys, handle_setup_ready_keys, handle_setup_security_keys,
-    handle_setup_welcome_keys,
+    handle_my_info_keys, handle_setup_add_fields_keys, handle_setup_create_identity_keys,
+    handle_setup_ready_keys, handle_setup_security_keys, handle_setup_welcome_keys,
 };
 
 /// Action to take after handling input.
@@ -253,17 +251,13 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::ContactVisibility => handle_visibility_keys(app, key),
         Screen::Exchange => handle_exchange_keys(app, key),
         Screen::Settings => handle_settings_keys(app, key),
-        Screen::Help => handle_help_keys(app, key),
         // Form dialogs: handled by engine guard above when app_engine is present
         Screen::FormDialog => {
             eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
         }
         Screen::Devices => handle_devices_keys(app, key),
-        Screen::Recovery => handle_recovery_keys(app, key),
         Screen::Sync => handle_sync_keys(app, key),
-        Screen::Delivery => handle_delivery_keys(app, key),
         Screen::Privacy => handle_privacy_keys(app, key),
-        Screen::Support => handle_support_keys(app, key),
         Screen::ActionMenu => handle_action_menu_keys(app, key),
         Screen::Lock => {
             eprintln!("WARNING: Lock screen reached legacy handler unexpectedly");
@@ -289,6 +283,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         | Screen::Backup
         | Screen::GroupDetail
         | Screen::Groups
+        | Screen::Help
+        | Screen::Delivery
+        | Screen::Recovery
+        | Screen::Support
         | Screen::More
         | Screen::Activity => {
             eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
@@ -433,14 +431,12 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::ContactDetail => handle_contact_detail_keys(app, key),
                 Screen::Exchange => handle_exchange_keys(app, key),
                 Screen::Settings => handle_settings_keys(app, key),
-                Screen::Help => handle_help_keys(app, key),
                 // Backup: engine-driven; Esc exits the flow.
                 Screen::Backup => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }
                 }
-                Screen::Delivery => handle_delivery_keys(app, key),
                 Screen::Devices => handle_devices_keys(app, key),
                 // Duress: engine-driven; Esc exits the flow (ADR-021/043)
                 Screen::Duress => {
@@ -455,16 +451,19 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                     }
                 }
                 Screen::Sync => handle_sync_keys(app, key),
-                Screen::Recovery => handle_recovery_keys(app, key),
-                // Groups / GroupDetail: engine-driven; Esc backs out.
-                Screen::Groups | Screen::GroupDetail => {
+                // Engine-driven; Esc backs out (global Esc handles it too).
+                Screen::Groups
+                | Screen::GroupDetail
+                | Screen::Help
+                | Screen::Delivery
+                | Screen::Recovery
+                | Screen::Support => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }
                 }
                 Screen::ContactVisibility => handle_visibility_keys(app, key),
                 Screen::Privacy => handle_privacy_keys(app, key),
-                Screen::Support => handle_support_keys(app, key),
                 // Form dialogs: Esc goes back (engine handles chars/Enter via key_mapping)
                 Screen::FormDialog => {
                     if key == KeyCode::Esc {

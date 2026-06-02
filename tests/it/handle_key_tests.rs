@@ -220,8 +220,8 @@ fn test_handle_key_help_q_quits() {
     let (mut app, _tmp) = create_test_app();
     app.screen = Screen::Help;
 
-    // Global q handler runs before screen-specific handler, so q quits
-    // even from Help. The handle_help_keys 'q' branch is unreachable.
+    // Global q handler runs before screen-specific handling, so q quits
+    // even from Help (now fully engine-driven, no bespoke handler).
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(
         matches!(action, Action::Quit),
