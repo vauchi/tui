@@ -288,11 +288,9 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 /// Build navigation items for the persistent bottom nav bar.
 fn build_nav_items(app: &App) -> Vec<NavItem> {
     let active_tab = match app.screen {
-        Screen::MyInfo
-        | Screen::MyInfoEntryDetail
-        | Screen::AddField
-        | Screen::EditField
-        | Screen::EditName => 0,
+        Screen::MyInfo | Screen::MyInfoEntryDetail => 0,
+        // Form dialogs collapse to one screen; tab comes from the engine.
+        Screen::FormDialog => app.form_dialog_nav_index(),
         Screen::Contacts
         | Screen::ContactDetail
         | Screen::ContactEdit
@@ -316,8 +314,7 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | Screen::Support
         | Screen::Emergency
         | Screen::Duress
-        | Screen::DeviceReplacement
-        | Screen::EditRelayUrl => 4,
+        | Screen::DeviceReplacement => 4,
         _ => 0, // Default to My Card
     };
 

@@ -11,7 +11,7 @@ use crossterm::event::KeyCode;
 use rstest::rstest;
 use tempfile::TempDir;
 
-use vauchi_app::ui::AppEngine;
+use vauchi_app::ui::{AppEngine, AppScreen, FormDialogType};
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 
 use vauchi_tui::app::{App, InputMode, Screen};
@@ -120,7 +120,6 @@ fn test_handle_key_esc_stays_on_setup() {
 #[case::c_contacts('c', Screen::Contacts)]
 #[case::s_settings('s', Screen::Settings)]
 #[case::d_devices('d', Screen::Devices)]
-#[case::a_add_field('a', Screen::AddField)]
 #[case::g_groups('g', Screen::Groups)]
 #[case::x_exchange('X', Screen::Exchange)]
 fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
@@ -137,8 +136,6 @@ fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected:
 
 // @internal
 #[rstest]
-#[case::n_edit_name('n', Screen::EditName)]
-#[case::u_edit_relay_url('u', Screen::EditRelayUrl)]
 #[case::b_backup('b', Screen::Backup)]
 #[case::p_privacy('p', Screen::Privacy)]
 fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
@@ -147,12 +144,70 @@ fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expec
 
     handle_key(&mut app, KeyCode::Char(key));
     assert_eq!(app.screen, expected);
-    // Engine-driven screens (EditName, EditRelayUrl) stay in Normal mode
     assert_eq!(
         app.input_mode,
         InputMode::Normal,
         "Settings navigation should stay in Normal mode"
     );
+}
+
+// Form dialogs collapse to the single `Screen::FormDialog`. Each opening key
+// is still verified against the engine's `AppScreen::FormDialog { dialog_type }`
+// — the single source of truth for which dialog opened.
+// @internal
+#[test]
+fn test_handle_key_a_opens_add_field_dialog() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::MyInfo;
+    handle_key(&mut app, KeyCode::Char('a'));
+    assert_eq!(app.screen, Screen::FormDialog);
+    assert!(
+        matches!(
+            app.current_app_screen(),
+            AppScreen::FormDialog {
+                dialog_type: FormDialogType::AddField { .. }
+            }
+        ),
+        "'a' from Home should open the AddField dialog"
+    );
+}
+
+// @internal
+#[test]
+fn test_handle_key_n_opens_edit_name_dialog() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Settings;
+    handle_key(&mut app, KeyCode::Char('n'));
+    assert_eq!(app.screen, Screen::FormDialog);
+    assert!(
+        matches!(
+            app.current_app_screen(),
+            AppScreen::FormDialog {
+                dialog_type: FormDialogType::EditName { .. }
+            }
+        ),
+        "'n' from Settings should open the EditName dialog"
+    );
+    assert_eq!(app.input_mode, InputMode::Normal);
+}
+
+// @internal
+#[test]
+fn test_handle_key_u_opens_edit_relay_url_dialog() {
+    let (mut app, _tmp) = create_test_app();
+    app.screen = Screen::Settings;
+    handle_key(&mut app, KeyCode::Char('u'));
+    assert_eq!(app.screen, Screen::FormDialog);
+    assert!(
+        matches!(
+            app.current_app_screen(),
+            AppScreen::FormDialog {
+                dialog_type: FormDialogType::EditRelayUrl { .. }
+            }
+        ),
+        "'u' from Settings should open the EditRelayUrl dialog"
+    );
+    assert_eq!(app.input_mode, InputMode::Normal);
 }
 
 // ============================================================================

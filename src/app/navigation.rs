@@ -50,21 +50,27 @@ impl App {
     /// `FormDialogEngine` owns the form values and is now the single
     /// source of truth for these dialogs.
     pub fn goto_form_dialog(&mut self, dialog_type: FormDialogType) {
-        let screen = match &dialog_type {
-            FormDialogType::AddField { .. } => Screen::AddField,
-            FormDialogType::EditField { .. } => Screen::EditField,
-            FormDialogType::EditName { .. } => Screen::EditName,
-            FormDialogType::EditRelayUrl { .. } => Screen::EditRelayUrl,
-            FormDialogType::CreateGroup => Screen::CreateGroup,
-            FormDialogType::RenameGroup { .. } => Screen::RenameGroup,
+        // FormDialogType is `#[non_exhaustive]`; only navigate for the
+        // dialog kinds this frontend renders. All collapse to the single
+        // `Screen::FormDialog`; the kind lives in the engine's AppScreen.
+        match &dialog_type {
+            FormDialogType::AddField { .. }
+            | FormDialogType::EditField { .. }
+            | FormDialogType::EditName { .. }
+            | FormDialogType::EditRelayUrl { .. }
+            | FormDialogType::CreateGroup
+            | FormDialogType::RenameGroup { .. } => {}
             _ => return,
-        };
-        self.clear_contact_search_if_leaving(screen);
-        self.screen = screen;
+        }
+        self.clear_contact_search_if_leaving(Screen::FormDialog);
+        self.screen = Screen::FormDialog;
         self.input_mode = InputMode::Normal;
-        self.sync_nav_index();
+        // Navigate the engine first so `sync_nav_index` — which derives the
+        // active tab from `AppScreen::FormDialog { dialog_type }` — observes
+        // the dialog kind rather than the screen we are leaving.
         self.app_engine
             .navigate_to(AppScreen::FormDialog { dialog_type });
+        self.sync_nav_index();
         self.render_state = ScreenRenderState::default();
     }
 
@@ -177,9 +183,9 @@ impl App {
             }
             Screen::Privacy => Some(AppScreen::Privacy),
             Screen::Support => Some(AppScreen::Support),
-            // FormDialog screens (AddField, EditField, EditName, EditRelayUrl)
-            // are entered via `goto_form_dialog(FormDialogType)` which carries
-            // its own data; they don't pass through this mapper.
+            // `Screen::FormDialog` is entered via `goto_form_dialog`, which
+            // navigates the engine to `AppScreen::FormDialog { dialog_type }`
+            // directly; it carries its own data and falls through to `None`.
             Screen::DeviceReplacement => Some(AppScreen::DeviceReplacement),
             Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
             // ContactMerge is engine-driven: action_result.rs syncs
@@ -235,7 +241,20 @@ impl App {
             Screen::Backup if !self.app_engine.vauchi().has_identity() => {
                 self.goto(Screen::SetupWelcome);
             }
-            Screen::AddField if self.onboarding_state.identity_created => {
+            // Setup-time AddField: the bootstrap wizard (SetupAddFields)
+            // opens the AddField form dialog, which has no engine history to
+            // pop back to. Guard on the live dialog kind — `identity_created`
+            // stays true forever, so post-setup form dialogs must still take
+            // the engine-driven branch below.
+            Screen::FormDialog
+                if self.onboarding_state.identity_created
+                    && matches!(
+                        self.app_engine.current_app_screen(),
+                        AppScreen::FormDialog {
+                            dialog_type: FormDialogType::AddField { .. }
+                        }
+                    ) =>
+            {
                 self.goto(Screen::SetupAddFields);
             }
 
@@ -317,7 +336,8 @@ impl App {
             // top-level screens; AppEngine pops back through them
             // automatically. Stay on whatever the next non-overlay
             // screen is — for now fall back to MyInfo.
-            AppScreen::FormDialog { .. } | AppScreen::DeepLinkConsent { .. } => Screen::MyInfo,
+            AppScreen::FormDialog { .. } => Screen::FormDialog,
+            AppScreen::DeepLinkConsent { .. } => Screen::MyInfo,
             // `AppScreen` is `#[non_exhaustive]` — any future variant
             // not yet wired into TUI lands on MyInfo until the migration
             // catches up.
@@ -343,11 +363,10 @@ impl App {
     fn nav_index_for_screen(&self) -> Option<usize> {
         match self.screen {
             // 0: My Card (MyInfo and sub-screens)
-            Screen::MyInfo
-            | Screen::MyInfoEntryDetail
-            | Screen::AddField
-            | Screen::EditField
-            | Screen::EditName => Some(0),
+            Screen::MyInfo | Screen::MyInfoEntryDetail => Some(0),
+            // Form dialogs collapse to one screen; the active tab is derived
+            // from the engine's dialog kind (My Card / Groups / More).
+            Screen::FormDialog => Some(self.form_dialog_nav_index()),
             // 1: Contacts and sub-screens
             Screen::Contacts
             | Screen::ContactDetail
@@ -361,9 +380,7 @@ impl App {
             // 2: Exchange
             Screen::Exchange => Some(2),
             // 3: Groups and sub-screens
-            Screen::Groups | Screen::GroupDetail | Screen::CreateGroup | Screen::RenameGroup => {
-                Some(3)
-            }
+            Screen::Groups | Screen::GroupDetail => Some(3),
             // 4: More and all infrastructure screens
             Screen::More
             | Screen::Settings
@@ -372,7 +389,6 @@ impl App {
             | Screen::Support
             | Screen::Emergency
             | Screen::Duress
-            | Screen::EditRelayUrl
             | Screen::Backup
             | Screen::Devices
             | Screen::DeviceReplacement
@@ -380,6 +396,36 @@ impl App {
             | Screen::Sync
             | Screen::Activity
             | Screen::Recovery => Some(4),
+            _ => None,
+        }
+    }
+
+    /// Active nav-bar tab (0-4) for the current form dialog, derived from
+    /// the engine's `AppScreen::FormDialog { dialog_type }` — the single
+    /// source of truth now that the per-dialog `Screen` variants are gone.
+    /// AddField/EditField/EditName -> My Card (0); CreateGroup/RenameGroup ->
+    /// Groups (3); EditRelayUrl -> More (4).
+    pub(crate) fn form_dialog_nav_index(&self) -> usize {
+        match self.app_engine.current_app_screen() {
+            AppScreen::FormDialog { dialog_type } => match dialog_type {
+                FormDialogType::AddField { .. }
+                | FormDialogType::EditField { .. }
+                | FormDialogType::EditName { .. } => 0,
+                FormDialogType::CreateGroup | FormDialogType::RenameGroup { .. } => 3,
+                FormDialogType::EditRelayUrl { .. } => 4,
+                _ => 0,
+            },
+            _ => 0,
+        }
+    }
+
+    /// The live form-dialog kind, if the engine is currently on a form
+    /// dialog. Captured before dispatching an action so success feedback
+    /// survives the engine's back-navigation (the engine has already left
+    /// the dialog by the time `handle_action_result` runs).
+    pub(crate) fn form_dialog_type(&self) -> Option<FormDialogType> {
+        match self.app_engine.current_app_screen() {
+            AppScreen::FormDialog { dialog_type } => Some(dialog_type.clone()),
             _ => None,
         }
     }

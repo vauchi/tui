@@ -13,7 +13,7 @@ use tempfile::TempDir;
 use crossterm::event::KeyCode;
 use rstest::rstest;
 
-use vauchi_app::ui::AppEngine;
+use vauchi_app::ui::{AppEngine, AppScreen, FormDialogType};
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::{App, InputMode, Screen};
 use vauchi_tui::handlers::{Action, handle_key};
@@ -168,10 +168,10 @@ fn test_go_back_from_contact_visibility_returns_to_contact_detail() {
     assert_eq!(app.screen, Screen::ContactDetail);
 }
 
-// FormDialog screens are entered via `goto_form_dialog(FormDialogType)`
-// which carries the dialog's data. Plain `goto(Screen::EditName)` does
-// not navigate AppEngine and so leaves nav history untouched, making
-// `go_back` pop the wrong frame. These tests use the real entry point.
+// Form dialogs are entered via `goto_form_dialog(FormDialogType)`, which
+// carries the dialog's data. Plain `goto(Screen::FormDialog)` does not
+// navigate AppEngine and so leaves nav history untouched, making `go_back`
+// pop the wrong frame. These tests use the real entry point.
 // @internal
 #[test]
 fn test_go_back_from_edit_name_returns_to_settings() {
@@ -196,6 +196,65 @@ fn test_go_back_from_edit_relay_url_returns_to_settings() {
     });
     app.go_back();
     assert_eq!(app.screen, Screen::Settings);
+}
+
+// 'a' from Home opens the AddField form dialog. The dialog kind is asserted
+// via the engine's AppScreen (single source of truth) now that all form
+// dialogs share `Screen::FormDialog`.
+// @internal
+#[test]
+fn test_handle_key_a_from_home_opens_add_field_dialog() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(Screen::MyInfo);
+    let action = handle_key(&mut app, KeyCode::Char('a'));
+    assert!(matches!(action, Action::Continue));
+    assert_eq!(app.screen, Screen::FormDialog);
+    assert!(
+        matches!(
+            app.current_app_screen(),
+            AppScreen::FormDialog {
+                dialog_type: FormDialogType::AddField { .. }
+            }
+        ),
+        "'a' from Home should open the AddField dialog"
+    );
+}
+
+// Nav-bar tab for a form dialog is derived from the engine's dialog kind
+// (the single source of truth): My Card (0), Groups (3), or More (4).
+// @internal
+#[rstest]
+#[case::add_field(FormDialogType::AddField { available_groups: vec![] }, 0)]
+#[case::edit_field(
+    FormDialogType::EditField {
+        field_id: "f1".into(),
+        field_label: "Phone".into(),
+        current_value: "555".into(),
+        current_note: None,
+    },
+    0
+)]
+#[case::edit_name(FormDialogType::EditName { current_name: "Alice".into() }, 0)]
+#[case::edit_relay_url(FormDialogType::EditRelayUrl { current_url: "https://r.test".into() }, 4)]
+#[case::create_group(FormDialogType::CreateGroup, 3)]
+#[case::rename_group(
+    FormDialogType::RenameGroup {
+        group_id: "g1".into(),
+        current_name: "Friends".into(),
+    },
+    3
+)]
+fn test_form_dialog_nav_tab_follows_dialog_kind(
+    #[case] dialog: FormDialogType,
+    #[case] expected_tab: usize,
+) {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto_form_dialog(dialog);
+    assert_eq!(app.screen, Screen::FormDialog);
+    assert_eq!(
+        app.focus.nav_index, expected_tab,
+        "form-dialog nav tab should follow the engine's dialog kind"
+    );
 }
 
 // @internal
@@ -293,7 +352,6 @@ fn test_handle_key_esc_goes_back() {
 #[case::d_devices('d', Screen::Devices)]
 #[case::r_recovery('r', Screen::Recovery)]
 #[case::b_backup('b', Screen::Backup)]
-#[case::a_add_field('a', Screen::AddField)]
 #[case::y_delivery('y', Screen::Delivery)]
 #[case::g_groups('g', Screen::Groups)]
 #[case::x_exchange('X', Screen::Exchange)]

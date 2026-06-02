@@ -4,12 +4,28 @@
 
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
-use vauchi_app::ui::{ActionResult, Component, LockScreenEngine, WorkflowEngine};
+use vauchi_app::ui::{ActionResult, Component, FormDialogType, LockScreenEngine, WorkflowEngine};
 
 use crate::app::{App, Screen};
 
 /// Applies an `ActionResult` from AppEngine to TUI state.
+///
+/// Use this where the action cannot originate from a form dialog (and from
+/// tests). Form-dialog dispatch sites call [`handle_action_result_with`]
+/// with the dialog kind captured before dispatch.
 pub fn handle_action_result(app: &mut App, result: ActionResult) {
+    handle_action_result_with(app, result, None);
+}
+
+/// As [`handle_action_result`], but `from_form_dialog` carries the dialog
+/// kind captured *before* dispatch. Needed because the engine has already
+/// navigated back to the parent by the time this runs, so its `AppScreen`
+/// no longer carries the kind that drives success feedback.
+pub(crate) fn handle_action_result_with(
+    app: &mut App,
+    result: ActionResult,
+    from_form_dialog: Option<FormDialogType>,
+) {
     match result {
         ActionResult::UpdateScreen(_) => {
             // Screen model is re-fetched on next draw via app_engine.current_screen()
@@ -18,8 +34,13 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             // currently focused component is not a TextInput (e.g., after selecting
             // a type in the ToggleList, the engine adds TextInput fields below it).
             if matches!(
-                app.screen,
-                Screen::AddField | Screen::EditField | Screen::EditName | Screen::EditRelayUrl
+                from_form_dialog,
+                Some(
+                    FormDialogType::AddField { .. }
+                        | FormDialogType::EditField { .. }
+                        | FormDialogType::EditName { .. }
+                        | FormDialogType::EditRelayUrl { .. }
+                )
             ) {
                 let screen_model = app.app_engine.current_screen();
                 let focused = screen_model
@@ -41,8 +62,6 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
             // Sync TUI screen from AppEngine's current screen.
             // Reset render state for the new screen (fresh focus/selection).
 
-            // Show success feedback when navigating back from form dialogs
-            let from_screen = app.screen;
             {
                 app.render_state = Default::default();
                 match app.app_engine.current_app_screen() {
@@ -86,19 +105,11 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                         app.selected_contact_id = Some(contact_id.clone());
                         app.screen = Screen::ContactVisibility;
                     }
-                    vauchi_app::ui::AppScreen::FormDialog { dialog_type } => {
-                        // Map form dialog types to the corresponding TUI Screen.
-                        // FormDialogEngine owns the form values; no local mirror.
-                        use vauchi_app::ui::FormDialogType;
-                        app.screen = match dialog_type {
-                            FormDialogType::AddField { .. } => Screen::AddField,
-                            FormDialogType::EditField { .. } => Screen::EditField,
-                            FormDialogType::EditName { .. } => Screen::EditName,
-                            FormDialogType::EditRelayUrl { .. } => Screen::EditRelayUrl,
-                            FormDialogType::CreateGroup => Screen::CreateGroup,
-                            FormDialogType::RenameGroup { .. } => Screen::RenameGroup,
-                            _ => app.screen, // unknown variant — stay
-                        };
+                    vauchi_app::ui::AppScreen::FormDialog { .. } => {
+                        // All form dialogs collapse to one screen; the kind
+                        // lives in the engine's AppScreen (single source of
+                        // truth). FormDialogEngine owns the form values.
+                        app.screen = Screen::FormDialog;
                     }
                     vauchi_app::ui::AppScreen::ContactEdit { contact_id } => {
                         app.selected_contact_id = Some(contact_id.clone());
@@ -131,14 +142,16 @@ pub fn handle_action_result(app: &mut App, result: ActionResult) {
                     }
                 }
             }
-            // Show success feedback when completing a form dialog
-            match from_screen {
-                Screen::AddField => app.set_status("Entry added"),
-                Screen::EditField => app.set_status("Entry updated"),
-                Screen::EditName => app.set_status("Name updated"),
-                Screen::EditRelayUrl => app.set_status("Relay URL updated"),
-                Screen::CreateGroup => app.set_status("Group created"),
-                Screen::RenameGroup => app.set_status("Group renamed"),
+            // Show success feedback when completing a form dialog. The kind
+            // is captured pre-dispatch (`from_form_dialog`) because the engine
+            // has already navigated back to the parent by the time this runs.
+            match from_form_dialog {
+                Some(FormDialogType::AddField { .. }) => app.set_status("Entry added"),
+                Some(FormDialogType::EditField { .. }) => app.set_status("Entry updated"),
+                Some(FormDialogType::EditName { .. }) => app.set_status("Name updated"),
+                Some(FormDialogType::EditRelayUrl { .. }) => app.set_status("Relay URL updated"),
+                Some(FormDialogType::CreateGroup) => app.set_status("Group created"),
+                Some(FormDialogType::RenameGroup { .. }) => app.set_status("Group renamed"),
                 _ => {}
             }
         }

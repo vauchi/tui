@@ -381,6 +381,7 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                     .handle_action(UserAction::ActionPressed { action_id: id });
                 // AppEngine navigates back internally; sync TUI screen state
                 app.go_back();
+                // Contact delete/archive — never a form dialog, so no kind.
                 crate::handlers::action_result::handle_action_result(app, result);
             }
         }

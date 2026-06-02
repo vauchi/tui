@@ -30,10 +30,7 @@ fn test_screen_variants_exist() {
         Screen::Exchange,
         Screen::Settings,
         Screen::Help,
-        Screen::AddField,
-        Screen::EditField,
-        Screen::EditName,
-        Screen::EditRelayUrl,
+        Screen::FormDialog,
         Screen::Devices,
         Screen::Recovery,
         Screen::Sync,
@@ -59,8 +56,8 @@ fn test_screen_variants_exist() {
         Screen::ContactLimit,
     ];
 
-    // Verify we have all 32 screen variants
-    assert_eq!(screens.len(), 32);
+    // Verify we have all 29 screen variants
+    assert_eq!(screens.len(), 29);
 }
 
 /// Test: Screen Home is the initial screen variant

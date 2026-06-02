@@ -25,14 +25,6 @@ pub enum Screen {
     Settings,
     /// Help screen
     Help,
-    /// Add field dialog
-    AddField,
-    /// Edit field dialog
-    EditField,
-    /// Edit display name dialog
-    EditName,
-    /// Edit relay URL dialog
-    EditRelayUrl,
     /// Device management screen
     Devices,
     /// Recovery screen
@@ -63,10 +55,11 @@ pub enum Screen {
     Groups,
     /// Group detail view
     GroupDetail,
-    /// Create-group form dialog (FormDialogType::CreateGroup).
-    CreateGroup,
-    /// Rename-group form dialog (FormDialogType::RenameGroup).
-    RenameGroup,
+    /// Unified form-dialog screen. Presentation-only tracking; the dialog
+    /// kind lives in the engine's `AppScreen::FormDialog { dialog_type }`,
+    /// the single source of truth. Collapses the former per-dialog variants
+    /// (AddField/EditField/EditName/EditRelayUrl/CreateGroup/RenameGroup).
+    FormDialog,
     // -- SP-21 Onboarding Wizard --
     /// Welcome screen with privacy highlights
     SetupWelcome,

@@ -13,7 +13,7 @@ use crossterm::event::KeyCode;
 use vauchi_app::ui::{AppScreen, Component, UserAction, WorkflowEngine};
 
 use crate::app::{App, InputMode, Screen};
-use crate::handlers::action_result::handle_action_result;
+use crate::handlers::action_result::{handle_action_result, handle_action_result_with};
 use crate::ui::focus::FocusZone;
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
@@ -93,10 +93,11 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         if key == KeyCode::Esc {
             // Send cancel to engine — it handles dirty detection and
             // shows InlineConfirm if the form has unsaved changes (ADR-022).
+            let from_fd = app.form_dialog_type();
             let result = app.app_engine.handle_action(UserAction::ActionPressed {
                 action_id: "cancel".into(),
             });
-            handle_action_result(app, result);
+            handle_action_result_with(app, result, from_fd);
             return Action::Continue;
         }
         handle_engine_keys(app, key);
@@ -189,10 +190,11 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
                 .iter()
                 .find(|c| matches!(c, Component::InlineConfirm { .. }))
             {
+                let from_fd = app.form_dialog_type();
                 let result = app.app_engine.handle_action(UserAction::ActionPressed {
                     action_id: format!("cancel_{id}"),
                 });
-                handle_action_result(app, result);
+                handle_action_result_with(app, result, from_fd);
                 return Action::Continue;
             }
             app.go_back();
@@ -231,10 +233,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
             | Screen::ContactVisibility
             | Screen::Privacy
             | Screen::Support
-            | Screen::EditName
-            | Screen::EditField
-            | Screen::EditRelayUrl
-            | Screen::AddField
+            | Screen::FormDialog
             | Screen::ContactDuplicates
             | Screen::ContactMerge
             | Screen::MyInfoEntryDetail
@@ -256,12 +255,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         Screen::Settings => handle_settings_keys(app, key),
         Screen::Help => handle_help_keys(app, key),
         // Form dialogs: handled by engine guard above when app_engine is present
-        Screen::AddField
-        | Screen::EditField
-        | Screen::EditName
-        | Screen::EditRelayUrl
-        | Screen::CreateGroup
-        | Screen::RenameGroup => {
+        Screen::FormDialog => {
             eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
         }
         Screen::Devices => handle_devices_keys(app, key),
@@ -391,9 +385,11 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 app.go_back();
                 return;
             }
-            // Forward the action to AppEngine
+            // Forward the action to AppEngine. Capture the form-dialog kind
+            // first so success feedback survives the engine's back-nav.
+            let from_fd = app.form_dialog_type();
             let result = app.app_engine.handle_action(action);
-            handle_action_result(app, result);
+            handle_action_result_with(app, result, from_fd);
         }
         KeyResult::Consumed => {
             // Key was handled internally (focus change, etc.)
@@ -471,7 +467,7 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 Screen::Privacy => handle_privacy_keys(app, key),
                 Screen::Support => handle_support_keys(app, key),
                 // Form dialogs: Esc goes back (engine handles chars/Enter via key_mapping)
-                Screen::EditName | Screen::EditField | Screen::EditRelayUrl | Screen::AddField => {
+                Screen::FormDialog => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }
