@@ -187,6 +187,76 @@ pub fn render_screen(
     // (Action hints removed — shown in the persistent action bar instead)
 }
 
+/// Vertical-stacking constraint for a single component.
+///
+/// `chrome` is the token-derived header/footer allowance shared by all
+/// components; `area` bounds list-like components to half the screen.
+fn component_constraint(c: &Component, area: Rect, chrome: u16) -> Constraint {
+    match c {
+        Component::Text { .. } => Constraint::Length(chrome),
+        Component::TextInput { .. } => Constraint::Length(3 + chrome),
+        Component::ToggleList { items, .. } => {
+            let item_lines: usize = items
+                .iter()
+                .map(|i| if i.subtitle.is_some() { 2 } else { 1 })
+                .sum();
+            Constraint::Length((item_lines as u16 + chrome).min(area.height / 2))
+        }
+        Component::FieldList { fields, .. } => {
+            Constraint::Length((fields.len() as u16 + 2 + chrome).min(area.height / 2))
+        }
+        Component::Preview { variants, .. } => {
+            let extra = if variants.is_empty() { 0 } else { chrome };
+            Constraint::Min(8 + extra)
+        }
+        Component::InfoPanel { items, .. } => {
+            Constraint::Length((items.len() as u16 * 3 + chrome).min(area.height / 2))
+        }
+        Component::List { items, .. } => {
+            Constraint::Length((items.len() as u16 + chrome).min(area.height / 2).max(4))
+        }
+        Component::SettingsGroup { items, .. } => {
+            Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
+        }
+        Component::ActionList { items, .. } => {
+            Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
+        }
+        Component::StatusIndicator { .. } => Constraint::Length(3),
+        Component::PinInput { .. } => Constraint::Length(5),
+        Component::QrCode { .. } => Constraint::Min(14),
+        Component::Divider => Constraint::Length(1),
+        Component::InlineConfirm { .. } => Constraint::Length(4),
+        Component::EditableText { .. } => Constraint::Length(3),
+        Component::Banner { .. } => Constraint::Length(2),
+        Component::Dropdown { .. } => Constraint::Length(1),
+        Component::AvatarPreview { .. } => Constraint::Length(1),
+        Component::Slider { .. } => Constraint::Length(1),
+        Component::Indicator { .. } => Constraint::Length(1),
+        Component::SectionedActionList { sections, .. } => {
+            let item_lines: usize = sections
+                .iter()
+                .map(|s| 1 /* header */ + s.items.len())
+                .sum();
+            Constraint::Length(((item_lines as u16) + chrome).max(4))
+        }
+        Component::Row { items, .. } => {
+            // Horizontal container: it is as tall as its tallest child.
+            // Map each child through the per-component sizing and take the
+            // largest fixed/min height so the preview column has room.
+            let child_height = items
+                .iter()
+                .map(|child| match component_constraint(child, area, chrome) {
+                    Constraint::Length(n) | Constraint::Min(n) => n,
+                    _ => chrome,
+                })
+                .max()
+                .unwrap_or(chrome);
+            Constraint::Min(child_height)
+        }
+        _ => Constraint::Length(1),
+    }
+}
+
 /// Render all components in the screen model.
 fn render_components(
     f: &mut Frame,
@@ -208,55 +278,7 @@ fn render_components(
     // `chrome` replaces the former hardcoded `+ 2` — now token-derived.
     let constraints: Vec<Constraint> = components
         .iter()
-        .map(|c| match c {
-            Component::Text { .. } => Constraint::Length(chrome),
-            Component::TextInput { .. } => Constraint::Length(3 + chrome),
-            Component::ToggleList { items, .. } => {
-                let item_lines: usize = items
-                    .iter()
-                    .map(|i| if i.subtitle.is_some() { 2 } else { 1 })
-                    .sum();
-                Constraint::Length((item_lines as u16 + chrome).min(area.height / 2))
-            }
-            Component::FieldList { fields, .. } => {
-                Constraint::Length((fields.len() as u16 + 2 + chrome).min(area.height / 2))
-            }
-            Component::Preview { variants, .. } => {
-                let extra = if variants.is_empty() { 0 } else { chrome };
-                Constraint::Min(8 + extra)
-            }
-            Component::InfoPanel { items, .. } => {
-                Constraint::Length((items.len() as u16 * 3 + chrome).min(area.height / 2))
-            }
-            Component::List { items, .. } => {
-                Constraint::Length((items.len() as u16 + chrome).min(area.height / 2).max(4))
-            }
-            Component::SettingsGroup { items, .. } => {
-                Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
-            }
-            Component::ActionList { items, .. } => {
-                Constraint::Length((items.len() as u16 + chrome).min(area.height / 2))
-            }
-            Component::StatusIndicator { .. } => Constraint::Length(3),
-            Component::PinInput { .. } => Constraint::Length(5),
-            Component::QrCode { .. } => Constraint::Min(14),
-            Component::Divider => Constraint::Length(1),
-            Component::InlineConfirm { .. } => Constraint::Length(4),
-            Component::EditableText { .. } => Constraint::Length(3),
-            Component::Banner { .. } => Constraint::Length(2),
-            Component::Dropdown { .. } => Constraint::Length(1),
-            Component::AvatarPreview { .. } => Constraint::Length(1),
-            Component::Slider { .. } => Constraint::Length(1),
-            Component::Indicator { .. } => Constraint::Length(1),
-            Component::SectionedActionList { sections, .. } => {
-                let item_lines: usize = sections
-                    .iter()
-                    .map(|s| 1 /* header */ + s.items.len())
-                    .sum();
-                Constraint::Length(((item_lines as u16) + chrome).max(4))
-            }
-            _ => Constraint::Length(1),
-        })
+        .map(|c| component_constraint(c, area, chrome))
         .collect();
 
     let chunks = Layout::default()
@@ -267,7 +289,32 @@ fn render_components(
     for (i, component) in components.iter().enumerate() {
         let is_focused = state.content_has_focus && i == state.focused_component;
         let chunk = chunks[i];
+        render_one_component(f, chunk, component, is_focused, state, i, theme, tokens);
+    }
+}
 
+/// Render a single component into `area`.
+///
+/// `state` and `index` drive selection/scroll lookups for list-like
+/// components; `index` is the component's position in the flat screen
+/// list (Row children reuse their container's index — they have no
+/// independent focus/selection slot in the flat state model).
+#[allow(clippy::too_many_arguments)]
+// `tokens` is the design-context threaded down to nested Row children;
+// no leaf arm reads it today, so clippy sees it as recursion-only.
+#[allow(clippy::only_used_in_recursion)]
+fn render_one_component(
+    f: &mut Frame,
+    chunk: Rect,
+    component: &Component,
+    is_focused: bool,
+    state: &ScreenRenderState,
+    index: usize,
+    theme: &TuiTheme,
+    tokens: &DesignTokens,
+) {
+    let i = index;
+    {
         match component {
             Component::Text { content, style, .. } => {
                 render_text(f, chunk, content, style, theme);
@@ -525,6 +572,24 @@ fn render_components(
                 render_lists::render_sectioned_action_list(
                     f, chunk, sections, is_focused, state, i, theme,
                 );
+            }
+            Component::Row { items, .. } => {
+                // Horizontal container (ADR-021/043): split the area into
+                // one equal-width column per child so an `ActionList` child
+                // can't crowd out a `Preview`/`QrCode` sibling, then recurse
+                // into the same per-component render path. Row is a layout
+                // container — its children carry interactivity; they reuse
+                // the container's flat-list `index` (no per-child state slot).
+                if !items.is_empty() {
+                    let columns = Layout::horizontal(
+                        std::iter::repeat_n(Constraint::Ratio(1, items.len() as u32), items.len())
+                            .collect::<Vec<_>>(),
+                    )
+                    .split(chunk);
+                    for (child, col) in items.iter().zip(columns.iter()) {
+                        render_one_component(f, *col, child, is_focused, state, i, theme, tokens);
+                    }
+                }
             }
             _ => {
                 // Future Component variants — caught by CC-22 reachability

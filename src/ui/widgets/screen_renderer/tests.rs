@@ -259,6 +259,58 @@ fn render_sectioned_action_list_emits_all_sections_and_items() {
     }
 }
 
+/// `Component::Row` is a horizontal container: it must split its area
+/// left-to-right and render BOTH children (recursing into the same
+/// per-component render path). Historically dropped by the catch-all
+/// `_` arm in `render_components`. A wide-enough buffer lets the two
+/// equal columns sit side by side on the same line.
+// @internal
+#[test]
+fn render_row_splits_horizontally_and_contributes_both_children() {
+    let components = vec![Component::Row {
+        id: "preview_row".into(),
+        items: vec![
+            Component::Text {
+                id: "left".into(),
+                content: "LEFTPANE".into(),
+                style: TextStyle::Body,
+            },
+            Component::Text {
+                id: "right".into(),
+                content: "RIGHTPANE".into(),
+                style: TextStyle::Body,
+            },
+        ],
+    }];
+    let text = render_components_to_text(80, 4, &components);
+    assert!(
+        text.contains("LEFTPANE"),
+        "Row: expected left child, got: {text:?}"
+    );
+    assert!(
+        text.contains("RIGHTPANE"),
+        "Row: expected right child, got: {text:?}"
+    );
+    // Horizontal split: both children land on the SAME line (the left
+    // child in the first column, the right child in the second), so the
+    // line carrying LEFTPANE must also carry RIGHTPANE.
+    let shared_line = text
+        .lines()
+        .find(|l| l.contains("LEFTPANE"))
+        .unwrap_or_default();
+    assert!(
+        shared_line.contains("RIGHTPANE"),
+        "Row children must share a line (side-by-side), got line: {shared_line:?}"
+    );
+    // And the right child sits to the RIGHT of the left child.
+    let left_col = shared_line.find("LEFTPANE").unwrap();
+    let right_col = shared_line.find("RIGHTPANE").unwrap();
+    assert!(
+        right_col > left_col,
+        "right child must render to the right of the left child: {shared_line:?}"
+    );
+}
+
 /// Build one labelled instance of every currently-known
 /// `Component` variant. Mirrors the enum in
 /// `core/vauchi-app/src/ui/component.rs` — keep in sync with
@@ -470,6 +522,21 @@ fn every_known_component() -> Vec<Component> {
                     info_key: None,
                 }],
             }],
+        },
+        Component::Row {
+            id: "row".into(),
+            items: vec![
+                Component::Text {
+                    id: "row_left".into(),
+                    content: "Left".into(),
+                    style: TextStyle::Body,
+                },
+                Component::Text {
+                    id: "row_right".into(),
+                    content: "Right".into(),
+                    style: TextStyle::Body,
+                },
+            ],
         },
     ]
 }

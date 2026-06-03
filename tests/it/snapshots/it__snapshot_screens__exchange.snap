@@ -14,16 +14,16 @@ expression: output
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │   • Hover  Requires camera, microphone, speaker                              │
 │   • Shake  Requires BLE, accelerometer                                       │
+│   • Magic  Requires BLE, microphone, speaker                                 │
+│   • Cable  Requires USB port                                                 │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │   • Tap tap  Requires NFC                                                    │
 │   • Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerometer   │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   • Broadcast  Requires camera                                               │
+│   star.fill Link  Requires internet                                          │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│   • Web  Requires camera, internet                                           │
-└──────────────────────────────────────────────────────────────────────────────┘
+
 [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More

@@ -24,6 +24,7 @@ include:
     ref: main
     file:
       - '/ci-templates/rust-base.yml'
+      - '/ci-templates/parser-parity.yml'
       - '/ci-templates/content-fetch.yml'
       - '/ci-templates/security.yml'
       - '/ci-templates/coverage.yml'
@@ -414,3 +415,13 @@ pages:
 
 github-mirror:
   extends: .github-mirror
+
+# Parser-parity gate: the Rust render dispatch in
+# src/ui/widgets/screen_renderer/mod.rs must cover every variant in
+# core's canonical Component enum. Catches silent drift when core adds
+# a variant (it would fall through the non-exhaustive wildcard).
+check:parser-parity:
+  extends: .parser-parity-job
+  variables:
+    FRONTEND_NAME: "tui"
+    PARSER_FILE: "src/ui/widgets/screen_renderer/mod.rs"

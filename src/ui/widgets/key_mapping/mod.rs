@@ -43,6 +43,11 @@ fn is_focusable(component: &Component) -> bool {
             | Component::Indicator { .. }
             | Component::QrCode { .. }
             | Component::Divider
+            // `Row` is a layout container, not a focus target. Its children
+            // carry the interactivity, but the flat focus model walks
+            // top-level components only, so the container itself must not
+            // capture focus (the renderer recurses into children for paint).
+            | Component::Row { .. }
     )
 }
 
