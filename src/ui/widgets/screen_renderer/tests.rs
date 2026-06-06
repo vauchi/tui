@@ -564,3 +564,117 @@ fn every_known_component_variant_renders_non_empty() {
         );
     }
 }
+
+/// Core emits SF-Symbol-style icon tokens (`qrcode`, `sparkles`, …) that
+/// the TUI cannot render natively. They must be mapped to a glyph or
+/// dropped to the generic bullet — the raw token must never reach the
+/// screen. Regression guard for the three renderers that historically
+/// printed `item.icon` verbatim (exchange method list, etc.).
+// @internal
+#[test]
+fn action_list_icon_token_never_renders_verbatim() {
+    use vauchi_app::ui::ActionListItem;
+    let components = vec![Component::ActionList {
+        id: "actions".into(),
+        items: vec![ActionListItem {
+            id: "a1".into(),
+            label: "Glance".into(),
+            icon: Some("qrcode".into()),
+            detail: None,
+            a11y: None,
+            info_key: None,
+        }],
+    }];
+    let text = render_components_to_text(60, 8, &components);
+    assert!(text.contains("Glance"), "expected label, got: {text:?}");
+    assert!(
+        !text.contains("qrcode"),
+        "raw icon token leaked into the UI: {text:?}"
+    );
+    assert!(
+        text.contains('•'),
+        "expected generic bullet fallback, got: {text:?}"
+    );
+}
+
+// @internal
+#[test]
+fn sectioned_action_list_icon_token_never_renders_verbatim() {
+    use vauchi_app::ui::{ActionListItem, Section};
+    let components = vec![Component::SectionedActionList {
+        id: "modes".into(),
+        sections: vec![Section {
+            id: "sec".into(),
+            label: "Methods".into(),
+            items: vec![ActionListItem {
+                id: "m1".into(),
+                label: "Magic".into(),
+                icon: Some("sparkles".into()),
+                detail: None,
+                a11y: None,
+                info_key: None,
+            }],
+        }],
+    }];
+    let text = render_components_to_text(60, 6, &components);
+    assert!(text.contains("Magic"), "expected label, got: {text:?}");
+    assert!(
+        !text.contains("sparkles"),
+        "raw icon token leaked into the UI: {text:?}"
+    );
+    assert!(
+        text.contains('•'),
+        "expected generic bullet fallback, got: {text:?}"
+    );
+}
+
+// @internal
+#[test]
+fn status_indicator_icon_token_never_renders_verbatim() {
+    use vauchi_app::ui::Status;
+    let components = vec![Component::StatusIndicator {
+        id: "status".into(),
+        icon: Some("gesture".into()),
+        title: "Connected".into(),
+        detail: None,
+        status: Status::Success,
+        a11y: None,
+    }];
+    let text = render_components_to_text(60, 4, &components);
+    assert!(text.contains("Connected"), "expected title, got: {text:?}");
+    assert!(
+        !text.contains("gesture"),
+        "raw icon token leaked into the UI: {text:?}"
+    );
+    // Unknown icon falls back to the status glyph for Success.
+    assert!(
+        text.contains('✓'),
+        "expected status glyph fallback, got: {text:?}"
+    );
+}
+
+/// A *known* icon token must render its badge (not the bullet, not the
+/// raw token) once a list flows through the shared mapping.
+// @internal
+#[test]
+fn action_list_known_icon_renders_badge() {
+    use vauchi_app::ui::ActionListItem;
+    let components = vec![Component::ActionList {
+        id: "actions".into(),
+        items: vec![ActionListItem {
+            id: "a1".into(),
+            label: "Privacy".into(),
+            icon: Some("shield".into()),
+            detail: None,
+            a11y: None,
+            info_key: None,
+        }],
+    }];
+    let text = render_components_to_text(60, 8, &components);
+    assert!(text.contains("Privacy"), "expected label, got: {text:?}");
+    assert!(
+        !text.contains("shield"),
+        "raw icon token leaked into the UI: {text:?}"
+    );
+    assert!(text.contains("[S]"), "expected shield badge, got: {text:?}");
+}
