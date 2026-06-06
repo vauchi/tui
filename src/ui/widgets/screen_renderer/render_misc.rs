@@ -9,6 +9,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
+use crate::ui::widgets::icon::icon_badge;
 use vauchi_app::ui::{IndicatorKind, QrMode, Status};
 
 /// Render the step progress indicator.
@@ -137,7 +138,7 @@ pub(super) fn render_status_indicator(
         _ => ("?", theme.fg_secondary),
     };
 
-    let display_icon = icon.unwrap_or(status_icon);
+    let display_icon = icon.and_then(icon_badge).unwrap_or(status_icon);
     let mut text = format!(" {} {}", display_icon, title);
     if let Some(d) = detail {
         text.push_str(&format!(" — {}", d));

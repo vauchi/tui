@@ -13,9 +13,9 @@ expression: output
 │     Which of your fields each group sees                                     │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   group Family  3 members                                                    │
-│   group Friends  4 members                                                   │
-│   group Work  3 members                                                      │
+│   [#] Family  3 members                                                      │
+│   [#] Friends  4 members                                                     │
+│   [#] Work  3 members                                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

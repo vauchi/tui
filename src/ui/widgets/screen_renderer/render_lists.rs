@@ -8,6 +8,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
 
 use crate::theme::TuiTheme;
+use crate::ui::widgets::icon::icon_badge;
 use vauchi_app::ui::SettingsItemKind;
 
 use super::ScreenRenderState;
@@ -195,7 +196,7 @@ pub(super) fn render_sectioned_action_list(
         );
 
         for item in &section.items {
-            let icon = item.icon.as_deref().unwrap_or("•");
+            let icon = item.icon.as_deref().and_then(icon_badge).unwrap_or("•");
             let detail = item
                 .detail
                 .as_ref()
@@ -250,7 +251,7 @@ pub(super) fn render_action_list(
         .iter()
         .enumerate()
         .map(|(i, item)| {
-            let icon = item.icon.as_deref().unwrap_or("•");
+            let icon = item.icon.as_deref().and_then(icon_badge).unwrap_or("•");
             let detail = item
                 .detail
                 .as_ref()

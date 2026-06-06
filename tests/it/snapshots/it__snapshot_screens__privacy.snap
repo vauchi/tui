@@ -15,8 +15,8 @@ expression: output
 │  Active                                                                      │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   data View My Data  See what data is stored locally                         │
-│   consent Manage Consent  Review and update data consent                     │
+│   • View My Data  See what data is stored locally                            │
+│   • Manage Consent  Review and update data consent                           │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

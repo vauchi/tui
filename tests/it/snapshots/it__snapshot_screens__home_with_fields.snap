@@ -13,9 +13,9 @@ expression: output
 │      Share your contact card in person — private and secure.                 │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   Email alice@company.com (Work)                                             │
-│   Phone +41 79 123 45 67 (Mobile)                                            │
-│   Website https://alice.example.com (Blog)                                   │
+│   • alice@company.com (Work)                                                 │
+│   • +41 79 123 45 67 (Mobile)                                                │
+│   • https://alice.example.com (Blog)                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 

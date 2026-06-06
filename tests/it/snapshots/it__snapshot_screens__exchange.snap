@@ -8,21 +8,21 @@ expression: output
 
  ○ Sync  [Enter]
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   qrcode Glance  Requires camera                                             │
-│   bump Bump  Requires BLE, accelerometer                                     │
+│   • Glance  Requires camera                                                  │
+│   • Bump  Requires BLE, accelerometer                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   nfc Hover  Requires camera, microphone, speaker                            │
-│   shake Shake  Requires BLE, accelerometer                                   │
-│   sparkles Magic  Requires BLE, microphone, speaker                          │
-│   cable Cable  Requires USB port                                             │
+│   • Hover  Requires camera, microphone, speaker                              │
+│   • Shake  Requires BLE, accelerometer                                       │
+│   • Magic  Requires BLE, microphone, speaker                                 │
+│   • Cable  Requires USB port                                                 │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   tap Tap tap  Requires NFC                                                  │
-│   gesture Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerome│
+│   • Tap tap  Requires NFC                                                    │
+│   • Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerometer   │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   link Link  Requires internet                                               │
+│   • Link  Requires internet                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 [?] help  [Esc] back  [q] quit
