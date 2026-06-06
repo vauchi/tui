@@ -11,6 +11,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::theme::TuiTheme;
+use crate::ui::widgets::icon::icon_badge;
 use vauchi_app::ui::InfoItem;
 
 /// State needed to render an info panel component.
@@ -31,7 +32,7 @@ impl<'a> InfoPanelWidget<'a> {
             let icon_prefix = item
                 .icon
                 .as_ref()
-                .map(|i| format!("{} ", icon_to_text(i)))
+                .map(|i| format!("{} ", icon_badge(i).unwrap_or("[-]")))
                 .unwrap_or_default();
 
             lines.push(Line::from(Span::styled(
@@ -51,7 +52,7 @@ impl<'a> InfoPanelWidget<'a> {
 
         let panel_icon = self
             .icon
-            .map(|i| format!("{} ", icon_to_text(i)))
+            .map(|i| format!("{} ", icon_badge(i).unwrap_or("[-]")))
             .unwrap_or_default();
 
         let panel = Paragraph::new(lines).block(
@@ -62,26 +63,5 @@ impl<'a> InfoPanelWidget<'a> {
         );
 
         f.render_widget(panel, area);
-    }
-}
-
-/// Map icon identifiers to text representations for TUI.
-fn icon_to_text(icon: &str) -> &'static str {
-    match icon {
-        "lock" => "[*]",
-        "refresh" => "[~]",
-        "people" | "group" => "[#]",
-        "shield" => "[S]",
-        "server" => "[@]",
-        "key" => "[K]",
-        "check" => "[v]",
-        "share" => "[>]",
-        "edit" => "[/]",
-        "warning" => "[!]",
-        "devices" => "[D]",
-        "backup" => "[B]",
-        "card" => "[C]",
-        "eye" => "[o]",
-        _ => "[-]",
     }
 }

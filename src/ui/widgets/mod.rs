@@ -10,6 +10,7 @@ pub(crate) mod action_bar;
 pub(crate) mod card_preview;
 pub(crate) mod dropdown;
 pub(crate) mod field_list;
+pub(crate) mod icon;
 pub(crate) mod info_panel;
 pub(crate) mod key_mapping;
 pub(crate) mod nav_bar;
