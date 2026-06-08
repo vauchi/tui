@@ -25,7 +25,6 @@ fn theme_config_path() -> Option<std::path::PathBuf> {
 /// Load saved theme ID from config, or detect from VAUCHI_THEME env var,
 /// or default to dark.
 fn load_saved_theme(theme_ids: &[String]) -> (TuiTheme, usize) {
-    // Check env var first
     if let Ok(id) = std::env::var("VAUCHI_THEME")
         && let Some(pos) = theme_ids.iter().position(|t| t == &id)
         && let Some(t) = get_tui_theme(&id)
@@ -33,7 +32,6 @@ fn load_saved_theme(theme_ids: &[String]) -> (TuiTheme, usize) {
         return (t, pos);
     }
 
-    // Check saved config
     if let Some(path) = theme_config_path()
         && let Ok(id) = std::fs::read_to_string(&path)
     {
@@ -45,7 +43,6 @@ fn load_saved_theme(theme_ids: &[String]) -> (TuiTheme, usize) {
         }
     }
 
-    // Default to dark
     let default_id = "default-dark";
     let index = theme_ids.iter().position(|t| t == default_id).unwrap_or(0);
     (get_default_tui_theme(true), index)

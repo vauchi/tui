@@ -171,7 +171,6 @@ fn main() -> Result<()> {
     )?;
     terminal.show_cursor()?;
 
-    // Handle any errors
     if let Err(err) = res {
         let msg = format!("{err:?}");
         eprintln!("Error: {msg}");
@@ -248,7 +247,6 @@ fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
         return Ok(SymmetricKey::from_bytes(arr));
     }
 
-    // Generate a new random key
     let key = SymmetricKey::generate();
 
     std::fs::create_dir_all(data_dir).context("Failed to create data directory")?;
@@ -342,7 +340,6 @@ fn seed_demo_data(vauchi: &mut Vauchi) {
     use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};
     use vauchi_core::crypto::SymmetricKey;
 
-    // Create own identity
     if vauchi.create_identity("Demo User").is_err() {
         return;
     }

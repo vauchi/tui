@@ -370,7 +370,6 @@ fn draw_action_menu(f: &mut Frame, area: Rect, app: &App) {
         return;
     }
 
-    // Calculate popup size
     let max_label_len = actions
         .iter()
         .map(|(label, _)| label.len())
@@ -379,15 +378,12 @@ fn draw_action_menu(f: &mut Frame, area: Rect, app: &App) {
     let popup_width = (max_label_len as u16 + 6).min(area.width.saturating_sub(4));
     let popup_height = (actions.len() as u16 + 2).min(area.height.saturating_sub(2));
 
-    // Center the popup
     let x = area.x + (area.width.saturating_sub(popup_width)) / 2;
     let y = area.y + (area.height.saturating_sub(popup_height)) / 2;
     let popup_area = Rect::new(x, y, popup_width, popup_height);
 
-    // Clear background
     f.render_widget(Clear, popup_area);
 
-    // Build list items
     let items: Vec<ListItem> = actions
         .iter()
         .enumerate()
