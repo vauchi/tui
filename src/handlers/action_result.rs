@@ -314,6 +314,18 @@ fn handle_exchange_commands(app: &mut App, commands: Vec<vauchi_core::Command>) 
                 // Audio proximity not available in terminal — silently skip
                 // (not fatal, just means no proximity verification)
             }
+            // Capture-at-exchange (ADR-051): no location provider in a
+            // terminal. Answer with the "location" transport specifically so
+            // core clears the pending capture, rather than the generic
+            // "unknown" catch-all below (which core wouldn't match to the
+            // location capture and would surface as a stray toast).
+            Command::LocationRequest { .. } => {
+                let _ = app
+                    .app_engine
+                    .handle_hardware_event(Event::HardwareUnavailable {
+                        transport: "location".into(),
+                    });
+            }
             _ => {
                 // Unknown Command — report as unavailable
                 let _ = app
