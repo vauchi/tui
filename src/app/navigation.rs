@@ -452,3 +452,116 @@ impl Screen {
         }
     }
 }
+
+// INLINE_TEST_REQUIRED: round-trip test exercises the private
+// App::engine_target_for_screen forward map against pub(crate)
+// Screen::from_app_screen — neither is reachable from tests/ (integration
+// tests are an external crate and see only `pub`).
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app::App;
+    use vauchi_app::ui::AppEngine;
+    use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
+
+    fn test_app() -> App {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().to_path_buf();
+        let config = VauchiConfig::with_storage_path(path.join("vauchi.db"))
+            .with_storage_key(SymmetricKey::generate());
+        let mut app_engine = AppEngine::new(Vauchi::new(config).expect("vauchi"));
+        app_engine
+            .vauchi_mut()
+            .create_identity("Test User")
+            .expect("create identity");
+        let _keep = dir.keep();
+        App::new(app_engine, "wss://relay.vauchi.app".to_string(), path)
+    }
+
+    /// Every `Screen` that `engine_target_for_screen` maps to an `AppScreen`
+    /// must round-trip back to itself through `Screen::from_app_screen`. This
+    /// is the seam Phase 0 unified: if a future edit adds a `Screen` variant
+    /// (or an `AppScreen` mapping) to one map but not the inverse, the round
+    /// trip breaks here instead of drifting silently between the two paths.
+    #[test]
+    fn engine_mapped_screens_round_trip_through_from_app_screen() {
+        let mut app = test_app();
+        // Contact-bearing arms of `engine_target_for_screen` read this.
+        app.selected_contact_id = Some("test-contact".to_string());
+
+        let engine_mapped = [
+            Screen::MyInfo,
+            Screen::Contacts,
+            Screen::ContactDetail,
+            Screen::ContactEdit,
+            Screen::ContactVisibility,
+            Screen::Exchange,
+            Screen::Settings,
+            Screen::Help,
+            Screen::Backup,
+            Screen::Delivery,
+            Screen::Devices,
+            Screen::Duress,
+            Screen::Emergency,
+            Screen::Sync,
+            Screen::Activity,
+            Screen::Recovery,
+            Screen::More,
+            Screen::Groups,
+            Screen::Privacy,
+            Screen::Support,
+            Screen::DeviceReplacement,
+            Screen::DeviceLinking,
+            Screen::ContactDuplicates,
+            Screen::ContactLimit,
+            Screen::VerifyFingerprint,
+        ];
+
+        for screen in engine_mapped {
+            let app_screen = app
+                .engine_target_for_screen(screen)
+                .unwrap_or_else(|| panic!("{screen:?} expected to map to an AppScreen"));
+            assert_eq!(
+                Screen::from_app_screen(&app_screen),
+                Some(screen),
+                "{screen:?} did not round-trip through from_app_screen",
+            );
+        }
+    }
+
+    #[test]
+    fn contact_id_of_extracts_id_for_contact_screens_and_none_otherwise() {
+        let detail = AppScreen::ContactDetail {
+            contact_id: "alice".to_string(),
+        };
+        assert_eq!(
+            Screen::contact_id_of(&detail),
+            Some("alice".to_string()),
+            "ContactDetail must surface its contact_id",
+        );
+        assert_eq!(
+            Screen::contact_id_of(&AppScreen::Settings),
+            None,
+            "Settings carries no contact_id",
+        );
+    }
+
+    /// `AppScreen` variants the TUI has no top-level `Screen` for must return
+    /// `None`; both callers rely on this to fall back (back-nav) or leave
+    /// `app.screen` untouched (action-result). `EmergencyShred` is a good
+    /// witness: the TUI's Emergency screen maps to `EmergencyBroadcast`, so
+    /// `EmergencyShred` has no TUI screen of its own.
+    #[test]
+    fn from_app_screen_is_none_for_unmapped_screens() {
+        assert_eq!(
+            Screen::from_app_screen(&AppScreen::EmergencyShred),
+            None,
+            "EmergencyShred has no top-level TUI screen",
+        );
+        assert_eq!(
+            Screen::from_app_screen(&AppScreen::ChangePassword),
+            None,
+            "ChangePassword has no top-level TUI screen",
+        );
+    }
+}
