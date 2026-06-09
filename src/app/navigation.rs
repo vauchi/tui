@@ -51,6 +51,7 @@ impl App {
         // the engine's underlying screen stays in `self.screen`.
         match self.overlay {
             Some(Overlay::ActionMenu) => Screen::ActionMenu,
+            Some(Overlay::ContactImport) => Screen::ContactImport,
             None => self.screen,
         }
     }

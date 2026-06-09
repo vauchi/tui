@@ -346,6 +346,34 @@ fn test_handle_key_setup_i_opens_backup_import() {
     assert_eq!(app.input_mode, InputMode::Normal);
 }
 
+// @scenario: contacts_management:Import contacts from vCard
+#[test]
+fn test_contact_import_overlay_opens_in_editing_mode_and_closes() {
+    let (mut app, _tmp) = create_test_app();
+    // '2' navigates to Contacts and sets Content focus.
+    handle_key(&mut app, KeyCode::Char('2'));
+    assert_eq!(app.active_screen(), Screen::Contacts);
+
+    // 'i' opens the import overlay over Contacts, in Editing mode so the file
+    // path can be typed. (Pre-overlay, goto() reset input_mode to Normal,
+    // leaving the dialog untypeable.)
+    handle_key(&mut app, KeyCode::Char('i'));
+    assert_eq!(app.active_screen(), Screen::ContactImport);
+    assert_eq!(app.screen, Screen::Contacts);
+    assert_eq!(app.input_mode, InputMode::Editing);
+
+    // Editing-mode keys build the path, not navigate the contact list.
+    handle_key(&mut app, KeyCode::Char('/'));
+    handle_key(&mut app, KeyCode::Char('x'));
+    assert_eq!(app.import_state.file_path, "/x");
+
+    // Esc closes the overlay and returns to Contacts in Normal mode.
+    handle_key(&mut app, KeyCode::Esc);
+    assert_eq!(app.overlay, None);
+    assert_eq!(app.active_screen(), Screen::Contacts);
+    assert_eq!(app.input_mode, InputMode::Normal);
+}
+
 // ============================================================================
 // Contact Search Mode
 // ============================================================================

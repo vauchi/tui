@@ -19,13 +19,13 @@ use super::Action;
 pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
     match key {
         KeyCode::Esc => {
-            if app.screen == Screen::ContactImport {
-                app.goto(Screen::Contacts);
+            if app.active_screen() == Screen::ContactImport {
+                app.close_overlay();
             }
             app.input_mode = InputMode::Normal;
         }
         KeyCode::Enter => {
-            if app.screen == Screen::ContactImport {
+            if app.active_screen() == Screen::ContactImport {
                 handle_import_submit(app);
             }
             app.input_mode = InputMode::Normal;
@@ -82,7 +82,7 @@ fn handle_import_submit(app: &mut App) {
             app.import_state.result_message = Some(msg.clone());
             app.import_state.success = true;
             app.set_status(msg);
-            app.goto(Screen::Contacts);
+            app.close_overlay();
         }
         Err(e) => {
             app.import_state.result_message = Some(format!("Import failed: {e}"));

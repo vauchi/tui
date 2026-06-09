@@ -91,7 +91,9 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('i') => {
             app.import_state = ImportState::default();
             app.input_mode = InputMode::Editing;
-            app.goto(Screen::ContactImport);
+            // Overlay over the contact list; the engine screen stays Contacts.
+            // Set after `input_mode` (no `goto`, which would reset it to Normal).
+            app.overlay = Some(Overlay::ContactImport);
         }
         KeyCode::Char('L') => {
             // Engine owns current_limit / current_count via ContactLimit screen.
