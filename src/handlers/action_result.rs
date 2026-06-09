@@ -98,11 +98,15 @@ pub(crate) fn handle_action_result_with(
             }
         }
         ActionResult::OpenContact { contact_id } => {
-            app.selected_contact_id = Some(contact_id);
+            app.selected_contact_id = Some(contact_id.clone());
+            app.app_engine
+                .navigate_to(AppScreen::ContactDetail { contact_id });
             app.screen = Screen::ContactDetail;
         }
         ActionResult::EditContact { contact_id } => {
-            app.selected_contact_id = Some(contact_id);
+            app.selected_contact_id = Some(contact_id.clone());
+            app.app_engine
+                .navigate_to(AppScreen::ContactEdit { contact_id });
             app.screen = Screen::ContactEdit;
             app.render_state = Default::default();
         }
@@ -200,7 +204,9 @@ pub(crate) fn handle_action_result_with(
                 .navigate_to(vauchi_app::ui::AppScreen::Onboarding);
         }
         ActionResult::VerifyFingerprint { contact_id } => {
-            app.selected_contact_id = Some(contact_id);
+            app.selected_contact_id = Some(contact_id.clone());
+            app.app_engine
+                .navigate_to(AppScreen::VerifyFingerprint { contact_id });
             app.screen = Screen::VerifyFingerprint;
             app.render_state = Default::default();
         }
