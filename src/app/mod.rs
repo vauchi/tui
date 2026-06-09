@@ -187,6 +187,10 @@ impl App {
                 _ => AppScreen::MyInfo,
             };
             app_engine.set_initial_screen(target);
+        } else {
+            // No identity → onboarding; app_engine tracks it so it is the
+            // single source of truth for the current screen (brick 6).
+            app_engine.set_initial_screen(AppScreen::Onboarding);
         }
 
         // Create engines for initial screen

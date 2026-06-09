@@ -24,29 +24,9 @@ impl App {
     /// state is also synthesized from `self.screen`. Once `go_back`
     /// migrates to engine-driven back-nav (Phase 1 T1.4), this fallback
     /// can be deleted.
-    /// True while `self.screen` is the onboarding sentinel. During
-    /// onboarding `self.screen` stays `SetupWelcome` (the precise step is
-    /// derived from the engine); a detour out of onboarding — Backup
-    /// restore via 'i' — sets a real screen, clearing this.
-    fn screen_is_onboarding_sentinel(&self) -> bool {
-        matches!(
-            self.screen,
-            Screen::SetupWelcome
-                | Screen::SetupCreateIdentity
-                | Screen::SetupAddFields
-                | Screen::SetupSecurity
-                | Screen::SetupReady
-        )
-    }
-
     pub fn current_app_screen(&self) -> AppScreen {
-        if self.screen_is_onboarding_sentinel() {
-            return AppScreen::Onboarding;
-        }
-        if matches!(self.screen, Screen::Lock) {
-            return AppScreen::Lock;
-        }
-        // app_engine is the source of truth for engine-driven screens.
+        // app_engine is the single source of truth — it tracks Onboarding
+        // and Lock too (set at init, navigated by goto / completion).
         self.app_engine.current_app_screen().clone()
     }
 
@@ -63,15 +43,14 @@ impl App {
                 Overlay::ContactImport => Screen::ContactImport,
             };
         }
-        // During onboarding `self.screen` is the sentinel; the precise step
-        // is derived from the engine. A detour out of onboarding falls
-        // through to the real screen.
-        if self.screen_is_onboarding_sentinel()
+        let app_screen = self.current_app_screen();
+        // In onboarding the precise step comes from the onboarding engine.
+        if app_screen == AppScreen::Onboarding
             && let Some(ref engine) = self.onboarding_engine
         {
             return Screen::for_onboarding_screen_id(engine.current_screen().screen_id.as_str());
         }
-        Screen::from_app_screen(&self.current_app_screen()).unwrap_or(self.screen)
+        Screen::from_app_screen(&app_screen).unwrap_or(self.screen)
     }
 
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
@@ -237,6 +216,14 @@ impl App {
                     })
             }
             Screen::MyInfoEntryDetail => None,
+            // Onboarding + Lock run dedicated engines, but app_engine also
+            // tracks them so it is the single source of truth (brick 6).
+            Screen::SetupWelcome
+            | Screen::SetupCreateIdentity
+            | Screen::SetupAddFields
+            | Screen::SetupSecurity
+            | Screen::SetupReady => Some(AppScreen::Onboarding),
+            Screen::Lock => Some(AppScreen::Lock),
             _ => None,
         }
     }
@@ -688,7 +675,7 @@ mod tests {
     fn backup_detour_during_onboarding_is_not_reported_as_onboarding() {
         let mut app = test_app();
         app.onboarding_engine = Some(vauchi_app::ui::OnboardingEngine::new());
-        app.screen = Screen::SetupWelcome;
+        app.app_engine.navigate_to(AppScreen::Onboarding);
         assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 
         // 'i' restore detours to Backup with the onboarding engine still alive.
