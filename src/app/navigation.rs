@@ -4,7 +4,9 @@
 
 //! Screen navigation — `goto()`, `go_back()`, and nav-index sync.
 
-use vauchi_app::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
+use vauchi_app::ui::{
+    AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine, WorkflowEngine,
+};
 
 use super::App;
 use super::state::*;
@@ -22,15 +24,23 @@ impl App {
     /// state is also synthesized from `self.screen`. Once `go_back`
     /// migrates to engine-driven back-nav (Phase 1 T1.4), this fallback
     /// can be deleted.
-    pub fn current_app_screen(&self) -> AppScreen {
-        if matches!(
+    /// True while `self.screen` is the onboarding sentinel. During
+    /// onboarding `self.screen` stays `SetupWelcome` (the precise step is
+    /// derived from the engine); a detour out of onboarding — Backup
+    /// restore via 'i' — sets a real screen, clearing this.
+    fn screen_is_onboarding_sentinel(&self) -> bool {
+        matches!(
             self.screen,
             Screen::SetupWelcome
                 | Screen::SetupCreateIdentity
                 | Screen::SetupAddFields
                 | Screen::SetupSecurity
                 | Screen::SetupReady
-        ) {
+        )
+    }
+
+    pub fn current_app_screen(&self) -> AppScreen {
+        if self.screen_is_onboarding_sentinel() {
             return AppScreen::Onboarding;
         }
         if matches!(self.screen, Screen::Lock) {
@@ -49,11 +59,21 @@ impl App {
     pub fn active_screen(&self) -> Screen {
         // An open overlay is the active screen from the UI's perspective;
         // the engine's underlying screen stays in `self.screen`.
-        match self.overlay {
-            Some(Overlay::ActionMenu) => Screen::ActionMenu,
-            Some(Overlay::ContactImport) => Screen::ContactImport,
-            None => self.screen,
+        if let Some(overlay) = self.overlay {
+            return match overlay {
+                Overlay::ActionMenu => Screen::ActionMenu,
+                Overlay::ContactImport => Screen::ContactImport,
+            };
         }
+        // During onboarding `self.screen` is the sentinel; the precise step
+        // is derived from the engine. A detour out of onboarding falls
+        // through to the real screen.
+        if self.screen_is_onboarding_sentinel()
+            && let Some(ref engine) = self.onboarding_engine
+        {
+            return Screen::for_onboarding_screen_id(engine.current_screen().screen_id.as_str());
+        }
+        self.screen
     }
 
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
@@ -474,6 +494,21 @@ impl Screen {
             _ => None,
         }
     }
+
+    /// Map an onboarding engine `screen_id` to its TUI setup `Screen`.
+    /// The wizard step is derived from the engine, never stored.
+    pub(crate) fn for_onboarding_screen_id(screen_id: &str) -> Screen {
+        match screen_id {
+            "identity_check" | "welcome" => Screen::SetupWelcome,
+            "default_name" => Screen::SetupCreateIdentity,
+            "skip_gate" | "groups_setup" | "contact_info" | "preview_card" => {
+                Screen::SetupAddFields
+            }
+            "security_explanation" | "backup_prompt" => Screen::SetupSecurity,
+            "ready" => Screen::SetupReady,
+            _ => Screen::SetupWelcome,
+        }
+    }
 }
 
 // INLINE_TEST_REQUIRED: round-trip test exercises the private
@@ -635,5 +670,26 @@ mod tests {
         app.goto(Screen::Settings);
         assert_eq!(app.overlay, None);
         assert_eq!(app.active_screen(), Screen::Settings);
+    }
+
+    /// The Backup-restore detour ('i' during onboarding) navigates to a
+    /// real screen while the onboarding engine stays alive. The engine's
+    /// presence must NOT make the app report onboarding — `self.screen` is
+    /// the mode sentinel.
+    #[test]
+    fn backup_detour_during_onboarding_is_not_reported_as_onboarding() {
+        let mut app = test_app();
+        app.onboarding_engine = Some(vauchi_app::ui::OnboardingEngine::new());
+        app.screen = Screen::SetupWelcome;
+        assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
+
+        // 'i' restore detours to Backup with the onboarding engine still alive.
+        app.goto(Screen::Backup);
+        assert_eq!(app.active_screen(), Screen::Backup);
+        assert_eq!(app.current_app_screen(), AppScreen::Backup);
+        assert!(
+            app.onboarding_engine.is_some(),
+            "engine persists across the detour so the user can return",
+        );
     }
 }

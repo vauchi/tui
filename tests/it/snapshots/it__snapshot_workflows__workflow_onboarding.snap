@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 79
 description: "Onboarding happy path: first launch → identity creation → what-next"
 expression: output
 ---
@@ -54,7 +53,7 @@ Display name
 
 
 
-[q] quit
+[?] help  [Esc] back  [q] quit
 
 ═══ Step 3 ─ GroupsSetup — enter name + press 'Continue' ═══
                                  [2/4]  ○ ● ○ ○
@@ -80,7 +79,7 @@ Add a custom group
 
 
 
-[Enter] Continue  [s] Skip  [q] quit
+[Enter] Continue  [s] Skip  [?] help  [Esc] back  [q] quit
 
 ═══ Step 4 ─ ContactInfo — press 'Skip' ════════════════════
                                  [3/4]  ○ ○ ● ○

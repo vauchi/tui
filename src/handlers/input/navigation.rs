@@ -95,7 +95,7 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
 /// screen (which has no "back" destination). Returns `None` otherwise.
 pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Option<Action> {
     // Welcome screen: 'q' quits (no back to go to)
-    if app.screen == Screen::SetupWelcome && key == KeyCode::Char('q') {
+    if app.active_screen() == Screen::SetupWelcome && key == KeyCode::Char('q') {
         return Some(Action::Quit);
     }
 
@@ -112,8 +112,17 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Opti
 
     match key_result {
         KeyResult::Action(action) => {
+            let screen_before = engine.current_screen().screen_id;
             let result = engine.handle_action(action);
             handle_onboarding_result(app, result);
+            // The active step is derived from the engine; reset render
+            // focus only when that step actually changed.
+            if let Some(engine) = &app.onboarding_engine
+                && engine.current_screen().screen_id != screen_before
+            {
+                app.render_state =
+                    crate::ui::widgets::screen_renderer::ScreenRenderState::default();
+            }
         }
         KeyResult::Consumed => {
             // Internal navigation (focus/selection change) — just re-render
@@ -139,8 +148,9 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Opti
 fn handle_onboarding_result(app: &mut App, result: ActionResult) {
     match result {
         ActionResult::UpdateScreen(_) | ActionResult::NavigateTo(_) => {
-            // Engine state updated — sync TUI screen to engine step
-            sync_onboarding_screen(app);
+            // Engine state updated; the active onboarding step is derived
+            // from the engine (`App::active_screen`). Render focus is reset
+            // by the caller when the step changes.
         }
         ActionResult::Complete => {
             // Onboarding complete — persist data and go to Home
@@ -191,28 +201,6 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
             app.set_status(message);
         }
         _ => {}
-    }
-}
-
-/// Map onboarding engine screen_id to TUI Screen variant.
-fn sync_onboarding_screen(app: &mut App) {
-    if let Some(engine) = &app.onboarding_engine {
-        let screen_id = engine.current_screen().screen_id;
-        let tui_screen = match screen_id.as_str() {
-            "identity_check" | "welcome" => Screen::SetupWelcome,
-            "default_name" => Screen::SetupCreateIdentity,
-            "skip_gate" | "groups_setup" | "contact_info" | "preview_card" => {
-                Screen::SetupAddFields
-            }
-            "security_explanation" | "backup_prompt" => Screen::SetupSecurity,
-            "ready" => Screen::SetupReady,
-            _ => Screen::SetupWelcome,
-        };
-        // Only reset render state when navigating to a different screen
-        if app.active_screen() != tui_screen {
-            app.render_state = crate::ui::widgets::screen_renderer::ScreenRenderState::default();
-        }
-        app.screen = tui_screen;
     }
 }
 
