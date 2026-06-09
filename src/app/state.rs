@@ -90,6 +90,33 @@ pub enum Screen {
     DeviceLinking,
 }
 
+impl Screen {
+    /// True for screens whose keys are resolved by the generic engine
+    /// `ScreenModel` resolver (the humble path). The complement is the only
+    /// bespoke-handler set: the setup wizard steps, the lock screen, and the
+    /// `ActionMenu`/`ContactImport` overlays — none of which is driven by an
+    /// engine `ScreenModel`.
+    ///
+    /// Single source for the routing gate, replacing a hand-listed
+    /// `matches!` that had drifted: `ContactLimit` and `VerifyFingerprint`
+    /// are engine-driven but were omitted, so their keys hit the legacy
+    /// dispatch and were dropped. Defining the gate by its small complement
+    /// makes that class of omission impossible.
+    pub(crate) fn routes_through_engine(self) -> bool {
+        !matches!(
+            self,
+            Screen::SetupWelcome
+                | Screen::SetupCreateIdentity
+                | Screen::SetupAddFields
+                | Screen::SetupSecurity
+                | Screen::SetupReady
+                | Screen::Lock
+                | Screen::ActionMenu
+                | Screen::ContactImport
+        )
+    }
+}
+
 /// Input mode for text entry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputMode {

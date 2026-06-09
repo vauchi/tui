@@ -572,4 +572,31 @@ mod tests {
             "ChangePassword has no top-level TUI screen",
         );
     }
+
+    /// `routes_through_engine` must be true for every engine-driven
+    /// screen and false only for the bespoke-handler complement. Locks
+    /// the drift the predicate replaced: `ContactLimit` /
+    /// `VerifyFingerprint` are engine-driven and were silently dropping
+    /// keys before the gate was redefined by its complement.
+    #[test]
+    fn routes_through_engine_is_false_only_for_bespoke_handler_screens() {
+        assert!(Screen::ContactLimit.routes_through_engine());
+        assert!(Screen::VerifyFingerprint.routes_through_engine());
+        assert!(Screen::MyInfo.routes_through_engine());
+        for bespoke in [
+            Screen::SetupWelcome,
+            Screen::SetupCreateIdentity,
+            Screen::SetupAddFields,
+            Screen::SetupSecurity,
+            Screen::SetupReady,
+            Screen::Lock,
+            Screen::ActionMenu,
+            Screen::ContactImport,
+        ] {
+            assert!(
+                !bespoke.routes_through_engine(),
+                "{bespoke:?} must use its bespoke handler, not the engine resolver",
+            );
+        }
+    }
 }

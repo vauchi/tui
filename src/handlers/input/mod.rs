@@ -208,37 +208,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
-    // Engine-driven screens — route through AppEngine key mapping
-    if matches!(
-        app.active_screen(),
-        Screen::MyInfo
-            | Screen::Contacts
-            | Screen::ContactDetail
-            | Screen::Exchange
-            | Screen::Settings
-            | Screen::Help
-            | Screen::Backup
-            | Screen::Delivery
-            | Screen::Devices
-            | Screen::Duress
-            | Screen::Emergency
-            | Screen::Sync
-            | Screen::Recovery
-            | Screen::Groups
-            | Screen::GroupDetail
-            | Screen::ContactEdit
-            | Screen::ContactVisibility
-            | Screen::Privacy
-            | Screen::Support
-            | Screen::FormDialog
-            | Screen::ContactDuplicates
-            | Screen::ContactMerge
-            | Screen::MyInfoEntryDetail
-            | Screen::Activity
-            | Screen::DeviceReplacement
-            | Screen::DeviceLinking
-            | Screen::More
-    ) {
+    // Engine-driven screens — route through AppEngine key mapping. The
+    // complement (setup wizard, lock, ActionMenu/ContactImport overlays) runs
+    // the bespoke handlers in the match below.
+    if app.active_screen().routes_through_engine() {
         handle_engine_keys(app, key);
         return Action::Continue;
     }
