@@ -34,8 +34,7 @@ fn backup_app() -> (App, TempDir) {
         "wss://relay.vauchi.app".to_string(),
         temp_dir.path().to_path_buf(),
     );
-    app.screen = Screen::Backup;
-    app.ensure_engine_synced();
+    app.goto(Screen::Backup);
     (app, temp_dir)
 }
 

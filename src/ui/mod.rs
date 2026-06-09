@@ -66,9 +66,6 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Auto-clear stale status messages
     app.tick_status();
 
-    // Sync AppEngine to match the current TUI screen before rendering
-    app.ensure_engine_synced();
-
     // Cache screen models once per frame to avoid redundant allocations
     let cached = FrameScreenModels {
         app: Some(app.app_engine.current_screen()),

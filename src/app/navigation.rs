@@ -13,30 +13,23 @@ use super::state::*;
 use crate::ui::widgets::screen_renderer::ScreenRenderState;
 
 impl App {
-    /// The live `AppScreen` from the engine perspective.
-    ///
-    /// For engine-driven screens this returns the engine's truth
-    /// (`app_engine.current_app_screen()` cloned). The Setup wizard and
-    /// Lock screen run on dedicated engines that don't navigate
-    /// AppEngine, so their `AppScreen` is synthesized from `self.screen`.
-    /// As a fallback (writers that bypass `goto` — notably tests and
-    /// `go_back()` — leave the engine out of sync), the per-screen
-    /// state is also synthesized from `self.screen`. Once `go_back`
-    /// migrates to engine-driven back-nav (Phase 1 T1.4), this fallback
-    /// can be deleted.
+    /// The current `AppScreen` — the engine is the single source of
+    /// truth. `app_engine` tracks every screen including Onboarding and
+    /// Lock (set at init, navigated by `goto` / onboarding completion /
+    /// unlock), so no TUI-local screen mirror is needed.
     pub fn current_app_screen(&self) -> AppScreen {
         // app_engine is the single source of truth — it tracks Onboarding
         // and Lock too (set at init, navigated by goto / completion).
         self.app_engine.current_app_screen().clone()
     }
 
-    /// The current TUI `Screen`. Single read accessor for the `screen`
-    /// field so external modules never touch the field directly — the
-    /// seam Phase 1 flips to an engine-derived value before the field is
-    /// deleted (`navigation.rs` remains the only module that names it).
+    /// The current TUI `Screen`, derived entirely from engine state: an
+    /// open overlay, else the onboarding step (from the onboarding
+    /// engine), else the `AppScreen` mapped back to its `Screen`. There
+    /// is no stored screen field — this is the single computed view.
     pub fn active_screen(&self) -> Screen {
         // An open overlay is the active screen from the UI's perspective;
-        // the engine's underlying screen stays in `self.screen`.
+        // the engine screen beneath it is unchanged.
         if let Some(overlay) = self.overlay {
             return match overlay {
                 Overlay::ActionMenu => Screen::ActionMenu,
@@ -50,7 +43,7 @@ impl App {
         {
             return Screen::for_onboarding_screen_id(engine.current_screen().screen_id.as_str());
         }
-        Screen::from_app_screen(&app_screen).unwrap_or(self.screen)
+        Screen::from_app_screen(&app_screen).unwrap_or(Screen::MyInfo)
     }
 
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
@@ -74,7 +67,6 @@ impl App {
             _ => return,
         }
         self.clear_contact_search_if_leaving(Screen::FormDialog);
-        self.screen = Screen::FormDialog;
         self.input_mode = InputMode::Normal;
         // Navigate the engine first so `sync_nav_index` — which derives the
         // active tab from `AppScreen::FormDialog { dialog_type }` — observes
@@ -94,7 +86,6 @@ impl App {
         // Navigating to any screen dismisses an open TUI overlay.
         self.overlay = None;
         self.clear_contact_search_if_leaving(screen);
-        self.screen = screen;
         self.input_mode = InputMode::Normal;
         self.sync_nav_index();
 
@@ -106,7 +97,7 @@ impl App {
     }
 
     fn clear_contact_search_if_leaving(&mut self, target: Screen) {
-        if self.screen == Screen::Contacts && target != Screen::Contacts {
+        if self.active_screen() == Screen::Contacts && target != Screen::Contacts {
             self.contact_search_mode = false;
             self.contact_search_query.clear();
         }
@@ -132,18 +123,6 @@ impl App {
                 self.render_state = ScreenRenderState::default();
             }
             _ => {}
-        }
-    }
-
-    /// Reconcile AppEngine with `self.screen` after writers that bypass
-    /// `goto` (notably `go_back()`'s direct `self.screen = Screen::*`
-    /// assignments). Once `go_back` migrates to engine-driven back-nav
-    /// (Phase 1 T1.4), this can be deleted.
-    pub fn ensure_engine_synced(&mut self) {
-        if let Some(target) = self.engine_target_for_screen(self.screen)
-            && *self.app_engine.current_app_screen() != target
-        {
-            self.app_engine.navigate_to(target);
         }
     }
 
@@ -249,7 +228,7 @@ impl App {
             self.close_overlay();
             return;
         }
-        match self.screen {
+        match self.active_screen() {
             // TUI-only states (no AppEngine navigation).
             Screen::SetupWelcome | Screen::Lock => {} // stay
             Screen::SetupCreateIdentity => self.goto(Screen::SetupWelcome),
@@ -303,7 +282,7 @@ impl App {
     /// via engine-driven back-navigation. Mirrors the inline resets the
     /// old arm-based `go_back` did before delegating to `goto()`.
     fn clear_screen_local_state(&mut self) {
-        match self.screen {
+        match self.active_screen() {
             Screen::ContactDetail => self.selected_contact_id = None,
             Screen::ContactEdit => self.render_state = ScreenRenderState::default(),
             Screen::ContactVisibility => self.selected_visibility_field = 0,
@@ -318,16 +297,9 @@ impl App {
     /// AppEngine has but TUI doesn't (or hasn't migrated yet).
     pub(crate) fn sync_screen_from_engine(&mut self) {
         let app_screen = self.app_engine.current_app_screen();
-        // `from_app_screen` returns `None` for AppScreen variants the TUI
-        // has no top-level screen for (FormDialog overlays pop back through,
-        // DeepLinkConsent, future non_exhaustive variants); fall back to
-        // MyInfo as the safe landing screen.
-        let new_screen = Screen::from_app_screen(app_screen).unwrap_or(Screen::MyInfo);
-        let contact_id = Screen::contact_id_of(app_screen);
-        if let Some(contact_id) = contact_id {
+        if let Some(contact_id) = Screen::contact_id_of(app_screen) {
             self.selected_contact_id = Some(contact_id);
         }
-        self.screen = new_screen;
         self.input_mode = InputMode::Normal;
         self.sync_nav_index();
         self.render_state = ScreenRenderState::default();
@@ -345,7 +317,7 @@ impl App {
     /// Returns `None` for screens that don't correspond to a top-level tab
     /// (onboarding, lock, etc.).
     fn nav_index_for_screen(&self) -> Option<usize> {
-        match self.screen {
+        match self.active_screen() {
             // 0: My Card (MyInfo and sub-screens)
             Screen::MyInfo | Screen::MyInfoEntryDetail => Some(0),
             // Form dialogs collapse to one screen; the active tab is derived

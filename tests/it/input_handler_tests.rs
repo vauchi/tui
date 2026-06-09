@@ -79,13 +79,13 @@ fn create_app_without_identity() -> (App, TempDir) {
 #[test]
 fn test_goto_changes_screen() {
     let (mut app, _dir) = create_app_with_identity();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.active_screen(), Screen::MyInfo);
 
     app.goto(Screen::Contacts);
-    assert_eq!(app.screen, Screen::Contacts);
+    assert_eq!(app.active_screen(), Screen::Contacts);
 
     app.goto(Screen::Settings);
-    assert_eq!(app.screen, Screen::Settings);
+    assert_eq!(app.active_screen(), Screen::Settings);
 }
 
 // @internal
@@ -137,7 +137,7 @@ fn test_go_back_returns_to_expected_screen(#[case] from: Screen, #[case] expecte
     }
     app.goto(from);
     app.go_back();
-    assert_eq!(app.screen, expected);
+    assert_eq!(app.active_screen(), expected);
 }
 
 // `ContactDetail` requires `selected_contact_id` to be set so
@@ -153,7 +153,7 @@ fn test_go_back_from_contact_detail_returns_to_contacts() {
     app.goto(Screen::Contacts);
     app.goto(Screen::ContactDetail);
     app.go_back();
-    assert_eq!(app.screen, Screen::Contacts);
+    assert_eq!(app.active_screen(), Screen::Contacts);
 }
 
 // @internal
@@ -165,7 +165,7 @@ fn test_go_back_from_contact_visibility_returns_to_contact_detail() {
     app.goto(Screen::ContactDetail);
     app.goto(Screen::ContactVisibility);
     app.go_back();
-    assert_eq!(app.screen, Screen::ContactDetail);
+    assert_eq!(app.active_screen(), Screen::ContactDetail);
 }
 
 // Form dialogs are entered via `goto_form_dialog(FormDialogType)`, which
@@ -182,7 +182,7 @@ fn test_go_back_from_edit_name_returns_to_settings() {
         current_name: "Alice".into(),
     });
     app.go_back();
-    assert_eq!(app.screen, Screen::Settings);
+    assert_eq!(app.active_screen(), Screen::Settings);
 }
 
 // @internal
@@ -195,7 +195,7 @@ fn test_go_back_from_edit_relay_url_returns_to_settings() {
         current_url: "https://relay.test".into(),
     });
     app.go_back();
-    assert_eq!(app.screen, Screen::Settings);
+    assert_eq!(app.active_screen(), Screen::Settings);
 }
 
 // 'a' from Home opens the AddField form dialog. The dialog kind is asserted
@@ -208,7 +208,7 @@ fn test_handle_key_a_from_home_opens_add_field_dialog() {
     app.goto(Screen::MyInfo);
     let action = handle_key(&mut app, KeyCode::Char('a'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::FormDialog);
+    assert_eq!(app.active_screen(), Screen::FormDialog);
     assert!(
         matches!(
             app.current_app_screen(),
@@ -250,7 +250,7 @@ fn test_form_dialog_nav_tab_follows_dialog_kind(
 ) {
     let (mut app, _dir) = create_app_with_identity();
     app.goto_form_dialog(dialog);
-    assert_eq!(app.screen, Screen::FormDialog);
+    assert_eq!(app.active_screen(), Screen::FormDialog);
     assert_eq!(
         app.focus.nav_index, expected_tab,
         "form-dialog nav tab should follow the engine's dialog kind"
@@ -261,10 +261,10 @@ fn test_form_dialog_nav_tab_follows_dialog_kind(
 #[test]
 fn test_go_back_from_setup_stays_on_setup() {
     let (mut app, _dir) = create_app_without_identity();
-    assert_eq!(app.screen, Screen::SetupWelcome);
+    assert_eq!(app.active_screen(), Screen::SetupWelcome);
     app.go_back();
     assert_eq!(
-        app.screen,
+        app.active_screen(),
         Screen::SetupWelcome,
         "go_back from SetupWelcome should stay on SetupWelcome"
     );
@@ -276,7 +276,7 @@ fn test_go_back_from_backup_without_identity_goes_to_setup() {
     let (mut app, _dir) = create_app_without_identity();
     app.goto(Screen::Backup);
     app.go_back();
-    assert_eq!(app.screen, Screen::SetupWelcome);
+    assert_eq!(app.active_screen(), Screen::SetupWelcome);
 }
 
 // @internal
@@ -325,7 +325,7 @@ fn test_handle_key_question_mark_navigates_to_help() {
 
     let action = handle_key(&mut app, KeyCode::Char('?'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Help);
+    assert_eq!(app.active_screen(), Screen::Help);
 }
 
 // @internal
@@ -336,7 +336,7 @@ fn test_handle_key_esc_goes_back() {
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.active_screen(), Screen::MyInfo);
 }
 
 // @scenario: contacts_management:View all contacts
@@ -361,7 +361,7 @@ fn test_handle_key_on_home_navigates_to_screen(#[case] key: char, #[case] expect
 
     let action = handle_key(&mut app, KeyCode::Char(key));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, expected);
+    assert_eq!(app.active_screen(), expected);
 }
 
 // @internal
@@ -384,14 +384,14 @@ fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
 #[test]
 fn test_app_new_with_identity_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.active_screen(), Screen::MyInfo);
 }
 
 // @internal
 #[test]
 fn test_app_new_without_identity_starts_on_setup() {
     let (app, _dir) = create_app_without_identity();
-    assert_eq!(app.screen, Screen::SetupWelcome);
+    assert_eq!(app.active_screen(), Screen::SetupWelcome);
 }
 
 // ============================================================================
@@ -411,7 +411,7 @@ fn test_delivery_esc_goes_back_to_more() {
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::More);
+    assert_eq!(app.active_screen(), Screen::More);
 }
 
 // ============================================================================
@@ -425,7 +425,7 @@ fn test_settings_shift_d_navigates_to_duress() {
     app.goto(Screen::Settings);
     let action = handle_key(&mut app, KeyCode::Char('D'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Duress);
+    assert_eq!(app.active_screen(), Screen::Duress);
 }
 
 // @internal
@@ -441,7 +441,7 @@ fn test_duress_esc_in_status_goes_back() {
     app.goto(Screen::Duress);
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Settings);
+    assert_eq!(app.active_screen(), Screen::Settings);
 }
 
 // ============================================================================
@@ -454,7 +454,7 @@ fn test_duress_esc_in_status_goes_back() {
 fn test_lock_screen_no_password_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
     // No password configured → should start on Home, not Lock
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.active_screen(), Screen::MyInfo);
 }
 
 // @internal
@@ -465,7 +465,7 @@ fn test_lock_screen_q_does_not_quit() {
     // 'q' should NOT quit from lock screen — it's a PIN character
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.active_screen(), Screen::Lock);
     assert_eq!(app.lock_state.pin_input, "q");
 }
 
@@ -477,7 +477,7 @@ fn test_lock_screen_esc_does_not_navigate() {
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
     // Should stay on Lock screen
-    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.active_screen(), Screen::Lock);
 }
 
 // @internal
@@ -509,7 +509,7 @@ fn test_lock_screen_empty_enter_does_nothing() {
     app.goto(Screen::Lock);
     handle_key(&mut app, KeyCode::Enter);
     // Should stay on Lock — empty PIN doesn't attempt auth
-    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.active_screen(), Screen::Lock);
     assert_eq!(app.lock_state.attempts, 0);
 }
 
@@ -530,7 +530,7 @@ fn test_lock_screen_wrong_pin_increments_attempts() {
     handle_key(&mut app, KeyCode::Char('n'));
     handle_key(&mut app, KeyCode::Char('g'));
     handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.active_screen(), Screen::Lock);
     assert_eq!(app.lock_state.attempts, 1);
     assert!(app.lock_state.error);
     assert!(app.lock_state.pin_input.is_empty()); // cleared after failure
@@ -549,7 +549,7 @@ fn test_lock_screen_correct_pin_unlocks() {
         handle_key(&mut app, KeyCode::Char(c));
     }
     handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.screen, Screen::MyInfo);
+    assert_eq!(app.active_screen(), Screen::MyInfo);
     assert!(!app.lock_state.error);
 }
 
@@ -568,7 +568,7 @@ fn test_lock_go_back_stays_on_lock() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(Screen::Lock);
     app.go_back();
-    assert_eq!(app.screen, Screen::Lock);
+    assert_eq!(app.active_screen(), Screen::Lock);
 }
 
 // Emergency broadcast is engine-driven (core `EmergencyBroadcastEngine`);
@@ -633,7 +633,8 @@ fn test_contact_detail_copy_announces_result() {
 fn test_contact_detail_delete_sets_status() {
     let (mut app, _dir) = create_app_with_identity();
 
-    // Navigate to contact detail with no contacts
+    // Navigate to contact detail (engine needs a selected contact id).
+    app.selected_contact_id = Some("test-contact-id".into());
     app.goto(Screen::ContactDetail);
     app.selected_contact = 0;
 
@@ -642,8 +643,8 @@ fn test_contact_detail_delete_sets_status() {
     // No contact to delete — should not crash, screen transitions back
     // The go_back transitions to Contacts
     assert!(
-        app.screen == Screen::Contacts || app.screen == Screen::ContactDetail,
+        app.active_screen() == Screen::Contacts || app.active_screen() == Screen::ContactDetail,
         "x on ContactDetail should navigate back or stay, got {:?}",
-        app.screen
+        app.active_screen()
     );
 }

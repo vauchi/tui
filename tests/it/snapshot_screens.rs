@@ -27,7 +27,7 @@ use common::{
 #[test]
 fn test_snapshot_setup_screen() {
     let (mut app, _tmp) = create_app_without_identity();
-    assert_eq!(app.screen, Screen::SetupWelcome);
+    assert_eq!(app.active_screen(), Screen::SetupWelcome);
     let output = render_to_string(&mut app);
     assert_snap!("setup_screen", "app_start", "no identity detected", output);
 }
@@ -40,7 +40,7 @@ fn test_snapshot_setup_screen() {
 #[test]
 fn test_snapshot_home_with_fields() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::MyInfo;
+    app.goto(Screen::MyInfo);
     let output = render_to_string(&mut app);
     assert_snap!("home_with_fields", "app_start", "identity exists", output);
 }
@@ -53,7 +53,7 @@ fn test_snapshot_home_with_fields() {
 #[test]
 fn test_snapshot_contacts_empty() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Contacts;
+    app.goto(Screen::Contacts);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contacts_empty",
@@ -71,7 +71,7 @@ fn test_snapshot_contacts_empty() {
 #[test]
 fn test_snapshot_settings() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Settings;
+    app.goto(Screen::Settings);
     let output = render_to_string(&mut app);
     assert_snap!(
         "settings",
@@ -89,7 +89,7 @@ fn test_snapshot_settings() {
 #[test]
 fn test_snapshot_help() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Help;
+    app.goto(Screen::Help);
     let output = render_to_string(&mut app);
     assert_snap!("help", "MyInfo", "press '5' (More tab) → Help", output);
 }
@@ -102,7 +102,7 @@ fn test_snapshot_help() {
 #[test]
 fn test_snapshot_devices() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Devices;
+    app.goto(Screen::Devices);
     let output = render_to_string(&mut app);
     assert_snap!("devices", "Settings", "select Devices", output);
 }
@@ -115,7 +115,7 @@ fn test_snapshot_devices() {
 #[test]
 fn test_snapshot_recovery() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Recovery;
+    app.goto(Screen::Recovery);
     let output = render_to_string(&mut app);
     assert_snap!("recovery", "Settings", "select Recovery", output);
 }
@@ -128,7 +128,7 @@ fn test_snapshot_recovery() {
 #[test]
 fn test_snapshot_sync_idle() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Sync;
+    app.goto(Screen::Sync);
     let output = render_to_string(&mut app);
     assert_snap!("sync_idle", "Settings", "select Sync", output);
 }
@@ -137,7 +137,7 @@ fn test_snapshot_sync_idle() {
 #[test]
 fn test_snapshot_sync_connected() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Sync;
+    app.goto(Screen::Sync);
     // Sync screen renders from the engine's ScreenModel; sync_state is not
     // read by the renderer, so this setup is inert (output == sync_idle).
     app.sync_state = SyncState {
@@ -243,7 +243,7 @@ fn test_snapshot_edit_relay_url_dialog() {
 #[test]
 fn test_snapshot_privacy() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Privacy;
+    app.goto(Screen::Privacy);
     let output = render_to_string(&mut app);
     assert_snap!("privacy", "Settings", "select Privacy & Data", output);
 }
@@ -252,7 +252,7 @@ fn test_snapshot_privacy() {
 #[test]
 fn test_snapshot_exchange() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.screen = Screen::Exchange;
+    app.goto(Screen::Exchange);
     // ADR-031: QR image contains ephemeral keys — redacted by redact_dynamic_values in render_to_string
     let output = render_to_string(&mut app);
     assert_snap!("exchange", "MyInfo", "press '3' (Exchange tab)", output);
@@ -506,7 +506,7 @@ fn test_snapshot_lock_screen() {
         attempts: 0,
         error: false,
     };
-    app.screen = Screen::Lock;
+    app.goto(Screen::Lock);
     let output = render_to_string(&mut app);
     assert_snap!(
         "lock_screen",
@@ -541,7 +541,7 @@ fn test_snapshot_group_detail() {
         .expect("has groups");
     app.app_engine
         .navigate_to(AppScreen::GroupDetail { group_id });
-    app.screen = Screen::GroupDetail;
+    app.goto(Screen::GroupDetail);
     let output = render_to_string(&mut app);
     assert_snap!("group_detail", "Groups", "press Enter on group", output);
 }
@@ -559,7 +559,7 @@ fn test_snapshot_group_detail_empty() {
     app.app_engine.navigate_to(AppScreen::GroupDetail {
         group_id: group.id().to_string(),
     });
-    app.screen = Screen::GroupDetail;
+    app.goto(Screen::GroupDetail);
     let output = render_to_string(&mut app);
     assert_snap!(
         "group_detail_empty",
@@ -577,7 +577,7 @@ fn test_snapshot_group_detail_empty() {
 #[test]
 fn test_snapshot_setup_create_identity() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.screen = Screen::SetupCreateIdentity;
+    app.goto(Screen::SetupCreateIdentity);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName
@@ -598,7 +598,7 @@ fn test_snapshot_setup_create_identity() {
 #[test]
 fn test_snapshot_setup_groups_setup() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.screen = Screen::SetupCreateIdentity;
+    app.goto(Screen::SetupCreateIdentity);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName
@@ -627,7 +627,7 @@ fn test_snapshot_setup_groups_setup() {
 #[test]
 fn test_snapshot_setup_add_fields() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.screen = Screen::SetupAddFields;
+    app.goto(Screen::SetupAddFields);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName → GroupsSetup → ContactInfo
@@ -653,7 +653,7 @@ fn test_snapshot_setup_add_fields() {
 #[test]
 fn test_snapshot_setup_ready() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.screen = Screen::SetupReady;
+    app.goto(Screen::SetupReady);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName → GroupsSetup → ContactInfo → WhatNext
@@ -711,7 +711,7 @@ fn test_snapshot_contact_merge() {
             "ahmed.n@example.com".to_string(),
         ],
     });
-    app.screen = Screen::ContactMerge;
+    app.goto(Screen::ContactMerge);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_merge",
@@ -746,7 +746,7 @@ fn test_snapshot_my_info_entry_detail() {
     app.goto(Screen::MyInfo);
     // Select first field and navigate to detail
     app.selected_field = 0;
-    app.screen = Screen::MyInfoEntryDetail;
+    app.goto(Screen::MyInfoEntryDetail);
     let output = render_to_string(&mut app);
     assert_snap!(
         "my_info_entry_detail",

@@ -60,15 +60,11 @@ pub(crate) fn handle_action_result_with(
             }
         }
         ActionResult::NavigateTo(_) => {
-            // AppEngine already updated its internal screen; TUI re-renders on
-            // next draw. Reverse-map the engine's AppScreen onto `app.screen`
-            // via the shared `Screen::from_app_screen` (single source of
-            // truth, shared with `App::sync_screen_from_engine`). `None`
-            // means "no top-level TUI screen for this AppScreen" — stay put,
-            // matching the prior catch-all behavior.
+            // AppEngine already updated its current screen; the TUI renders
+            // from it. Sync only the TUI-local mirror state the engine does
+            // not own (selected contact, lock engine).
             app.render_state = Default::default();
             let app_screen = app.app_engine.current_app_screen();
-            let target = Screen::from_app_screen(app_screen);
             let contact_id = Screen::contact_id_of(app_screen);
             let entering_lock = matches!(app_screen, AppScreen::Lock);
             if let Some(contact_id) = contact_id {
@@ -80,9 +76,6 @@ pub(crate) fn handle_action_result_with(
                 app.lock_engine = Some(LockScreenEngine::new(
                     vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
                 ));
-            }
-            if let Some(target) = target {
-                app.screen = target;
             }
             // Show success feedback when completing a form dialog. The kind
             // is captured pre-dispatch (`from_form_dialog`) because the engine
@@ -101,13 +94,11 @@ pub(crate) fn handle_action_result_with(
             app.selected_contact_id = Some(contact_id.clone());
             app.app_engine
                 .navigate_to(AppScreen::ContactDetail { contact_id });
-            app.screen = Screen::ContactDetail;
         }
         ActionResult::EditContact { contact_id } => {
             app.selected_contact_id = Some(contact_id.clone());
             app.app_engine
                 .navigate_to(AppScreen::ContactEdit { contact_id });
-            app.screen = Screen::ContactEdit;
             app.render_state = Default::default();
         }
         ActionResult::OpenUrl { url } => {
@@ -175,7 +166,6 @@ pub(crate) fn handle_action_result_with(
             // the device-link screen so the QR shows there too.
             app.app_engine
                 .navigate_to(vauchi_app::ui::AppScreen::DeviceLinking);
-            app.screen = Screen::DeviceLinking;
             app.render_state = Default::default();
         }
         ActionResult::RequestCamera => {
@@ -195,7 +185,6 @@ pub(crate) fn handle_action_result_with(
             handle_exchange_commands(app, commands);
         }
         ActionResult::WipeComplete => {
-            app.screen = Screen::SetupWelcome;
             app.onboarding_engine = Some(vauchi_app::ui::OnboardingEngine::new());
             app.render_state = Default::default();
             app.invalidate_engines();
@@ -207,7 +196,6 @@ pub(crate) fn handle_action_result_with(
             app.selected_contact_id = Some(contact_id.clone());
             app.app_engine
                 .navigate_to(AppScreen::VerifyFingerprint { contact_id });
-            app.screen = Screen::VerifyFingerprint;
             app.render_state = Default::default();
         }
         // trust-notes-preview (core!368) — not yet implemented in TUI

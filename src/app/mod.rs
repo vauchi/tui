@@ -76,8 +76,6 @@ fn detect_locale() -> I18n {
 /// Application state.
 #[allow(dead_code)]
 pub struct App {
-    /// Current screen
-    pub screen: Screen,
     /// Active TUI-only modal layered over `screen` (action menu, import
     /// dialog). `None` when no overlay is open. See [`Overlay`].
     pub overlay: Option<Overlay>,
@@ -213,7 +211,6 @@ impl App {
         let (theme, theme_index) = load_saved_theme(&theme_ids);
 
         App {
-            screen: initial_screen,
             overlay: None,
             input_mode: InputMode::Normal,
             should_quit: false,

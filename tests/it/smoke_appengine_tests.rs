@@ -55,7 +55,7 @@ fn render_to_string(app: &mut App, width: u16, height: u16) -> String {
 #[test]
 fn smoke_home_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::MyInfo;
+    app.goto(Screen::MyInfo);
     let output = render_to_string(&mut app, 80, 24);
 
     // Home screen should have the title (display name or "My Info")
@@ -76,7 +76,7 @@ fn smoke_home_screen_renders_via_engine() {
 #[test]
 fn smoke_contacts_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Contacts;
+    app.goto(Screen::Contacts);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -90,7 +90,7 @@ fn smoke_contacts_screen_renders_via_engine() {
 #[test]
 fn smoke_exchange_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Exchange;
+    app.goto(Screen::Exchange);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -104,7 +104,7 @@ fn smoke_exchange_screen_renders_via_engine() {
 #[test]
 fn smoke_settings_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Settings;
+    app.goto(Screen::Settings);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -124,7 +124,7 @@ fn smoke_settings_screen_renders_via_engine() {
 #[test]
 fn smoke_help_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Help;
+    app.goto(Screen::Help);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -144,7 +144,7 @@ fn smoke_help_screen_renders_via_engine() {
 #[test]
 fn smoke_backup_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Backup;
+    app.goto(Screen::Backup);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -158,7 +158,7 @@ fn smoke_backup_screen_renders_via_engine() {
 #[test]
 fn smoke_delivery_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Delivery;
+    app.goto(Screen::Delivery);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -172,7 +172,7 @@ fn smoke_delivery_screen_renders_via_engine() {
 #[test]
 fn smoke_devices_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Devices;
+    app.goto(Screen::Devices);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -186,7 +186,7 @@ fn smoke_devices_screen_renders_via_engine() {
 #[test]
 fn smoke_duress_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Duress;
+    app.goto(Screen::Duress);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -200,7 +200,7 @@ fn smoke_duress_screen_renders_via_engine() {
 #[test]
 fn smoke_emergency_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Emergency;
+    app.goto(Screen::Emergency);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -216,7 +216,7 @@ fn smoke_emergency_screen_renders_via_engine() {
 #[test]
 fn smoke_sync_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Sync;
+    app.goto(Screen::Sync);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Sync"),
@@ -229,7 +229,7 @@ fn smoke_sync_screen_renders_via_engine() {
 #[test]
 fn smoke_recovery_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Recovery;
+    app.goto(Screen::Recovery);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Recovery") || output.contains("Quorum"),
@@ -242,7 +242,7 @@ fn smoke_recovery_screen_renders_via_engine() {
 #[test]
 fn smoke_groups_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Groups;
+    app.goto(Screen::Groups);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Group"),
@@ -255,7 +255,7 @@ fn smoke_groups_screen_renders_via_engine() {
 #[test]
 fn smoke_privacy_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Privacy;
+    app.goto(Screen::Privacy);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Privacy") || output.contains("Data"),
@@ -268,7 +268,7 @@ fn smoke_privacy_screen_renders_via_engine() {
 #[test]
 fn smoke_support_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.screen = Screen::Support;
+    app.goto(Screen::Support);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Support") || output.contains("Vauchi"),
@@ -285,7 +285,7 @@ fn smoke_group_detail_screen_renders_via_engine() {
     app.app_engine.navigate_to(AppScreen::GroupDetail {
         group_id: "test-group".into(),
     });
-    app.screen = Screen::GroupDetail;
+    app.goto(Screen::GroupDetail);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Group") || output.contains("Members"),
@@ -299,7 +299,7 @@ fn smoke_group_detail_screen_renders_via_engine() {
 fn smoke_contact_visibility_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
     app.selected_contact_id = Some("test-contact".into());
-    app.screen = Screen::ContactVisibility;
+    app.goto(Screen::ContactVisibility);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Visibility") || output.contains("toggle"),
@@ -330,7 +330,7 @@ fn smoke_all_engine_screens_no_panic() {
         Screen::Privacy,
         Screen::Support,
     ] {
-        app.screen = screen;
+        app.goto(screen);
         // Should not panic
         let output = render_to_string(&mut app, 80, 24);
         assert!(!output.is_empty(), "{:?} rendered empty", screen);

@@ -123,7 +123,7 @@ fn test_workflow_add_field() {
     let mut steps = Vec::new();
 
     // Step 1: MyInfo
-    app.screen = Screen::MyInfo;
+    app.goto(Screen::MyInfo);
     steps.push(workflow_step(1, "MyInfo — view card fields", &mut app));
 
     // Step 2: Add field dialog (engine-driven)

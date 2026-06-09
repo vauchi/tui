@@ -43,7 +43,7 @@ fn group_detail_app() -> (App, TempDir) {
     app.app_engine.navigate_to(AppScreen::GroupDetail {
         group_id: group.id().to_string(),
     });
-    app.screen = Screen::GroupDetail;
+    app.goto(Screen::GroupDetail);
     (app, temp_dir)
 }
 

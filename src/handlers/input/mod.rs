@@ -80,7 +80,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Legacy: Onboarding name input bypasses global keys
-    if app.screen == Screen::SetupCreateIdentity {
+    if app.active_screen() == Screen::SetupCreateIdentity {
         handle_setup_create_identity_keys(app, key);
         return Action::Continue;
     }
@@ -340,9 +340,6 @@ fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
 /// Falls back to legacy screen handlers for keys not consumed by the engine
 /// (e.g., TUI-specific navigation shortcuts like 's' for Settings).
 fn handle_engine_keys(app: &mut App, key: KeyCode) {
-    // Ensure AppEngine is synced to the current TUI screen
-    app.ensure_engine_synced();
-
     // Get the current screen model from AppEngine
     let screen_model = app.app_engine.current_screen();
 
