@@ -4,7 +4,9 @@
 
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
-use vauchi_app::ui::{ActionResult, Component, FormDialogType, LockScreenEngine, WorkflowEngine};
+use vauchi_app::ui::{
+    ActionResult, AppScreen, Component, FormDialogType, LockScreenEngine, WorkflowEngine,
+};
 
 use crate::app::{App, Screen};
 
@@ -58,89 +60,29 @@ pub(crate) fn handle_action_result_with(
             }
         }
         ActionResult::NavigateTo(_) => {
-            // AppEngine already updated its internal screen; TUI re-renders on next draw.
-            // Sync TUI screen from AppEngine's current screen.
-            // Reset render state for the new screen (fresh focus/selection).
-
-            {
-                app.render_state = Default::default();
-                match app.app_engine.current_app_screen() {
-                    vauchi_app::ui::AppScreen::MyInfo => app.screen = Screen::MyInfo,
-                    vauchi_app::ui::AppScreen::Contacts => app.screen = Screen::Contacts,
-                    vauchi_app::ui::AppScreen::Exchange => app.screen = Screen::Exchange,
-                    vauchi_app::ui::AppScreen::Settings => app.screen = Screen::Settings,
-                    vauchi_app::ui::AppScreen::Help => app.screen = Screen::Help,
-                    vauchi_app::ui::AppScreen::Onboarding => {
-                        app.screen = Screen::SetupWelcome;
-                    }
-                    vauchi_app::ui::AppScreen::ContactDetail { contact_id } => {
-                        app.selected_contact_id = Some(contact_id.clone());
-                        app.screen = Screen::ContactDetail;
-                    }
-                    vauchi_app::ui::AppScreen::Backup => app.screen = Screen::Backup,
-                    vauchi_app::ui::AppScreen::Lock => {
-                        if app.lock_engine.is_none() {
-                            app.lock_engine = Some(LockScreenEngine::new(
-                                vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
-                            ));
-                        }
-                        app.screen = Screen::Lock;
-                    }
-                    vauchi_app::ui::AppScreen::DeviceLinking => app.screen = Screen::DeviceLinking,
-                    vauchi_app::ui::AppScreen::DuressPin => app.screen = Screen::Duress,
-                    vauchi_app::ui::AppScreen::EmergencyBroadcast => app.screen = Screen::Emergency,
-                    vauchi_app::ui::AppScreen::DeliveryStatus => app.screen = Screen::Delivery,
-                    vauchi_app::ui::AppScreen::Sync => app.screen = Screen::Sync,
-                    vauchi_app::ui::AppScreen::Recovery => app.screen = Screen::Recovery,
-                    vauchi_app::ui::AppScreen::Groups => app.screen = Screen::Groups,
-                    vauchi_app::ui::AppScreen::More => app.screen = Screen::More,
-                    vauchi_app::ui::AppScreen::Privacy => app.screen = Screen::Privacy,
-                    vauchi_app::ui::AppScreen::Support => app.screen = Screen::Support,
-                    vauchi_app::ui::AppScreen::GroupDetail { .. } => {
-                        // Engine carries the group_id on its current AppScreen;
-                        // renderers and handlers read it from there.
-                        app.screen = Screen::GroupDetail;
-                    }
-                    vauchi_app::ui::AppScreen::ContactVisibility { contact_id } => {
-                        app.selected_contact_id = Some(contact_id.clone());
-                        app.screen = Screen::ContactVisibility;
-                    }
-                    vauchi_app::ui::AppScreen::FormDialog { .. } => {
-                        // All form dialogs collapse to one screen; the kind
-                        // lives in the engine's AppScreen (single source of
-                        // truth). FormDialogEngine owns the form values.
-                        app.screen = Screen::FormDialog;
-                    }
-                    vauchi_app::ui::AppScreen::ContactEdit { contact_id } => {
-                        app.selected_contact_id = Some(contact_id.clone());
-                        app.screen = Screen::ContactEdit;
-                    }
-                    vauchi_app::ui::AppScreen::ContactDuplicates => {
-                        app.screen = Screen::ContactDuplicates;
-                    }
-                    vauchi_app::ui::AppScreen::ContactMerge { .. } => {
-                        app.screen = Screen::ContactMerge;
-                    }
-                    vauchi_app::ui::AppScreen::ContactLimit => {
-                        app.screen = Screen::ContactLimit;
-                    }
-                    vauchi_app::ui::AppScreen::MyInfoEntryDetail { .. } => {
-                        app.screen = Screen::MyInfoEntryDetail;
-                    }
-                    vauchi_app::ui::AppScreen::VerifyFingerprint { contact_id } => {
-                        app.selected_contact_id = Some(contact_id.clone());
-                        app.screen = Screen::VerifyFingerprint;
-                    }
-                    vauchi_app::ui::AppScreen::ActivityLog => {
-                        app.screen = Screen::Activity;
-                    }
-                    vauchi_app::ui::AppScreen::DeviceReplacement => {
-                        app.screen = Screen::DeviceReplacement;
-                    }
-                    _ => {
-                        // Unknown AppScreen variant — stay on current screen
-                    }
-                }
+            // AppEngine already updated its internal screen; TUI re-renders on
+            // next draw. Reverse-map the engine's AppScreen onto `app.screen`
+            // via the shared `Screen::from_app_screen` (single source of
+            // truth, shared with `App::sync_screen_from_engine`). `None`
+            // means "no top-level TUI screen for this AppScreen" — stay put,
+            // matching the prior catch-all behavior.
+            app.render_state = Default::default();
+            let app_screen = app.app_engine.current_app_screen();
+            let target = Screen::from_app_screen(app_screen);
+            let contact_id = Screen::contact_id_of(app_screen);
+            let entering_lock = matches!(app_screen, AppScreen::Lock);
+            if let Some(contact_id) = contact_id {
+                app.selected_contact_id = Some(contact_id);
+            }
+            // NavigateTo bypasses `goto()`, so lazily create the lock engine
+            // here (mirrors `App::ensure_screen_engine` for the goto() path).
+            if entering_lock && app.lock_engine.is_none() {
+                app.lock_engine = Some(LockScreenEngine::new(
+                    vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
+                ));
+            }
+            if let Some(target) = target {
+                app.screen = target;
             }
             // Show success feedback when completing a form dialog. The kind
             // is captured pre-dispatch (`from_form_dialog`) because the engine

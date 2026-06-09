@@ -289,59 +289,16 @@ impl App {
     /// `engine_target_for_screen`. Falls back to MyInfo for screens
     /// AppEngine has but TUI doesn't (or hasn't migrated yet).
     pub(crate) fn sync_screen_from_engine(&mut self) {
-        let new_screen = match self.app_engine.current_app_screen() {
-            AppScreen::MyInfo => Screen::MyInfo,
-            AppScreen::Contacts => Screen::Contacts,
-            AppScreen::Exchange => Screen::Exchange,
-            AppScreen::Settings => Screen::Settings,
-            AppScreen::Help => Screen::Help,
-            AppScreen::Backup => Screen::Backup,
-            AppScreen::DeliveryStatus => Screen::Delivery,
-            AppScreen::DeviceManagement => Screen::Devices,
-            AppScreen::DuressPin => Screen::Duress,
-            AppScreen::EmergencyBroadcast => Screen::Emergency,
-            AppScreen::ContactDetail { contact_id } => {
-                self.selected_contact_id = Some(contact_id.clone());
-                Screen::ContactDetail
-            }
-            AppScreen::ContactEdit { contact_id } => {
-                self.selected_contact_id = Some(contact_id.clone());
-                Screen::ContactEdit
-            }
-            AppScreen::Sync => Screen::Sync,
-            AppScreen::ActivityLog => Screen::Activity,
-            AppScreen::Recovery => Screen::Recovery,
-            AppScreen::More => Screen::More,
-            AppScreen::Groups => Screen::Groups,
-            AppScreen::GroupDetail { .. } => Screen::GroupDetail,
-            AppScreen::ContactVisibility { contact_id } => {
-                self.selected_contact_id = Some(contact_id.clone());
-                Screen::ContactVisibility
-            }
-            AppScreen::Privacy => Screen::Privacy,
-            AppScreen::Support => Screen::Support,
-            AppScreen::DeviceReplacement => Screen::DeviceReplacement,
-            AppScreen::DeviceLinking => Screen::DeviceLinking,
-            AppScreen::ContactDuplicates => Screen::ContactDuplicates,
-            AppScreen::ContactMerge { .. } => Screen::ContactMerge,
-            AppScreen::ContactLimit => Screen::ContactLimit,
-            AppScreen::VerifyFingerprint { contact_id } => {
-                self.selected_contact_id = Some(contact_id.clone());
-                Screen::VerifyFingerprint
-            }
-            AppScreen::Onboarding => Screen::SetupWelcome,
-            AppScreen::Lock => Screen::Lock,
-            // FormDialog / DeepLinkConsent: TUI doesn't render these as
-            // top-level screens; AppEngine pops back through them
-            // automatically. Stay on whatever the next non-overlay
-            // screen is — for now fall back to MyInfo.
-            AppScreen::FormDialog { .. } => Screen::FormDialog,
-            AppScreen::DeepLinkConsent { .. } => Screen::MyInfo,
-            // `AppScreen` is `#[non_exhaustive]` — any future variant
-            // not yet wired into TUI lands on MyInfo until the migration
-            // catches up.
-            _ => Screen::MyInfo,
-        };
+        let app_screen = self.app_engine.current_app_screen();
+        // `from_app_screen` returns `None` for AppScreen variants the TUI
+        // has no top-level screen for (FormDialog overlays pop back through,
+        // DeepLinkConsent, future non_exhaustive variants); fall back to
+        // MyInfo as the safe landing screen.
+        let new_screen = Screen::from_app_screen(app_screen).unwrap_or(Screen::MyInfo);
+        let contact_id = Screen::contact_id_of(app_screen);
+        if let Some(contact_id) = contact_id {
+            self.selected_contact_id = Some(contact_id);
+        }
         self.screen = new_screen;
         self.input_mode = InputMode::Normal;
         self.sync_nav_index();
@@ -426,6 +383,71 @@ impl App {
     pub(crate) fn form_dialog_type(&self) -> Option<FormDialogType> {
         match self.app_engine.current_app_screen() {
             AppScreen::FormDialog { dialog_type } => Some(dialog_type.clone()),
+            _ => None,
+        }
+    }
+}
+
+impl Screen {
+    /// Pure inverse of [`App::engine_target_for_screen`]: the TUI `Screen`
+    /// for an engine `AppScreen` discriminant, or `None` for `AppScreen`
+    /// variants the TUI has no top-level screen for (overlay form dialogs,
+    /// deep-link consent, future `#[non_exhaustive]` variants) — callers
+    /// apply their own fallback.
+    ///
+    /// Single source for the AppScreen->Screen map. It replaced two
+    /// hand-maintained copies (`App::sync_screen_from_engine` and
+    /// `handlers::action_result`) that had drifted: `MyInfoEntryDetail`
+    /// mapped to its own screen in the action-result path but fell back to
+    /// `MyInfo` in the back-nav path. Both now agree via this function.
+    /// Associated data (`contact_id`, `group_id`, dialog kind) stays on the
+    /// engine's `AppScreen`; [`Screen::contact_id_of`] surfaces the one piece
+    /// the TUI mirrors locally.
+    pub(crate) fn from_app_screen(app_screen: &AppScreen) -> Option<Screen> {
+        Some(match app_screen {
+            AppScreen::MyInfo => Screen::MyInfo,
+            AppScreen::Contacts => Screen::Contacts,
+            AppScreen::ContactDetail { .. } => Screen::ContactDetail,
+            AppScreen::ContactEdit { .. } => Screen::ContactEdit,
+            AppScreen::ContactVisibility { .. } => Screen::ContactVisibility,
+            AppScreen::Exchange => Screen::Exchange,
+            AppScreen::Settings => Screen::Settings,
+            AppScreen::Help => Screen::Help,
+            AppScreen::Backup => Screen::Backup,
+            AppScreen::Lock => Screen::Lock,
+            AppScreen::DeviceLinking => Screen::DeviceLinking,
+            AppScreen::DeviceManagement => Screen::Devices,
+            AppScreen::DuressPin => Screen::Duress,
+            AppScreen::EmergencyBroadcast => Screen::Emergency,
+            AppScreen::DeliveryStatus => Screen::Delivery,
+            AppScreen::Sync => Screen::Sync,
+            AppScreen::Recovery => Screen::Recovery,
+            AppScreen::Groups => Screen::Groups,
+            AppScreen::GroupDetail { .. } => Screen::GroupDetail,
+            AppScreen::More => Screen::More,
+            AppScreen::Privacy => Screen::Privacy,
+            AppScreen::Support => Screen::Support,
+            AppScreen::FormDialog { .. } => Screen::FormDialog,
+            AppScreen::ContactDuplicates => Screen::ContactDuplicates,
+            AppScreen::ContactMerge { .. } => Screen::ContactMerge,
+            AppScreen::ContactLimit => Screen::ContactLimit,
+            AppScreen::MyInfoEntryDetail { .. } => Screen::MyInfoEntryDetail,
+            AppScreen::VerifyFingerprint { .. } => Screen::VerifyFingerprint,
+            AppScreen::ActivityLog => Screen::Activity,
+            AppScreen::DeviceReplacement => Screen::DeviceReplacement,
+            AppScreen::Onboarding => Screen::SetupWelcome,
+            _ => return None,
+        })
+    }
+
+    /// The contact id the TUI mirrors into `selected_contact_id` for the
+    /// `AppScreen` variants that carry one. `None` for every other screen.
+    pub(crate) fn contact_id_of(app_screen: &AppScreen) -> Option<String> {
+        match app_screen {
+            AppScreen::ContactDetail { contact_id }
+            | AppScreen::ContactEdit { contact_id }
+            | AppScreen::ContactVisibility { contact_id }
+            | AppScreen::VerifyFingerprint { contact_id } => Some(contact_id.clone()),
             _ => None,
         }
     }
