@@ -7,7 +7,7 @@
 use crossterm::event::KeyCode;
 use vauchi_app::ui::{UserAction, WorkflowEngine};
 
-use crate::app::{ActionMenuState, App, ImportState, InputMode, Screen};
+use crate::app::{ActionMenuState, App, ImportState, InputMode, Overlay, Screen};
 use crate::helpers;
 
 pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
@@ -146,7 +146,8 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
                         actions,
                         selected: 0,
                     };
-                    app.goto(Screen::ActionMenu);
+                    // Overlay over the contact detail — engine screen unchanged.
+                    app.overlay = Some(Overlay::ActionMenu);
                 } else if let Some(uri) = field.to_uri() {
                     let action_type = field.to_action();
                     let type_name = match &action_type {

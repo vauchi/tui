@@ -117,6 +117,18 @@ impl Screen {
     }
 }
 
+/// A TUI-only modal layered on top of the underlying engine screen. These
+/// have no engine `AppScreen` — the engine stays on the screen beneath
+/// while the overlay captures input. Tracked separately from `Screen` so
+/// the screen stays the engine's truth; the matching `Screen` variant is
+/// retired once nothing else references it. `ContactImport` joins here in a
+/// follow-up brick (its entry has an `input_mode` interaction to untangle).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Overlay {
+    /// Field-action popup over a contact's detail screen.
+    ActionMenu,
+}
+
 /// Input mode for text entry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputMode {

@@ -47,7 +47,12 @@ impl App {
     /// seam Phase 1 flips to an engine-derived value before the field is
     /// deleted (`navigation.rs` remains the only module that names it).
     pub fn active_screen(&self) -> Screen {
-        self.screen
+        // An open overlay is the active screen from the UI's perspective;
+        // the engine's underlying screen stays in `self.screen`.
+        match self.overlay {
+            Some(Overlay::ActionMenu) => Screen::ActionMenu,
+            None => self.screen,
+        }
     }
 
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
@@ -88,6 +93,8 @@ impl App {
     /// target maps to an `AppScreen`, ensures any non-AppEngine engine
     /// (Onboarding, Lock) exists, and resets render state.
     pub fn goto(&mut self, screen: Screen) {
+        // Navigating to any screen dismisses an open TUI overlay.
+        self.overlay = None;
         self.clear_contact_search_if_leaving(screen);
         self.screen = screen;
         self.input_mode = InputMode::Normal;
@@ -231,6 +238,11 @@ impl App {
     /// roundtrip through the engine (`selected_contact_id`,
     /// `selected_visibility_field`) clear here.
     pub fn go_back(&mut self) {
+        // An open overlay swallows "back": close it, stay on the screen beneath.
+        if self.overlay.is_some() {
+            self.close_overlay();
+            return;
+        }
         match self.screen {
             // TUI-only states (no AppEngine navigation).
             Screen::SetupWelcome | Screen::Lock => {} // stay
@@ -238,10 +250,6 @@ impl App {
             Screen::SetupAddFields => self.goto(Screen::SetupCreateIdentity),
             Screen::SetupSecurity => self.goto(Screen::SetupAddFields),
             Screen::SetupReady => self.goto(Screen::SetupSecurity),
-            Screen::ActionMenu => {
-                self.action_menu_state = ActionMenuState::default();
-                self.goto(Screen::ContactDetail);
-            }
 
             // Setup-time `Backup` and `AddField` retain their explicit
             // arms because the bootstrap flow has no engine history to
@@ -277,6 +285,12 @@ impl App {
                 self.sync_screen_from_engine();
             }
         }
+    }
+
+    /// Close any open TUI overlay, resetting its transient state.
+    pub fn close_overlay(&mut self) {
+        self.overlay = None;
+        self.action_menu_state = ActionMenuState::default();
     }
 
     /// Clear TUI-presentation-only state for the screen we're leaving
@@ -598,5 +612,27 @@ mod tests {
                 "{bespoke:?} must use its bespoke handler, not the engine resolver",
             );
         }
+    }
+
+    /// An open overlay reads as the active screen while the engine screen
+    /// beneath is untouched, and is dismissed by both back-nav and forward
+    /// navigation. Locks brick 3's overlay-aware `active_screen` + the
+    /// `go_back`/`goto` overlay handling.
+    #[test]
+    fn open_overlay_is_active_screen_and_dismissed_by_back_and_navigation() {
+        let mut app = test_app();
+        app.screen = Screen::ContactDetail;
+        app.overlay = Some(Overlay::ActionMenu);
+        assert_eq!(app.active_screen(), Screen::ActionMenu);
+        assert_eq!(app.screen, Screen::ContactDetail);
+
+        app.go_back();
+        assert_eq!(app.overlay, None);
+        assert_eq!(app.active_screen(), Screen::ContactDetail);
+
+        app.overlay = Some(Overlay::ActionMenu);
+        app.goto(Screen::Settings);
+        assert_eq!(app.overlay, None);
+        assert_eq!(app.active_screen(), Screen::Settings);
     }
 }

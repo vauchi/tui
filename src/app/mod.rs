@@ -78,6 +78,9 @@ fn detect_locale() -> I18n {
 pub struct App {
     /// Current screen
     pub screen: Screen,
+    /// Active TUI-only modal layered over `screen` (action menu, import
+    /// dialog). `None` when no overlay is open. See [`Overlay`].
+    pub overlay: Option<Overlay>,
     /// Input mode
     pub input_mode: InputMode,
     /// Whether the app should quit (for future use)
@@ -207,6 +210,7 @@ impl App {
 
         App {
             screen: initial_screen,
+            overlay: None,
             input_mode: InputMode::Normal,
             should_quit: false,
             status_message: None,

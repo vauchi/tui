@@ -12,7 +12,7 @@ use crate::common;
 
 use vauchi_app::ui::LockScreenEngine;
 use vauchi_core::contact_card::ContactAction;
-use vauchi_tui::app::{ActionMenuState, LockState, Screen, SyncState};
+use vauchi_tui::app::{ActionMenuState, LockState, Overlay, Screen, SyncState};
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity,
@@ -478,7 +478,7 @@ fn test_snapshot_action_menu() {
         ],
         selected: 0,
     };
-    app.screen = Screen::ActionMenu;
+    app.overlay = Some(Overlay::ActionMenu);
     let output = render_to_string(&mut app);
     assert_snap!(
         "action_menu",
