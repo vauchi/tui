@@ -541,6 +541,7 @@ mod tests {
     /// is the seam Phase 0 unified: if a future edit adds a `Screen` variant
     /// (or an `AppScreen` mapping) to one map but not the inverse, the round
     /// trip breaks here instead of drifting silently between the two paths.
+    // @internal
     #[test]
     fn engine_mapped_screens_round_trip_through_from_app_screen() {
         let mut app = test_app();
@@ -587,6 +588,7 @@ mod tests {
         }
     }
 
+    // @internal
     #[test]
     fn contact_id_of_extracts_id_for_contact_screens_and_none_otherwise() {
         let detail = AppScreen::ContactDetail {
@@ -609,6 +611,7 @@ mod tests {
     /// `app.screen` untouched (action-result). `EmergencyShred` is a good
     /// witness: the TUI's Emergency screen maps to `EmergencyBroadcast`, so
     /// `EmergencyShred` has no TUI screen of its own.
+    // @internal
     #[test]
     fn from_app_screen_is_none_for_unmapped_screens() {
         assert_eq!(
@@ -628,6 +631,7 @@ mod tests {
     /// the drift the predicate replaced: `ContactLimit` /
     /// `VerifyFingerprint` are engine-driven and were silently dropping
     /// keys before the gate was redefined by its complement.
+    // @internal
     #[test]
     fn routes_through_engine_is_false_only_for_bespoke_handler_screens() {
         assert!(Screen::ContactLimit.routes_through_engine());
@@ -654,6 +658,7 @@ mod tests {
     /// beneath is untouched, and is dismissed by both back-nav and forward
     /// navigation. Locks brick 3's overlay-aware `active_screen` + the
     /// `go_back`/`goto` overlay handling.
+    // @internal
     #[test]
     fn open_overlay_is_active_screen_and_dismissed_by_back_and_navigation() {
         let mut app = test_app();
@@ -676,6 +681,7 @@ mod tests {
     /// real screen while the onboarding engine stays alive. The engine's
     /// presence must NOT make the app report onboarding — `self.screen` is
     /// the mode sentinel.
+    // @internal
     #[test]
     fn backup_detour_during_onboarding_is_not_reported_as_onboarding() {
         let mut app = test_app();
