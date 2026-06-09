@@ -136,7 +136,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         }
     }
     // TUI-only overlays on top of the engine screen.
-    match app.screen {
+    match app.active_screen() {
         Screen::ActionMenu => draw_action_menu(f, chunks[0], app),
         Screen::ContactImport => draw_import_dialog(f, chunks[0], app),
         _ => {}
@@ -267,7 +267,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
     };
 
     // Add global actions (back/quit) except on Lock and first setup screen
-    match app.screen {
+    match app.active_screen() {
         Screen::Lock => {}
         Screen::SetupWelcome => {
             items.push(ActionItem::new("q", "quit"));
@@ -287,7 +287,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 
 /// Build navigation items for the persistent bottom nav bar.
 fn build_nav_items(app: &App) -> Vec<NavItem> {
-    let active_tab = match app.screen {
+    let active_tab = match app.active_screen() {
         Screen::MyInfo | Screen::MyInfoEntryDetail => 0,
         // Form dialogs collapse to one screen; tab comes from the engine.
         Screen::FormDialog => app.form_dialog_nav_index(),

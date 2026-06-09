@@ -210,7 +210,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
 
     // Engine-driven screens — route through AppEngine key mapping
     if matches!(
-        app.screen,
+        app.active_screen(),
         Screen::MyInfo
             | Screen::Contacts
             | Screen::ContactDetail
@@ -244,7 +244,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     }
 
     // Screen-specific keys
-    match app.screen {
+    match app.active_screen() {
         Screen::MyInfo => handle_my_info_keys(app, key),
         Screen::Contacts => handle_contacts_keys(app, key),
         Screen::ContactDetail => handle_contact_detail_keys(app, key),
@@ -426,7 +426,7 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 return;
             }
             // Fall back to legacy handlers for TUI-specific shortcuts
-            match app.screen {
+            match app.active_screen() {
                 Screen::MyInfo => handle_my_info_keys(app, key),
                 Screen::Contacts => handle_contacts_keys(app, key),
                 Screen::ContactDetail => handle_contact_detail_keys(app, key),

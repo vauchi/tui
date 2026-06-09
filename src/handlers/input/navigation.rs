@@ -209,7 +209,7 @@ fn sync_onboarding_screen(app: &mut App) {
             _ => Screen::SetupWelcome,
         };
         // Only reset render state when navigating to a different screen
-        if app.screen != tui_screen {
+        if app.active_screen() != tui_screen {
             app.render_state = crate::ui::widgets::screen_renderer::ScreenRenderState::default();
         }
         app.screen = tui_screen;

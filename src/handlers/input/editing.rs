@@ -30,7 +30,7 @@ pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
             }
             app.input_mode = InputMode::Normal;
         }
-        KeyCode::Backspace => match app.screen {
+        KeyCode::Backspace => match app.active_screen() {
             Screen::ContactImport => {
                 app.import_state.file_path.pop();
             }
@@ -38,7 +38,7 @@ pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
                 app.input_buffer.pop();
             }
         },
-        KeyCode::Char(c) => match app.screen {
+        KeyCode::Char(c) => match app.active_screen() {
             Screen::ContactImport => app.import_state.file_path.push(c),
             _ => app.input_buffer.push(c),
         },

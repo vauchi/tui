@@ -42,6 +42,14 @@ impl App {
         self.app_engine.current_app_screen().clone()
     }
 
+    /// The current TUI `Screen`. Single read accessor for the `screen`
+    /// field so external modules never touch the field directly — the
+    /// seam Phase 1 flips to an engine-derived value before the field is
+    /// deleted (`navigation.rs` remains the only module that names it).
+    pub fn active_screen(&self) -> Screen {
+        self.screen
+    }
+
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
     ///
     /// Bypasses the legacy `Screen → AppScreen` mapping so callers no
