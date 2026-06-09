@@ -42,10 +42,11 @@ fn contract_storage_save_and_load_identity() {
     );
     let backup_data = b"test-backup-data".to_vec();
     storage
+        .identity()
         .save_identity(&backup_data, identity.display_name())
         .unwrap();
 
-    let loaded = storage.load_identity().unwrap();
+    let loaded = storage.identity().load_identity().unwrap();
     assert!(loaded.is_some());
     let (data, name) = loaded.unwrap();
     assert_eq!(data, backup_data);
@@ -61,9 +62,9 @@ fn contract_storage_save_and_load_own_card() {
     let storage = Storage::open(db_path.to_str().unwrap(), key).unwrap();
 
     let card = ContactCard::new("TuiTest");
-    storage.save_own_card(&card).unwrap();
+    storage.contacts().save_own_card(&card).unwrap();
 
-    let loaded = storage.load_own_card().unwrap();
+    let loaded = storage.contacts().load_own_card().unwrap();
     assert!(loaded.is_some());
     assert_eq!(loaded.unwrap().display_name(), "TuiTest");
 }
@@ -76,7 +77,7 @@ fn contract_storage_list_contacts_returns_vec() {
     let key = SymmetricKey::generate();
     let storage = Storage::open(db_path.to_str().unwrap(), key).unwrap();
 
-    let contacts = storage.list_contacts().unwrap();
+    let contacts = storage.contacts().list_contacts().unwrap();
     assert!(contacts.is_empty());
 }
 
