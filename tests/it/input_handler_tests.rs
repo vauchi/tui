@@ -615,6 +615,10 @@ fn test_home_field_delete_status_includes_label() {
 #[test]
 fn test_contact_detail_copy_announces_result() {
     let (mut app, _dir) = create_app_with_identity();
+    // ContactDetail is engine-driven: the engine only navigates there with a
+    // selected contact, so set the id before `goto` (active_screen now derives
+    // from the engine, not from `self.screen`).
+    app.selected_contact_id = Some("test-contact-id".into());
     app.goto(Screen::ContactDetail);
 
     handle_key(&mut app, KeyCode::Char('c'));

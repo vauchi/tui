@@ -46,9 +46,7 @@ impl App {
         if matches!(self.screen, Screen::Lock) {
             return AppScreen::Lock;
         }
-        if let Some(app_screen) = self.engine_target_for_screen(self.screen) {
-            return app_screen;
-        }
+        // app_engine is the source of truth for engine-driven screens.
         self.app_engine.current_app_screen().clone()
     }
 
@@ -73,7 +71,7 @@ impl App {
         {
             return Screen::for_onboarding_screen_id(engine.current_screen().screen_id.as_str());
         }
-        self.screen
+        Screen::from_app_screen(&self.current_app_screen()).unwrap_or(self.screen)
     }
 
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
@@ -662,19 +660,23 @@ mod tests {
     #[test]
     fn open_overlay_is_active_screen_and_dismissed_by_back_and_navigation() {
         let mut app = test_app();
-        app.screen = Screen::ContactDetail;
+        app.goto(Screen::Settings);
         app.overlay = Some(Overlay::ActionMenu);
+        // The overlay reads as the active screen; the engine screen beneath
+        // is intact.
         assert_eq!(app.active_screen(), Screen::ActionMenu);
-        assert_eq!(app.screen, Screen::ContactDetail);
+        assert_eq!(app.current_app_screen(), AppScreen::Settings);
 
+        // Back closes the overlay, returning to the screen beneath.
         app.go_back();
         assert_eq!(app.overlay, None);
-        assert_eq!(app.active_screen(), Screen::ContactDetail);
-
-        app.overlay = Some(Overlay::ActionMenu);
-        app.goto(Screen::Settings);
-        assert_eq!(app.overlay, None);
         assert_eq!(app.active_screen(), Screen::Settings);
+
+        // Navigating elsewhere also dismisses an open overlay.
+        app.overlay = Some(Overlay::ActionMenu);
+        app.goto(Screen::Help);
+        assert_eq!(app.overlay, None);
+        assert_eq!(app.active_screen(), Screen::Help);
     }
 
     /// The Backup-restore detour ('i' during onboarding) navigates to a

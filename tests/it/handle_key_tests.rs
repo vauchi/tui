@@ -400,7 +400,7 @@ fn test_handle_key_contacts_slash_enters_search_mode() {
 #[test]
 fn test_handle_key_search_mode_typing_updates_query() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Contacts;
+    app.goto(Screen::Contacts);
     app.contact_search_mode = true;
     app.contact_search_query.clear();
 
@@ -413,7 +413,7 @@ fn test_handle_key_search_mode_typing_updates_query() {
 #[test]
 fn test_handle_key_search_mode_esc_exits_search() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Contacts;
+    app.goto(Screen::Contacts);
     app.contact_search_mode = true;
 
     handle_key(&mut app, KeyCode::Esc);
@@ -424,7 +424,7 @@ fn test_handle_key_search_mode_esc_exits_search() {
 #[test]
 fn test_handle_key_search_mode_backspace_removes_char() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Contacts;
+    app.goto(Screen::Contacts);
     app.contact_search_mode = true;
     app.contact_search_query = "abc".to_string();
 
@@ -498,7 +498,7 @@ fn test_handle_key_home_k_stays_at_zero() {
 #[test]
 fn test_handle_key_search_mode_q_does_not_quit() {
     let (mut app, _tmp) = create_test_app();
-    app.screen = Screen::Contacts;
+    app.goto(Screen::Contacts);
     app.contact_search_mode = true;
 
     let action = handle_key(&mut app, KeyCode::Char('q'));
