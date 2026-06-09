@@ -15,7 +15,7 @@ use tempfile::TempDir;
 use vauchi_app::ui::{AppEngine, AppScreen, Component, WorkflowEngine};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 
-use vauchi_tui::app::{App, Screen};
+use vauchi_tui::app::App;
 
 fn group_detail_app() -> (App, TempDir) {
     let temp_dir = TempDir::new().expect("temp dir");
@@ -40,10 +40,9 @@ fn group_detail_app() -> (App, TempDir) {
     // Navigate the live engine to this group's detail (mirrors selecting it
     // from the Groups list); read the engine screen directly without
     // re-syncing, which would re-derive the group from list context.
-    app.app_engine.navigate_to(AppScreen::GroupDetail {
+    app.goto(AppScreen::GroupDetail {
         group_id: group.id().to_string(),
     });
-    app.goto(Screen::GroupDetail);
     (app, temp_dir)
 }
 

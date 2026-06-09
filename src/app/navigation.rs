@@ -4,9 +4,7 @@
 
 //! Screen navigation — `goto()`, `go_back()`, and nav-index sync.
 
-use vauchi_app::ui::{
-    AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine, WorkflowEngine,
-};
+use vauchi_app::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
 
 use super::App;
 use super::state::*;
@@ -21,29 +19,6 @@ impl App {
         // app_engine is the single source of truth — it tracks Onboarding
         // and Lock too (set at init, navigated by goto / completion).
         self.app_engine.current_app_screen().clone()
-    }
-
-    /// The current TUI `Screen`, derived entirely from engine state: an
-    /// open overlay, else the onboarding step (from the onboarding
-    /// engine), else the `AppScreen` mapped back to its `Screen`. There
-    /// is no stored screen field — this is the single computed view.
-    pub fn active_screen(&self) -> Screen {
-        // An open overlay is the active screen from the UI's perspective;
-        // the engine screen beneath it is unchanged.
-        if let Some(overlay) = self.overlay {
-            return match overlay {
-                Overlay::ActionMenu => Screen::ActionMenu,
-                Overlay::ContactImport => Screen::ContactImport,
-            };
-        }
-        let app_screen = self.current_app_screen();
-        // In onboarding the precise step comes from the onboarding engine.
-        if app_screen == AppScreen::Onboarding
-            && let Some(ref engine) = self.onboarding_engine
-        {
-            return Screen::for_onboarding_screen_id(engine.current_screen().screen_id.as_str());
-        }
-        Screen::from_app_screen(&app_screen).unwrap_or(Screen::MyInfo)
     }
 
     /// Navigate to a `FormDialog` AppScreen with explicit `dialog_type`.
@@ -66,7 +41,10 @@ impl App {
             | FormDialogType::RenameGroup { .. } => {}
             _ => return,
         }
-        self.clear_contact_search_if_leaving(Screen::FormDialog);
+        if self.current_app_screen() == AppScreen::Contacts {
+            self.contact_search_mode = false;
+            self.contact_search_query.clear();
+        }
         self.input_mode = InputMode::Normal;
         // Navigate the engine first so `sync_nav_index` — which derives the
         // active tab from `AppScreen::FormDialog { dialog_type }` — observes
@@ -77,44 +55,37 @@ impl App {
         self.render_state = ScreenRenderState::default();
     }
 
-    /// Navigate to a screen.
-    ///
-    /// Thin wrapper: updates `self.screen`, navigates AppEngine when the
-    /// target maps to an `AppScreen`, ensures any non-AppEngine engine
-    /// (Onboarding, Lock) exists, and resets render state.
-    pub fn goto(&mut self, screen: Screen) {
-        // Navigating to any screen dismisses an open TUI overlay.
+    /// Navigate to an `AppScreen`. Dismisses any overlay, navigates the
+    /// engine (the single source of truth), ensures the dedicated
+    /// onboarding/lock engine exists, and resets render + nav state.
+    pub fn goto(&mut self, target: AppScreen) {
         self.overlay = None;
-        self.clear_contact_search_if_leaving(screen);
+        self.clear_contact_search_if_leaving(&target);
         self.input_mode = InputMode::Normal;
+        self.app_engine.navigate_to(target.clone());
+        self.render_state = ScreenRenderState::default();
+        self.ensure_screen_engine(&target);
         self.sync_nav_index();
-
-        if let Some(app_screen) = self.engine_target_for_screen(screen) {
-            self.app_engine.navigate_to(app_screen);
-            self.render_state = ScreenRenderState::default();
-        }
-        self.ensure_screen_engine(screen);
     }
 
-    fn clear_contact_search_if_leaving(&mut self, target: Screen) {
-        if self.active_screen() == Screen::Contacts && target != Screen::Contacts {
+    fn clear_contact_search_if_leaving(&mut self, target: &AppScreen) {
+        if self.current_app_screen() == AppScreen::Contacts && *target != AppScreen::Contacts {
             self.contact_search_mode = false;
             self.contact_search_query.clear();
         }
     }
 
     /// Lazily creates the dedicated engines that don't live on AppEngine
-    /// (Onboarding, Lock). Resets render state when an engine-backed
-    /// screen is entered so the renderer starts on a clean slate.
-    fn ensure_screen_engine(&mut self, screen: Screen) {
-        match screen {
-            Screen::SetupWelcome => {
+    /// (Onboarding, Lock). Resets render state when such a screen is entered.
+    fn ensure_screen_engine(&mut self, target: &AppScreen) {
+        match target {
+            AppScreen::Onboarding => {
                 if self.onboarding_engine.is_none() {
                     self.onboarding_engine = Some(OnboardingEngine::new());
                 }
                 self.render_state = ScreenRenderState::default();
             }
-            Screen::Lock => {
+            AppScreen::Lock => {
                 if self.lock_engine.is_none() {
                     self.lock_engine = Some(LockScreenEngine::new(
                         vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
@@ -123,87 +94,6 @@ impl App {
                 self.render_state = ScreenRenderState::default();
             }
             _ => {}
-        }
-    }
-
-    /// Computes the `AppScreen` that AppEngine should be navigated to for
-    /// a given TUI `Screen`. Returns `None` for screens that don't map to
-    /// an engine-driven AppScreen (Setup wizard steps, Lock, ActionMenu,
-    /// ContactImport, MyInfoEntryDetail — engine already has the right
-    /// state for the latter).
-    fn engine_target_for_screen(&self, screen: Screen) -> Option<AppScreen> {
-        match screen {
-            Screen::MyInfo => Some(AppScreen::MyInfo),
-            Screen::Contacts => Some(AppScreen::Contacts),
-            Screen::Exchange => Some(AppScreen::Exchange),
-            Screen::Settings => Some(AppScreen::Settings),
-            Screen::Help => Some(AppScreen::Help),
-            Screen::Backup => Some(AppScreen::Backup),
-            Screen::Delivery => Some(AppScreen::DeliveryStatus),
-            Screen::Devices => Some(AppScreen::DeviceManagement),
-            Screen::Duress => Some(AppScreen::DuressPin),
-            Screen::Emergency => Some(AppScreen::EmergencyBroadcast),
-            Screen::ContactDetail => {
-                self.selected_contact_id
-                    .as_ref()
-                    .map(|id| AppScreen::ContactDetail {
-                        contact_id: id.clone(),
-                    })
-            }
-            Screen::ContactEdit => {
-                self.selected_contact_id
-                    .as_ref()
-                    .map(|id| AppScreen::ContactEdit {
-                        contact_id: id.clone(),
-                    })
-            }
-            Screen::Sync => Some(AppScreen::Sync),
-            Screen::Activity => Some(AppScreen::ActivityLog),
-            Screen::Recovery => Some(AppScreen::Recovery),
-            Screen::More => Some(AppScreen::More),
-            Screen::Groups => Some(AppScreen::Groups),
-            // GroupDetail is engine-driven: the Groups WorkflowEngine
-            // emits `NavigateTo(GroupDetail { group_id })` when the user
-            // picks a group, and `action_result.rs` syncs `app.screen`.
-            Screen::GroupDetail => None,
-            Screen::ContactVisibility => {
-                self.selected_contact_id
-                    .as_ref()
-                    .map(|id| AppScreen::ContactVisibility {
-                        contact_id: id.clone(),
-                    })
-            }
-            Screen::Privacy => Some(AppScreen::Privacy),
-            Screen::Support => Some(AppScreen::Support),
-            // `Screen::FormDialog` is entered via `goto_form_dialog`, which
-            // navigates the engine to `AppScreen::FormDialog { dialog_type }`
-            // directly; it carries its own data and falls through to `None`.
-            Screen::DeviceReplacement => Some(AppScreen::DeviceReplacement),
-            Screen::DeviceLinking => Some(AppScreen::DeviceLinking),
-            Screen::ContactDuplicates => Some(AppScreen::ContactDuplicates),
-            // ContactMerge is engine-driven: action_result.rs syncs
-            // `app.screen = Screen::ContactMerge` from
-            // `AppScreen::ContactMerge { ... }`. No local mirror needed
-            // — engine has the primary/secondary contact data.
-            Screen::ContactMerge => None,
-            Screen::ContactLimit => Some(AppScreen::ContactLimit),
-            Screen::VerifyFingerprint => {
-                self.selected_contact_id
-                    .as_ref()
-                    .map(|id| AppScreen::VerifyFingerprint {
-                        contact_id: id.clone(),
-                    })
-            }
-            Screen::MyInfoEntryDetail => None,
-            // Onboarding + Lock run dedicated engines, but app_engine also
-            // tracks them so it is the single source of truth (brick 6).
-            Screen::SetupWelcome
-            | Screen::SetupCreateIdentity
-            | Screen::SetupAddFields
-            | Screen::SetupSecurity
-            | Screen::SetupReady => Some(AppScreen::Onboarding),
-            Screen::Lock => Some(AppScreen::Lock),
-            _ => None,
         }
     }
 
@@ -228,44 +118,28 @@ impl App {
             self.close_overlay();
             return;
         }
-        match self.active_screen() {
-            // TUI-only states (no AppEngine navigation).
-            Screen::SetupWelcome | Screen::Lock => {} // stay
-            Screen::SetupCreateIdentity => self.goto(Screen::SetupWelcome),
-            Screen::SetupAddFields => self.goto(Screen::SetupCreateIdentity),
-            Screen::SetupSecurity => self.goto(Screen::SetupAddFields),
-            Screen::SetupReady => self.goto(Screen::SetupSecurity),
+        match self.current_app_screen() {
+            // Dedicated-engine states with no engine back-history: "back"
+            // is a no-op (onboarding advances via its own engine).
+            AppScreen::Onboarding | AppScreen::Lock => {}
 
-            // Setup-time `Backup` and `AddField` retain their explicit
-            // arms because the bootstrap flow has no engine history to
-            // pop back to — the parent is the in-progress wizard step,
-            // which AppEngine doesn't track.
-            Screen::Backup if !self.app_engine.vauchi().has_identity() => {
-                self.goto(Screen::SetupWelcome);
+            // Bootstrap (no identity yet): Backup-restore and the AddField
+            // form dialog have no engine history to pop, so route back to
+            // the onboarding flow explicitly.
+            AppScreen::Backup if !self.app_engine.vauchi().has_identity() => {
+                self.goto(AppScreen::Onboarding);
             }
-            // Setup-time AddField: the bootstrap wizard (SetupAddFields)
-            // opens the AddField form dialog, which has no engine history to
-            // pop back to. Guard on the live dialog kind — `identity_created`
-            // stays true forever, so post-setup form dialogs must still take
-            // the engine-driven branch below.
-            Screen::FormDialog
-                if self.onboarding_state.identity_created
-                    && matches!(
-                        self.app_engine.current_app_screen(),
-                        AppScreen::FormDialog {
-                            dialog_type: FormDialogType::AddField { .. }
-                        }
-                    ) =>
+            AppScreen::FormDialog {
+                dialog_type: FormDialogType::AddField { .. },
+            } if self.onboarding_state.identity_created
+                && !self.app_engine.vauchi().has_identity() =>
             {
-                self.goto(Screen::SetupAddFields);
+                self.goto(AppScreen::Onboarding);
             }
 
             // Engine-driven screens — delegate to AppEngine.
             _ => {
-                // Local UI-only state resets that don't survive a parent
-                // re-render. These are TUI presentation state, not data.
                 self.clear_screen_local_state();
-
                 self.app_engine.navigate_back();
                 self.sync_screen_from_engine();
             }
@@ -282,10 +156,10 @@ impl App {
     /// via engine-driven back-navigation. Mirrors the inline resets the
     /// old arm-based `go_back` did before delegating to `goto()`.
     fn clear_screen_local_state(&mut self) {
-        match self.active_screen() {
-            Screen::ContactDetail => self.selected_contact_id = None,
-            Screen::ContactEdit => self.render_state = ScreenRenderState::default(),
-            Screen::ContactVisibility => self.selected_visibility_field = 0,
+        match self.current_app_screen() {
+            AppScreen::ContactDetail { .. } => self.selected_contact_id = None,
+            AppScreen::ContactEdit { .. } => self.render_state = ScreenRenderState::default(),
+            AppScreen::ContactVisibility { .. } => self.selected_visibility_field = 0,
             _ => {}
         }
     }
@@ -296,8 +170,14 @@ impl App {
     /// `engine_target_for_screen`. Falls back to MyInfo for screens
     /// AppEngine has but TUI doesn't (or hasn't migrated yet).
     pub(crate) fn sync_screen_from_engine(&mut self) {
-        let app_screen = self.app_engine.current_app_screen();
-        if let Some(contact_id) = Screen::contact_id_of(app_screen) {
+        let contact_id = match self.app_engine.current_app_screen() {
+            AppScreen::ContactDetail { contact_id }
+            | AppScreen::ContactEdit { contact_id }
+            | AppScreen::ContactVisibility { contact_id }
+            | AppScreen::VerifyFingerprint { contact_id } => Some(contact_id.clone()),
+            _ => None,
+        };
+        if let Some(contact_id) = contact_id {
             self.selected_contact_id = Some(contact_id);
         }
         self.input_mode = InputMode::Normal;
@@ -317,42 +197,34 @@ impl App {
     /// Returns `None` for screens that don't correspond to a top-level tab
     /// (onboarding, lock, etc.).
     fn nav_index_for_screen(&self) -> Option<usize> {
-        match self.active_screen() {
-            // 0: My Card (MyInfo and sub-screens)
-            Screen::MyInfo | Screen::MyInfoEntryDetail => Some(0),
-            // Form dialogs collapse to one screen; the active tab is derived
-            // from the engine's dialog kind (My Card / Groups / More).
-            Screen::FormDialog => Some(self.form_dialog_nav_index()),
-            // 1: Contacts and sub-screens
-            Screen::Contacts
-            | Screen::ContactDetail
-            | Screen::ContactEdit
-            | Screen::ContactVisibility
-            | Screen::ContactDuplicates
-            | Screen::ContactMerge
-            | Screen::ContactLimit
-            | Screen::ActionMenu
-            | Screen::VerifyFingerprint => Some(1),
-            // 2: Exchange
-            Screen::Exchange => Some(2),
-            // 3: Groups and sub-screens
-            Screen::Groups | Screen::GroupDetail => Some(3),
-            // 4: More and all infrastructure screens
-            Screen::More
-            | Screen::Settings
-            | Screen::Help
-            | Screen::Privacy
-            | Screen::Support
-            | Screen::Emergency
-            | Screen::Duress
-            | Screen::Backup
-            | Screen::Devices
-            | Screen::DeviceReplacement
-            | Screen::DeviceLinking
-            | Screen::Delivery
-            | Screen::Sync
-            | Screen::Activity
-            | Screen::Recovery => Some(4),
+        match self.current_app_screen() {
+            AppScreen::MyInfo | AppScreen::MyInfoEntryDetail { .. } => Some(0),
+            AppScreen::FormDialog { .. } => Some(self.form_dialog_nav_index()),
+            AppScreen::Contacts
+            | AppScreen::ContactDetail { .. }
+            | AppScreen::ContactEdit { .. }
+            | AppScreen::ContactVisibility { .. }
+            | AppScreen::ContactDuplicates
+            | AppScreen::ContactMerge { .. }
+            | AppScreen::ContactLimit
+            | AppScreen::VerifyFingerprint { .. } => Some(1),
+            AppScreen::Exchange => Some(2),
+            AppScreen::Groups | AppScreen::GroupDetail { .. } => Some(3),
+            AppScreen::More
+            | AppScreen::Settings
+            | AppScreen::Help
+            | AppScreen::Privacy
+            | AppScreen::Support
+            | AppScreen::EmergencyBroadcast
+            | AppScreen::DuressPin
+            | AppScreen::Backup
+            | AppScreen::DeviceManagement
+            | AppScreen::DeviceReplacement
+            | AppScreen::DeviceLinking
+            | AppScreen::DeliveryStatus
+            | AppScreen::Sync
+            | AppScreen::ActivityLog
+            | AppScreen::Recovery => Some(4),
             _ => None,
         }
     }
@@ -388,90 +260,9 @@ impl App {
     }
 }
 
-impl Screen {
-    /// Pure inverse of [`App::engine_target_for_screen`]: the TUI `Screen`
-    /// for an engine `AppScreen` discriminant, or `None` for `AppScreen`
-    /// variants the TUI has no top-level screen for (overlay form dialogs,
-    /// deep-link consent, future `#[non_exhaustive]` variants) — callers
-    /// apply their own fallback.
-    ///
-    /// Single source for the AppScreen->Screen map. It replaced two
-    /// hand-maintained copies (`App::sync_screen_from_engine` and
-    /// `handlers::action_result`) that had drifted: `MyInfoEntryDetail`
-    /// mapped to its own screen in the action-result path but fell back to
-    /// `MyInfo` in the back-nav path. Both now agree via this function.
-    /// Associated data (`contact_id`, `group_id`, dialog kind) stays on the
-    /// engine's `AppScreen`; [`Screen::contact_id_of`] surfaces the one piece
-    /// the TUI mirrors locally.
-    pub(crate) fn from_app_screen(app_screen: &AppScreen) -> Option<Screen> {
-        Some(match app_screen {
-            AppScreen::MyInfo => Screen::MyInfo,
-            AppScreen::Contacts => Screen::Contacts,
-            AppScreen::ContactDetail { .. } => Screen::ContactDetail,
-            AppScreen::ContactEdit { .. } => Screen::ContactEdit,
-            AppScreen::ContactVisibility { .. } => Screen::ContactVisibility,
-            AppScreen::Exchange => Screen::Exchange,
-            AppScreen::Settings => Screen::Settings,
-            AppScreen::Help => Screen::Help,
-            AppScreen::Backup => Screen::Backup,
-            AppScreen::Lock => Screen::Lock,
-            AppScreen::DeviceLinking => Screen::DeviceLinking,
-            AppScreen::DeviceManagement => Screen::Devices,
-            AppScreen::DuressPin => Screen::Duress,
-            AppScreen::EmergencyBroadcast => Screen::Emergency,
-            AppScreen::DeliveryStatus => Screen::Delivery,
-            AppScreen::Sync => Screen::Sync,
-            AppScreen::Recovery => Screen::Recovery,
-            AppScreen::Groups => Screen::Groups,
-            AppScreen::GroupDetail { .. } => Screen::GroupDetail,
-            AppScreen::More => Screen::More,
-            AppScreen::Privacy => Screen::Privacy,
-            AppScreen::Support => Screen::Support,
-            AppScreen::FormDialog { .. } => Screen::FormDialog,
-            AppScreen::ContactDuplicates => Screen::ContactDuplicates,
-            AppScreen::ContactMerge { .. } => Screen::ContactMerge,
-            AppScreen::ContactLimit => Screen::ContactLimit,
-            AppScreen::MyInfoEntryDetail { .. } => Screen::MyInfoEntryDetail,
-            AppScreen::VerifyFingerprint { .. } => Screen::VerifyFingerprint,
-            AppScreen::ActivityLog => Screen::Activity,
-            AppScreen::DeviceReplacement => Screen::DeviceReplacement,
-            AppScreen::Onboarding => Screen::SetupWelcome,
-            _ => return None,
-        })
-    }
-
-    /// The contact id the TUI mirrors into `selected_contact_id` for the
-    /// `AppScreen` variants that carry one. `None` for every other screen.
-    pub(crate) fn contact_id_of(app_screen: &AppScreen) -> Option<String> {
-        match app_screen {
-            AppScreen::ContactDetail { contact_id }
-            | AppScreen::ContactEdit { contact_id }
-            | AppScreen::ContactVisibility { contact_id }
-            | AppScreen::VerifyFingerprint { contact_id } => Some(contact_id.clone()),
-            _ => None,
-        }
-    }
-
-    /// Map an onboarding engine `screen_id` to its TUI setup `Screen`.
-    /// The wizard step is derived from the engine, never stored.
-    pub(crate) fn for_onboarding_screen_id(screen_id: &str) -> Screen {
-        match screen_id {
-            "identity_check" | "welcome" => Screen::SetupWelcome,
-            "default_name" => Screen::SetupCreateIdentity,
-            "skip_gate" | "groups_setup" | "contact_info" | "preview_card" => {
-                Screen::SetupAddFields
-            }
-            "security_explanation" | "backup_prompt" => Screen::SetupSecurity,
-            "ready" => Screen::SetupReady,
-            _ => Screen::SetupWelcome,
-        }
-    }
-}
-
-// INLINE_TEST_REQUIRED: round-trip test exercises the private
-// App::engine_target_for_screen forward map against pub(crate)
-// Screen::from_app_screen — neither is reachable from tests/ (integration
-// tests are an external crate and see only `pub`).
+// INLINE_TEST_REQUIRED: exercises go_back / goto / current_app_screen and the
+// overlay + onboarding derivation, which need the private App internals
+// (unreachable from an external integration-test crate).
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -493,155 +284,29 @@ mod tests {
         App::new(app_engine, "wss://relay.vauchi.app".to_string(), path)
     }
 
-    /// Every `Screen` that `engine_target_for_screen` maps to an `AppScreen`
-    /// must round-trip back to itself through `Screen::from_app_screen`. This
-    /// is the seam Phase 0 unified: if a future edit adds a `Screen` variant
-    /// (or an `AppScreen` mapping) to one map but not the inverse, the round
-    /// trip breaks here instead of drifting silently between the two paths.
+    /// An open overlay is dismissed by both back-nav and forward navigation,
+    /// leaving the engine's underlying screen intact.
     // @internal
     #[test]
-    fn engine_mapped_screens_round_trip_through_from_app_screen() {
+    fn open_overlay_is_dismissed_by_back_and_navigation() {
         let mut app = test_app();
-        // Contact-bearing arms of `engine_target_for_screen` read this.
-        app.selected_contact_id = Some("test-contact".to_string());
-
-        let engine_mapped = [
-            Screen::MyInfo,
-            Screen::Contacts,
-            Screen::ContactDetail,
-            Screen::ContactEdit,
-            Screen::ContactVisibility,
-            Screen::Exchange,
-            Screen::Settings,
-            Screen::Help,
-            Screen::Backup,
-            Screen::Delivery,
-            Screen::Devices,
-            Screen::Duress,
-            Screen::Emergency,
-            Screen::Sync,
-            Screen::Activity,
-            Screen::Recovery,
-            Screen::More,
-            Screen::Groups,
-            Screen::Privacy,
-            Screen::Support,
-            Screen::DeviceReplacement,
-            Screen::DeviceLinking,
-            Screen::ContactDuplicates,
-            Screen::ContactLimit,
-            Screen::VerifyFingerprint,
-        ];
-
-        for screen in engine_mapped {
-            let app_screen = app
-                .engine_target_for_screen(screen)
-                .unwrap_or_else(|| panic!("{screen:?} expected to map to an AppScreen"));
-            assert_eq!(
-                Screen::from_app_screen(&app_screen),
-                Some(screen),
-                "{screen:?} did not round-trip through from_app_screen",
-            );
-        }
-    }
-
-    // @internal
-    #[test]
-    fn contact_id_of_extracts_id_for_contact_screens_and_none_otherwise() {
-        let detail = AppScreen::ContactDetail {
-            contact_id: "alice".to_string(),
-        };
-        assert_eq!(
-            Screen::contact_id_of(&detail),
-            Some("alice".to_string()),
-            "ContactDetail must surface its contact_id",
-        );
-        assert_eq!(
-            Screen::contact_id_of(&AppScreen::Settings),
-            None,
-            "Settings carries no contact_id",
-        );
-    }
-
-    /// `AppScreen` variants the TUI has no top-level `Screen` for must return
-    /// `None`; both callers rely on this to fall back (back-nav) or leave
-    /// `app.screen` untouched (action-result). `EmergencyShred` is a good
-    /// witness: the TUI's Emergency screen maps to `EmergencyBroadcast`, so
-    /// `EmergencyShred` has no TUI screen of its own.
-    // @internal
-    #[test]
-    fn from_app_screen_is_none_for_unmapped_screens() {
-        assert_eq!(
-            Screen::from_app_screen(&AppScreen::EmergencyShred),
-            None,
-            "EmergencyShred has no top-level TUI screen",
-        );
-        assert_eq!(
-            Screen::from_app_screen(&AppScreen::ChangePassword),
-            None,
-            "ChangePassword has no top-level TUI screen",
-        );
-    }
-
-    /// `routes_through_engine` must be true for every engine-driven
-    /// screen and false only for the bespoke-handler complement. Locks
-    /// the drift the predicate replaced: `ContactLimit` /
-    /// `VerifyFingerprint` are engine-driven and were silently dropping
-    /// keys before the gate was redefined by its complement.
-    // @internal
-    #[test]
-    fn routes_through_engine_is_false_only_for_bespoke_handler_screens() {
-        assert!(Screen::ContactLimit.routes_through_engine());
-        assert!(Screen::VerifyFingerprint.routes_through_engine());
-        assert!(Screen::MyInfo.routes_through_engine());
-        for bespoke in [
-            Screen::SetupWelcome,
-            Screen::SetupCreateIdentity,
-            Screen::SetupAddFields,
-            Screen::SetupSecurity,
-            Screen::SetupReady,
-            Screen::Lock,
-            Screen::ActionMenu,
-            Screen::ContactImport,
-        ] {
-            assert!(
-                !bespoke.routes_through_engine(),
-                "{bespoke:?} must use its bespoke handler, not the engine resolver",
-            );
-        }
-    }
-
-    /// An open overlay reads as the active screen while the engine screen
-    /// beneath is untouched, and is dismissed by both back-nav and forward
-    /// navigation. Locks brick 3's overlay-aware `active_screen` + the
-    /// `go_back`/`goto` overlay handling.
-    // @internal
-    #[test]
-    fn open_overlay_is_active_screen_and_dismissed_by_back_and_navigation() {
-        let mut app = test_app();
-        app.goto(Screen::Settings);
+        app.goto(AppScreen::Settings);
         app.overlay = Some(Overlay::ActionMenu);
-        // The overlay reads as the active screen; the engine screen beneath
-        // is intact.
-        assert_eq!(app.active_screen(), Screen::ActionMenu);
         assert_eq!(app.current_app_screen(), AppScreen::Settings);
 
-        // Back closes the overlay, returning to the screen beneath.
         app.go_back();
         assert_eq!(app.overlay, None);
-        assert_eq!(app.active_screen(), Screen::Settings);
+        assert_eq!(app.current_app_screen(), AppScreen::Settings);
 
-        // Navigating elsewhere also dismisses an open overlay.
         app.overlay = Some(Overlay::ActionMenu);
-        app.goto(Screen::Help);
+        app.goto(AppScreen::Help);
         assert_eq!(app.overlay, None);
-        assert_eq!(app.active_screen(), Screen::Help);
+        assert_eq!(app.current_app_screen(), AppScreen::Help);
     }
 
-    /// The Backup-restore detour ('i' during onboarding) navigates to a
-    /// real screen while the onboarding engine stays alive. The engine's
-    /// presence must NOT make the app report onboarding — `self.screen` is
-    /// the mode sentinel.
+    /// The Backup-restore detour during onboarding navigates to a real
+    /// screen while the onboarding engine stays alive; the app must report
+    /// Backup, not Onboarding.
     // @internal
     #[test]
     fn backup_detour_during_onboarding_is_not_reported_as_onboarding() {
@@ -650,13 +315,8 @@ mod tests {
         app.app_engine.navigate_to(AppScreen::Onboarding);
         assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 
-        // 'i' restore detours to Backup with the onboarding engine still alive.
-        app.goto(Screen::Backup);
-        assert_eq!(app.active_screen(), Screen::Backup);
+        app.goto(AppScreen::Backup);
         assert_eq!(app.current_app_screen(), AppScreen::Backup);
-        assert!(
-            app.onboarding_engine.is_some(),
-            "engine persists across the detour so the user can return",
-        );
+        assert!(app.onboarding_engine.is_some());
     }
 }

@@ -12,69 +12,28 @@
 //!
 //! Tests here focus on the standalone state structs and enums.
 
-use vauchi_tui::app::{InputMode, Screen};
+use vauchi_app::ui::AppScreen;
+use vauchi_tui::app::InputMode;
 
 // ============================================================================
 // Screen Enum Tests
 // ============================================================================
 
-/// Test: All screen variants exist (including Privacy)
-// @internal
-#[test]
-fn test_screen_variants_exist() {
-    let screens = [
-        Screen::MyInfo,
-        Screen::Contacts,
-        Screen::ContactDetail,
-        Screen::ContactVisibility,
-        Screen::Exchange,
-        Screen::Settings,
-        Screen::Help,
-        Screen::FormDialog,
-        Screen::Devices,
-        Screen::Recovery,
-        Screen::Sync,
-        Screen::Backup,
-        Screen::Privacy,
-        Screen::Support,
-        Screen::Delivery,
-        Screen::ActionMenu,
-        Screen::Emergency,
-        Screen::Duress,
-        Screen::Lock,
-        Screen::Groups,
-        Screen::GroupDetail,
-        // SP-21 Onboarding wizard
-        Screen::SetupWelcome,
-        Screen::SetupCreateIdentity,
-        Screen::SetupAddFields,
-        Screen::SetupSecurity,
-        Screen::SetupReady,
-        // SP-12a Duplicates / Merge / Limit
-        Screen::ContactDuplicates,
-        Screen::ContactMerge,
-        Screen::ContactLimit,
-    ];
-
-    // Verify we have all 29 screen variants
-    assert_eq!(screens.len(), 29);
-}
-
-/// Test: Screen Home is the initial screen variant
+/// Test: AppScreen Home is the initial screen variant
 // @internal
 #[test]
 fn test_screen_home_is_initial() {
-    let screen = Screen::MyInfo;
-    assert_eq!(screen, Screen::MyInfo);
+    let screen = AppScreen::MyInfo;
+    assert_eq!(screen, AppScreen::MyInfo);
 }
 
-/// Test: Screen equality works
+/// Test: AppScreen equality works
 // @internal
 #[test]
 fn test_screen_equality() {
-    assert_eq!(Screen::MyInfo, Screen::MyInfo);
-    assert_ne!(Screen::MyInfo, Screen::Contacts);
-    assert_ne!(Screen::Settings, Screen::Help);
+    assert_eq!(AppScreen::MyInfo, AppScreen::MyInfo);
+    assert_ne!(AppScreen::MyInfo, AppScreen::Contacts);
+    assert_ne!(AppScreen::Settings, AppScreen::Help);
 }
 
 // ============================================================================

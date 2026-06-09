@@ -14,7 +14,7 @@ use tempfile::TempDir;
 use vauchi_app::ui::{AppEngine, AppScreen, FormDialogType};
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
 
-use vauchi_tui::app::{App, InputMode, Screen};
+use vauchi_tui::app::{App, InputMode, Overlay};
 use vauchi_tui::handlers::{Action, handle_key};
 
 /// Create AppEngine for a test data dir.
@@ -38,7 +38,7 @@ fn create_test_app() -> (App, TempDir) {
         "wss://relay.vauchi.app".to_string(),
         temp_dir.path().to_path_buf(),
     );
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     (app, temp_dir)
 }
 
@@ -62,7 +62,7 @@ fn create_test_app_no_identity() -> (App, TempDir) {
 #[test]
 fn test_handle_key_q_returns_quit_from_home() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(matches!(action, Action::Quit), "q should quit from Home");
@@ -72,7 +72,7 @@ fn test_handle_key_q_returns_quit_from_home() {
 #[test]
 fn test_handle_key_question_mark_navigates_to_help() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('?'));
     assert!(
@@ -80,8 +80,8 @@ fn test_handle_key_question_mark_navigates_to_help() {
         "? should return Continue"
     );
     assert_eq!(
-        app.active_screen(),
-        Screen::Help,
+        app.current_app_screen(),
+        AppScreen::Help,
         "? should navigate to Help"
     );
 }
@@ -90,13 +90,13 @@ fn test_handle_key_question_mark_navigates_to_help() {
 #[test]
 fn test_handle_key_esc_goes_back_from_contacts() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
     assert_eq!(
-        app.active_screen(),
-        Screen::MyInfo,
+        app.current_app_screen(),
+        AppScreen::MyInfo,
         "Esc from Contacts should go to Home"
     );
 }
@@ -105,12 +105,12 @@ fn test_handle_key_esc_goes_back_from_contacts() {
 #[test]
 fn test_handle_key_esc_stays_on_setup() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 
     handle_key(&mut app, KeyCode::Esc);
     assert_eq!(
-        app.active_screen(),
-        Screen::SetupWelcome,
+        app.current_app_screen(),
+        AppScreen::Onboarding,
         "Esc from SetupWelcome should stay on SetupWelcome"
     );
 }
@@ -121,17 +121,17 @@ fn test_handle_key_esc_stays_on_setup() {
 
 // @internal
 #[rstest]
-#[case::c_contacts('c', Screen::Contacts)]
-#[case::s_settings('s', Screen::Settings)]
-#[case::d_devices('d', Screen::Devices)]
-#[case::g_groups('g', Screen::Groups)]
-#[case::x_exchange('X', Screen::Exchange)]
-fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
+#[case::c_contacts('c', AppScreen::Contacts)]
+#[case::s_settings('s', AppScreen::Settings)]
+#[case::d_devices('d', AppScreen::DeviceManagement)]
+#[case::g_groups('g', AppScreen::Groups)]
+#[case::x_exchange('X', AppScreen::Exchange)]
+fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected: AppScreen) {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     handle_key(&mut app, KeyCode::Char(key));
-    assert_eq!(app.active_screen(), expected);
+    assert_eq!(app.current_app_screen(), expected);
 }
 
 // ============================================================================
@@ -140,14 +140,14 @@ fn test_handle_key_home_navigates_to_screen(#[case] key: char, #[case] expected:
 
 // @internal
 #[rstest]
-#[case::b_backup('b', Screen::Backup)]
-#[case::p_privacy('p', Screen::Privacy)]
-fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
+#[case::b_backup('b', AppScreen::Backup)]
+#[case::p_privacy('p', AppScreen::Privacy)]
+fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expected: AppScreen) {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
 
     handle_key(&mut app, KeyCode::Char(key));
-    assert_eq!(app.active_screen(), expected);
+    assert_eq!(app.current_app_screen(), expected);
     assert_eq!(
         app.input_mode,
         InputMode::Normal,
@@ -162,9 +162,12 @@ fn test_handle_key_settings_navigates_to_screen(#[case] key: char, #[case] expec
 #[test]
 fn test_handle_key_a_opens_add_field_dialog() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     handle_key(&mut app, KeyCode::Char('a'));
-    assert_eq!(app.active_screen(), Screen::FormDialog);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::FormDialog { .. }
+    ));
     assert!(
         matches!(
             app.current_app_screen(),
@@ -180,9 +183,12 @@ fn test_handle_key_a_opens_add_field_dialog() {
 #[test]
 fn test_handle_key_n_opens_edit_name_dialog() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     handle_key(&mut app, KeyCode::Char('n'));
-    assert_eq!(app.active_screen(), Screen::FormDialog);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::FormDialog { .. }
+    ));
     assert!(
         matches!(
             app.current_app_screen(),
@@ -199,9 +205,12 @@ fn test_handle_key_n_opens_edit_name_dialog() {
 #[test]
 fn test_handle_key_u_opens_edit_relay_url_dialog() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     handle_key(&mut app, KeyCode::Char('u'));
-    assert_eq!(app.active_screen(), Screen::FormDialog);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::FormDialog { .. }
+    ));
     assert!(
         matches!(
             app.current_app_screen(),
@@ -222,7 +231,7 @@ fn test_handle_key_u_opens_edit_relay_url_dialog() {
 #[test]
 fn test_handle_key_help_q_quits() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Help);
+    app.goto(AppScreen::Help);
 
     // Global q handler runs before screen-specific handling, so q quits
     // even from Help (now fully engine-driven, no bespoke handler).
@@ -237,13 +246,13 @@ fn test_handle_key_help_q_quits() {
 #[test]
 fn test_handle_key_help_enter_selects_faq_item() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Help);
+    app.goto(AppScreen::Help);
 
     // Engine-driven: Enter selects a FAQ item (opens URL), stays on Help
     handle_key(&mut app, KeyCode::Enter);
     assert_eq!(
-        app.active_screen(),
-        Screen::Help,
+        app.current_app_screen(),
+        AppScreen::Help,
         "Enter on Help should stay on Help (opens FAQ URL)"
     );
 }
@@ -310,7 +319,7 @@ fn test_handle_key_editing_enter_returns_to_normal() {
 #[test]
 fn test_handle_key_engine_onboarding_enter_advances() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
     assert!(
         app.onboarding_engine.is_some(),
         "Engine should be created for onboarding"
@@ -320,16 +329,9 @@ fn test_handle_key_engine_onboarding_enter_advances() {
     handle_key(&mut app, KeyCode::Enter);
     // Engine advances — screen should still be in onboarding range
     assert!(
-        matches!(
-            app.active_screen(),
-            Screen::SetupWelcome
-                | Screen::SetupCreateIdentity
-                | Screen::SetupAddFields
-                | Screen::SetupSecurity
-                | Screen::SetupReady
-        ),
+        matches!(app.current_app_screen(), AppScreen::Onboarding),
         "Engine should advance within onboarding screens, got {:?}",
-        app.active_screen(),
+        app.current_app_screen(),
     );
 }
 
@@ -337,11 +339,11 @@ fn test_handle_key_engine_onboarding_enter_advances() {
 #[test]
 fn test_handle_key_setup_i_opens_backup_import() {
     let (mut app, _tmp) = create_test_app_no_identity();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 
     // 'i' on SetupWelcome goes to Backup import (engine-driven or legacy)
     handle_key(&mut app, KeyCode::Char('i'));
-    assert_eq!(app.active_screen(), Screen::Backup);
+    assert_eq!(app.current_app_screen(), AppScreen::Backup);
     // goto() resets input_mode to Normal
     assert_eq!(app.input_mode, InputMode::Normal);
 }
@@ -352,13 +354,13 @@ fn test_contact_import_overlay_opens_in_editing_mode_and_closes() {
     let (mut app, _tmp) = create_test_app();
     // '2' navigates to Contacts and sets Content focus.
     handle_key(&mut app, KeyCode::Char('2'));
-    assert_eq!(app.active_screen(), Screen::Contacts);
+    assert_eq!(app.current_app_screen(), AppScreen::Contacts);
 
     // 'i' opens the import overlay over Contacts, in Editing mode so the file
     // path can be typed. (Pre-overlay, goto() reset input_mode to Normal,
     // leaving the dialog untypeable.)
     handle_key(&mut app, KeyCode::Char('i'));
-    assert_eq!(app.active_screen(), Screen::ContactImport);
+    assert_eq!(app.overlay, Some(Overlay::ContactImport));
     assert_eq!(app.current_app_screen(), AppScreen::Contacts);
     assert_eq!(app.input_mode, InputMode::Editing);
 
@@ -370,7 +372,7 @@ fn test_contact_import_overlay_opens_in_editing_mode_and_closes() {
     // Esc closes the overlay and returns to Contacts in Normal mode.
     handle_key(&mut app, KeyCode::Esc);
     assert_eq!(app.overlay, None);
-    assert_eq!(app.active_screen(), Screen::Contacts);
+    assert_eq!(app.current_app_screen(), AppScreen::Contacts);
     assert_eq!(app.input_mode, InputMode::Normal);
 }
 
@@ -382,7 +384,7 @@ fn test_contact_import_overlay_opens_in_editing_mode_and_closes() {
 #[test]
 fn test_handle_key_contacts_slash_enters_search_mode() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_mode = false;
 
     handle_key(&mut app, KeyCode::Char('/'));
@@ -400,7 +402,7 @@ fn test_handle_key_contacts_slash_enters_search_mode() {
 #[test]
 fn test_handle_key_search_mode_typing_updates_query() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_mode = true;
     app.contact_search_query.clear();
 
@@ -413,7 +415,7 @@ fn test_handle_key_search_mode_typing_updates_query() {
 #[test]
 fn test_handle_key_search_mode_esc_exits_search() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_mode = true;
 
     handle_key(&mut app, KeyCode::Esc);
@@ -424,7 +426,7 @@ fn test_handle_key_search_mode_esc_exits_search() {
 #[test]
 fn test_handle_key_search_mode_backspace_removes_char() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_mode = true;
     app.contact_search_query = "abc".to_string();
 
@@ -440,7 +442,7 @@ fn test_handle_key_search_mode_backspace_removes_char() {
 #[test]
 fn test_handle_key_home_j_increments_selected_field() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     // Add two fields so navigation works
     app.app_engine
         .vauchi()
@@ -465,25 +467,33 @@ fn test_handle_key_home_j_increments_selected_field() {
         .unwrap_or(0);
     handle_key(&mut app, KeyCode::Char('j'));
     // Ensure key was consumed (engine handles focus/component navigation)
-    assert_eq!(app.active_screen(), Screen::MyInfo, "should stay on MyInfo");
+    assert_eq!(
+        app.current_app_screen(),
+        AppScreen::MyInfo,
+        "should stay on MyInfo"
+    );
 }
 
 // @internal
 #[test]
 fn test_handle_key_home_k_decrements_selected_field() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     // Engine-driven: k navigates within focused component
     handle_key(&mut app, KeyCode::Char('k'));
-    assert_eq!(app.active_screen(), Screen::MyInfo, "should stay on MyInfo");
+    assert_eq!(
+        app.current_app_screen(),
+        AppScreen::MyInfo,
+        "should stay on MyInfo"
+    );
 }
 
 // @internal
 #[test]
 fn test_handle_key_home_k_stays_at_zero() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     app.selected_field = 0;
 
     handle_key(&mut app, KeyCode::Char('k'));
@@ -498,7 +508,7 @@ fn test_handle_key_home_k_stays_at_zero() {
 #[test]
 fn test_handle_key_search_mode_q_does_not_quit() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_mode = true;
 
     let action = handle_key(&mut app, KeyCode::Char('q'));
@@ -520,7 +530,9 @@ fn test_handle_key_search_mode_q_does_not_quit() {
 fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
     let (mut app, _tmp) = create_test_app();
     app.selected_contact_id = Some("dummy-contact-id".to_string());
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     app.selected_contact = 0;
 
     // Note: without a real contact, get_contact_by_index returns None,
@@ -531,9 +543,8 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
     // The v handler attempts to get a contact; with none, it stays on ContactDetail.
     // The important thing is that lowercase v does NOT set a validation status message
     // (the uppercase V handler sets validation-related status).
-    assert_eq!(
-        app.active_screen(),
-        Screen::ContactDetail,
+    assert!(
+        matches!(app.current_app_screen(), AppScreen::ContactDetail { .. }),
         "lowercase v without contact should stay on ContactDetail"
     );
 }
@@ -549,7 +560,7 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
 #[test]
 fn test_handle_key_sync_t_tests_connection() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Sync);
+    app.goto(AppScreen::Sync);
 
     handle_key(&mut app, KeyCode::Char('t'));
     assert!(
@@ -557,8 +568,8 @@ fn test_handle_key_sync_t_tests_connection() {
         "t on Sync should set a status message about connection test"
     );
     assert_eq!(
-        app.active_screen(),
-        Screen::Sync,
+        app.current_app_screen(),
+        AppScreen::Sync,
         "t should stay on Sync screen"
     );
 }
@@ -567,7 +578,7 @@ fn test_handle_key_sync_t_tests_connection() {
 #[test]
 fn test_handle_key_sync_r_refreshes_pending() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::Sync);
+    app.goto(AppScreen::Sync);
 
     handle_key(&mut app, KeyCode::Char('r'));
     assert!(
@@ -575,8 +586,8 @@ fn test_handle_key_sync_r_refreshes_pending() {
         "r on Sync should set a status message about pending updates"
     );
     assert_eq!(
-        app.active_screen(),
-        Screen::Sync,
+        app.current_app_screen(),
+        AppScreen::Sync,
         "r should stay on Sync screen"
     );
 }
@@ -588,7 +599,9 @@ fn test_handle_key_sync_r_refreshes_pending() {
 fn test_handle_key_contact_detail_c_announces_copy_result() {
     let (mut app, _tmp) = create_test_app();
     app.selected_contact_id = Some("dummy-contact-id".to_string());
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     app.selected_contact = 0;
     app.selected_contact_field = 0;
 
@@ -606,7 +619,7 @@ fn test_handle_key_contact_detail_c_announces_copy_result() {
 #[test]
 fn test_handle_key_home_delete_announces_field_label() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     // Add a field, then delete it
     app.app_engine
         .vauchi()

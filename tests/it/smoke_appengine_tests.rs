@@ -9,9 +9,9 @@
 
 use ratatui::prelude::*;
 
-use vauchi_app::ui::AppEngine;
+use vauchi_app::ui::{AppEngine, AppScreen};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
-use vauchi_tui::app::{App, Screen};
+use vauchi_tui::app::App;
 use vauchi_tui::ui;
 
 fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
@@ -55,7 +55,7 @@ fn render_to_string(app: &mut App, width: u16, height: u16) -> String {
 #[test]
 fn smoke_home_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     let output = render_to_string(&mut app, 80, 24);
 
     // Home screen should have the title (display name or "My Info")
@@ -76,7 +76,7 @@ fn smoke_home_screen_renders_via_engine() {
 #[test]
 fn smoke_contacts_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -90,7 +90,7 @@ fn smoke_contacts_screen_renders_via_engine() {
 #[test]
 fn smoke_exchange_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Exchange);
+    app.goto(AppScreen::Exchange);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -104,7 +104,7 @@ fn smoke_exchange_screen_renders_via_engine() {
 #[test]
 fn smoke_settings_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -124,7 +124,7 @@ fn smoke_settings_screen_renders_via_engine() {
 #[test]
 fn smoke_help_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Help);
+    app.goto(AppScreen::Help);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -144,7 +144,7 @@ fn smoke_help_screen_renders_via_engine() {
 #[test]
 fn smoke_backup_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Backup);
+    app.goto(AppScreen::Backup);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -158,7 +158,7 @@ fn smoke_backup_screen_renders_via_engine() {
 #[test]
 fn smoke_delivery_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Delivery);
+    app.goto(AppScreen::DeliveryStatus);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -172,7 +172,7 @@ fn smoke_delivery_screen_renders_via_engine() {
 #[test]
 fn smoke_devices_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Devices);
+    app.goto(AppScreen::DeviceManagement);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -186,7 +186,7 @@ fn smoke_devices_screen_renders_via_engine() {
 #[test]
 fn smoke_duress_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Duress);
+    app.goto(AppScreen::DuressPin);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -200,7 +200,7 @@ fn smoke_duress_screen_renders_via_engine() {
 #[test]
 fn smoke_emergency_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Emergency);
+    app.goto(AppScreen::EmergencyBroadcast);
     let output = render_to_string(&mut app, 80, 24);
 
     assert!(
@@ -216,7 +216,7 @@ fn smoke_emergency_screen_renders_via_engine() {
 #[test]
 fn smoke_sync_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Sync);
+    app.goto(AppScreen::Sync);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Sync"),
@@ -229,7 +229,7 @@ fn smoke_sync_screen_renders_via_engine() {
 #[test]
 fn smoke_recovery_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Recovery);
+    app.goto(AppScreen::Recovery);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Recovery") || output.contains("Quorum"),
@@ -242,7 +242,7 @@ fn smoke_recovery_screen_renders_via_engine() {
 #[test]
 fn smoke_groups_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Groups);
+    app.goto(AppScreen::Groups);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Group"),
@@ -255,7 +255,7 @@ fn smoke_groups_screen_renders_via_engine() {
 #[test]
 fn smoke_privacy_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Privacy);
+    app.goto(AppScreen::Privacy);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Privacy") || output.contains("Data"),
@@ -268,7 +268,7 @@ fn smoke_privacy_screen_renders_via_engine() {
 #[test]
 fn smoke_support_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Support);
+    app.goto(AppScreen::Support);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Support") || output.contains("Vauchi"),
@@ -282,10 +282,9 @@ fn smoke_support_screen_renders_via_engine() {
 fn smoke_group_detail_screen_renders_via_engine() {
     use vauchi_app::ui::AppScreen;
     let (mut app, _dir) = create_app_with_identity();
-    app.app_engine.navigate_to(AppScreen::GroupDetail {
+    app.goto(AppScreen::GroupDetail {
         group_id: "test-group".into(),
     });
-    app.goto(Screen::GroupDetail);
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Group") || output.contains("Members"),
@@ -299,7 +298,9 @@ fn smoke_group_detail_screen_renders_via_engine() {
 fn smoke_contact_visibility_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
     app.selected_contact_id = Some("test-contact".into());
-    app.goto(Screen::ContactVisibility);
+    app.goto(AppScreen::ContactVisibility {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     let output = render_to_string(&mut app, 80, 24);
     assert!(
         output.contains("Visibility") || output.contains("toggle"),
@@ -314,23 +315,23 @@ fn smoke_all_engine_screens_no_panic() {
     let (mut app, _dir) = create_app_with_identity();
 
     for screen in [
-        Screen::MyInfo,
-        Screen::Contacts,
-        Screen::Exchange,
-        Screen::Settings,
-        Screen::Help,
-        Screen::Backup,
-        Screen::Delivery,
-        Screen::Devices,
-        Screen::Duress,
-        Screen::Emergency,
-        Screen::Sync,
-        Screen::Recovery,
-        Screen::Groups,
-        Screen::Privacy,
-        Screen::Support,
+        AppScreen::MyInfo,
+        AppScreen::Contacts,
+        AppScreen::Exchange,
+        AppScreen::Settings,
+        AppScreen::Help,
+        AppScreen::Backup,
+        AppScreen::DeliveryStatus,
+        AppScreen::DeviceManagement,
+        AppScreen::DuressPin,
+        AppScreen::EmergencyBroadcast,
+        AppScreen::Sync,
+        AppScreen::Recovery,
+        AppScreen::Groups,
+        AppScreen::Privacy,
+        AppScreen::Support,
     ] {
-        app.goto(screen);
+        app.goto(screen.clone());
         // Should not panic
         let output = render_to_string(&mut app, 80, 24);
         assert!(!output.is_empty(), "{:?} rendered empty", screen);

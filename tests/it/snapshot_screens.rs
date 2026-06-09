@@ -10,9 +10,9 @@
 
 use crate::common;
 
-use vauchi_app::ui::LockScreenEngine;
+use vauchi_app::ui::{AppScreen, LockScreenEngine};
 use vauchi_core::contact_card::ContactAction;
-use vauchi_tui::app::{ActionMenuState, LockState, Overlay, Screen, SyncState};
+use vauchi_tui::app::{ActionMenuState, LockState, Overlay, SyncState};
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity,
@@ -27,7 +27,7 @@ use common::{
 #[test]
 fn test_snapshot_setup_screen() {
     let (mut app, _tmp) = create_app_without_identity();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
     let output = render_to_string(&mut app);
     assert_snap!("setup_screen", "app_start", "no identity detected", output);
 }
@@ -40,7 +40,7 @@ fn test_snapshot_setup_screen() {
 #[test]
 fn test_snapshot_home_with_fields() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     let output = render_to_string(&mut app);
     assert_snap!("home_with_fields", "app_start", "identity exists", output);
 }
@@ -53,7 +53,7 @@ fn test_snapshot_home_with_fields() {
 #[test]
 fn test_snapshot_contacts_empty() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contacts_empty",
@@ -71,7 +71,7 @@ fn test_snapshot_contacts_empty() {
 #[test]
 fn test_snapshot_settings() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     let output = render_to_string(&mut app);
     assert_snap!(
         "settings",
@@ -89,7 +89,7 @@ fn test_snapshot_settings() {
 #[test]
 fn test_snapshot_help() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Help);
+    app.goto(AppScreen::Help);
     let output = render_to_string(&mut app);
     assert_snap!("help", "MyInfo", "press '5' (More tab) → Help", output);
 }
@@ -102,7 +102,7 @@ fn test_snapshot_help() {
 #[test]
 fn test_snapshot_devices() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Devices);
+    app.goto(AppScreen::DeviceManagement);
     let output = render_to_string(&mut app);
     assert_snap!("devices", "Settings", "select Devices", output);
 }
@@ -115,7 +115,7 @@ fn test_snapshot_devices() {
 #[test]
 fn test_snapshot_recovery() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Recovery);
+    app.goto(AppScreen::Recovery);
     let output = render_to_string(&mut app);
     assert_snap!("recovery", "Settings", "select Recovery", output);
 }
@@ -128,7 +128,7 @@ fn test_snapshot_recovery() {
 #[test]
 fn test_snapshot_sync_idle() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Sync);
+    app.goto(AppScreen::Sync);
     let output = render_to_string(&mut app);
     assert_snap!("sync_idle", "Settings", "select Sync", output);
 }
@@ -137,7 +137,7 @@ fn test_snapshot_sync_idle() {
 #[test]
 fn test_snapshot_sync_connected() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Sync);
+    app.goto(AppScreen::Sync);
     // Sync screen renders from the engine's ScreenModel; sync_state is not
     // read by the renderer, so this setup is inert (output == sync_idle).
     app.sync_state = SyncState {
@@ -243,7 +243,7 @@ fn test_snapshot_edit_relay_url_dialog() {
 #[test]
 fn test_snapshot_privacy() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Privacy);
+    app.goto(AppScreen::Privacy);
     let output = render_to_string(&mut app);
     assert_snap!("privacy", "Settings", "select Privacy & Data", output);
 }
@@ -252,7 +252,7 @@ fn test_snapshot_privacy() {
 #[test]
 fn test_snapshot_exchange() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Exchange);
+    app.goto(AppScreen::Exchange);
     // ADR-031: QR image contains ephemeral keys — redacted by redact_dynamic_values in render_to_string
     let output = render_to_string(&mut app);
     assert_snap!("exchange", "MyInfo", "press '3' (Exchange tab)", output);
@@ -272,7 +272,7 @@ fn test_snapshot_exchange() {
 #[test]
 fn test_snapshot_contacts_with_entries() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contacts_with_entries",
@@ -286,7 +286,7 @@ fn test_snapshot_contacts_with_entries() {
 #[test]
 fn test_snapshot_contacts_search_by_name() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_query = "Ahmed".to_string();
     vauchi_tui::helpers::dispatch_search(&mut app);
     let output = render_to_string(&mut app);
@@ -302,7 +302,7 @@ fn test_snapshot_contacts_search_by_name() {
 #[test]
 fn test_snapshot_contacts_search_by_email() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.contact_search_query = "carmen".to_string();
     vauchi_tui::helpers::dispatch_search(&mut app);
     let output = render_to_string(&mut app);
@@ -318,7 +318,7 @@ fn test_snapshot_contacts_search_by_email() {
 #[test]
 fn test_snapshot_contacts_group_filter() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     // Cycle to first group (Family)
     vauchi_tui::helpers::cycle_group_filter(&mut app);
     let output = render_to_string(&mut app);
@@ -334,7 +334,7 @@ fn test_snapshot_contacts_group_filter() {
 #[test]
 fn test_snapshot_contacts_scrolled() {
     let (mut app, _tmp) = create_app_with_contacts(15);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     app.selected_contact = 5;
     let output = render_to_string(&mut app);
     assert_snap!(
@@ -353,7 +353,7 @@ fn test_snapshot_contacts_scrolled() {
 #[test]
 fn test_snapshot_contact_detail() {
     let (mut app, _tmp) = create_app_with_contacts(5);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     // Select first contact and navigate to detail
     let contact_id = app
         .app_engine
@@ -364,7 +364,9 @@ fn test_snapshot_contact_detail() {
         .map(|c| c.id().to_string())
         .expect("has contacts");
     app.selected_contact_id = Some(contact_id);
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_detail",
@@ -378,7 +380,7 @@ fn test_snapshot_contact_detail() {
 #[test]
 fn test_snapshot_contact_edit() {
     let (mut app, _tmp) = create_app_with_contacts(5);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     let contact_id = app
         .app_engine
         .vauchi()
@@ -388,7 +390,9 @@ fn test_snapshot_contact_edit() {
         .map(|c| c.id().to_string())
         .expect("has contacts");
     app.selected_contact_id = Some(contact_id);
-    app.goto(Screen::ContactEdit);
+    app.goto(AppScreen::ContactEdit {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     let output = render_to_string(&mut app);
     assert_snap!("contact_edit", "ContactDetail", "press 'e' (Edit)", output);
 }
@@ -397,7 +401,7 @@ fn test_snapshot_contact_edit() {
 #[test]
 fn test_snapshot_contact_visibility() {
     let (mut app, _tmp) = create_app_with_contacts(5);
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     let contact_id = app
         .app_engine
         .vauchi()
@@ -407,7 +411,9 @@ fn test_snapshot_contact_visibility() {
         .map(|c| c.id().to_string())
         .expect("has contacts");
     app.selected_contact_id = Some(contact_id);
-    app.goto(Screen::ContactVisibility);
+    app.goto(AppScreen::ContactVisibility {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_visibility",
@@ -425,7 +431,7 @@ fn test_snapshot_contact_visibility() {
 #[test]
 fn test_snapshot_support() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Support);
+    app.goto(AppScreen::Support);
     let output = render_to_string(&mut app);
     assert_snap!("support", "Settings", "select Support", output);
 }
@@ -438,7 +444,7 @@ fn test_snapshot_support() {
 #[test]
 fn test_snapshot_delivery() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::Delivery);
+    app.goto(AppScreen::DeliveryStatus);
     let output = render_to_string(&mut app);
     assert_snap!("delivery", "Settings", "select Delivery", output);
 }
@@ -460,7 +466,9 @@ fn test_snapshot_action_menu() {
         .map(|c| c.id().to_string())
         .expect("has contacts");
     app.selected_contact_id = Some(contact_id);
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     app.action_menu_state = ActionMenuState {
         actions: vec![
             (
@@ -506,7 +514,7 @@ fn test_snapshot_lock_screen() {
         attempts: 0,
         error: false,
     };
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     let output = render_to_string(&mut app);
     assert_snap!(
         "lock_screen",
@@ -524,7 +532,7 @@ fn test_snapshot_lock_screen() {
 #[test]
 fn test_snapshot_groups() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::Groups);
+    app.goto(AppScreen::Groups);
     let output = render_to_string(&mut app);
     assert_snap!("groups", "MyInfo", "press Enter (Group View)", output);
 }
@@ -539,9 +547,7 @@ fn test_snapshot_group_detail() {
         .first()
         .map(|g| g.id().to_string())
         .expect("has groups");
-    app.app_engine
-        .navigate_to(AppScreen::GroupDetail { group_id });
-    app.goto(Screen::GroupDetail);
+    app.goto(AppScreen::GroupDetail { group_id });
     let output = render_to_string(&mut app);
     assert_snap!("group_detail", "Groups", "press Enter on group", output);
 }
@@ -556,10 +562,9 @@ fn test_snapshot_group_detail_empty() {
         .vauchi()
         .create_group("Empty Group")
         .expect("create group");
-    app.app_engine.navigate_to(AppScreen::GroupDetail {
+    app.goto(AppScreen::GroupDetail {
         group_id: group.id().to_string(),
     });
-    app.goto(Screen::GroupDetail);
     let output = render_to_string(&mut app);
     assert_snap!(
         "group_detail_empty",
@@ -577,7 +582,7 @@ fn test_snapshot_group_detail_empty() {
 #[test]
 fn test_snapshot_setup_create_identity() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.goto(Screen::SetupCreateIdentity);
+    app.goto(AppScreen::Onboarding);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName
@@ -598,7 +603,7 @@ fn test_snapshot_setup_create_identity() {
 #[test]
 fn test_snapshot_setup_groups_setup() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.goto(Screen::SetupCreateIdentity);
+    app.goto(AppScreen::Onboarding);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName
@@ -627,7 +632,7 @@ fn test_snapshot_setup_groups_setup() {
 #[test]
 fn test_snapshot_setup_add_fields() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.goto(Screen::SetupAddFields);
+    app.goto(AppScreen::Onboarding);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName → GroupsSetup → ContactInfo
@@ -653,7 +658,7 @@ fn test_snapshot_setup_add_fields() {
 #[test]
 fn test_snapshot_setup_ready() {
     let (mut app, _tmp) = create_app_without_identity();
-    app.goto(Screen::SetupReady);
+    app.goto(AppScreen::Onboarding);
     if let Some(engine) = &mut app.onboarding_engine {
         use vauchi_app::ui::WorkflowEngine;
         // IdentityCheck → DefaultName → GroupsSetup → ContactInfo → WhatNext
@@ -682,7 +687,7 @@ fn test_snapshot_setup_ready() {
 #[test]
 fn test_snapshot_contact_duplicates() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::ContactDuplicates);
+    app.goto(AppScreen::ContactDuplicates);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_duplicates",
@@ -699,7 +704,7 @@ fn test_snapshot_contact_merge() {
     let (mut app, _tmp) = create_app_with_contacts(10);
     // Engine drives ContactMerge navigation (no local mirror state any more);
     // navigate it directly with the same fixture values the old test used.
-    app.app_engine.navigate_to(AppScreen::ContactMerge {
+    app.goto(AppScreen::ContactMerge {
         primary_name: "Ahmed Nikolaus".to_string(),
         primary_fields: vec![
             "+1-203-107-1013".to_string(),
@@ -711,7 +716,6 @@ fn test_snapshot_contact_merge() {
             "ahmed.n@example.com".to_string(),
         ],
     });
-    app.goto(Screen::ContactMerge);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_merge",
@@ -725,7 +729,7 @@ fn test_snapshot_contact_merge() {
 #[test]
 fn test_snapshot_contact_limit() {
     let (mut app, _tmp) = create_app_with_contacts(10);
-    app.goto(Screen::ContactLimit);
+    app.goto(AppScreen::ContactLimit);
     let output = render_to_string(&mut app);
     assert_snap!(
         "contact_limit",
@@ -743,10 +747,17 @@ fn test_snapshot_contact_limit() {
 #[test]
 fn test_snapshot_my_info_entry_detail() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     // Select first field and navigate to detail
-    app.selected_field = 0;
-    app.goto(Screen::MyInfoEntryDetail);
+    let field_id = app
+        .app_engine
+        .vauchi()
+        .own_card()
+        .ok()
+        .flatten()
+        .and_then(|c| c.fields().first().map(|f| f.id().to_string()))
+        .unwrap_or_default();
+    app.goto(AppScreen::MyInfoEntryDetail { field_id });
     let output = render_to_string(&mut app);
     assert_snap!(
         "my_info_entry_detail",

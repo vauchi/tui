@@ -8,7 +8,7 @@ use vauchi_app::ui::{
     ActionResult, AppScreen, Component, FormDialogType, LockScreenEngine, WorkflowEngine,
 };
 
-use crate::app::{App, Screen};
+use crate::app::App;
 
 /// Applies an `ActionResult` from AppEngine to TUI state.
 ///
@@ -65,7 +65,13 @@ pub(crate) fn handle_action_result_with(
             // not own (selected contact, lock engine).
             app.render_state = Default::default();
             let app_screen = app.app_engine.current_app_screen();
-            let contact_id = Screen::contact_id_of(app_screen);
+            let contact_id = match app_screen {
+                AppScreen::ContactDetail { contact_id }
+                | AppScreen::ContactEdit { contact_id }
+                | AppScreen::ContactVisibility { contact_id }
+                | AppScreen::VerifyFingerprint { contact_id } => Some(contact_id.clone()),
+                _ => None,
+            };
             let entering_lock = matches!(app_screen, AppScreen::Lock);
             if let Some(contact_id) = contact_id {
                 app.selected_contact_id = Some(contact_id);

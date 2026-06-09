@@ -15,7 +15,7 @@ use rstest::rstest;
 
 use vauchi_app::ui::{AppEngine, AppScreen, FormDialogType};
 use vauchi_core::{ContactField, FieldType, SymmetricKey, Vauchi, VauchiConfig};
-use vauchi_tui::app::{App, InputMode, Screen};
+use vauchi_tui::app::{App, InputMode};
 use vauchi_tui::handlers::{Action, handle_key};
 
 static INIT_LOCALES: Once = Once::new();
@@ -79,13 +79,13 @@ fn create_app_without_identity() -> (App, TempDir) {
 #[test]
 fn test_goto_changes_screen() {
     let (mut app, _dir) = create_app_with_identity();
-    assert_eq!(app.active_screen(), Screen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
 
-    app.goto(Screen::Contacts);
-    assert_eq!(app.active_screen(), Screen::Contacts);
+    app.goto(AppScreen::Contacts);
+    assert_eq!(app.current_app_screen(), AppScreen::Contacts);
 
-    app.goto(Screen::Settings);
-    assert_eq!(app.active_screen(), Screen::Settings);
+    app.goto(AppScreen::Settings);
+    assert_eq!(app.current_app_screen(), AppScreen::Settings);
 }
 
 // @internal
@@ -94,7 +94,7 @@ fn test_goto_resets_input_mode_to_normal() {
     let (mut app, _dir) = create_app_with_identity();
     app.input_mode = InputMode::Editing;
 
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     assert_eq!(
         app.input_mode,
         InputMode::Normal,
@@ -119,25 +119,25 @@ fn test_goto_resets_input_mode_to_normal() {
 // See `_private/docs/problems/2026-04-30-navigation-in-core/` test
 // scaffolding strategy.
 #[rstest]
-#[case::contacts(Screen::Contacts, Screen::MyInfo)]
-#[case::settings(Screen::Settings, Screen::More)]
-#[case::exchange(Screen::Exchange, Screen::MyInfo)]
-#[case::help(Screen::Help, Screen::More)]
-#[case::devices(Screen::Devices, Screen::More)]
-#[case::recovery(Screen::Recovery, Screen::More)]
-#[case::sync(Screen::Sync, Screen::More)]
-#[case::privacy(Screen::Privacy, Screen::Settings)]
-#[case::backup(Screen::Backup, Screen::More)]
-#[case::groups(Screen::Groups, Screen::MyInfo)]
-#[case::duress(Screen::Duress, Screen::Settings)]
-fn test_go_back_returns_to_expected_screen(#[case] from: Screen, #[case] expected: Screen) {
+#[case::contacts(AppScreen::Contacts, AppScreen::MyInfo)]
+#[case::settings(AppScreen::Settings, AppScreen::More)]
+#[case::exchange(AppScreen::Exchange, AppScreen::MyInfo)]
+#[case::help(AppScreen::Help, AppScreen::More)]
+#[case::devices(AppScreen::DeviceManagement, AppScreen::More)]
+#[case::recovery(AppScreen::Recovery, AppScreen::More)]
+#[case::sync(AppScreen::Sync, AppScreen::More)]
+#[case::privacy(AppScreen::Privacy, AppScreen::Settings)]
+#[case::backup(AppScreen::Backup, AppScreen::More)]
+#[case::groups(AppScreen::Groups, AppScreen::MyInfo)]
+#[case::duress(AppScreen::DuressPin, AppScreen::Settings)]
+fn test_go_back_returns_to_expected_screen(#[case] from: AppScreen, #[case] expected: AppScreen) {
     let (mut app, _dir) = create_app_with_identity();
-    if expected != Screen::MyInfo {
-        app.goto(expected);
+    if expected != AppScreen::MyInfo {
+        app.goto(expected.clone());
     }
     app.goto(from);
     app.go_back();
-    assert_eq!(app.active_screen(), expected);
+    assert_eq!(app.current_app_screen(), expected);
 }
 
 // `ContactDetail` requires `selected_contact_id` to be set so
@@ -150,10 +150,12 @@ fn test_go_back_returns_to_expected_screen(#[case] from: Screen, #[case] expecte
 fn test_go_back_from_contact_detail_returns_to_contacts() {
     let (mut app, _dir) = create_app_with_identity();
     app.selected_contact_id = Some("test-contact-id".into());
-    app.goto(Screen::Contacts);
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::Contacts);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     app.go_back();
-    assert_eq!(app.active_screen(), Screen::Contacts);
+    assert_eq!(app.current_app_screen(), AppScreen::Contacts);
 }
 
 // @internal
@@ -161,11 +163,18 @@ fn test_go_back_from_contact_detail_returns_to_contacts() {
 fn test_go_back_from_contact_visibility_returns_to_contact_detail() {
     let (mut app, _dir) = create_app_with_identity();
     app.selected_contact_id = Some("test-contact-id".into());
-    app.goto(Screen::Contacts);
-    app.goto(Screen::ContactDetail);
-    app.goto(Screen::ContactVisibility);
+    app.goto(AppScreen::Contacts);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
+    app.goto(AppScreen::ContactVisibility {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     app.go_back();
-    assert_eq!(app.active_screen(), Screen::ContactDetail);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::ContactDetail { .. }
+    ));
 }
 
 // Form dialogs are entered via `goto_form_dialog(FormDialogType)`, which
@@ -177,12 +186,12 @@ fn test_go_back_from_contact_visibility_returns_to_contact_detail() {
 fn test_go_back_from_edit_name_returns_to_settings() {
     use vauchi_app::ui::FormDialogType;
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     app.goto_form_dialog(FormDialogType::EditName {
         current_name: "Alice".into(),
     });
     app.go_back();
-    assert_eq!(app.active_screen(), Screen::Settings);
+    assert_eq!(app.current_app_screen(), AppScreen::Settings);
 }
 
 // @internal
@@ -190,12 +199,12 @@ fn test_go_back_from_edit_name_returns_to_settings() {
 fn test_go_back_from_edit_relay_url_returns_to_settings() {
     use vauchi_app::ui::FormDialogType;
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     app.goto_form_dialog(FormDialogType::EditRelayUrl {
         current_url: "https://relay.test".into(),
     });
     app.go_back();
-    assert_eq!(app.active_screen(), Screen::Settings);
+    assert_eq!(app.current_app_screen(), AppScreen::Settings);
 }
 
 // 'a' from Home opens the AddField form dialog. The dialog kind is asserted
@@ -205,10 +214,13 @@ fn test_go_back_from_edit_relay_url_returns_to_settings() {
 #[test]
 fn test_handle_key_a_from_home_opens_add_field_dialog() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     let action = handle_key(&mut app, KeyCode::Char('a'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::FormDialog);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::FormDialog { .. }
+    ));
     assert!(
         matches!(
             app.current_app_screen(),
@@ -250,7 +262,10 @@ fn test_form_dialog_nav_tab_follows_dialog_kind(
 ) {
     let (mut app, _dir) = create_app_with_identity();
     app.goto_form_dialog(dialog);
-    assert_eq!(app.active_screen(), Screen::FormDialog);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::FormDialog { .. }
+    ));
     assert_eq!(
         app.focus.nav_index, expected_tab,
         "form-dialog nav tab should follow the engine's dialog kind"
@@ -261,11 +276,11 @@ fn test_form_dialog_nav_tab_follows_dialog_kind(
 #[test]
 fn test_go_back_from_setup_stays_on_setup() {
     let (mut app, _dir) = create_app_without_identity();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
     app.go_back();
     assert_eq!(
-        app.active_screen(),
-        Screen::SetupWelcome,
+        app.current_app_screen(),
+        AppScreen::Onboarding,
         "go_back from SetupWelcome should stay on SetupWelcome"
     );
 }
@@ -274,9 +289,9 @@ fn test_go_back_from_setup_stays_on_setup() {
 #[test]
 fn test_go_back_from_backup_without_identity_goes_to_setup() {
     let (mut app, _dir) = create_app_without_identity();
-    app.goto(Screen::Backup);
+    app.goto(AppScreen::Backup);
     app.go_back();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 }
 
 // @internal
@@ -300,7 +315,7 @@ fn test_set_status_and_clear_status() {
 #[test]
 fn test_handle_key_q_on_home_quits() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(matches!(action, Action::Quit));
@@ -310,7 +325,7 @@ fn test_handle_key_q_on_home_quits() {
 #[test]
 fn test_handle_key_q_is_global_quit() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
 
     // 'q' is a global quit on any screen (not screen-specific)
     let action = handle_key(&mut app, KeyCode::Char('q'));
@@ -321,22 +336,22 @@ fn test_handle_key_q_is_global_quit() {
 #[test]
 fn test_handle_key_question_mark_navigates_to_help() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char('?'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::Help);
+    assert_eq!(app.current_app_screen(), AppScreen::Help);
 }
 
 // @internal
 #[test]
 fn test_handle_key_esc_goes_back() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
 }
 
 // @scenario: contacts_management:View all contacts
@@ -346,29 +361,29 @@ fn test_handle_key_esc_goes_back() {
 // @scenario: identity_management:Create encrypted identity backup
 // @scenario: contact_card_management:Add a field to contact card
 #[rstest]
-#[case::c_contacts('c', Screen::Contacts)]
-#[case::s_settings('s', Screen::Settings)]
-#[case::n_sync('n', Screen::Sync)]
-#[case::d_devices('d', Screen::Devices)]
-#[case::r_recovery('r', Screen::Recovery)]
-#[case::b_backup('b', Screen::Backup)]
-#[case::y_delivery('y', Screen::Delivery)]
-#[case::g_groups('g', Screen::Groups)]
-#[case::x_exchange('X', Screen::Exchange)]
-fn test_handle_key_on_home_navigates_to_screen(#[case] key: char, #[case] expected: Screen) {
+#[case::c_contacts('c', AppScreen::Contacts)]
+#[case::s_settings('s', AppScreen::Settings)]
+#[case::n_sync('n', AppScreen::Sync)]
+#[case::d_devices('d', AppScreen::DeviceManagement)]
+#[case::r_recovery('r', AppScreen::Recovery)]
+#[case::b_backup('b', AppScreen::Backup)]
+#[case::y_delivery('y', AppScreen::DeliveryStatus)]
+#[case::g_groups('g', AppScreen::Groups)]
+#[case::x_exchange('X', AppScreen::Exchange)]
+fn test_handle_key_on_home_navigates_to_screen(#[case] key: char, #[case] expected: AppScreen) {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     let action = handle_key(&mut app, KeyCode::Char(key));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), expected);
+    assert_eq!(app.current_app_screen(), expected);
 }
 
 // @internal
 #[test]
 fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     app.input_mode = InputMode::Editing;
 
     let action = handle_key(&mut app, KeyCode::Esc);
@@ -384,14 +399,14 @@ fn test_handle_key_in_editing_mode_esc_returns_to_normal() {
 #[test]
 fn test_app_new_with_identity_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
-    assert_eq!(app.active_screen(), Screen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
 }
 
 // @internal
 #[test]
 fn test_app_new_without_identity_starts_on_setup() {
     let (app, _dir) = create_app_without_identity();
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 }
 
 // ============================================================================
@@ -406,12 +421,12 @@ fn test_delivery_esc_goes_back_to_more() {
     // reflects user-driven traversal. Direct `goto(Delivery)` from
     // MyInfo would land on MyInfo when we pop, which is correct
     // engine behavior but doesn't exercise the Delivery→More flow.
-    app.goto(Screen::More);
-    app.goto(Screen::Delivery);
+    app.goto(AppScreen::More);
+    app.goto(AppScreen::DeliveryStatus);
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::More);
+    assert_eq!(app.current_app_screen(), AppScreen::More);
 }
 
 // ============================================================================
@@ -422,10 +437,10 @@ fn test_delivery_esc_goes_back_to_more() {
 #[test]
 fn test_settings_shift_d_navigates_to_duress() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     let action = handle_key(&mut app, KeyCode::Char('D'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::Duress);
+    assert_eq!(app.current_app_screen(), AppScreen::DuressPin);
 }
 
 // @internal
@@ -437,11 +452,11 @@ fn test_duress_esc_in_status_goes_back() {
     // jumping straight from MyInfo. See
     // `_private/docs/problems/2026-04-30-navigation-in-core/` test
     // scaffolding strategy.
-    app.goto(Screen::Settings);
-    app.goto(Screen::Duress);
+    app.goto(AppScreen::Settings);
+    app.goto(AppScreen::DuressPin);
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::Settings);
+    assert_eq!(app.current_app_screen(), AppScreen::Settings);
 }
 
 // ============================================================================
@@ -454,18 +469,18 @@ fn test_duress_esc_in_status_goes_back() {
 fn test_lock_screen_no_password_starts_on_home() {
     let (app, _dir) = create_app_with_identity();
     // No password configured → should start on Home, not Lock
-    assert_eq!(app.active_screen(), Screen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
 }
 
 // @internal
 #[test]
 fn test_lock_screen_q_does_not_quit() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     // 'q' should NOT quit from lock screen — it's a PIN character
     let action = handle_key(&mut app, KeyCode::Char('q'));
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.active_screen(), Screen::Lock);
+    assert_eq!(app.current_app_screen(), AppScreen::Lock);
     assert_eq!(app.lock_state.pin_input, "q");
 }
 
@@ -473,18 +488,18 @@ fn test_lock_screen_q_does_not_quit() {
 #[test]
 fn test_lock_screen_esc_does_not_navigate() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
     // Should stay on Lock screen
-    assert_eq!(app.active_screen(), Screen::Lock);
+    assert_eq!(app.current_app_screen(), AppScreen::Lock);
 }
 
 // @internal
 #[test]
 fn test_lock_screen_char_input_accumulates() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     handle_key(&mut app, KeyCode::Char('1'));
     handle_key(&mut app, KeyCode::Char('2'));
     handle_key(&mut app, KeyCode::Char('3'));
@@ -495,7 +510,7 @@ fn test_lock_screen_char_input_accumulates() {
 #[test]
 fn test_lock_screen_backspace_removes_char() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     handle_key(&mut app, KeyCode::Char('a'));
     handle_key(&mut app, KeyCode::Char('b'));
     handle_key(&mut app, KeyCode::Backspace);
@@ -506,10 +521,10 @@ fn test_lock_screen_backspace_removes_char() {
 #[test]
 fn test_lock_screen_empty_enter_does_nothing() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     handle_key(&mut app, KeyCode::Enter);
     // Should stay on Lock — empty PIN doesn't attempt auth
-    assert_eq!(app.active_screen(), Screen::Lock);
+    assert_eq!(app.current_app_screen(), AppScreen::Lock);
     assert_eq!(app.lock_state.attempts, 0);
 }
 
@@ -522,7 +537,7 @@ fn test_lock_screen_wrong_pin_increments_attempts() {
         .vauchi_mut()
         .setup_app_password("correctpin")
         .unwrap();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     // Enter wrong PIN
     handle_key(&mut app, KeyCode::Char('w'));
     handle_key(&mut app, KeyCode::Char('r'));
@@ -530,7 +545,7 @@ fn test_lock_screen_wrong_pin_increments_attempts() {
     handle_key(&mut app, KeyCode::Char('n'));
     handle_key(&mut app, KeyCode::Char('g'));
     handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.active_screen(), Screen::Lock);
+    assert_eq!(app.current_app_screen(), AppScreen::Lock);
     assert_eq!(app.lock_state.attempts, 1);
     assert!(app.lock_state.error);
     assert!(app.lock_state.pin_input.is_empty()); // cleared after failure
@@ -544,12 +559,12 @@ fn test_lock_screen_correct_pin_unlocks() {
         .vauchi_mut()
         .setup_app_password("mypin")
         .unwrap();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     for c in "mypin".chars() {
         handle_key(&mut app, KeyCode::Char(c));
     }
     handle_key(&mut app, KeyCode::Enter);
-    assert_eq!(app.active_screen(), Screen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
     assert!(!app.lock_state.error);
 }
 
@@ -566,9 +581,9 @@ fn test_lock_state_defaults() {
 #[test]
 fn test_lock_go_back_stays_on_lock() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::Lock);
+    app.goto(AppScreen::Lock);
     app.go_back();
-    assert_eq!(app.active_screen(), Screen::Lock);
+    assert_eq!(app.current_app_screen(), AppScreen::Lock);
 }
 
 // Emergency broadcast is engine-driven (core `EmergencyBroadcastEngine`);
@@ -585,7 +600,7 @@ fn test_lock_go_back_stays_on_lock() {
 #[test]
 fn test_home_field_delete_status_includes_label() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
 
     // Add a field
     app.app_engine
@@ -619,7 +634,9 @@ fn test_contact_detail_copy_announces_result() {
     // selected contact, so set the id before `goto` (active_screen now derives
     // from the engine, not from `self.screen`).
     app.selected_contact_id = Some("test-contact-id".into());
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
 
     handle_key(&mut app, KeyCode::Char('c'));
     assert!(
@@ -635,7 +652,9 @@ fn test_contact_detail_delete_sets_status() {
 
     // Navigate to contact detail (engine needs a selected contact id).
     app.selected_contact_id = Some("test-contact-id".into());
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     app.selected_contact = 0;
 
     // Pressing 'x' with no contacts should stay on screen without crash
@@ -643,8 +662,9 @@ fn test_contact_detail_delete_sets_status() {
     // No contact to delete — should not crash, screen transitions back
     // The go_back transitions to Contacts
     assert!(
-        app.active_screen() == Screen::Contacts || app.active_screen() == Screen::ContactDetail,
+        app.current_app_screen() == AppScreen::Contacts
+            || matches!(app.current_app_screen(), AppScreen::ContactDetail { .. }),
         "x on ContactDetail should navigate back or stay, got {:?}",
-        app.active_screen()
+        app.current_app_screen()
     );
 }

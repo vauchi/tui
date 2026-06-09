@@ -12,7 +12,7 @@ mod navigation;
 use crossterm::event::KeyCode;
 use vauchi_app::ui::{AppScreen, Component, UserAction, WorkflowEngine};
 
-use crate::app::{App, InputMode, Overlay, Screen};
+use crate::app::{App, InputMode, Overlay};
 use crate::handlers::action_result::{handle_action_result, handle_action_result_with};
 use crate::ui::focus::FocusZone;
 use crate::ui::widgets::key_mapping::{self, KeyResult};
@@ -131,33 +131,33 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
     match key {
         KeyCode::Char('q') => return Action::Quit,
         KeyCode::Char('?') => {
-            app.goto(Screen::Help);
+            app.goto(AppScreen::Help);
             return Action::Continue;
         }
         // Direct screen switching: number keys 1-5
         KeyCode::Char('1') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::MyInfo);
+            app.goto(AppScreen::MyInfo);
             return Action::Continue;
         }
         KeyCode::Char('2') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Contacts);
+            app.goto(AppScreen::Contacts);
             return Action::Continue;
         }
         KeyCode::Char('3') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Exchange);
+            app.goto(AppScreen::Exchange);
             return Action::Continue;
         }
         KeyCode::Char('4') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::Groups);
+            app.goto(AppScreen::Groups);
             return Action::Continue;
         }
         KeyCode::Char('5') => {
             app.focus.zone = FocusZone::Content;
-            app.goto(Screen::More);
+            app.goto(AppScreen::More);
             return Action::Continue;
         }
         // Shift+Tab: move focus backwards (Content → NavBar → ActionBar → Content)
@@ -199,10 +199,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
-    // Engine-driven screens — route through AppEngine key mapping. The
-    // complement (setup wizard, lock, ActionMenu/ContactImport overlays) runs
-    // the bespoke handlers in the match below.
-    if app.active_screen().routes_through_engine() {
+    // No overlay → an engine-driven screen (lock/onboarding/form-dialog
+    // were handled by the bypasses above): route through the engine
+    // resolver. An open overlay falls through to the overlay dispatch below.
+    if app.overlay.is_none() {
         handle_engine_keys(app, key);
         return Action::Continue;
     }
@@ -249,11 +249,11 @@ fn handle_bar_keys(app: &mut App, key: KeyCode) -> Option<Action> {
                 FocusZone::NavBar => {
                     // Navigate to the tab at the focused index
                     let target = match app.focus.nav_index {
-                        0 => Screen::MyInfo,
-                        1 => Screen::Contacts,
-                        2 => Screen::Exchange,
-                        3 => Screen::Groups,
-                        4 => Screen::More,
+                        0 => AppScreen::MyInfo,
+                        1 => AppScreen::Contacts,
+                        2 => AppScreen::Exchange,
+                        3 => AppScreen::Groups,
+                        4 => AppScreen::More,
                         _ => return Some(Action::Continue),
                     };
                     // Cancel any pending state before navigating

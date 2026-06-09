@@ -5,9 +5,9 @@
 //! Contact-related input handlers: contact list, detail, actions, visibility.
 
 use crossterm::event::KeyCode;
-use vauchi_app::ui::{UserAction, WorkflowEngine};
+use vauchi_app::ui::{AppScreen, UserAction, WorkflowEngine};
 
-use crate::app::{ActionMenuState, App, ImportState, InputMode, Overlay, Screen};
+use crate::app::{ActionMenuState, App, ImportState, InputMode, Overlay};
 use crate::helpers;
 
 pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
@@ -77,14 +77,16 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
             {
                 app.selected_contact_id = Some(contact.id().to_string());
             }
-            app.goto(Screen::ContactDetail);
+            if let Some(contact_id) = app.selected_contact_id.clone() {
+                app.goto(AppScreen::ContactDetail { contact_id });
+            }
         }
         KeyCode::Char('d') | KeyCode::Char('m') => {
             // Open duplicates / merge screen ('d' legacy, 'm' for merge).
             // Engine builds the duplicate list from `find_duplicates()`;
             // the renderer reads from the engine's ScreenModel.
             match app.app_engine.vauchi().find_duplicates() {
-                Ok(_) => app.goto(Screen::ContactDuplicates),
+                Ok(_) => app.goto(AppScreen::ContactDuplicates),
                 Err(e) => app.set_status(format!("Error: {}", e)),
             }
         }
@@ -97,7 +99,7 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         }
         KeyCode::Char('L') => {
             // Engine owns current_limit / current_count via ContactLimit screen.
-            app.goto(Screen::ContactLimit);
+            app.goto(AppScreen::ContactLimit);
         }
         _ => {}
     }
@@ -195,7 +197,9 @@ pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
             {
                 app.selected_contact_id = Some(contact.id().to_string());
                 app.selected_visibility_field = 0;
-                app.goto(Screen::ContactVisibility);
+                if let Some(contact_id) = app.selected_contact_id.clone() {
+                    app.goto(AppScreen::ContactVisibility { contact_id });
+                }
             }
         }
         KeyCode::Char('t') => {

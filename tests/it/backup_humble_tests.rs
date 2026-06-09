@@ -12,10 +12,10 @@
 use crossterm::event::KeyCode;
 use tempfile::TempDir;
 
-use vauchi_app::ui::{AppEngine, Component, WorkflowEngine};
+use vauchi_app::ui::{AppEngine, AppScreen, Component, WorkflowEngine};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 
-use vauchi_tui::app::{App, Screen};
+use vauchi_tui::app::App;
 use vauchi_tui::handlers::handle_key;
 
 fn backup_app() -> (App, TempDir) {
@@ -34,7 +34,7 @@ fn backup_app() -> (App, TempDir) {
         "wss://relay.vauchi.app".to_string(),
         temp_dir.path().to_path_buf(),
     );
-    app.goto(Screen::Backup);
+    app.goto(AppScreen::Backup);
     (app, temp_dir)
 }
 

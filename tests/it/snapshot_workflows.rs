@@ -8,8 +8,7 @@
 //! combining them into a single composite snapshot.
 
 use crate::common;
-
-use vauchi_tui::app::Screen;
+use vauchi_app::ui::AppScreen;
 
 use common::{
     create_app_with_contacts, create_app_with_identity, create_app_without_identity, workflow_step,
@@ -91,7 +90,7 @@ fn test_workflow_exchange() {
     steps.push(workflow_step(1, "MyInfo — home screen", &mut app));
 
     // Step 2: Exchange screen
-    app.goto(Screen::Exchange);
+    app.goto(AppScreen::Exchange);
     steps.push(workflow_step(
         2,
         "Exchange — press '3' (Exchange tab)",
@@ -99,7 +98,7 @@ fn test_workflow_exchange() {
     ));
 
     // Step 3: Back to contacts (after exchange completes)
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     steps.push(workflow_step(
         3,
         "Contacts — press '2' (view exchanged contacts)",
@@ -123,7 +122,7 @@ fn test_workflow_add_field() {
     let mut steps = Vec::new();
 
     // Step 1: MyInfo
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     steps.push(workflow_step(1, "MyInfo — view card fields", &mut app));
 
     // Step 2: Add field dialog (engine-driven)
@@ -138,7 +137,7 @@ fn test_workflow_add_field() {
     ));
 
     // Step 3: Back to MyInfo (field added)
-    app.goto(Screen::MyInfo);
+    app.goto(AppScreen::MyInfo);
     steps.push(workflow_step(
         3,
         "MyInfo — field saved, return to card",
@@ -161,7 +160,7 @@ fn test_workflow_contact_detail() {
     let mut steps = Vec::new();
 
     // Step 1: Contacts list
-    app.goto(Screen::Contacts);
+    app.goto(AppScreen::Contacts);
     steps.push(workflow_step(1, "Contacts — view contact list", &mut app));
 
     // Step 2: Contact detail
@@ -174,7 +173,9 @@ fn test_workflow_contact_detail() {
         .map(|c| c.id().to_string())
         .expect("has contacts");
     app.selected_contact_id = Some(contact_id);
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     steps.push(workflow_step(
         2,
         "ContactDetail — press Enter on contact",
@@ -182,11 +183,15 @@ fn test_workflow_contact_detail() {
     ));
 
     // Step 3: Contact edit
-    app.goto(Screen::ContactEdit);
+    app.goto(AppScreen::ContactEdit {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     steps.push(workflow_step(3, "ContactEdit — press 'e' (Edit)", &mut app));
 
     // Step 4: Back to detail
-    app.goto(Screen::ContactDetail);
+    app.goto(AppScreen::ContactDetail {
+        contact_id: app.selected_contact_id.clone().unwrap_or_default(),
+    });
     steps.push(workflow_step(
         4,
         "ContactDetail — press Esc (back from edit)",
@@ -209,7 +214,7 @@ fn test_workflow_settings() {
     let mut steps = Vec::new();
 
     // Step 1: Settings
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     steps.push(workflow_step(
         1,
         "Settings — press '5' (More tab) → Settings",
@@ -217,7 +222,7 @@ fn test_workflow_settings() {
     ));
 
     // Step 2: Privacy
-    app.goto(Screen::Privacy);
+    app.goto(AppScreen::Privacy);
     steps.push(workflow_step(
         2,
         "Privacy — select Privacy & Data",
@@ -225,15 +230,15 @@ fn test_workflow_settings() {
     ));
 
     // Step 3: Back to Settings
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     steps.push(workflow_step(3, "Settings — press Esc (back)", &mut app));
 
     // Step 4: Backup
-    app.goto(Screen::Backup);
+    app.goto(AppScreen::Backup);
     steps.push(workflow_step(4, "Backup — select Backup", &mut app));
 
     // Step 5: Back to Settings
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
     steps.push(workflow_step(5, "Settings — press Esc (back)", &mut app));
 
     let output = steps.join("\n\n");

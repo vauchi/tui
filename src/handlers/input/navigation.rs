@@ -6,7 +6,7 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, OnboardingState, Screen};
+use crate::app::{App, OnboardingState};
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use super::Action;
@@ -15,15 +15,15 @@ use vauchi_core::types::AhaMomentType;
 
 pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
     match key {
-        KeyCode::Char('c') => app.goto(Screen::Contacts),
-        KeyCode::Char('s') => app.goto(Screen::Settings),
-        KeyCode::Char('d') => app.goto(Screen::Devices),
-        KeyCode::Char('r') => app.goto(Screen::Recovery),
-        KeyCode::Char('n') => app.goto(Screen::Sync),
-        KeyCode::Char('y') => app.goto(Screen::Delivery),
-        KeyCode::Char('b') => app.goto(Screen::Backup),
-        KeyCode::Char('g') => app.goto(Screen::Groups),
-        KeyCode::Char('X') => app.goto(Screen::Exchange),
+        KeyCode::Char('c') => app.goto(AppScreen::Contacts),
+        KeyCode::Char('s') => app.goto(AppScreen::Settings),
+        KeyCode::Char('d') => app.goto(AppScreen::DeviceManagement),
+        KeyCode::Char('r') => app.goto(AppScreen::Recovery),
+        KeyCode::Char('n') => app.goto(AppScreen::Sync),
+        KeyCode::Char('y') => app.goto(AppScreen::DeliveryStatus),
+        KeyCode::Char('b') => app.goto(AppScreen::Backup),
+        KeyCode::Char('g') => app.goto(AppScreen::Groups),
+        KeyCode::Char('X') => app.goto(AppScreen::Exchange),
         KeyCode::Char('a') => {
             let available_groups = app.app_engine.available_groups().into_iter().collect();
             app.goto_form_dialog(FormDialogType::AddField { available_groups });
@@ -38,7 +38,7 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
                         current_note: None,
                     });
                 } else {
-                    app.goto(Screen::Exchange);
+                    app.goto(AppScreen::Exchange);
                 }
             }
         }
@@ -95,7 +95,17 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
 /// screen (which has no "back" destination). Returns `None` otherwise.
 pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Option<Action> {
     // Welcome screen: 'q' quits (no back to go to)
-    if app.active_screen() == Screen::SetupWelcome && key == KeyCode::Char('q') {
+    let on_welcome = app
+        .onboarding_engine
+        .as_ref()
+        .map(|e| {
+            matches!(
+                e.current_screen().screen_id.as_str(),
+                "welcome" | "identity_check"
+            )
+        })
+        .unwrap_or(false);
+    if on_welcome && key == KeyCode::Char('q') {
         return Some(Action::Quit);
     }
 
@@ -136,7 +146,7 @@ pub(crate) fn handle_onboarding_engine_keys(app: &mut App, key: KeyCode) -> Opti
                 if screen_id == "welcome" || screen_id == "identity_check" {
                     // Engine-driven: the Backup choose screen lets the user
                     // pick Restore (paste-restore via BackupRecoveryEngine).
-                    app.goto(Screen::Backup);
+                    app.goto(AppScreen::Backup);
                 }
             }
         }
@@ -190,7 +200,7 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
             }
             app.onboarding_engine = None;
             app.onboarding_state = OnboardingState::default();
-            app.goto(Screen::MyInfo);
+            app.goto(AppScreen::MyInfo);
         }
         ActionResult::ValidationError {
             component_id,

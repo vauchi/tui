@@ -6,7 +6,7 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, InputMode, Screen};
+use crate::app::{App, InputMode, Overlay};
 
 use super::Action;
 
@@ -19,27 +19,27 @@ use super::Action;
 pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
     match key {
         KeyCode::Esc => {
-            if app.active_screen() == Screen::ContactImport {
+            if app.overlay == Some(Overlay::ContactImport) {
                 app.close_overlay();
             }
             app.input_mode = InputMode::Normal;
         }
         KeyCode::Enter => {
-            if app.active_screen() == Screen::ContactImport {
+            if app.overlay == Some(Overlay::ContactImport) {
                 handle_import_submit(app);
             }
             app.input_mode = InputMode::Normal;
         }
-        KeyCode::Backspace => match app.active_screen() {
-            Screen::ContactImport => {
+        KeyCode::Backspace => match app.overlay {
+            Some(Overlay::ContactImport) => {
                 app.import_state.file_path.pop();
             }
             _ => {
                 app.input_buffer.pop();
             }
         },
-        KeyCode::Char(c) => match app.active_screen() {
-            Screen::ContactImport => app.import_state.file_path.push(c),
+        KeyCode::Char(c) => match app.overlay {
+            Some(Overlay::ContactImport) => app.import_state.file_path.push(c),
             _ => app.input_buffer.push(c),
         },
         _ => {}

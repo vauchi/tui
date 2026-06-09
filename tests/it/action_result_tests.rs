@@ -7,7 +7,7 @@
 
 use vauchi_app::ui::{ActionResult, AppEngine, AppScreen, ScreenModel, UserAction, WorkflowEngine};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
-use vauchi_tui::app::{App, Screen};
+use vauchi_tui::app::App;
 use vauchi_tui::handlers::action_result::handle_action_result;
 
 fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
@@ -50,18 +50,18 @@ fn dummy_screen_model() -> ScreenModel {
 #[test]
 fn update_screen_is_noop() {
     let mut app = create_app_with_identity();
-    let original_screen = app.active_screen();
+    let original_screen = app.current_app_screen();
     handle_action_result(&mut app, ActionResult::UpdateScreen(dummy_screen_model()));
-    assert_eq!(app.active_screen(), original_screen);
+    assert_eq!(app.current_app_screen(), original_screen);
 }
 
 // @internal
 #[test]
 fn complete_is_noop() {
     let mut app = create_app_with_identity();
-    let original_screen = app.active_screen();
+    let original_screen = app.current_app_screen();
     handle_action_result(&mut app, ActionResult::Complete);
-    assert_eq!(app.active_screen(), original_screen);
+    assert_eq!(app.current_app_screen(), original_screen);
 }
 
 // --- Screen navigation variants ---
@@ -76,7 +76,10 @@ fn open_contact_sets_contact_detail_screen() {
             contact_id: "abc123".into(),
         },
     );
-    assert_eq!(app.active_screen(), Screen::ContactDetail);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::ContactDetail { .. }
+    ));
 }
 
 // @internal
@@ -87,7 +90,7 @@ fn start_device_link_raw_navigates_to_device_linking() {
     // is intercepted in core and arrives as NavigateTo(DeviceLinking).
     let mut app = create_app_with_identity();
     handle_action_result(&mut app, ActionResult::StartDeviceLink);
-    assert_eq!(app.active_screen(), Screen::DeviceLinking);
+    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
     assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
 }
 
@@ -195,11 +198,11 @@ fn validation_error_replaces_existing_error() {
 #[test]
 fn wipe_complete_resets_to_setup_welcome() {
     let mut app = create_app_with_identity();
-    app.goto(Screen::Settings);
+    app.goto(AppScreen::Settings);
 
     handle_action_result(&mut app, ActionResult::WipeComplete);
 
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
     assert!(
         app.onboarding_engine.is_some(),
         "onboarding_engine should be Some after WipeComplete"
@@ -223,7 +226,7 @@ fn navigate_to_syncs_home_screen() {
     // Ensure the engine navigates to Home
     app.app_engine.navigate_to(AppScreen::MyInfo);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
 }
 
 // @internal
@@ -232,7 +235,7 @@ fn navigate_to_syncs_contacts_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Contacts);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Contacts);
+    assert_eq!(app.current_app_screen(), AppScreen::Contacts);
 }
 
 // @internal
@@ -241,7 +244,7 @@ fn navigate_to_syncs_exchange_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Exchange);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Exchange);
+    assert_eq!(app.current_app_screen(), AppScreen::Exchange);
 }
 
 // @internal
@@ -250,7 +253,7 @@ fn navigate_to_syncs_settings_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Settings);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Settings);
+    assert_eq!(app.current_app_screen(), AppScreen::Settings);
 }
 
 // @internal
@@ -259,7 +262,7 @@ fn navigate_to_syncs_help_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Help);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Help);
+    assert_eq!(app.current_app_screen(), AppScreen::Help);
 }
 
 // @internal
@@ -268,7 +271,7 @@ fn navigate_to_syncs_onboarding_to_setup_welcome() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Onboarding);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::SetupWelcome);
+    assert_eq!(app.current_app_screen(), AppScreen::Onboarding);
 }
 
 // --- NavigateTo: previously missing mappings (C-2 fix) ---
@@ -281,7 +284,10 @@ fn navigate_to_syncs_contact_detail_screen() {
         contact_id: "test-id".into(),
     });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::ContactDetail);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::ContactDetail { .. }
+    ));
 }
 
 // @internal
@@ -290,7 +296,7 @@ fn navigate_to_syncs_backup_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Backup);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Backup);
+    assert_eq!(app.current_app_screen(), AppScreen::Backup);
 }
 
 // @internal
@@ -299,7 +305,7 @@ fn navigate_to_syncs_lock_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Lock);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Lock);
+    assert_eq!(app.current_app_screen(), AppScreen::Lock);
 }
 
 // @internal
@@ -308,26 +314,26 @@ fn navigate_to_syncs_device_linking_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::DeviceLinking);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::DeviceLinking);
+    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
 }
 
 // @internal
 #[test]
 fn link_device_reaches_device_linking_and_survives_resync() {
-    // Regression: AppScreen::DeviceLinking used to collapse to Screen::Devices,
+    // Regression: AppScreen::DeviceLinking used to collapse to AppScreen::DeviceManagement,
     // so ensure_engine_synced (run every draw) snapped the engine back to
     // DeviceManagement (engine_target_for_screen(Devices) = DeviceManagement)
     // and the device-link QR screen never rendered.
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::DeviceManagement);
-    app.goto(Screen::Devices);
+    app.goto(AppScreen::DeviceManagement);
 
     // "Link New Device" is the Primary action on the DeviceManagement screen.
     let result = app.app_engine.handle_action(UserAction::ActionPressed {
         action_id: "link_device".into(),
     });
     handle_action_result(&mut app, result);
-    assert_eq!(app.active_screen(), Screen::DeviceLinking);
+    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
 
     // Simulate the next frame's sync — it must NOT revert the engine.
     assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
@@ -348,7 +354,7 @@ fn navigate_to_syncs_duress_pin_to_duress_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::DuressPin);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Duress);
+    assert_eq!(app.current_app_screen(), AppScreen::DuressPin);
 }
 
 // @internal
@@ -359,7 +365,7 @@ fn navigate_to_syncs_emergency_broadcast_to_emergency_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::EmergencyBroadcast);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Emergency);
+    assert_eq!(app.current_app_screen(), AppScreen::EmergencyBroadcast);
 }
 
 // @internal
@@ -368,7 +374,7 @@ fn navigate_to_syncs_delivery_status_to_delivery_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::DeliveryStatus);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Delivery);
+    assert_eq!(app.current_app_screen(), AppScreen::DeliveryStatus);
 }
 
 // --- NavigateTo: Wave 6 Phase A screens ---
@@ -379,7 +385,7 @@ fn navigate_to_syncs_sync_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Sync);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Sync);
+    assert_eq!(app.current_app_screen(), AppScreen::Sync);
 }
 
 // @internal
@@ -388,7 +394,7 @@ fn navigate_to_syncs_recovery_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Recovery);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Recovery);
+    assert_eq!(app.current_app_screen(), AppScreen::Recovery);
 }
 
 // @internal
@@ -397,7 +403,7 @@ fn navigate_to_syncs_groups_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Groups);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Groups);
+    assert_eq!(app.current_app_screen(), AppScreen::Groups);
 }
 
 // @internal
@@ -406,7 +412,7 @@ fn navigate_to_syncs_privacy_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Privacy);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Privacy);
+    assert_eq!(app.current_app_screen(), AppScreen::Privacy);
 }
 
 // @internal
@@ -435,7 +441,7 @@ fn navigate_to_syncs_support_screen() {
     let mut app = create_app_with_identity();
     app.app_engine.navigate_to(AppScreen::Support);
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::Support);
+    assert_eq!(app.current_app_screen(), AppScreen::Support);
 }
 
 // @internal
@@ -446,7 +452,10 @@ fn navigate_to_syncs_group_detail_screen() {
         group_id: "g1".into(),
     });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::GroupDetail);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::GroupDetail { .. }
+    ));
     // Engine carries group_id on its current AppScreen — no local mirror.
     assert!(
         matches!(
@@ -465,7 +474,10 @@ fn navigate_to_syncs_contact_visibility_screen() {
         contact_id: "c1".into(),
     });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::ContactVisibility);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::ContactVisibility { .. }
+    ));
     assert_eq!(
         app.selected_contact_id.as_deref(),
         Some("c1"),
@@ -481,7 +493,10 @@ fn navigate_to_contact_edit_sets_edit_screen() {
         contact_id: "test-id".into(),
     });
     handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.active_screen(), Screen::ContactEdit);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::ContactEdit { .. }
+    ));
     assert_eq!(
         app.selected_contact_id.as_deref(),
         Some("test-id"),
@@ -499,7 +514,10 @@ fn edit_contact_result_routes_to_contact_edit_screen() {
             contact_id: "abc".into(),
         },
     );
-    assert_eq!(app.active_screen(), Screen::ContactEdit);
+    assert!(matches!(
+        app.current_app_screen(),
+        AppScreen::ContactEdit { .. }
+    ));
     assert_eq!(app.selected_contact_id.as_deref(), Some("abc"));
 }
 

@@ -6,7 +6,7 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, LockState, Screen};
+use crate::app::{App, LockState};
 
 /// Handle lock screen input — PIN entry to unlock the app.
 ///
@@ -16,7 +16,7 @@ use crate::app::{App, LockState, Screen};
 /// 'q' does NOT quit — it's a PIN character.
 pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) {
     use crate::ui::widgets::key_mapping::{self, KeyResult};
-    use vauchi_app::ui::{ActionResult, WorkflowEngine};
+    use vauchi_app::ui::{ActionResult, AppScreen, WorkflowEngine};
     use vauchi_core::api::AuthMode;
 
     // Try engine-driven handling first
@@ -68,12 +68,12 @@ pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) 
                             Ok(AuthMode::Normal) => {
                                 app.lock_state = LockState::default();
                                 app.lock_engine = None;
-                                app.goto(Screen::MyInfo);
+                                app.goto(AppScreen::MyInfo);
                             }
                             Ok(AuthMode::Duress) => {
                                 app.lock_state = LockState::default();
                                 app.lock_engine = None;
-                                app.goto(Screen::MyInfo);
+                                app.goto(AppScreen::MyInfo);
                             }
                             Ok(AuthMode::Unauthenticated) | Ok(_) | Err(_) => {
                                 // Invalid PIN, unknown mode, or error
@@ -118,11 +118,11 @@ pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) 
                 {
                     Ok(AuthMode::Normal) => {
                         app.lock_state = LockState::default();
-                        app.goto(Screen::MyInfo);
+                        app.goto(AppScreen::MyInfo);
                     }
                     Ok(AuthMode::Duress) => {
                         app.lock_state = LockState::default();
-                        app.goto(Screen::MyInfo);
+                        app.goto(AppScreen::MyInfo);
                     }
                     Ok(AuthMode::Unauthenticated) | Ok(_) | Err(_) => {
                         app.lock_state.pin_input.clear();

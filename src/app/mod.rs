@@ -159,15 +159,15 @@ impl App {
     pub fn new(app_engine: AppEngine, relay_url: String, data_dir: std::path::PathBuf) -> Self {
         // Determine initial screen from AppEngine's Vauchi state
         let has_identity = app_engine.vauchi().has_identity();
-        let initial_screen = if !has_identity {
-            Screen::SetupWelcome
+        let initial_screen: AppScreen = if !has_identity {
+            AppScreen::Onboarding
         } else if app_engine.vauchi().is_password_enabled().unwrap_or(false) {
-            Screen::Lock
+            AppScreen::Lock
         } else {
-            // Use AppEngine's dynamic default: MyInfo (0 contacts) or Contacts (>=1)
+            // AppEngine's dynamic default: MyInfo (0 contacts) or Contacts (>=1)
             match app_engine.default_screen() {
-                AppScreen::Contacts => Screen::Contacts,
-                _ => Screen::MyInfo,
+                AppScreen::Contacts => AppScreen::Contacts,
+                _ => AppScreen::MyInfo,
             }
         };
 
@@ -177,27 +177,18 @@ impl App {
         // (`AppScreen::Onboarding`) to `nav_history`. Without it, the
         // user's first `navigate_back` lands on Onboarding instead of
         // their expected parent. Only call this once, during bootstrap.
+        // Bootstrap the engine to the initial screen — app_engine is the
+        // single source of truth (it tracks Onboarding/Lock too).
         let mut app_engine = app_engine;
-        if has_identity {
-            let target = match initial_screen {
-                Screen::Lock => AppScreen::Lock,
-                Screen::Contacts => AppScreen::Contacts,
-                _ => AppScreen::MyInfo,
-            };
-            app_engine.set_initial_screen(target);
-        } else {
-            // No identity → onboarding; app_engine tracks it so it is the
-            // single source of truth for the current screen (brick 6).
-            app_engine.set_initial_screen(AppScreen::Onboarding);
-        }
+        app_engine.set_initial_screen(initial_screen.clone());
 
         // Create engines for initial screen
-        let onboarding_engine = if initial_screen == Screen::SetupWelcome {
+        let onboarding_engine = if initial_screen == AppScreen::Onboarding {
             Some(OnboardingEngine::new())
         } else {
             None
         };
-        let lock_engine = if initial_screen == Screen::Lock {
+        let lock_engine = if initial_screen == AppScreen::Lock {
             Some(LockScreenEngine::new(
                 vauchi_app::ui::DEFAULT_LOCK_MAX_ATTEMPTS,
             ))

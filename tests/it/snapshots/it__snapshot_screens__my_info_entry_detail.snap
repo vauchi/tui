@@ -3,20 +3,15 @@ source: tests/it/snapshot_screens.rs
 description: MyInfo → press Enter on entry
 expression: output
 ---
-                                   Alice Smith
+                                      Work
+                                      Email
 
  ○ Sync  [Enter]
-  [Avatar: AS]
-┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
-│                                                                              │
-│  [#] Find someone nearby                                                     │
-│      Share your contact card in person — private and secure.                 │
-└──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│   • alice@company.com (Work)                                                 │
-│   • +41 79 123 45 67 (Mobile)                                                │
-│   • https://alice.example.com (Blog)                                         │
-└──────────────────────────────────────────────────────────────────────────────┘
+alice@company.com (Work)
+
+────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────
+No contacts can see this entry.
 
 
 
@@ -25,5 +20,10 @@ expression: output
 
 
 
-[Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
+
+
+
+
+
+[e] Edit  [x] Delete  [?] help  [Esc] back  [q] quit
   1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

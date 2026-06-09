@@ -6,8 +6,8 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, Screen};
-use vauchi_app::ui::FormDialogType;
+use crate::app::App;
+use vauchi_app::ui::{AppScreen, FormDialogType};
 
 pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCode) {
     match key {
@@ -19,24 +19,24 @@ pub(in crate::handlers::input) fn handle_settings_keys(app: &mut App, key: KeyCo
             let current_url = app.relay_url.clone();
             app.goto_form_dialog(FormDialogType::EditRelayUrl { current_url });
         }
-        KeyCode::Char('b') => app.goto(Screen::Backup),
-        KeyCode::Char('d') => app.goto(Screen::Devices),
-        KeyCode::Char('r') => app.goto(Screen::Recovery),
+        KeyCode::Char('b') => app.goto(AppScreen::Backup),
+        KeyCode::Char('d') => app.goto(AppScreen::DeviceManagement),
+        KeyCode::Char('r') => app.goto(AppScreen::Recovery),
         KeyCode::Char('p') | KeyCode::Char('g') => {
             // Open Privacy & Data screen (engine loads state on navigate).
-            app.goto(Screen::Privacy);
+            app.goto(AppScreen::Privacy);
         }
         KeyCode::Char('e') => {
             // Open Emergency Broadcast screen — engine loads config on navigate.
-            app.goto(Screen::Emergency);
+            app.goto(AppScreen::EmergencyBroadcast);
         }
         KeyCode::Char('D') => {
             // Open Duress PIN screen — engine loads config on navigate.
-            app.goto(Screen::Duress);
+            app.goto(AppScreen::DuressPin);
         }
         KeyCode::Char('s') => {
             // Open Support Vauchi screen
-            app.goto(Screen::Support);
+            app.goto(AppScreen::Support);
         }
         KeyCode::Char(']') | KeyCode::Right => {
             app.next_theme();
