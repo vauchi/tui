@@ -6,7 +6,7 @@
 
 use crossterm::event::KeyCode;
 
-use crate::app::{App, InputMode, OnboardingState, Screen};
+use crate::app::{App, OnboardingState, Screen};
 use crate::ui::widgets::key_mapping::{self, KeyResult};
 
 use super::Action;
@@ -201,106 +201,5 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
             app.set_status(message);
         }
         _ => {}
-    }
-}
-
-// Legacy handlers (used when engine is not initialized)
-pub(super) fn handle_setup_welcome_keys(app: &mut App, key: KeyCode) {
-    if app.onboarding_engine.is_some() {
-        handle_onboarding_engine_keys(app, key);
-        return;
-    }
-    match key {
-        KeyCode::Enter => {
-            app.onboarding_state = OnboardingState::default();
-            app.goto(Screen::SetupCreateIdentity);
-            app.input_mode = InputMode::Editing;
-        }
-        KeyCode::Char('i') => {
-            // Engine-driven: the Backup choose screen lets the user pick
-            // Restore (paste-restore via BackupRecoveryEngine).
-            app.goto(Screen::Backup);
-        }
-        _ => {}
-    }
-}
-
-pub(super) fn handle_setup_create_identity_keys(app: &mut App, key: KeyCode) {
-    if app.onboarding_engine.is_some() {
-        handle_onboarding_engine_keys(app, key);
-        return;
-    }
-    match key {
-        KeyCode::Enter => {
-            let name = app.onboarding_state.name_input.trim().to_string();
-            if name.is_empty() {
-                app.set_status("Please enter your name");
-                return;
-            }
-            match app.app_engine.vauchi_mut().create_identity(&name) {
-                Ok(()) => {
-                    app.invalidate_engines();
-                    app.onboarding_state.identity_created = true;
-                    if let Ok(Some(moment)) = app
-                        .app_engine
-                        .vauchi()
-                        .try_trigger_aha_moment(AhaMomentType::CardCreationComplete)
-                    {
-                        app.set_status(format!("★ {} — {}", moment.title(), moment.message()));
-                    }
-                    app.goto(Screen::SetupAddFields);
-                }
-                Err(e) => {
-                    app.set_status(format!("Failed to create identity: {}", e));
-                }
-            }
-        }
-        KeyCode::Backspace => {
-            app.onboarding_state.name_input.pop();
-        }
-        KeyCode::Char(c) => {
-            if app.onboarding_state.name_input.len() < 50 {
-                app.onboarding_state.name_input.push(c);
-            }
-        }
-        _ => {}
-    }
-}
-
-pub(super) fn handle_setup_add_fields_keys(app: &mut App, key: KeyCode) {
-    if app.onboarding_engine.is_some() {
-        handle_onboarding_engine_keys(app, key);
-        return;
-    }
-    match key {
-        KeyCode::Char('a') => {
-            let available_groups = app.app_engine.available_groups().into_iter().collect();
-            app.goto_form_dialog(FormDialogType::AddField { available_groups });
-        }
-        KeyCode::Char('s') | KeyCode::Enter => {
-            app.goto(Screen::SetupSecurity);
-        }
-        _ => {}
-    }
-}
-
-pub(super) fn handle_setup_security_keys(app: &mut App, key: KeyCode) {
-    if app.onboarding_engine.is_some() {
-        handle_onboarding_engine_keys(app, key);
-        return;
-    }
-    if let KeyCode::Enter = key {
-        app.goto(Screen::SetupReady);
-    }
-}
-
-pub(super) fn handle_setup_ready_keys(app: &mut App, key: KeyCode) {
-    if app.onboarding_engine.is_some() {
-        handle_onboarding_engine_keys(app, key);
-        return;
-    }
-    if let KeyCode::Enter = key {
-        app.onboarding_state = OnboardingState::default();
-        app.goto(Screen::MyInfo);
     }
 }

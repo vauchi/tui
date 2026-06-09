@@ -12,7 +12,7 @@ mod navigation;
 use crossterm::event::KeyCode;
 use vauchi_app::ui::{AppScreen, Component, UserAction, WorkflowEngine};
 
-use crate::app::{App, InputMode, Screen};
+use crate::app::{App, InputMode, Overlay, Screen};
 use crate::handlers::action_result::{handle_action_result, handle_action_result_with};
 use crate::ui::focus::FocusZone;
 use crate::ui::widgets::key_mapping::{self, KeyResult};
@@ -25,10 +25,7 @@ use editing::handle_editing_mode;
 use features_input::{
     handle_exchange_keys, handle_lock_keys, handle_settings_keys, handle_sync_keys,
 };
-use navigation::{
-    handle_my_info_keys, handle_setup_add_fields_keys, handle_setup_create_identity_keys,
-    handle_setup_ready_keys, handle_setup_security_keys, handle_setup_welcome_keys,
-};
+use navigation::handle_my_info_keys;
 
 /// Action to take after handling input.
 pub enum Action {
@@ -76,12 +73,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         if let Some(action) = navigation::handle_onboarding_engine_keys(app, key) {
             return action;
         }
-        return Action::Continue;
-    }
-
-    // Legacy: Onboarding name input bypasses global keys
-    if app.active_screen() == Screen::SetupCreateIdentity {
-        handle_setup_create_identity_keys(app, key);
         return Action::Continue;
     }
 
@@ -216,61 +207,15 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
-    // Screen-specific keys
-    match app.active_screen() {
-        Screen::MyInfo => handle_my_info_keys(app, key),
-        Screen::Contacts => handle_contacts_keys(app, key),
-        Screen::ContactDetail => handle_contact_detail_keys(app, key),
-        Screen::ContactVisibility => handle_visibility_keys(app, key),
-        Screen::Exchange => handle_exchange_keys(app, key),
-        Screen::Settings => handle_settings_keys(app, key),
-        // Form dialogs: handled by engine guard above when app_engine is present
-        Screen::FormDialog => {
-            eprintln!("WARNING: form dialog screen reached legacy handler unexpectedly");
+    // Overlay-specific keys (reached only when an overlay is open; the
+    // gate above routed every non-overlay screen through the engine).
+    match app.overlay {
+        Some(Overlay::ActionMenu) => handle_action_menu_keys(app, key),
+        Some(Overlay::ContactImport) => {
+            // Typing is handled in editing mode; the global Esc handler
+            // closes the overlay.
         }
-        Screen::Sync => handle_sync_keys(app, key),
-        Screen::ActionMenu => handle_action_menu_keys(app, key),
-        Screen::Lock => {
-            eprintln!("WARNING: Lock screen reached legacy handler unexpectedly");
-        }
-        // SP-21 Onboarding wizard
-        Screen::SetupWelcome => handle_setup_welcome_keys(app, key),
-        Screen::SetupCreateIdentity => {
-            eprintln!("WARNING: SetupCreateIdentity reached legacy handler unexpectedly");
-        }
-        Screen::SetupAddFields => handle_setup_add_fields_keys(app, key),
-        Screen::SetupSecurity => handle_setup_security_keys(app, key),
-        Screen::SetupReady => handle_setup_ready_keys(app, key),
-        // Engine-only screens: handled by engine guard above
-        Screen::ContactEdit
-        | Screen::ContactDuplicates
-        | Screen::ContactMerge
-        | Screen::ContactLimit
-        | Screen::MyInfoEntryDetail
-        | Screen::VerifyFingerprint
-        | Screen::DeviceReplacement
-        | Screen::DeviceLinking
-        | Screen::Duress
-        | Screen::Emergency
-        | Screen::Backup
-        | Screen::GroupDetail
-        | Screen::Groups
-        | Screen::Help
-        | Screen::Delivery
-        | Screen::Recovery
-        | Screen::Support
-        | Screen::Devices
-        | Screen::More
-        | Screen::Activity
-        | Screen::Privacy => {
-            eprintln!("WARNING: engine-only screen reached legacy handler unexpectedly");
-        }
-        Screen::ContactImport => {
-            // Handled entirely in editing mode — Esc returns to Contacts
-            if key == KeyCode::Esc {
-                app.goto(Screen::Contacts);
-            }
-        }
+        None => {}
     }
 
     Action::Continue
@@ -396,62 +341,21 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 return;
             }
             // Fall back to legacy handlers for TUI-specific shortcuts
-            match app.active_screen() {
-                Screen::MyInfo => handle_my_info_keys(app, key),
-                Screen::Contacts => handle_contacts_keys(app, key),
-                Screen::ContactDetail => handle_contact_detail_keys(app, key),
-                Screen::Exchange => handle_exchange_keys(app, key),
-                Screen::Settings => handle_settings_keys(app, key),
-                // Backup: engine-driven; Esc exits the flow.
-                Screen::Backup => {
+            match app.current_app_screen() {
+                AppScreen::MyInfo => handle_my_info_keys(app, key),
+                AppScreen::Contacts => handle_contacts_keys(app, key),
+                AppScreen::ContactDetail { .. } => handle_contact_detail_keys(app, key),
+                AppScreen::Exchange => handle_exchange_keys(app, key),
+                AppScreen::Settings => handle_settings_keys(app, key),
+                AppScreen::Sync => handle_sync_keys(app, key),
+                AppScreen::ContactVisibility { .. } => handle_visibility_keys(app, key),
+                // All other engine-driven screens: Esc backs out (the global
+                // Esc handler also covers this; kept for non-global paths).
+                _ => {
                     if key == KeyCode::Esc {
                         app.go_back();
                     }
                 }
-                // Duress: engine-driven; Esc exits the flow (ADR-021/043)
-                Screen::Duress => {
-                    if key == KeyCode::Esc {
-                        app.go_back();
-                    }
-                }
-                // Emergency broadcast: engine-driven; Esc exits the flow.
-                Screen::Emergency => {
-                    if key == KeyCode::Esc {
-                        app.go_back();
-                    }
-                }
-                Screen::Sync => handle_sync_keys(app, key),
-                // Engine-driven; Esc backs out (global Esc handles it too).
-                Screen::Groups
-                | Screen::GroupDetail
-                | Screen::Help
-                | Screen::Delivery
-                | Screen::Recovery
-                | Screen::Support
-                | Screen::Devices
-                | Screen::Privacy => {
-                    if key == KeyCode::Esc {
-                        app.go_back();
-                    }
-                }
-                Screen::ContactVisibility => handle_visibility_keys(app, key),
-                // Form dialogs: Esc goes back (engine handles chars/Enter via key_mapping)
-                Screen::FormDialog => {
-                    if key == KeyCode::Esc {
-                        app.go_back();
-                    }
-                }
-                // ContactEdit + SP-12a + EntryDetail: Esc goes back
-                Screen::ContactEdit
-                | Screen::ContactDuplicates
-                | Screen::ContactMerge
-                | Screen::ContactLimit
-                | Screen::MyInfoEntryDetail => {
-                    if key == KeyCode::Esc {
-                        app.go_back();
-                    }
-                }
-                _ => {}
             }
         }
     }
