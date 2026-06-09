@@ -15,7 +15,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, Paragraph};
 use vauchi_app::ui::{ScreenModel, WorkflowEngine};
 
-use crate::app::{App, Screen};
+use crate::app::{App, Overlay};
 use crate::ui::focus::FocusZone;
 use crate::ui::widgets::action_bar::{ActionBarWidget, ActionItem};
 use crate::ui::widgets::nav_bar::{NavBarWidget, NavItem};
@@ -133,10 +133,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         }
     }
     // TUI-only overlays on top of the engine screen.
-    match app.active_screen() {
-        Screen::ActionMenu => draw_action_menu(f, chunks[0], app),
-        Screen::ContactImport => draw_import_dialog(f, chunks[0], app),
-        _ => {}
+    match app.overlay {
+        Some(Overlay::ActionMenu) => draw_action_menu(f, chunks[0], app),
+        Some(Overlay::ContactImport) => draw_import_dialog(f, chunks[0], app),
+        None => {}
     }
 
     // Status message or search indicator (conditional)
@@ -263,15 +263,27 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
         Vec::new()
     };
 
-    // Add global actions (back/quit) except on Lock and first setup screen
-    match app.active_screen() {
-        Screen::Lock => {}
-        Screen::SetupWelcome => {
-            items.push(ActionItem::new("q", "quit"));
-        }
-        Screen::SetupReady => {
-            // No back on final screen
-        }
+    // Add global actions (back/quit) except on Lock and the first/last
+    // onboarding step. The step comes from the onboarding engine.
+    let onboarding_step = app
+        .onboarding_engine
+        .as_ref()
+        .map(|e| e.current_screen().screen_id);
+    match app.current_app_screen() {
+        AppScreen::Lock => {}
+        AppScreen::Onboarding => match onboarding_step.as_deref() {
+            Some("welcome" | "identity_check") => {
+                items.push(ActionItem::new("q", "quit"));
+            }
+            Some("ready") => {
+                // No back/quit on the final screen
+            }
+            _ => {
+                items.push(ActionItem::new("?", "help"));
+                items.push(ActionItem::new("Esc", "back"));
+                items.push(ActionItem::new("q", "quit"));
+            }
+        },
         _ => {
             items.push(ActionItem::new("?", "help"));
             items.push(ActionItem::new("Esc", "back"));
@@ -284,35 +296,34 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 
 /// Build navigation items for the persistent bottom nav bar.
 fn build_nav_items(app: &App) -> Vec<NavItem> {
-    let active_tab = match app.active_screen() {
-        Screen::MyInfo | Screen::MyInfoEntryDetail => 0,
-        // Form dialogs collapse to one screen; tab comes from the engine.
-        Screen::FormDialog => app.form_dialog_nav_index(),
-        Screen::Contacts
-        | Screen::ContactDetail
-        | Screen::ContactEdit
-        | Screen::ContactVisibility
-        | Screen::ContactDuplicates
-        | Screen::ContactMerge
-        | Screen::ContactLimit
-        | Screen::ContactImport => 1,
-        Screen::Exchange => 2,
-        Screen::Groups | Screen::GroupDetail => 3,
-        Screen::More
-        | Screen::Settings
-        | Screen::Help
-        | Screen::Devices
-        | Screen::Recovery
-        | Screen::Sync
-        | Screen::Activity
-        | Screen::Delivery
-        | Screen::Backup
-        | Screen::Privacy
-        | Screen::Support
-        | Screen::Emergency
-        | Screen::Duress
-        | Screen::DeviceReplacement
-        | Screen::DeviceLinking => 4,
+    let active_tab = match app.current_app_screen() {
+        AppScreen::MyInfo | AppScreen::MyInfoEntryDetail { .. } => 0,
+        AppScreen::FormDialog { .. } => app.form_dialog_nav_index(),
+        AppScreen::Contacts
+        | AppScreen::ContactDetail { .. }
+        | AppScreen::ContactEdit { .. }
+        | AppScreen::ContactVisibility { .. }
+        | AppScreen::ContactDuplicates
+        | AppScreen::ContactMerge { .. }
+        | AppScreen::ContactLimit
+        | AppScreen::VerifyFingerprint { .. } => 1,
+        AppScreen::Exchange => 2,
+        AppScreen::Groups | AppScreen::GroupDetail { .. } => 3,
+        AppScreen::More
+        | AppScreen::Settings
+        | AppScreen::Help
+        | AppScreen::DeviceManagement
+        | AppScreen::Recovery
+        | AppScreen::Sync
+        | AppScreen::ActivityLog
+        | AppScreen::DeliveryStatus
+        | AppScreen::Backup
+        | AppScreen::Privacy
+        | AppScreen::Support
+        | AppScreen::EmergencyBroadcast
+        | AppScreen::DuressPin
+        | AppScreen::DeviceReplacement
+        | AppScreen::DeviceLinking => 4,
         _ => 0, // Default to My Card
     };
 
