@@ -112,6 +112,52 @@ test:unit:
       junit: target/nextest/ci/junit.xml
     expire_in: 1 week
 
+# VRT: render the committed insta .snap snapshots to PNG and upload to Visual
+# Regression Tracker. VRT is image-only; a TUI snapshot is a monospace
+# character grid, so the render is byte-deterministic for a pinned (Pillow
+# version, font bytes, font size) — a baseline only moves when the snapshot
+# text changes. Advisory (allow_failure) like every other platform's VRT job.
+test:vrt:
+  extends: [.rust-runner, .timeout-quick]
+  stage: test
+  needs:
+    - job: lint:format
+      optional: true
+  allow_failure: true
+  before_script:
+    - !reference [.self-hosted, before_script]
+  variables:
+    VRT_PLATFORM: tui
+    VRT_SCREENSHOT_DIR: tests/vrt/out
+  script:
+    - |
+      # Pinned render deps: Pillow (bundles its own freetype in the wheel, so
+      # rasterization is identical across runners) + sha256-pinned DejaVu Sans
+      # Mono (full box-drawing + symbol coverage). venv avoids the PEP-668
+      # externally-managed-environment lock; fall back to --break-system-packages.
+      VENV="/tmp/vrt-venv-${CI_JOB_ID}"
+      if python3 -m venv "$VENV" 2>/dev/null; then
+        PY="$VENV/bin/python"; "$VENV/bin/pip" install --quiet Pillow==10.4.0
+      else
+        PY="python3"; python3 -m pip install --quiet --break-system-packages Pillow==10.4.0
+      fi
+      FONT="/tmp/DejaVuSansMono-${CI_JOB_ID}.ttf"
+      curl -fsSL -o "$FONT" \
+        "https://github.com/matplotlib/matplotlib/raw/v3.9.2/lib/matplotlib/mpl-data/fonts/ttf/DejaVuSansMono.ttf"
+      echo "602ec86b8948cfcd956482fe64f94c36c867770149ef2f791d4613f443bcecb3  $FONT" | sha256sum -c -
+      "$PY" tests/vrt/snap-to-png.py --snap-dir . --out-dir "$VRT_SCREENSHOT_DIR" \
+        --font "$FONT" --font-size 16
+  artifacts:
+    when: always
+    paths:
+      - tests/vrt/out/
+    expire_in: 1 week
+  after_script:
+    - !reference [.vrt-upload-script, script]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 # Manual job: record insta snapshot baselines on CI and commit them to the branch.
 # CI is the single source of truth for baselines — never record locally.
 test:snapshots:record:
