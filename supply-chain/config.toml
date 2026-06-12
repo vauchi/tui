@@ -140,7 +140,7 @@ version = "0.2.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.63"
+version = "1.2.64"
 criteria = "safe-to-deploy"
 
 [[exemptions.chacha20]]
