@@ -38,12 +38,12 @@ fn emergency_app() -> (App, TempDir) {
     (app, temp_dir)
 }
 
-fn has_toggle(app: &App, want: &str) -> bool {
+fn has_status(app: &App, want: &str) -> bool {
     app.app_engine
         .current_screen()
         .components
         .iter()
-        .any(|c| matches!(c, Component::ToggleList { id, .. } if id == want))
+        .any(|c| matches!(c, Component::StatusIndicator { id, .. } if id == want))
 }
 
 fn has_text_input(app: &App, want: &str) -> bool {
@@ -60,7 +60,7 @@ fn configure_flow_runs_through_engine_and_persists_via_core() {
     let (mut app, _tmp) = emergency_app();
 
     // Renders the engine overview, not a bespoke widget.
-    assert!(has_toggle(&app, "emergency_toggle"), "starts on overview");
+    assert!(has_status(&app, "emergency_status"), "starts on overview");
 
     // Configure → contact-ids screen.
     handle_key(&mut app, KeyCode::Enter);
