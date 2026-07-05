@@ -11,9 +11,7 @@
 mod exchange;
 mod lock;
 mod settings;
-mod sync;
 
 pub(super) use exchange::handle_exchange_keys;
 pub(super) use lock::handle_lock_keys;
 pub(super) use settings::handle_settings_keys;
-pub(super) use sync::handle_sync_keys;
