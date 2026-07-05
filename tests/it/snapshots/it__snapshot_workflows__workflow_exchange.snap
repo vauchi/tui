@@ -1,5 +1,6 @@
 ---
 source: tests/it/snapshot_workflows.rs
+assertion_line: 113
 description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
 expression: output
 ---
@@ -38,19 +39,19 @@ expression: output
 │   • Link  Requires internet                                                  │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   • Glance  Requires BLE, camera                                             │
-│   • Bump  Requires BLE, accelerometer                                        │
+│   • Other ways to connect                                                    │
 └──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│   • Hover  Requires camera, microphone, speaker                              │
-│   • Shake  Requires BLE, accelerometer                                       │
-│   • Magic  Requires BLE, microphone, speaker                                 │
-│   • Cable  Requires USB port                                                 │
-└──────────────────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────────────────┐
-│   • Tap tap  Requires NFC                                                    │
-│   • Tap hover shake  Requires BLE, NFC, microphone, speaker, accelerometer   │
-└──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
 
 [?] help  [Esc] back  [q] quit
    1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More

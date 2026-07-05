@@ -1,5 +1,6 @@
 ---
 source: tests/it/snapshot_workflows.rs
+assertion_line: 248
 description: "Settings navigation: Settings → Privacy → Backup"
 expression: output
 ---
@@ -52,7 +53,7 @@ expression: output
 
 
 
-[e] Export Data  [x] Delete Identity  [!] Panic Shred  [?] help  [Esc] back
+[e] Export My Data  [x] Delete Identity  [!] Panic Shred  [?] help  [Esc] back
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 3 ─ Settings — press Esc (back) ═══════════════════
