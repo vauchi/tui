@@ -394,15 +394,17 @@ impl App {
 
     /// Poll for notifications from the AppEngine and display them.
     ///
-    /// Emergency alerts are shown as modal alerts (blocking).
-    /// Others (e.g. contact added) are shown as status messages (toasts).
+    /// Emergency and duress alerts are shown as modal alerts (blocking);
+    /// core supplies the distinct copy so the recipient can respond to a
+    /// coerced sender appropriately. Others (e.g. contact added) are shown
+    /// as status messages (toasts).
     pub fn tick_notifications(&mut self) {
         use vauchi_app::notification_types::NotificationCategory;
 
         let notifications = self.app_engine.poll_notifications();
         for n in notifications {
             match n.category {
-                NotificationCategory::EmergencyAlert => {
+                NotificationCategory::EmergencyAlert | NotificationCategory::DuressAlert => {
                     self.alert_message = Some((n.title, n.body));
                 }
                 NotificationCategory::ContactAdded => {
