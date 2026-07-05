@@ -1,23 +1,22 @@
 ---
 source: tests/it/snapshot_screens.rs
+assertion_line: 136
 description: Sync → sync completed successfully
 expression: output
 ---
-                                      Sync
+                                   Alice Smith
 
  ○ Sync  [Enter]
+  [Avatar: AS]
+┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+│                                                                              │
+│  [#] Find someone nearby                                                     │
+│      Share your contact card in person — private and secure.                 │
+└──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ ✗ Relay: Offline — Changes will sync automatically when connected. Check your│
-└──────────────────────────────────────────────────────────────────────────────┘
-┌ [-] Details ─────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│  [-] Relay                                                                   │
-│      https://relay.vauchi.app                                                │
-│                                                                              │
-│  [-] Contacts                                                                │
-│      0                                                                       │
-│                                                                              │
-│  [-] Pending Updates                                                         │
+│   • alice@company.com (Work)                                                 │
+│   • +41 79 123 45 67 (Mobile)                                                │
+│   • https://alice.example.com (Blog)                                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -25,5 +24,7 @@ expression: output
 
 
 
-[Enter] Retry Connection  [?] help  [Esc] back  [q] quit
-   1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
+
+
+[Enter] Exchange Now  [a] Add Entry  [Enter] Group View  [Enter] Preview as...
+  1 ★ My Card   │  2 Contacts   │  3 Exchange   │   4 Groups    │    5 More

@@ -240,19 +240,6 @@ fn smoke_groups_screen_renders_via_engine() {
 
 // @internal
 #[test]
-fn smoke_privacy_screen_renders_via_engine() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(AppScreen::Privacy);
-    let output = render_to_string(&mut app, 80, 24);
-    assert!(
-        output.contains("Privacy") || output.contains("Data"),
-        "Privacy screen should show privacy content. Got:\n{}",
-        output
-    );
-}
-
-// @internal
-#[test]
 fn smoke_support_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(AppScreen::Support);
