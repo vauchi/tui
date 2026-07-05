@@ -560,7 +560,6 @@ fn test_handle_key_contact_detail_lowercase_v_still_opens_visibility() {
 #[test]
 fn test_handle_key_sync_t_tests_connection() {
     let (mut app, _tmp) = create_test_app();
-    app.goto(AppScreen::Sync);
 
     handle_key(&mut app, KeyCode::Char('t'));
     assert!(
