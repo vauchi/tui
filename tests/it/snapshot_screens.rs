@@ -124,22 +124,10 @@ fn test_snapshot_recovery() {
 // Sync
 // =============================================================
 
-// @scenario: sync_updates:View sync status
-#[test]
-fn test_snapshot_sync_idle() {
-    let (mut app, _tmp) = create_app_with_identity();
-    app.goto(AppScreen::Sync);
-    let output = render_to_string(&mut app);
-    assert_snap!("sync_idle", "Settings", "select Sync", output);
-}
-
 // @scenario: sync_updates:Client initiates sync with relay
 #[test]
 fn test_snapshot_sync_connected() {
     let (mut app, _tmp) = create_app_with_identity();
-    app.goto(AppScreen::Sync);
-    // Sync screen renders from the engine's ScreenModel; sync_state is not
-    // read by the renderer, so this setup is inert (output == sync_idle).
     app.sync_state = SyncState {
         is_syncing: false,
         pending_updates: 3,

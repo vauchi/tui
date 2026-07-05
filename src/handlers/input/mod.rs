@@ -22,9 +22,7 @@ use contacts_input::{
     handle_visibility_keys,
 };
 use editing::handle_editing_mode;
-use features_input::{
-    handle_exchange_keys, handle_lock_keys, handle_settings_keys, handle_sync_keys,
-};
+use features_input::{handle_exchange_keys, handle_lock_keys, handle_settings_keys};
 use navigation::handle_my_info_keys;
 
 /// Action to take after handling input.
@@ -347,7 +345,6 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
                 AppScreen::ContactDetail { .. } => handle_contact_detail_keys(app, key),
                 AppScreen::Exchange => handle_exchange_keys(app, key),
                 AppScreen::Settings => handle_settings_keys(app, key),
-                AppScreen::Sync => handle_sync_keys(app, key),
                 AppScreen::ContactVisibility { .. } => handle_visibility_keys(app, key),
                 // All other engine-driven screens: Esc backs out (the global
                 // Esc handler also covers this; kept for non-global paths).

@@ -31,3 +31,4 @@ service-account*.json
 # Generated VRT snapshot images (rendered in CI from .snap)
 tests/vrt/out/
 __pycache__/
+.cargo/config.toml

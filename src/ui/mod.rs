@@ -314,7 +314,6 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | AppScreen::Help
         | AppScreen::DeviceManagement
         | AppScreen::Recovery
-        | AppScreen::Sync
         | AppScreen::ActivityLog
         | AppScreen::DeliveryStatus
         | AppScreen::Backup

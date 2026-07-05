@@ -222,7 +222,6 @@ impl App {
             | AppScreen::DeviceReplacement
             | AppScreen::DeviceLinking
             | AppScreen::DeliveryStatus
-            | AppScreen::Sync
             | AppScreen::ActivityLog
             | AppScreen::Recovery => Some(4),
             _ => None,

@@ -19,7 +19,6 @@ pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
         KeyCode::Char('s') => app.goto(AppScreen::Settings),
         KeyCode::Char('d') => app.goto(AppScreen::DeviceManagement),
         KeyCode::Char('r') => app.goto(AppScreen::Recovery),
-        KeyCode::Char('n') => app.goto(AppScreen::Sync),
         KeyCode::Char('y') => app.goto(AppScreen::DeliveryStatus),
         KeyCode::Char('b') => app.goto(AppScreen::Backup),
         KeyCode::Char('g') => app.goto(AppScreen::Groups),

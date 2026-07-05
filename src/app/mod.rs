@@ -410,6 +410,9 @@ impl App {
                 NotificationCategory::ContactAdded => {
                     self.set_status(format!("{} — {}", n.title, n.body));
                 }
+                NotificationCategory::CardUpdate => {
+                    self.set_status(format!("{} — {}", n.title, n.body));
+                }
             }
         }
     }

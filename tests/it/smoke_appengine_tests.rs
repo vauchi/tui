@@ -214,19 +214,6 @@ fn smoke_emergency_screen_renders_via_engine() {
 
 // @internal
 #[test]
-fn smoke_sync_screen_renders_via_engine() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(AppScreen::Sync);
-    let output = render_to_string(&mut app, 80, 24);
-    assert!(
-        output.contains("Sync"),
-        "Sync screen should show title. Got:\n{}",
-        output
-    );
-}
-
-// @internal
-#[test]
 fn smoke_recovery_screen_renders_via_engine() {
     let (mut app, _dir) = create_app_with_identity();
     app.goto(AppScreen::Recovery);
@@ -325,7 +312,6 @@ fn smoke_all_engine_screens_no_panic() {
         AppScreen::DeviceManagement,
         AppScreen::DuressPin,
         AppScreen::EmergencyBroadcast,
-        AppScreen::Sync,
         AppScreen::Recovery,
         AppScreen::Groups,
         AppScreen::Privacy,

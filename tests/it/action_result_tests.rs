@@ -377,17 +377,6 @@ fn navigate_to_syncs_delivery_status_to_delivery_screen() {
     assert_eq!(app.current_app_screen(), AppScreen::DeliveryStatus);
 }
 
-// --- NavigateTo: Wave 6 Phase A screens ---
-
-// @internal
-#[test]
-fn navigate_to_syncs_sync_screen() {
-    let mut app = create_app_with_identity();
-    app.app_engine.navigate_to(AppScreen::Sync);
-    handle_action_result(&mut app, ActionResult::NavigateTo(dummy_screen_model()));
-    assert_eq!(app.current_app_screen(), AppScreen::Sync);
-}
-
 // @internal
 #[test]
 fn navigate_to_syncs_recovery_screen() {
