@@ -5,9 +5,13 @@
 //! Emergency broadcast screen — Humble-UI migration (ADR-021 / ADR-043).
 //!
 //! The screen renders the core `EmergencyBroadcastEngine` and forwards all
-//! input through it; contact-id parsing and persistence happen in core. No
-//! bespoke domain logic (parsing, rate-limiting, direct API calls) lives in
-//! the TUI. Digit IDs (`c1`, `c2`) exercise the AppScreen bypass guard.
+//! input through it. This test covers only the TUI's Humble concern — the
+//! overview and contacts sub-screens render their components (the contacts
+//! step is a `ToggleList` picker over the injected contact pool, not free
+//! text). The *behaviour* — recipient selection + message persist, and an
+//! empty selection is rejected — is core's and lives in
+//! `core/vauchi-app/tests/it/emergency_broadcast_wiring_tests.rs`
+//! (CC-24: a frontend test must not assert core state).
 
 use crossterm::event::KeyCode;
 use tempfile::TempDir;
@@ -46,62 +50,29 @@ fn has_status(app: &App, want: &str) -> bool {
         .any(|c| matches!(c, Component::StatusIndicator { id, .. } if id == want))
 }
 
-fn has_text_input(app: &App, want: &str) -> bool {
+fn has_toggle_list(app: &App, want: &str) -> bool {
     app.app_engine
         .current_screen()
         .components
         .iter()
-        .any(|c| matches!(c, Component::TextInput { id, .. } if id == want))
+        .any(|c| matches!(c, Component::ToggleList { id, .. } if id == want))
 }
 
-// @scenario: emergency_broadcast :: Configure emergency broadcast
+// @internal — the EmergencyBroadcast overview + contacts sub-screens render.
+// The contacts step is a ToggleList picker (not free text). Selection,
+// persistence, and empty-rejection are core's (see
+// `emergency_broadcast_wiring_tests`).
 #[test]
-fn configure_flow_runs_through_engine_and_persists_via_core() {
+fn emergency_broadcast_screens_render() {
     let (mut app, _tmp) = emergency_app();
 
     // Renders the engine overview, not a bespoke widget.
     assert!(has_status(&app, "emergency_status"), "starts on overview");
 
-    // Configure → contact-ids screen.
-    handle_key(&mut app, KeyCode::Enter);
-    assert!(has_text_input(&app, "contact_ids"), "configure → contacts");
-
-    // Type IDs incl. digits (exercises the bypass guard), then Enter advances.
-    for c in ['c', '1', ',', ' ', 'c', '2'] {
-        handle_key(&mut app, KeyCode::Char(c));
-    }
-    assert!(
-        has_text_input(&app, "contact_ids"),
-        "digits stay on contacts"
-    );
-    handle_key(&mut app, KeyCode::Enter); // submit_contact_ids → continue
-    assert!(has_text_input(&app, "message"), "continue → message");
-
-    // Message is pre-filled (default); Enter saves → core persists.
-    handle_key(&mut app, KeyCode::Enter); // submit_message → save → Complete
-
-    let cfg = app
-        .app_engine
-        .vauchi()
-        .load_emergency_config()
-        .expect("query");
-    let cfg = cfg.expect("emergency must be configured after the humble flow");
-    assert_eq!(
-        cfg.trusted_contact_ids,
-        vec!["c1".to_string(), "c2".to_string()]
-    );
-    assert!(!cfg.message.is_empty(), "a default message is persisted");
-}
-
-// @internal
-#[test]
-fn empty_contacts_blocks_advance() {
-    let (mut app, _tmp) = emergency_app();
-    handle_key(&mut app, KeyCode::Enter); // configure → contacts
-    // Continue with no IDs: the engine rejects, staying on the contacts screen.
+    // Configure → contacts picker (a ToggleList over available contacts).
     handle_key(&mut app, KeyCode::Enter);
     assert!(
-        has_text_input(&app, "contact_ids"),
-        "empty contacts must not advance to the message screen"
+        has_toggle_list(&app, "contact_ids"),
+        "configure → contacts step renders the recipient picker"
     );
 }

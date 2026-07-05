@@ -5,15 +5,18 @@
 //! Duress PIN screen — Humble-UI migration (ADR-021 / ADR-043).
 //!
 //! The duress screen renders the core `DuressPinEngine` and forwards all
-//! input through it; persistence happens in core when the engine completes.
-//! No bespoke domain logic (PIN parsing, `DuressSettings` construction,
-//! direct `save_duress_settings`) lives in the TUI.
+//! input through it. This test covers only the TUI's Humble concerns:
+//! each sub-screen renders its component, and digit keys route to the
+//! PinInput. The *behaviour* — PIN + recipient persist, completion is
+//! gated on a chosen recipient, a mismatched confirmation is rejected —
+//! is core's and lives in `core/vauchi-app/tests/it/duress_pin_wiring_tests.rs`
+//! (CC-24: a frontend test must not assert core state).
 //!
 //! Regression target: the bespoke handler hijacked digit keys via
 //! `InputMode::Editing`. On the engine path the global tab-switch keys
 //! (`1`–`5`) would navigate away during PIN entry, and the sync-chrome
 //! `Indicator` injected at index 0 would capture initial focus and swallow
-//! digits. Both are fixed; these tests drive a 6-digit PIN that includes
+//! digits. Both are fixed; this test drives a 6-digit PIN that includes
 //! `1`–`5` to prove digits reach the engine.
 //!
 //! The AppEngine stamps a canonical `screen_id` ("duress_pin") over every
@@ -81,16 +84,11 @@ fn has_status(app: &App, want: &str) -> bool {
         .any(|c| matches!(c, Component::StatusIndicator { id, .. } if id == want))
 }
 
-fn duress_enabled(app: &App) -> bool {
-    app.app_engine
-        .vauchi()
-        .is_duress_enabled()
-        .expect("query duress state")
-}
-
-// @scenario: duress_mode :: Enable duress password (requires app password)
+// @internal — the DuressPin sub-screens render and digit keys route to the
+// PinInput (the tab-switch bypass guard). Persistence, the recipient gate,
+// and mismatch rejection are core's (see `duress_pin_wiring_tests`).
 #[test]
-fn duress_setup_flow_runs_through_engine_and_persists_via_core() {
+fn duress_pin_screens_render_and_route_digits() {
     let (mut app, _tmp) = duress_app();
 
     // Renders the engine's overview screen, not a bespoke widget.
@@ -124,44 +122,11 @@ fn duress_setup_flow_runs_through_engine_and_persists_via_core() {
         handle_key(&mut app, KeyCode::Char(c));
     }
     handle_key(&mut app, KeyCode::Enter);
+
+    // A matching confirmation advances to the alerts step, which renders the
+    // recipient picker + message field. Selection and persistence are core's.
     assert!(
         has_text_input(&app, "alert_message"),
-        "matching PIN → alerts step"
-    );
-
-    // Save (alert message left empty) → engine completes → core persists.
-    handle_key(&mut app, KeyCode::Enter);
-
-    assert!(
-        duress_enabled(&app),
-        "duress PIN must be enabled in storage after the humble setup flow"
-    );
-}
-
-// @internal — engine rejects a mismatched confirmation PIN (no Gherkin scenario)
-#[test]
-fn duress_mismatched_confirmation_does_not_persist() {
-    let (mut app, _tmp) = duress_app();
-
-    handle_key(&mut app, KeyCode::Enter); // configure
-    for c in ['1', '2', '3', '4', '5', '6'] {
-        handle_key(&mut app, KeyCode::Char(c));
-    }
-    handle_key(&mut app, KeyCode::Enter); // continue → confirm
-    assert!(has_pin_input(&app, "confirm_pin"), "reached confirm step");
-
-    // Enter a non-matching confirmation PIN.
-    for c in ['6', '5', '4', '3', '2', '1'] {
-        handle_key(&mut app, KeyCode::Char(c));
-    }
-    handle_key(&mut app, KeyCode::Enter); // continue — engine rejects (no advance)
-
-    assert!(
-        has_pin_input(&app, "confirm_pin"),
-        "mismatched PIN must keep the user on the confirm screen"
-    );
-    assert!(
-        !duress_enabled(&app),
-        "duress must not be enabled when confirmation PIN does not match"
+        "matching PIN → alerts step renders the message field"
     );
 }
