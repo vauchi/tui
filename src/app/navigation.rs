@@ -196,6 +196,7 @@ impl App {
     /// Maps the current screen (or its parent tab) to a NavBar index.
     /// Returns `None` for screens that don't correspond to a top-level tab
     /// (onboarding, lock, etc.).
+    // TODO(HUMBLE): D — Maps AppScreen variants to tab indices (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     fn nav_index_for_screen(&self) -> Option<usize> {
         match self.current_app_screen() {
             AppScreen::MyInfo | AppScreen::MyInfoEntryDetail { .. } => Some(0),

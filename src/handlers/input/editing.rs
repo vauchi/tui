@@ -48,6 +48,7 @@ pub(super) fn handle_editing_mode(app: &mut App, key: KeyCode) -> Action {
 }
 
 /// Read a vCard file and import contacts via core API.
+// TODO(HUMBLE): D/T — Contact import overlay reads vCard file, expands ~, calls import directly (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 fn handle_import_submit(app: &mut App) {
     let path = app.import_state.file_path.trim().to_string();
     if path.is_empty() {

@@ -26,6 +26,7 @@ pub(super) fn render_contact_list(
     theme: &TuiTheme,
 ) {
     if items_data.is_empty() {
+        // TODO(HUMBLE): W — Empty-state text names Exchange feature (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         let empty = Paragraph::new("  No contacts yet. Use Exchange to add one.")
             .style(Style::default().fg(theme.fg_secondary))
             .block(

@@ -26,6 +26,7 @@ pub struct FieldListWidget<'a> {
 
 impl<'a> FieldListWidget<'a> {
     /// Render the field list into the given area.
+    // TODO(HUMBLE): W — Maps UiFieldVisibility/VisibilityMode to colors/labels (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     pub fn render(self, f: &mut Frame, area: Rect) {
         if self.fields.is_empty() {
             let empty = ratatui::widgets::Paragraph::new("  No fields added yet.")

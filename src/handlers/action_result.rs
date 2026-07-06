@@ -86,6 +86,7 @@ pub(crate) fn handle_action_result_with(
             // Show success feedback when completing a form dialog. The kind
             // is captured pre-dispatch (`from_form_dialog`) because the engine
             // has already navigated back to the parent by the time this runs.
+            // TODO(HUMBLE): W — Maps each FormDialogType to success message (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
             match from_form_dialog {
                 Some(FormDialogType::AddField { .. }) => app.set_status("Entry added"),
                 Some(FormDialogType::EditField { .. }) => app.set_status("Entry updated"),
@@ -147,6 +148,7 @@ pub(crate) fn handle_action_result_with(
         ActionResult::Complete => {
             // AppEngine handles completion routing internally
         }
+        // TODO(HUMBLE): D — Decides backup blobs copied to clipboard (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         ActionResult::BackupExportComplete { data } => {
             // The engine produced the backup blob; the TUI surfaces it by
             // copying to the clipboard (it is too long to display inline).
@@ -155,6 +157,7 @@ pub(crate) fn handle_action_result_with(
                 Err(_) => app.set_status("Backup created (clipboard unavailable)"),
             }
         }
+        // TODO(HUMBLE): D — Decides GDPR export filename and writes to disk (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         ActionResult::GdprExportComplete { json } => {
             // The engine produced the GDPR export JSON; the TUI writes it to
             // a file under the data dir (mirrors the retired bespoke handler).
@@ -164,6 +167,7 @@ pub(crate) fn handle_action_result_with(
                 Err(e) => app.set_status(format!("Export failed: {e}")),
             }
         }
+        // TODO(HUMBLE): D — StartDeviceLink -> navigate_to(AppScreen::DeviceLinking) (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         ActionResult::StartDeviceLink => {
             // The Devices (DeviceManagement) path is intercepted in core and
             // arrives as NavigateTo(DeviceLinking). StartDeviceLink only

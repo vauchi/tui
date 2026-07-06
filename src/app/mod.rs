@@ -340,6 +340,7 @@ impl App {
             self.sync_state.pending_updates =
                 self.app_engine.vauchi().pending_update_count().unwrap_or(0);
 
+            // TODO(HUMBLE): D — TUI decides AhaMomentType::FirstUpdateReceived from sync counts (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
             // Check for aha moments based on sync results
             if result.cards_updated > 0
                 && let Ok(Some(moment)) = self
@@ -398,6 +399,7 @@ impl App {
     /// core supplies the distinct copy so the recipient can respond to a
     /// coerced sender appropriately. Others (e.g. contact added) are shown
     /// as status messages (toasts).
+    // TODO(HUMBLE): D/W — NotificationCategory decides modal alert vs toast (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     pub fn tick_notifications(&mut self) {
         use vauchi_app::notification_types::NotificationCategory;
 

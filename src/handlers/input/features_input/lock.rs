@@ -14,6 +14,7 @@ use crate::app::{App, LockState};
 /// The lock screen intercepts all input. Only character entry, backspace,
 /// and Enter are processed. Esc stays on the lock screen (no escape).
 /// 'q' does NOT quit — it's a PIN character.
+// TODO(HUMBLE): D/W — Branches on AuthMode::Duress to decide post-auth routing (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 pub(in crate::handlers::input) fn handle_lock_keys(app: &mut App, key: KeyCode) {
     use crate::ui::widgets::key_mapping::{self, KeyResult};
     use vauchi_app::ui::{ActionResult, AppScreen, WorkflowEngine};

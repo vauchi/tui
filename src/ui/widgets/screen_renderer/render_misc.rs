@@ -215,6 +215,7 @@ pub(super) fn render_qr_code(
     label: Option<&str>,
     theme: &TuiTheme,
 ) {
+    // TODO(HUMBLE): W — "QR Code" / "Scan QR Code" titles (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     let title = match mode {
         QrMode::Display => " QR Code ",
         QrMode::Scan => " Scan QR Code ",

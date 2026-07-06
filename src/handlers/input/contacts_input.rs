@@ -70,6 +70,7 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
                 app.selected_contact -= 1;
             }
         }
+        // TODO(HUMBLE): D — Contact list index->ID resolution (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         KeyCode::Enter => {
             // Look up contact ID for engine-driven ContactDetail screen
             if let Ok(contacts) = app.app_engine.vauchi().list_contacts()
@@ -104,6 +105,7 @@ pub(super) fn handle_contacts_keys(app: &mut App, key: KeyCode) {
         _ => {}
     }
 }
+// TODO(HUMBLE): D — Contact-detail shortcuts perform block/hide/trust/verify/fingerprint/field mutations directly (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 pub(super) fn handle_contact_detail_keys(app: &mut App, key: KeyCode) {
     // Resolve the correct contact index from selected_contact_id if available.
     // The engine path sets selected_contact_id (String), but all legacy operations

@@ -54,6 +54,7 @@ pub struct LockState {
 }
 
 /// State for the action menu popup.
+// TODO(HUMBLE): W — Stores core ContactAction in app state (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 #[derive(Debug, Default)]
 pub struct ActionMenuState {
     /// Available actions with display labels.

@@ -229,6 +229,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
             action_items.push(ActionItem::new("Space", "toggle"));
         }
 
+        // TODO(HUMBLE): D — Action bar collapses group filters by ID prefix + style (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         // Collapse group filter actions into a single [g] item
         let mut group_filter_shown = false;
         for a in model.actions.iter().filter(|a| a.enabled) {
@@ -263,6 +264,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
         Vec::new()
     };
 
+    // TODO(HUMBLE): D — Footer actions for onboarding depend on engine screen_id strings (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     // Add global actions (back/quit) except on Lock and the first/last
     // onboarding step. The step comes from the onboarding engine.
     let onboarding_step = app
@@ -296,6 +298,7 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 
 /// Build navigation items for the persistent bottom nav bar.
 fn build_nav_items(app: &App) -> Vec<NavItem> {
+    // TODO(HUMBLE): D — Maps AppScreen variants to tab indices (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     let active_tab = match app.current_app_screen() {
         AppScreen::MyInfo | AppScreen::MyInfoEntryDetail { .. } => 0,
         AppScreen::FormDialog { .. } => app.form_dialog_nav_index(),

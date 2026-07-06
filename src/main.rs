@@ -174,6 +174,7 @@ fn main() -> Result<()> {
     if let Err(err) = res {
         let msg = format!("{err:?}");
         eprintln!("Error: {msg}");
+        // TODO(HUMBLE): D — Error classification by substring ("ecryption", "corrupted", "wrong key") (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         if msg.contains("ecryption") || msg.contains("corrupted") || msg.contains("wrong key") {
             let data_dir = std::env::var("VAUCHI_DATA_DIR")
                 .ok()
@@ -269,6 +270,7 @@ fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
 /// key name derived from the install_id stored next to the data directory.
 /// Otherwise, falls back to encrypted file storage.
 #[allow(unused_variables)]
+// TODO(HUMBLE): D — load_or_create_storage_key lifecycle (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
     /// Key name for non-keychain (file-based) storage.
     const KEY_NAME: &str = "storage_key";
@@ -335,6 +337,7 @@ fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
 ///
 /// Creates an identity, adds fields, creates groups, and adds fake contacts.
 /// Only runs when VAUCHI_SEED=1 and no identity exists yet.
+// TODO(HUMBLE): D — seed_demo_data calls core domain APIs directly (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 fn seed_demo_data(vauchi: &mut Vauchi) {
     use vauchi_core::contact::Contact;
     use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};

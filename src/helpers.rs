@@ -13,6 +13,7 @@ use vauchi_core::contact_card::ContactAction;
 /// Execute a contact action (open URI or copy to clipboard).
 ///
 /// If opening fails, automatically copies the relevant value to the clipboard as a fallback.
+// TODO(HUMBLE): T — Transforms ContactAction variants into platform URIs (tel:, sms:, mailto:, OSM) (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 pub fn execute_action(action: &ContactAction) -> Result<String, String> {
     match action {
         ContactAction::Call(v) => match open::that(format!("tel:{}", v)) {
@@ -80,6 +81,7 @@ pub fn open_field_uri(uri: &str, label: &str, action_type: &str) -> String {
 }
 
 /// Build secondary action labels from contact actions.
+// TODO(HUMBLE): W/T — Builds human-readable labels from ContactAction variants (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 pub fn action_label(action: &ContactAction) -> String {
     match action {
         ContactAction::Call(v) => format!("Call {}", v),
@@ -102,6 +104,7 @@ pub fn dispatch_search(app: &mut crate::app::App) {
 }
 
 /// Cycle through available group filters (All → group1 → group2 → ... → All).
+// TODO(HUMBLE): D — Parses filter_group: action IDs and styles to cycle filters (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 pub fn cycle_group_filter(app: &mut crate::app::App) {
     let screen = app.app_engine.current_screen();
     let group_actions: Vec<String> = screen

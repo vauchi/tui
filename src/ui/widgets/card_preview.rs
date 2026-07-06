@@ -123,6 +123,7 @@ impl<'a> CardPreviewWidget<'a> {
 }
 
 /// Map field type to a text icon.
+// TODO(HUMBLE): W — Parses field_type string to choose icon (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 fn field_icon(field_type: &str) -> &'static str {
     match field_type {
         "Email" => "[E]",

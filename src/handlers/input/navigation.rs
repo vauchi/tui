@@ -13,6 +13,7 @@ use super::Action;
 use vauchi_app::ui::{ActionResult, AppScreen, FormDialogType, WorkflowEngine};
 use vauchi_core::types::AhaMomentType;
 
+// TODO(HUMBLE): D — My Card shortcuts directly read/edit/delete own card fields (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 pub(super) fn handle_my_info_keys(app: &mut App, key: KeyCode) {
     match key {
         KeyCode::Char('c') => app.goto(AppScreen::Contacts),
@@ -161,6 +162,7 @@ fn handle_onboarding_result(app: &mut App, result: ActionResult) {
             // from the engine (`App::active_screen`). Render focus is reset
             // by the caller when the step changes.
         }
+        // TODO(HUMBLE): D — Onboarding completion calls create_identity directly (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
         ActionResult::Complete => {
             // Onboarding complete — persist data and go to Home
             if let Some(engine) = &app.onboarding_engine {
