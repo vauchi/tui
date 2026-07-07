@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 37
 description: app_start → no identity detected
 expression: output
 ---
@@ -27,4 +26,4 @@ expression: output
 
 
 
-[Enter] Create new identity  [h] I already have an identity  [q] quit
+[Enter] Create new identity  [Enter] Link from another device
