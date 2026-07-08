@@ -457,7 +457,8 @@ fn draw_import_dialog(f: &mut Frame, area: Rect, app: &App) {
         .style(Style::default().bg(app.theme.bg));
     f.render_widget(block, popup_area);
 
-    let label = Paragraph::new("File path:").style(Style::default().fg(app.theme.fg));
+    let label = Paragraph::new(app.i18n.t("import.file_path_label"))
+        .style(Style::default().fg(app.theme.fg));
     f.render_widget(label, inner[0]);
 
     let input_style = Style::default()
