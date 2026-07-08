@@ -5,7 +5,8 @@
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
 use vauchi_app::ui::{
-    ActionResult, AppScreen, Component, FormDialogType, LockScreenEngine, WorkflowEngine,
+    ActionResult, AppScreen, Component, DeviceLinkRole, FormDialogType, LockScreenEngine,
+    WorkflowEngine,
 };
 
 use crate::app::App;
@@ -168,15 +169,26 @@ pub(crate) fn handle_action_result_with(
             }
         }
         // TODO(HUMBLE): D — StartDeviceLink -> navigate_to(AppScreen::DeviceLinking) (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-        ActionResult::StartDeviceLink => {
-            // The Devices (DeviceManagement) path is intercepted in core and
-            // arrives as NavigateTo(DeviceLinking). StartDeviceLink only
-            // reaches the TUI raw from Onboarding / DeviceReplacement, which
-            // have no separate native link flow here — drive the engine to
-            // the device-link screen so the QR shows there too.
-            app.app_engine
-                .navigate_to(vauchi_app::ui::AppScreen::DeviceLinking);
-            app.render_state = Default::default();
+        ActionResult::StartDeviceLink { role } => {
+            match role {
+                // The Devices (DeviceManagement) path is intercepted in core and
+                // arrives as NavigateTo(DeviceLinking). StartDeviceLink only
+                // reaches the TUI raw from Onboarding / DeviceReplacement, which
+                // have no separate native link flow here — drive the engine to
+                // the device-link screen so the QR shows there too.
+                DeviceLinkRole::Initiator => {
+                    app.app_engine
+                        .navigate_to(vauchi_app::ui::AppScreen::DeviceLinking);
+                    app.render_state = Default::default();
+                }
+                // TUI has no camera; tell the user to use the CLI join flow.
+                DeviceLinkRole::Responder => {
+                    app.set_status("QR scan not supported in terminal mode; use 'vauchi device join <qr_data>'");
+                }
+                _ => {
+                    app.set_status("Unknown device-link role");
+                }
+            }
         }
         ActionResult::RequestCamera => {
             // TUI can't open camera — show status message
