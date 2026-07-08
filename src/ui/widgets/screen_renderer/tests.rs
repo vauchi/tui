@@ -358,7 +358,7 @@ fn every_known_component() -> Vec<Component> {
                 field_type: "email".into(),
                 label: "Email".into(),
                 value: "a@b.com".into(),
-                icon: String::new(),
+                icon: "envelope".into(),
                 visibility: UiFieldVisibility::Shown,
                 a11y: None,
             }],

@@ -14,3 +14,5 @@ ecryption = "ecryption"
 flate = "flate"
 # Crate name in cargo-vet supply-chain/config.toml
 writeable = "writeable"
+# Core icon token vocabulary (SF Symbols / Material Symbols)
+mappin = "mappin"

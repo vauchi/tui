@@ -101,7 +101,7 @@ impl<'a> CardPreviewWidget<'a> {
             )));
         } else {
             for field in display_fields {
-                let icon = field_icon(&field.field_type);
+                let icon = field_icon(&field.icon);
                 lines.push(Line::from(format!(
                     "  {} {} ({}): {}",
                     icon, field.label, field.field_type, field.value
@@ -122,15 +122,17 @@ impl<'a> CardPreviewWidget<'a> {
     }
 }
 
-/// Map field type to a text icon.
-// TODO(HUMBLE): W — Parses field_type string to choose icon (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-fn field_icon(field_type: &str) -> &'static str {
-    match field_type {
-        "Email" => "[E]",
-        "Phone" => "[P]",
-        "Website" => "[W]",
-        "Address" => "[A]",
-        "Social" => "[S]",
+/// Map core's platform-neutral icon token to a text glyph.
+// Core supplies `Field.icon`; this thin presenter maps it to TUI's text-icon
+// vocabulary (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations).
+fn field_icon(icon: &str) -> &'static str {
+    match icon {
+        "envelope" => "[E]",
+        "phone" => "[P]",
+        "globe" => "[W]",
+        "mappin" => "[A]",
+        "at" => "[S]",
+        "gift" => "[B]",
         _ => "[?]",
     }
 }
