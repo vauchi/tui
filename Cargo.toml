@@ -16,14 +16,14 @@ secure-storage = ["vauchi-core/secure-storage"]
 [dependencies]
 # Core library - use git dependency for CI, patched to local path via .cargo/config.toml
 vauchi-core = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network"] }
-vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network"] }
+vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "main", default-features = false, features = ["network"] }
 
 # Terminal UI
 ratatui = "0.28"
 crossterm = "0.28"
 
 # CLI argument parsing
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", default-features = false, features = ["derive", "std", "help", "usage", "error-context"] }
 
 # Error handling
 anyhow = "1.0"
@@ -36,7 +36,7 @@ libc = "0.2"
 dirs = "5.0"
 
 # QR code rendering
-qrcode = "0.14"
+qrcode = { version = "0.14", default-features = false }
 
 # Hex encoding
 hex = "0.4"
@@ -44,8 +44,8 @@ hex = "0.4"
 # Open URLs in system browser/app
 open = "5"
 
-# Clipboard support (copy field values)
-arboard = "3"
+# Clipboard support (copy field values; image-data disabled — TUI only copies text)
+arboard = { version = "3", default-features = false }
 
 # Serialization for protocol messages
 serde = { version = "1.0", features = ["derive"] }
