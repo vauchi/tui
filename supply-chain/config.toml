@@ -116,7 +116,7 @@ version = "0.2.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.cc]]
-version = "1.2.66"
+version = "1.2.67"
 criteria = "safe-to-deploy"
 
 [[exemptions.chacha20]]
@@ -629,6 +629,10 @@ criteria = "safe-to-deploy"
 
 [[exemptions.r-efi]]
 version = "6.0.0"
+criteria = "safe-to-deploy"
+
+[[exemptions.rand]]
+version = "0.9.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.ratatui]]
