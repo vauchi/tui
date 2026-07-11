@@ -431,6 +431,7 @@ fn every_known_component() -> Vec<Component> {
             title: "Connected".into(),
             detail: Some("relay.example".into()),
             status: Status::Success,
+            status_label: "Success".into(),
             a11y: None,
         },
         Component::PinInput {
@@ -641,6 +642,7 @@ fn status_indicator_icon_token_never_renders_verbatim() {
         title: "Connected".into(),
         detail: None,
         status: Status::Success,
+        status_label: "Success".into(),
         a11y: None,
     }];
     let text = render_components_to_text(60, 4, &components);
