@@ -388,7 +388,7 @@ fn every_known_component() -> Vec<Component> {
             a11y: None,
         },
         Component::List {
-            id: "contacts".into(),
+            id: "list".into(),
             items: vec![Item {
                 id: "c1".into(),
                 name: "Bob".into(),

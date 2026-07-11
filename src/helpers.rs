@@ -96,9 +96,23 @@ pub fn action_label(action: &ContactAction) -> String {
 }
 
 /// Dispatch the current search query to the engine for field-aware filtering.
+///
+/// The searchable component's id is read back from core's current screen and
+/// forwarded opaquely — the frontend never mints a domain component id.
 pub fn dispatch_search(app: &mut crate::app::App) {
+    let screen = app.app_engine.current_screen();
+    let Some(component_id) = screen.components.iter().find_map(|c| match c {
+        vauchi_app::ui::Component::List {
+            id,
+            searchable: true,
+            ..
+        } => Some(id.clone()),
+        _ => None,
+    }) else {
+        return;
+    };
     let _ = app.app_engine.handle_action(UserAction::SearchChanged {
-        component_id: "contacts".into(),
+        component_id,
         query: app.contact_search_query.clone(),
     });
 }
