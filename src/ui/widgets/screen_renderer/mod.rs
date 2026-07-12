@@ -229,7 +229,7 @@ fn component_constraint(c: &Component, area: Rect, chrome: u16) -> Constraint {
         Component::EditableText { .. } => Constraint::Length(3),
         Component::Banner { .. } => Constraint::Length(2),
         Component::Dropdown { .. } => Constraint::Length(1),
-        Component::AvatarPreview { .. } => Constraint::Length(1),
+        Component::ImageCircle { .. } => Constraint::Length(1),
         Component::Slider { .. } => Constraint::Length(1),
         Component::Indicator { .. } => Constraint::Length(1),
         Component::SectionedActionList { sections, .. } => {
@@ -538,7 +538,7 @@ fn render_one_component(
                 let para = Paragraph::new(line);
                 f.render_widget(para, chunk);
             }
-            Component::AvatarPreview { initials, .. } => {
+            Component::ImageCircle { initials, .. } => {
                 let text = format!("  [Avatar: {}]", initials);
                 f.render_widget(
                     Paragraph::new(text).style(Style::default().fg(theme.fg)),

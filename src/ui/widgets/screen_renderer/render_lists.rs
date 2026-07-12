@@ -64,9 +64,9 @@ pub(super) fn render_contact_list(
             let actual_idx = scroll + vi;
             let prefix = if actual_idx == selected { "▸" } else { " " };
             let line = if let Some(sub) = &item.subtitle {
-                format!("{} {} {}  {}", prefix, item.avatar_initials, item.name, sub)
+                format!("{} {} {}  {}", prefix, item.initials, item.name, sub)
             } else {
-                format!("{} {} {}", prefix, item.avatar_initials, item.name)
+                format!("{} {} {}", prefix, item.initials, item.name)
             };
             let style = if actual_idx == selected && is_focused {
                 Style::default()

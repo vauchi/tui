@@ -135,19 +135,20 @@ fn render_components_to_text(width: u16, height: u16, components: &[Component]) 
     out
 }
 
-/// `Component::AvatarPreview` must render *something* identifiable
+/// `Component::ImageCircle` must render *something* identifiable
 /// — historically dropped by the catch-all `_` arm in render_components.
 /// For TUI a placeholder showing the initials is acceptable.
 // @internal
 #[test]
 fn render_avatar_preview_emits_visible_initials() {
-    let components = vec![Component::AvatarPreview {
+    let components = vec![Component::ImageCircle {
         id: "avatar".into(),
         image_data: None,
         initials: "AB".into(),
         bg_color: None,
         brightness: 0.0,
         editable: false,
+        edit_action_id: None,
         a11y: None,
     }];
     let text = render_components_to_text(40, 3, &components);
@@ -373,7 +374,7 @@ fn every_known_component() -> Vec<Component> {
             variants: vec![],
             selected_variant: None,
             visible_fields: vec![],
-            avatar_data: None,
+            image_data: None,
             a11y: None,
         },
         Component::InfoPanel {
@@ -393,7 +394,7 @@ fn every_known_component() -> Vec<Component> {
                 id: "c1".into(),
                 name: "Bob".into(),
                 subtitle: None,
-                avatar_initials: "B".into(),
+                initials: "B".into(),
                 status: None,
                 actions: vec![],
                 a11y: None,
@@ -485,13 +486,14 @@ fn every_known_component() -> Vec<Component> {
             }],
             a11y: None,
         },
-        Component::AvatarPreview {
+        Component::ImageCircle {
             id: "avatar".into(),
             image_data: None,
             initials: "AB".into(),
             bg_color: None,
             brightness: 0.0,
             editable: false,
+            edit_action_id: None,
             a11y: None,
         },
         Component::Slider {
