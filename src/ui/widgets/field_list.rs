@@ -18,7 +18,7 @@ use vauchi_app::ui::{Field, UiFieldVisibility, VisibilityMode};
 pub struct FieldListWidget<'a> {
     pub fields: &'a [Field],
     pub visibility_mode: &'a VisibilityMode,
-    pub available_groups: &'a [String],
+    pub available_scopes: &'a [String],
     pub selected_index: usize,
     pub focused: bool,
     pub theme: &'a TuiTheme,
@@ -71,7 +71,7 @@ impl<'a> FieldListWidget<'a> {
                     let vis_color = match &field.visibility {
                         UiFieldVisibility::Shown => self.theme.success,
                         UiFieldVisibility::Hidden => self.theme.fg_secondary,
-                        UiFieldVisibility::Groups(g) if g.is_empty() => self.theme.warning,
+                        UiFieldVisibility::Scopes(s) if s.is_empty() => self.theme.warning,
                         _ => self.theme.fg,
                     };
                     Style::default().fg(vis_color)
@@ -88,11 +88,11 @@ impl<'a> FieldListWidget<'a> {
                     let vis_text = match &field.visibility {
                         UiFieldVisibility::Shown => "Shown".to_string(),
                         UiFieldVisibility::Hidden => "Hidden".to_string(),
-                        UiFieldVisibility::Groups(groups) => {
-                            if groups.is_empty() {
+                        UiFieldVisibility::Scopes(scopes) => {
+                            if scopes.is_empty() {
                                 "No groups".to_string()
                             } else {
-                                groups.join(", ")
+                                scopes.join(", ")
                             }
                         }
                         _ => "Unknown".to_string(),
@@ -118,10 +118,10 @@ impl<'a> FieldListWidget<'a> {
             VisibilityMode::ReadOnly => " Fields ".to_string(),
             VisibilityMode::ShowHide => " Fields (Show/Hide) ".to_string(),
             VisibilityMode::PerGroup => {
-                if self.available_groups.is_empty() {
+                if self.available_scopes.is_empty() {
                     " Fields (Per Group) ".to_string()
                 } else {
-                    format!(" Fields ({}) ", self.available_groups.join(", "))
+                    format!(" Fields ({}) ", self.available_scopes.join(", "))
                 }
             }
             _ => " Fields ".to_string(),

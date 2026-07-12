@@ -364,7 +364,7 @@ fn every_known_component() -> Vec<Component> {
                 a11y: None,
             }],
             visibility_mode: VisibilityMode::ShowHide,
-            available_groups: vec![],
+            available_scopes: vec![],
             a11y: None,
         },
         Component::Preview {

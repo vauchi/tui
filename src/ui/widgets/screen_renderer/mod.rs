@@ -354,13 +354,13 @@ fn render_one_component(
             Component::FieldList {
                 fields,
                 visibility_mode,
-                available_groups,
+                available_scopes,
                 ..
             } => {
                 FieldListWidget {
                     fields,
                     visibility_mode,
-                    available_groups,
+                    available_scopes,
                     selected_index: state.selection_for(i),
                     focused: is_focused,
                     theme,

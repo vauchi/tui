@@ -31,9 +31,13 @@ pub(crate) fn icon_badge(token: &str) -> Option<&'static str> {
         "edit" => "[/]",
         "warning" => "[!]",
         "devices" => "[D]",
-        "backup" => "[B]",
-        "card" => "[C]",
+        "backup" | "drive" => "[B]",
+        "card" | "id_card" => "[C]",
         "eye" => "[o]",
+        "folder" => "[F]",
+        "lifebuoy" => "[R]",
+        "swap" => "[X]",
+        "checkmark.seal" => "[Y]",
         _ => return None,
     })
 }
@@ -68,8 +72,27 @@ mod tests {
         // A badge must never equal the token it maps — that would be a
         // raw-identifier leak. Covers the full known set.
         for token in [
-            "lock", "refresh", "people", "group", "shield", "server", "key", "check", "share",
-            "edit", "warning", "devices", "backup", "card", "eye",
+            "lock",
+            "refresh",
+            "people",
+            "group",
+            "shield",
+            "server",
+            "key",
+            "check",
+            "share",
+            "edit",
+            "warning",
+            "devices",
+            "backup",
+            "drive",
+            "card",
+            "id_card",
+            "eye",
+            "folder",
+            "lifebuoy",
+            "swap",
+            "checkmark.seal",
         ] {
             assert_ne!(
                 icon_badge(token),

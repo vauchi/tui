@@ -250,7 +250,7 @@ fn field_list_show_hide_mode() {
             FieldListWidget {
                 fields: &fields,
                 visibility_mode: &VisibilityMode::ShowHide,
-                available_groups: &[],
+                available_scopes: &[],
                 selected_index: 0,
                 focused: true,
                 theme: &theme,
@@ -273,7 +273,7 @@ fn field_list_per_group_mode() {
             label: "Work".into(),
             value: "alice@corp.com".into(),
             icon: "envelope".into(),
-            visibility: UiFieldVisibility::Groups(vec!["Coworkers".into()]),
+            visibility: UiFieldVisibility::Scopes(vec!["Coworkers".into()]),
             a11y: None,
         },
         Field {
@@ -282,7 +282,7 @@ fn field_list_per_group_mode() {
             label: "Home".into(),
             value: "+41 79 000 00 00".into(),
             icon: "phone".into(),
-            visibility: UiFieldVisibility::Groups(vec![]),
+            visibility: UiFieldVisibility::Scopes(vec![]),
             a11y: None,
         },
     ];
@@ -296,7 +296,7 @@ fn field_list_per_group_mode() {
             FieldListWidget {
                 fields: &fields,
                 visibility_mode: &VisibilityMode::PerGroup,
-                available_groups: &["Coworkers".into(), "Family".into()],
+                available_scopes: &["Coworkers".into(), "Family".into()],
                 selected_index: 1,
                 focused: false,
                 theme: &theme,
@@ -322,7 +322,7 @@ fn field_list_empty() {
             FieldListWidget {
                 fields: &[],
                 visibility_mode: &VisibilityMode::ShowHide,
-                available_groups: &[],
+                available_scopes: &[],
                 selected_index: 0,
                 focused: false,
                 theme: &theme,

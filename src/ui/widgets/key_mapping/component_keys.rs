@@ -140,8 +140,8 @@ pub(super) fn map_component_key(
                 } else {
                     (current_idx + 1) % variants.len()
                 };
-                KeyResult::Action(UserAction::GroupViewSelected {
-                    group_name: Some(variants[next_idx].variant_id.clone()),
+                KeyResult::Action(UserAction::VariantSelected {
+                    variant_id: Some(variants[next_idx].variant_id.clone()),
                 })
             }
             _ => KeyResult::Unhandled,
