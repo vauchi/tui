@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 113
 description: "Exchange happy path: MyInfo → Exchange QR → Contacts"
 expression: output
 ---
@@ -9,7 +8,7 @@ expression: output
 
  ○ Sync  [Enter]
   [Avatar: AS]
-┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+┌ [X] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
 │      Share your contact card in person — private and secure.                 │
@@ -62,7 +61,7 @@ expression: output
  ○ Sync  [Enter]
 ┌ [#] No contacts yet ─────────────────────────────────────────────────────────┐
 │                                                                              │
-│  [-] Exchange cards in person                                                │
+│  [X] Exchange cards in person                                                │
 │      Meet someone nearby and share your contact card securely.               │
 └──────────────────────────────────────────────────────────────────────────────┘
 

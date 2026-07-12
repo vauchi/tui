@@ -8,7 +8,7 @@ expression: output
  ○ Sync  [Enter]
 ┌ [#] Group Info ──────────────────────────────────────────────────────────────┐
 │                                                                              │
-│  [-] Members                                                                 │
+│  [#] Members                                                                 │
 │      3                                                                       │
 │                                                                              │
 │  [o] Visible Fields                                                          │

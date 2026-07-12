@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 136
 description: Sync → sync completed successfully
 expression: output
 ---
@@ -8,7 +7,7 @@ expression: output
 
  ○ Sync  [Enter]
   [Avatar: AS]
-┌ [-] Ready to exchange? ──────────────────────────────────────────────────────┐
+┌ [X] Ready to exchange? ──────────────────────────────────────────────────────┐
 │                                                                              │
 │  [#] Find someone nearby                                                     │
 │      Share your contact card in person — private and secure.                 │

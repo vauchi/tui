@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_workflows.rs
-assertion_line: 248
 description: "Settings navigation: Settings → Privacy → Backup"
 expression: output
 ---
@@ -34,7 +33,7 @@ expression: output
                                  Privacy & Data
 
  ○ Sync  [Enter]
-┌ [-] Data Status ─────────────────────────────────────────────────────────────┐
+┌ [S] Data Status ─────────────────────────────────────────────────────────────┐
 │                                                                              │
 │  Deletion Status                                                             │
 │  No deletion requested                                                       │
@@ -43,8 +42,8 @@ expression: output
 │  Active                                                                      │
 └──────────────────────────────────────────────────────────────────────────────┘
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│   • View My Data  See what data is stored locally                            │
-│   • Manage Consent  Review and update data consent                           │
+│   [F] View My Data  See what data is stored locally                          │
+│   [Y] Manage Consent  Review and update data consent                         │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 
