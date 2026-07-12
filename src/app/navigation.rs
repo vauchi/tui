@@ -191,71 +191,42 @@ impl App {
     /// Keep `focus.nav_index` in sync with the current screen so that
     /// Left/Right navigation from Content zone lands on the correct tab.
     pub(crate) fn sync_nav_index(&mut self) {
-        if let Some(idx) = self.nav_index_for_screen() {
+        if let Some(idx) = self.active_nav_tab() {
             self.focus.nav_index = idx;
         }
     }
 
-    /// Maps the current screen (or its parent tab) to a NavBar index.
-    /// Returns `None` for screens that don't correspond to a top-level tab
-    /// (onboarding, lock, etc.).
+    /// The bottom-nav tab index (0-4) that owns the current screen, or
+    /// `None` for screens that show no bottom nav (onboarding, lock,
+    /// transient overlays) — callers leave the highlight unchanged for
+    /// `None`.
     ///
-    /// Sub-screens inherit their tab from the core-stamped
-    /// `parent_screen_id` wire hint instead of matching each `AppScreen`
-    /// sub-variant (ADR-043 humble). Only the top-level tab ids resolve
-    /// via `tab_index_for_parent`; screens with a non-tab parent
-    /// (`settings`, `recovery`, `device_management`) or no parent fall
-    /// through to the explicit match below, unchanged.
-    // TODO(HUMBLE): D — top-level-non-tab screens still branch on AppScreen; they need the `nav_tab_id` hint (Phase 1). See _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations
-    fn nav_index_for_screen(&self) -> Option<usize> {
-        if let Some(idx) = self
-            .app_engine
+    /// Reads the core-stamped `ScreenModel.nav_tab_id` wire hint (core!1366)
+    /// instead of hand-matching every `AppScreen` variant to a tab (ADR-043
+    /// humble). Core resolves sub-screens transitively to their owning tab
+    /// root, so this supersedes the earlier `parent_screen_id` pre-check.
+    /// Form dialogs are the one exception: they carry no `nav_tab_id`
+    /// (`presentation_kind == Modal`), so their active tab comes from the
+    /// edited field/group's parent via `form_dialog_nav_index`.
+    pub(crate) fn active_nav_tab(&self) -> Option<usize> {
+        if self.is_modal_screen() {
+            return Some(self.form_dialog_nav_index());
+        }
+        self.app_engine
             .current_screen()
-            .parent_screen_id
+            .nav_tab_id
             .as_deref()
-            .and_then(Self::tab_index_for_parent)
-        {
-            return Some(idx);
-        }
-        match self.current_app_screen() {
-            AppScreen::MyInfo => Some(0),
-            AppScreen::FormDialog { .. } => Some(self.form_dialog_nav_index()),
-            AppScreen::Contacts
-            | AppScreen::ContactDuplicates
-            | AppScreen::ContactMerge { .. }
-            | AppScreen::ContactLimit
-            | AppScreen::VerifyFingerprint { .. } => Some(1),
-            AppScreen::Exchange => Some(2),
-            AppScreen::Groups => Some(3),
-            AppScreen::More
-            | AppScreen::Settings
-            | AppScreen::Help
-            | AppScreen::Privacy
-            | AppScreen::Support
-            | AppScreen::DuressPin
-            | AppScreen::Backup
-            | AppScreen::DeviceManagement
-            | AppScreen::DeviceReplacement
-            | AppScreen::DeviceLinking
-            | AppScreen::DeliveryStatus
-            | AppScreen::ActivityLog
-            | AppScreen::Recovery => Some(4),
-            _ => None,
-        }
+            .and_then(Self::nav_tab_index)
     }
 
-    /// Map a top-level tab's `parent_screen_id` wire value to its NavBar
-    /// index. Returns `None` for non-tab parents (e.g. `settings`,
-    /// `recovery`, `device_management`), which keep their explicit
-    /// mapping in `nav_index_for_screen`. Covers exactly the parents of
-    /// the migrated sub-screens.
-    fn tab_index_for_parent(parent_id: &str) -> Option<usize> {
-        match parent_id {
-            "my_info" => Some(0),
-            "contacts" => Some(1),
-            "groups" => Some(3),
-            _ => None,
-        }
+    /// Position of a `nav_tab_id` value in the fixed bottom-nav order
+    /// (`my_info` / `contacts` / `exchange` / `groups` / `more`). `None`
+    /// for any non-tab id (the pre-auth/transient ids resolve to `None`
+    /// in core and never reach here).
+    fn nav_tab_index(tab_id: &str) -> Option<usize> {
+        ["my_info", "contacts", "exchange", "groups", "more"]
+            .iter()
+            .position(|&t| t == tab_id)
     }
 
     /// True when the current screen is presented modally (form dialogs).

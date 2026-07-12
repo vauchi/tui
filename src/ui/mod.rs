@@ -300,35 +300,10 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 
 /// Build navigation items for the persistent bottom nav bar.
 fn build_nav_items(app: &App) -> Vec<NavItem> {
-    // TODO(HUMBLE): D — Maps AppScreen variants to tab indices (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-    let active_tab = match app.current_app_screen() {
-        AppScreen::MyInfo | AppScreen::MyInfoEntryDetail { .. } => 0,
-        AppScreen::FormDialog { .. } => app.form_dialog_nav_index(),
-        AppScreen::Contacts
-        | AppScreen::ContactDetail { .. }
-        | AppScreen::ContactEdit { .. }
-        | AppScreen::ContactVisibility { .. }
-        | AppScreen::ContactDuplicates
-        | AppScreen::ContactMerge { .. }
-        | AppScreen::ContactLimit
-        | AppScreen::VerifyFingerprint { .. } => 1,
-        AppScreen::Exchange => 2,
-        AppScreen::Groups | AppScreen::GroupDetail { .. } => 3,
-        AppScreen::More
-        | AppScreen::Settings
-        | AppScreen::Help
-        | AppScreen::DeviceManagement
-        | AppScreen::Recovery
-        | AppScreen::ActivityLog
-        | AppScreen::DeliveryStatus
-        | AppScreen::Backup
-        | AppScreen::Privacy
-        | AppScreen::Support
-        | AppScreen::DuressPin
-        | AppScreen::DeviceReplacement
-        | AppScreen::DeviceLinking => 4,
-        _ => 0, // Default to My Card
-    };
+    // Owning tab from the core-stamped `nav_tab_id` hint (ADR-043 humble);
+    // `None` (pre-auth/transient screens the bar isn't drawn for) keeps the
+    // pre-hint default of My Card.
+    let active_tab = app.active_nav_tab().unwrap_or(0);
 
     vec![
         NavItem {
