@@ -196,20 +196,6 @@ fn smoke_duress_screen_renders_via_engine() {
     );
 }
 
-// @internal
-#[test]
-fn smoke_emergency_screen_renders_via_engine() {
-    let (mut app, _dir) = create_app_with_identity();
-    app.goto(AppScreen::EmergencyBroadcast);
-    let output = render_to_string(&mut app, 80, 24);
-
-    assert!(
-        output.contains("Emergency") || output.contains("Wipe"),
-        "Emergency screen should show emergency/wipe content. Got:\n{}",
-        output
-    );
-}
-
 // ── Wave 6 Phase A: new engine smoke tests ───────────────────────────
 
 // @internal
@@ -298,7 +284,6 @@ fn smoke_all_engine_screens_no_panic() {
         AppScreen::DeliveryStatus,
         AppScreen::DeviceManagement,
         AppScreen::DuressPin,
-        AppScreen::EmergencyBroadcast,
         AppScreen::Recovery,
         AppScreen::Groups,
         AppScreen::Privacy,

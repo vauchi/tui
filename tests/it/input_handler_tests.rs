@@ -584,11 +584,6 @@ fn test_lock_go_back_stays_on_lock() {
     assert_eq!(app.current_app_screen(), AppScreen::Lock);
 }
 
-// Emergency broadcast is engine-driven (core `EmergencyBroadcastEngine`);
-// behavioral coverage lives in `emergency_humble_tests.rs` and the core
-// engine tests. The bespoke send/confirm/rate-limit tests were removed with
-// the bespoke handler.
-
 // ============================================================================
 // SP-11: TUI Accessibility Improvements
 // @scenario: accessibility.feature @keyboard @tui

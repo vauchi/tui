@@ -484,10 +484,6 @@ fn test_snapshot_action_menu() {
     );
 }
 
-// Emergency broadcast is engine-driven (core `EmergencyBroadcastEngine`); the
-// bespoke-widget snapshot was removed with the bespoke handler. Coverage now
-// via emergency_humble_tests + core engine_golden_fixtures.
-
 // =============================================================
 // Lock Screen
 // =============================================================

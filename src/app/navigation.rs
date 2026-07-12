@@ -107,7 +107,7 @@ impl App {
     /// know about, so they keep explicit dispatch.
     ///
     /// Per-screen state-struct resets that the inline arms used to do
-    /// (PrivacyState::default, EmergencyState::default, etc.) live on
+    /// (PrivacyState::default, etc.) live on
     /// the engine side now — the engine rebuilds the parent screen
     /// fresh after `navigate_back`. Local UI-only resets that don't
     /// roundtrip through the engine (`selected_contact_id`,
@@ -216,7 +216,6 @@ impl App {
             | AppScreen::Help
             | AppScreen::Privacy
             | AppScreen::Support
-            | AppScreen::EmergencyBroadcast
             | AppScreen::DuressPin
             | AppScreen::Backup
             | AppScreen::DeviceManagement

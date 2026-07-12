@@ -103,14 +103,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
-    // Engine-driven emergency broadcast bypasses global keys — contact-id and
-    // message TextInputs consume characters (incl. digits) that would otherwise
-    // hit the global tab-switch shortcuts.
-    if app.current_app_screen() == AppScreen::EmergencyBroadcast {
-        handle_engine_keys(app, key);
-        return Action::Continue;
-    }
-
     // Engine-driven backup bypasses global keys — password and backup-data
     // TextInputs consume characters (incl. digits) that would otherwise hit
     // the global tab-switch shortcuts.

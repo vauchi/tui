@@ -322,7 +322,6 @@ fn build_nav_items(app: &App) -> Vec<NavItem> {
         | AppScreen::Backup
         | AppScreen::Privacy
         | AppScreen::Support
-        | AppScreen::EmergencyBroadcast
         | AppScreen::DuressPin
         | AppScreen::DeviceReplacement
         | AppScreen::DeviceLinking => 4,
