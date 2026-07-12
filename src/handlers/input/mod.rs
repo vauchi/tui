@@ -74,8 +74,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) -> Action {
         return Action::Continue;
     }
 
-    // Engine-driven form dialogs bypass global keys (text input uses 'q', etc.)
-    if matches!(app.current_app_screen(), AppScreen::FormDialog { .. }) {
+    // Modal screens (form dialogs) bypass global keys — text input uses
+    // 'q', etc. Read the core-stamped `presentation_kind` wire hint
+    // (Modal) rather than matching `AppScreen::FormDialog` (ADR-043).
+    if app.is_modal_screen() {
         if key == KeyCode::Esc {
             // Send cancel to engine — it handles dirty detection and
             // shows InlineConfirm if the form has unsaved changes (ADR-022).
@@ -281,8 +283,10 @@ fn handle_engine_keys(app: &mut App, key: KeyCode) {
     // Map the key to a UserAction via the key_mapping module
     match key_mapping::map_key(key, &screen_model, &mut app.render_state) {
         KeyResult::Action(action) => {
-            // On form dialog screens, "cancel" action means go back (don't forward to engine)
-            if matches!(app.current_app_screen(), AppScreen::FormDialog { .. })
+            // On modal (form dialog) screens, "cancel" action means go back
+            // (don't forward to engine). Read the `presentation_kind` wire
+            // hint (Modal) rather than matching `AppScreen::FormDialog`.
+            if app.is_modal_screen()
                 && let UserAction::ActionPressed { ref action_id } = action
                 && action_id == "cancel"
             {

@@ -217,8 +217,10 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
 
         let mut action_items: Vec<ActionItem> = Vec::new();
 
-        // Mode indicator for form screens
-        let is_form = matches!(app.current_app_screen(), AppScreen::FormDialog { .. });
+        // Mode indicator for form screens — read the core-stamped
+        // `presentation_kind` wire hint (Modal) rather than matching
+        // `AppScreen::FormDialog` (ADR-043 humble).
+        let is_form = model.presentation_kind == vauchi_app::ui::ScreenPresentationKind::Modal;
         if is_form {
             action_items.push(ActionItem::new("EDIT", "").with_active(true));
         }

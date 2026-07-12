@@ -4,7 +4,10 @@
 
 //! Screen navigation — `goto()`, `go_back()`, and nav-index sync.
 
-use vauchi_app::ui::{AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine};
+use vauchi_app::ui::{
+    AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine, ScreenPresentationKind,
+    WorkflowEngine,
+};
 
 use super::App;
 use super::state::*;
@@ -196,21 +199,34 @@ impl App {
     /// Maps the current screen (or its parent tab) to a NavBar index.
     /// Returns `None` for screens that don't correspond to a top-level tab
     /// (onboarding, lock, etc.).
-    // TODO(HUMBLE): D — Maps AppScreen variants to tab indices (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
+    ///
+    /// Sub-screens inherit their tab from the core-stamped
+    /// `parent_screen_id` wire hint instead of matching each `AppScreen`
+    /// sub-variant (ADR-043 humble). Only the top-level tab ids resolve
+    /// via `tab_index_for_parent`; screens with a non-tab parent
+    /// (`settings`, `recovery`, `device_management`) or no parent fall
+    /// through to the explicit match below, unchanged.
+    // TODO(HUMBLE): D — top-level-non-tab screens still branch on AppScreen; they need the `nav_tab_id` hint (Phase 1). See _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations
     fn nav_index_for_screen(&self) -> Option<usize> {
+        if let Some(idx) = self
+            .app_engine
+            .current_screen()
+            .parent_screen_id
+            .as_deref()
+            .and_then(Self::tab_index_for_parent)
+        {
+            return Some(idx);
+        }
         match self.current_app_screen() {
-            AppScreen::MyInfo | AppScreen::MyInfoEntryDetail { .. } => Some(0),
+            AppScreen::MyInfo => Some(0),
             AppScreen::FormDialog { .. } => Some(self.form_dialog_nav_index()),
             AppScreen::Contacts
-            | AppScreen::ContactDetail { .. }
-            | AppScreen::ContactEdit { .. }
-            | AppScreen::ContactVisibility { .. }
             | AppScreen::ContactDuplicates
             | AppScreen::ContactMerge { .. }
             | AppScreen::ContactLimit
             | AppScreen::VerifyFingerprint { .. } => Some(1),
             AppScreen::Exchange => Some(2),
-            AppScreen::Groups | AppScreen::GroupDetail { .. } => Some(3),
+            AppScreen::Groups => Some(3),
             AppScreen::More
             | AppScreen::Settings
             | AppScreen::Help
@@ -226,6 +242,28 @@ impl App {
             | AppScreen::Recovery => Some(4),
             _ => None,
         }
+    }
+
+    /// Map a top-level tab's `parent_screen_id` wire value to its NavBar
+    /// index. Returns `None` for non-tab parents (e.g. `settings`,
+    /// `recovery`, `device_management`), which keep their explicit
+    /// mapping in `nav_index_for_screen`. Covers exactly the parents of
+    /// the migrated sub-screens.
+    fn tab_index_for_parent(parent_id: &str) -> Option<usize> {
+        match parent_id {
+            "my_info" => Some(0),
+            "contacts" => Some(1),
+            "groups" => Some(3),
+            _ => None,
+        }
+    }
+
+    /// True when the current screen is presented modally (form dialogs).
+    /// Reads the core-stamped `presentation_kind` wire hint instead of
+    /// matching the `AppScreen::FormDialog` variant (ADR-043 humble);
+    /// core sets `Modal` for `FormDialog` and `Page` for everything else.
+    pub(crate) fn is_modal_screen(&self) -> bool {
+        self.app_engine.current_screen().presentation_kind == ScreenPresentationKind::Modal
     }
 
     /// Active nav-bar tab (0-4) for the current form dialog, derived from
@@ -301,6 +339,60 @@ mod tests {
         app.goto(AppScreen::Help);
         assert_eq!(app.overlay, None);
         assert_eq!(app.current_app_screen(), AppScreen::Help);
+    }
+
+    /// `is_modal_screen()` reads the core-stamped `presentation_kind`
+    /// wire hint: `Modal` for form dialogs, `Page` for ordinary screens.
+    /// This is the humble replacement for matching `AppScreen::FormDialog`.
+    // @internal
+    #[test]
+    fn is_modal_screen_tracks_presentation_kind_hint() {
+        let mut app = test_app();
+
+        app.goto(AppScreen::Settings);
+        assert!(
+            !app.is_modal_screen(),
+            "a Page screen (Settings) must not be modal"
+        );
+
+        app.goto_form_dialog(FormDialogType::AddField {
+            available_groups: vec![],
+        });
+        assert_eq!(
+            app.current_app_screen(),
+            AppScreen::FormDialog {
+                dialog_type: FormDialogType::AddField {
+                    available_groups: vec![],
+                },
+            }
+        );
+        assert!(
+            app.is_modal_screen(),
+            "a form dialog carries presentation_kind == Modal"
+        );
+    }
+
+    /// Sub-screens derive their active nav tab from the wire
+    /// `parent_screen_id` hint, not from an `AppScreen` sub-variant match.
+    // @internal
+    #[test]
+    fn sub_screen_nav_tab_derives_from_parent_screen_id_hint() {
+        let mut app = test_app();
+
+        app.goto(AppScreen::MyInfoEntryDetail {
+            field_id: "name".into(),
+        });
+        assert_eq!(app.focus.nav_index, 0, "my_info parent → tab 0");
+
+        app.goto(AppScreen::ContactDetail {
+            contact_id: "c1".into(),
+        });
+        assert_eq!(app.focus.nav_index, 1, "contacts parent → tab 1");
+
+        app.goto(AppScreen::GroupDetail {
+            group_id: "g1".into(),
+        });
+        assert_eq!(app.focus.nav_index, 3, "groups parent → tab 3");
     }
 
     /// The Backup-restore detour during onboarding navigates to a real
