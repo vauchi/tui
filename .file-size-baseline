@@ -17,4 +17,6 @@
 # Grew +1 line from `icon: String::new()` on Field literal — core 0.51.11 cascade (2026-05-22)
 # Grew +13 lines: sync-chrome Indicator made non-focusable + out-of-range
 # refocus guard, fixing duress PIN input swallow (2026-06-02, tui-duress-humble)
-src/ui/widgets/key_mapping/mod.rs 764
+# Grew +12 lines: ADR-044 Am2a navigateBack / AppForegrounded key mappings
+#                 and on_wakeup wiring (2026-07-13)
+src/ui/widgets/key_mapping/mod.rs 776
