@@ -15,8 +15,9 @@ secure-storage = ["vauchi-core/secure-storage"]
 
 [dependencies]
 # Core library - use git dependency for CI, patched to local path via .cargo/config.toml
-vauchi-core = { git = "https://gitlab.com/vauchi/core.git", branch = "main", features = ["network"] }
-vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "main", default-features = false, features = ["network"] }
+# TODO: revert to branch = "main" and bump Cargo.lock once core!1379 lands.
+vauchi-core = { git = "https://gitlab.com/vauchi/core.git", branch = "feature/core-on-wakeup-retire-heartbeat", features = ["network"] }
+vauchi-app = { git = "https://gitlab.com/vauchi/core.git", branch = "feature/core-on-wakeup-retire-heartbeat", default-features = false, features = ["network"] }
 
 # Terminal UI
 ratatui = "0.28"

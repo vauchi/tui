@@ -6,7 +6,7 @@
 
 use vauchi_app::ui::{
     AppScreen, FormDialogType, LockScreenEngine, OnboardingEngine, ScreenPresentationKind,
-    WorkflowEngine,
+    UserAction, WorkflowEngine,
 };
 
 use super::App;
@@ -102,10 +102,9 @@ impl App {
 
     /// Go back to the previous screen.
     ///
-    /// Engine-driven screens delegate to `app_engine.navigate_back()`,
-    /// which pops `nav_history` and restores the prior `AppScreen`. The
-    /// resulting `AppScreen` is reverse-mapped onto `self.screen` via
-    /// `sync_screen_from_engine`. Setup wizard, Lock, and the
+    /// Engine-driven screens dispatch the typed `UserAction::NavigateBack`
+    /// action and let core decide whether to pop (`NavigateTo`) or report a
+    /// back-stopping root (`PerformNativeBack`). Setup wizard, Lock, and the
     /// ActionMenu overlay are TUI-only states that AppEngine doesn't
     /// know about, so they keep explicit dispatch.
     ///
@@ -140,11 +139,15 @@ impl App {
                 self.goto(AppScreen::Onboarding);
             }
 
-            // Engine-driven screens — delegate to AppEngine.
+            // Engine-driven screens — delegate to AppEngine via the typed
+            // back action (ADR-044 Am2a). Core decides whether to pop
+            // (`NavigateTo`) or report a back-stopping root (`PerformNativeBack`).
             _ => {
                 self.clear_screen_local_state();
-                self.app_engine.navigate_back();
-                self.sync_screen_from_engine();
+                let result = self.app_engine.handle_action(UserAction::NavigateBack);
+                crate::handlers::action_result::handle_action_result(self, result);
+                self.input_mode = InputMode::Normal;
+                self.sync_nav_index();
             }
         }
     }
@@ -165,27 +168,6 @@ impl App {
             AppScreen::ContactVisibility { .. } => self.selected_visibility_field = 0,
             _ => {}
         }
-    }
-
-    /// Reverse map `app_engine.current_app_screen()` onto `self.screen`
-    /// after engine-driven navigation (`navigate_back`,
-    /// engine-emitted `NavigateTo` results). Inverse of
-    /// `engine_target_for_screen`. Falls back to MyInfo for screens
-    /// AppEngine has but TUI doesn't (or hasn't migrated yet).
-    pub(crate) fn sync_screen_from_engine(&mut self) {
-        let contact_id = match self.app_engine.current_app_screen() {
-            AppScreen::ContactDetail { contact_id }
-            | AppScreen::ContactEdit { contact_id }
-            | AppScreen::ContactVisibility { contact_id }
-            | AppScreen::VerifyFingerprint { contact_id } => Some(contact_id.clone()),
-            _ => None,
-        };
-        if let Some(contact_id) = contact_id {
-            self.selected_contact_id = Some(contact_id);
-        }
-        self.input_mode = InputMode::Normal;
-        self.sync_nav_index();
-        self.render_state = ScreenRenderState::default();
     }
 
     /// Keep `focus.nav_index` in sync with the current screen so that

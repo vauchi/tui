@@ -145,6 +145,9 @@ pub struct App {
     pub data_dir: std::path::PathBuf,
     /// ADR-031: Whether the exchange is waiting for QR scan input (paste).
     pub exchange_scan_pending: bool,
+    /// ADR-044 Am2a: next scheduled wakeup time, derived from the most
+    /// recent `Command::ScheduleWakeup` emitted by `on_wakeup()`.
+    pub next_wakeup: Option<std::time::Instant>,
     /// Channel receiver for background sync results.
     pub sync_rx: Option<std::sync::mpsc::Receiver<SyncResult>>,
     /// Channel receiver for background relay connection test results.
@@ -234,6 +237,7 @@ impl App {
             relay_url,
             data_dir,
             exchange_scan_pending: false,
+            next_wakeup: None,
             sync_rx: None,
             relay_test_rx: None,
         }
@@ -393,7 +397,12 @@ impl App {
         }
     }
 
-    /// Poll for notifications from the AppEngine and display them.
+    /// Core-driven wakeup tick (ADR-044 Am2a).
+    ///
+    /// Replaces the frontend-owned periodic `poll_notifications()` loop with
+    /// `AppEngine::on_wakeup()`. Core decides what work is due and emits the
+    /// next `Command::ScheduleWakeup`; the TUI only executes the native timer
+    /// and re-invokes this method when that schedule fires.
     ///
     /// Emergency and duress alerts are shown as modal alerts (blocking);
     /// core supplies the distinct copy so the recipient can respond to a
@@ -402,8 +411,9 @@ impl App {
     // TODO(HUMBLE): D/W — NotificationCategory decides modal alert vs toast (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
     pub fn tick_notifications(&mut self) {
         use vauchi_app::notification_types::NotificationCategory;
+        use vauchi_core::Command;
 
-        let notifications = self.app_engine.poll_notifications();
+        let notifications = self.app_engine.on_wakeup();
         for n in notifications {
             match n.category {
                 NotificationCategory::EmergencyAlert | NotificationCategory::DuressAlert => {
@@ -415,6 +425,17 @@ impl App {
                 NotificationCategory::CardUpdate => {
                     self.set_status(format!("{} — {}", n.title, n.body));
                 }
+            }
+        }
+
+        // Drain pending commands for the next wakeup schedule. Core owns *when*
+        // the heartbeat is due; the shell only executes the native timer.
+        for cmd in self.app_engine.drain_pending_commands() {
+            if let Command::ScheduleWakeup { earliest_secs, .. } = cmd {
+                self.next_wakeup = Some(
+                    std::time::Instant::now()
+                        + std::time::Duration::from_secs(earliest_secs.into()),
+                );
             }
         }
     }
@@ -483,5 +504,45 @@ mod tests {
         let i18n = detect_locale();
         assert_eq!(i18n.locale(), Locale::English);
         clear_locale_env();
+    }
+
+    fn test_app_engine() -> (vauchi_app::ui::AppEngine, tempfile::TempDir) {
+        use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().to_path_buf();
+        let config = VauchiConfig::with_storage_path(path.join("vauchi.db"))
+            .with_storage_key(SymmetricKey::generate());
+        let mut app_engine = vauchi_app::ui::AppEngine::new(Vauchi::new(config).expect("vauchi"));
+        app_engine
+            .vauchi_mut()
+            .create_identity("Test User")
+            .expect("create identity");
+        (app_engine, dir)
+    }
+
+    /// `tick_notifications` bootstraps the ADR-044 Am2a wakeup loop: it calls
+    /// `AppEngine::on_wakeup()`, drains pending commands, and stores the next
+    /// `ScheduleWakeup` deadline on `App::next_wakeup`.
+    // @internal
+    #[test]
+    fn tick_notifications_bootstraps_next_wakeup() {
+        let (app_engine, _dir) = test_app_engine();
+        let mut app = App::new(
+            app_engine,
+            "wss://relay.vauchi.app".into(),
+            std::path::PathBuf::from("."),
+        );
+        assert!(app.next_wakeup.is_none());
+
+        app.tick_notifications();
+
+        assert!(
+            app.next_wakeup.is_some(),
+            "on_wakeup must emit a ScheduleWakeup command"
+        );
+        assert!(
+            app.next_wakeup.unwrap() > std::time::Instant::now(),
+            "next_wakeup must be in the future"
+        );
     }
 }

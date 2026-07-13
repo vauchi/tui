@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 258
 description: "MyInfo → press '3' (Exchange tab)"
 expression: output
 ---
@@ -26,5 +25,5 @@ expression: output
 
 
 
-[?] help  [Esc] back  [q] quit
+[?] help  [q] quit
    1 My Card    │  2 Contacts   │ 3 ★ Exchange  │   4 Groups    │    5 More

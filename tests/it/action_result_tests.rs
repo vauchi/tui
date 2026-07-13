@@ -57,6 +57,18 @@ fn update_screen_is_noop() {
     assert_eq!(app.current_app_screen(), original_screen);
 }
 
+/// `PerformNativeBack` is core's signal that the back gesture reached a
+/// back-stopping root. The TUI's native default is to quit the app
+/// (ADR-044 Am2a).
+// @internal
+#[test]
+fn perform_native_back_sets_should_quit() {
+    let mut app = create_app_with_identity();
+    assert!(!app.should_quit);
+    handle_action_result(&mut app, ActionResult::PerformNativeBack);
+    assert!(app.should_quit);
+}
+
 // @internal
 #[test]
 fn complete_is_noop() {

@@ -25,5 +25,5 @@ expression: output
 │  No contacts yet. Use Exchange to add one.                                   │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
-[Enter] Rename  [Enter] Delete Group  [?] help  [Esc] back  [q] quit
+[Enter] Rename  [Enter] Delete Group  [Esc] Back  [?] help  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │  4 ★ Groups   │    5 More

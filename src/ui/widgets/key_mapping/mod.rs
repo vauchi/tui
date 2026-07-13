@@ -168,6 +168,14 @@ mod tests {
         components: Vec<Component>,
         actions: Vec<ScreenAction>,
     ) -> ScreenModel {
+        make_screen_with_nav_actions(components, actions, vec![])
+    }
+
+    pub(super) fn make_screen_with_nav_actions(
+        components: Vec<Component>,
+        actions: Vec<ScreenAction>,
+        nav_actions: Vec<ScreenAction>,
+    ) -> ScreenModel {
         ScreenModel {
             screen_id: "test".into(),
             title: "Test".into(),
@@ -175,6 +183,7 @@ mod tests {
             components,
             actions,
             progress: None,
+            nav_actions,
             ..Default::default()
         }
     }
@@ -762,3 +771,6 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod nav_action_tests;

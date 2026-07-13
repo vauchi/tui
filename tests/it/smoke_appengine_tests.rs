@@ -7,12 +7,32 @@
 //! Verifies that all 16 engine-driven screens render correctly through the
 //! AppEngine → screen_renderer pipeline.
 
+use std::sync::Once;
+
 use ratatui::prelude::*;
 
 use vauchi_app::ui::{AppEngine, AppScreen};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::App;
 use vauchi_tui::ui;
+
+static INIT_LOCALES: Once = Once::new();
+
+fn ensure_locales_loaded() {
+    INIT_LOCALES.call_once(|| {
+        let candidates = [
+            std::env::var("VAUCHI_LOCALES_DIR").ok(),
+            Some("../locales".to_string()),
+            Some("../core/vauchi-core/locales".to_string()),
+        ];
+        for candidate in candidates.iter().flatten() {
+            let path = std::path::Path::new(candidate);
+            if path.join("en.json").exists() && vauchi_app::i18n::init(path).is_ok() {
+                return;
+            }
+        }
+    });
+}
 
 fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
     let key = SymmetricKey::generate();
@@ -22,6 +42,7 @@ fn create_app_engine(data_dir: &std::path::Path) -> AppEngine {
 }
 
 fn create_app_with_identity() -> (App, tempfile::TempDir) {
+    ensure_locales_loaded();
     let dir = tempfile::tempdir().unwrap();
     let mut app_engine = create_app_engine(dir.path());
     app_engine

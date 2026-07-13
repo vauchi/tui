@@ -119,24 +119,36 @@ fn test_goto_resets_input_mode_to_normal() {
 // See `_private/docs/problems/2026-04-30-navigation-in-core/` test
 // scaffolding strategy.
 #[rstest]
-#[case::contacts(AppScreen::Contacts, AppScreen::MyInfo)]
 #[case::settings(AppScreen::Settings, AppScreen::More)]
-#[case::exchange(AppScreen::Exchange, AppScreen::MyInfo)]
 #[case::help(AppScreen::Help, AppScreen::More)]
 #[case::devices(AppScreen::DeviceManagement, AppScreen::More)]
 #[case::recovery(AppScreen::Recovery, AppScreen::More)]
 #[case::privacy(AppScreen::Privacy, AppScreen::Settings)]
 #[case::backup(AppScreen::Backup, AppScreen::More)]
-#[case::groups(AppScreen::Groups, AppScreen::MyInfo)]
 #[case::duress(AppScreen::DuressPin, AppScreen::Settings)]
 fn test_go_back_returns_to_expected_screen(#[case] from: AppScreen, #[case] expected: AppScreen) {
     let (mut app, _dir) = create_app_with_identity();
-    if expected != AppScreen::MyInfo {
-        app.goto(expected.clone());
-    }
+    app.goto(expected.clone());
     app.goto(from);
     app.go_back();
     assert_eq!(app.current_app_screen(), expected);
+}
+
+/// Tab roots (Contacts, Exchange, Groups, MyInfo) are back-stopping roots
+/// in core. `UserAction::NavigateBack` from a root returns
+/// `ActionResult::PerformNativeBack`, which the TUI translates to a quit
+/// signal instead of a screen change (ADR-044 Am2a).
+// @internal
+#[rstest]
+#[case::contacts(AppScreen::Contacts)]
+#[case::exchange(AppScreen::Exchange)]
+#[case::groups(AppScreen::Groups)]
+#[case::my_info(AppScreen::MyInfo)]
+fn test_go_back_at_root_quits(#[case] from: AppScreen) {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(from);
+    app.go_back();
+    assert!(app.should_quit, "back from a tab root must set should_quit");
 }
 
 // `ContactDetail` requires `selected_contact_id` to be set so
@@ -346,11 +358,25 @@ fn test_handle_key_question_mark_navigates_to_help() {
 #[test]
 fn test_handle_key_esc_goes_back() {
     let (mut app, _dir) = create_app_with_identity();
-    app.goto(AppScreen::Contacts);
+    app.goto(AppScreen::More);
+    app.goto(AppScreen::Settings);
 
     let action = handle_key(&mut app, KeyCode::Esc);
     assert!(matches!(action, Action::Continue));
-    assert_eq!(app.current_app_screen(), AppScreen::MyInfo);
+    assert_eq!(app.current_app_screen(), AppScreen::More);
+}
+
+/// Escape at a tab root is forwarded to core as `UserAction::NavigateBack`;
+/// core answers `PerformNativeBack` and the TUI quits (ADR-044 Am2a).
+// @internal
+#[test]
+fn test_handle_key_esc_at_root_quits() {
+    let (mut app, _dir) = create_app_with_identity();
+    app.goto(AppScreen::Contacts);
+
+    let action = handle_key(&mut app, KeyCode::Esc);
+    assert!(matches!(action, Action::Quit));
+    assert_eq!(app.current_app_screen(), AppScreen::Contacts);
 }
 
 // @scenario: contacts_management:View all contacts

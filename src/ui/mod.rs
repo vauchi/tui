@@ -261,14 +261,29 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
             }
         }
 
+        // ADR-044 Am2a: render core-stamped chrome actions from `nav_actions`
+        // (e.g. the back affordance on sub-screens, the settings gear on the
+        // home screen). The reserved `go_back` id is rendered as `[Esc] Back`;
+        // all other nav actions use the unified action↔key table.
+        for a in model.nav_actions.iter().filter(|a| a.enabled) {
+            if a.id == "go_back" {
+                action_items.push(ActionItem::new("Esc", &a.label));
+            } else {
+                let key_str = screen_renderer::action_key_hint_pub(&a.id);
+                action_items.push(ActionItem::new(key_str, &a.label));
+            }
+        }
+
         action_items
     } else {
         Vec::new()
     };
 
     // TODO(HUMBLE): D — Footer actions for onboarding depend on engine screen_id strings (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-    // Add global actions (back/quit) except on Lock and the first/last
-    // onboarding step. The step comes from the onboarding engine.
+    // Add global actions (help/quit) except on Lock and the first/last
+    // onboarding step. The step comes from the onboarding engine. Back is no
+    // longer hardcoded here; it rides on `ScreenModel::nav_actions` as the
+    // reserved `go_back` id (ADR-044 Am2a).
     let onboarding_step = app
         .onboarding_engine
         .as_ref()
@@ -284,13 +299,14 @@ fn build_action_items(app: &App, cached: &FrameScreenModels) -> Vec<ActionItem> 
             }
             _ => {
                 items.push(ActionItem::new("?", "help"));
+                // Onboarding uses its own engine; keep the explicit back hint
+                // there until the onboarding flow also migrates to nav_actions.
                 items.push(ActionItem::new("Esc", "back"));
                 items.push(ActionItem::new("q", "quit"));
             }
         },
         _ => {
             items.push(ActionItem::new("?", "help"));
-            items.push(ActionItem::new("Esc", "back"));
             items.push(ActionItem::new("q", "quit"));
         }
     }

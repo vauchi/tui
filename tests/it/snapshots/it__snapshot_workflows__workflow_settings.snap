@@ -26,7 +26,7 @@ expression: output
 ┌  ────────────────────────────────────────────────────────────────────────────┐
 │   Advanced  →                                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
-[?] help  [Esc] back  [q] quit
+[Esc] Back  [?] help  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 2 ─ Privacy — select Privacy & Data ═══════════════
@@ -52,7 +52,7 @@ expression: output
 
 
 
-[e] Export My Data  [x] Delete Identity  [!] Panic Shred  [?] help  [Esc] back
+[e] Export My Data  [x] Delete Identity  [!] Panic Shred  [Esc] Back  [?] help
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 3 ─ Settings — press Esc (back) ═══════════════════
@@ -78,7 +78,7 @@ expression: output
 ┌  ────────────────────────────────────────────────────────────────────────────┐
 │   Advanced  →                                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
-[?] help  [Esc] back  [q] quit
+[Esc] Back  [?] help  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 4 ─ Backup — select Backup ════════════════════════
@@ -104,7 +104,7 @@ expression: output
 
 
 
-[Enter] Create Backup  [Enter] Restore Backup  [?] help  [Esc] back  [q] quit
+[Enter] Create Backup  [Enter] Restore Backup  [Esc] Back  [?] help  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
 
 ═══ Step 5 ─ Settings — press Esc (back) ═══════════════════
@@ -130,5 +130,5 @@ expression: output
 ┌  ────────────────────────────────────────────────────────────────────────────┐
 │   Advanced  →                                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
-[?] help  [Esc] back  [q] quit
+[Esc] Back  [?] help  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More

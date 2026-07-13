@@ -238,6 +238,14 @@ static BINDINGS: &[Binding] = &[
         hint: "h",
         dispatchable: true,
     },
+    // -- 'o': global chrome "open_settings" (ADR-044 Am2a). Core stamps this
+    //    on `nav_actions` for the home screen; TUI renders it in the action bar.
+    Binding {
+        key: Some(KeyCode::Char('o')),
+        matcher: Matcher::Exact("open_settings"),
+        hint: "o",
+        dispatchable: true,
+    },
     // -- 'x': dispatchable for Privacy delete/execute (engine-driven since
     //    the bespoke `handle_privacy_keys` retired in G3 slice 2). `delete`
     //    (schedule, when no deletion pending) and `execute_deletion` (Delete

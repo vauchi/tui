@@ -60,6 +60,11 @@ pub(crate) fn handle_action_result_with(
                 }
             }
         }
+        ActionResult::PerformNativeBack => {
+            // Back reached a back-stopping root. Desktop's native default is
+            // to exit the application (ADR-044 Am2a).
+            app.should_quit = true;
+        }
         ActionResult::NavigateTo(_) => {
             // AppEngine already updated its current screen; the TUI renders
             // from it. Sync only the TUI-local mirror state the engine does

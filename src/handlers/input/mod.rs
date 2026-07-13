@@ -33,9 +33,18 @@ pub enum Action {
 
 /// Handle a key press.
 pub fn handle_key(app: &mut App, key: KeyCode) -> Action {
-    match app.input_mode {
+    let action = match app.input_mode {
         InputMode::Normal => handle_normal_mode(app, key),
         InputMode::Editing => handle_editing_mode(app, key),
+    };
+    // A `UserAction::NavigateBack` at a back-stopping root surfaces as
+    // `ActionResult::PerformNativeBack` and sets `should_quit`. Convert
+    // that to the loop-level quit signal here so every dispatch path
+    // (Esc, nav-action key, etc.) exits cleanly (ADR-044 Am2a).
+    if app.should_quit {
+        Action::Quit
+    } else {
+        action
     }
 }
 

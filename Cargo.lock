@@ -2987,7 +2987,7 @@ dependencies = [
 [[package]]
 name = "vauchi-app"
 version = "0.52.8"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#e752ee52cc83667db8378f56c8da16d7cb5249e3"
+source = "git+https://gitlab.com/vauchi/core.git?branch=feature%2Fcore-on-wakeup-retire-heartbeat#66ccc53a253da1f5bd823231d1a2fd0640f0386d"
 dependencies = [
  "base64",
  "hex",
@@ -3005,7 +3005,7 @@ dependencies = [
 [[package]]
 name = "vauchi-core"
 version = "0.52.8"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#e752ee52cc83667db8378f56c8da16d7cb5249e3"
+source = "git+https://gitlab.com/vauchi/core.git?branch=feature%2Fcore-on-wakeup-retire-heartbeat#66ccc53a253da1f5bd823231d1a2fd0640f0386d"
 dependencies = [
  "argon2",
  "base64",
@@ -3047,7 +3047,7 @@ dependencies = [
 [[package]]
 name = "vauchi-protocol"
 version = "0.52.8"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#e752ee52cc83667db8378f56c8da16d7cb5249e3"
+source = "git+https://gitlab.com/vauchi/core.git?branch=feature%2Fcore-on-wakeup-retire-heartbeat#66ccc53a253da1f5bd823231d1a2fd0640f0386d"
 dependencies = [
  "serde",
  "serde_json",

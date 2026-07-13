@@ -434,12 +434,15 @@ fn restore_terminal() {
 }
 
 fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
+    // Bootstrap the core-driven wakeup loop (ADR-044 Am2a). The first call
+    // runs any due work and emits the initial `Command::ScheduleWakeup`.
+    app.tick_notifications();
+
     loop {
         terminal.draw(|f| ui::draw(f, app))?;
 
         // Periodic maintenance (ADR-031)
         app.tick_status();
-        app.tick_notifications();
 
         // Poll background sync result channel (non-blocking).
         if let Some(rx) = &app.sync_rx
@@ -464,13 +467,34 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
             .map(|t| t.elapsed() < Duration::from_millis(600))
             .unwrap_or(false);
         let has_background_op = app.sync_rx.is_some() || app.relay_test_rx.is_some();
-        let poll_timeout = if has_active_flash || has_background_op {
+        let mut poll_timeout = if has_active_flash || has_background_op {
             Duration::from_millis(100)
         } else {
             Duration::from_secs(1)
         };
 
-        if event::poll(poll_timeout)?
+        // ADR-044 Am2a: honor core's wakeup schedule. Cap the poll timeout so
+        // we wake in time to call `on_wakeup()` when it is due.
+        let now = std::time::Instant::now();
+        if let Some(wakeup) = app.next_wakeup {
+            poll_timeout = poll_timeout.min(wakeup.saturating_duration_since(now));
+        }
+
+        let event_ready = event::poll(poll_timeout)?;
+
+        // If no input event arrived and the scheduled wakeup is due, run the
+        // core heartbeat. A delayed or coalesced wake is safe — `on_wakeup`
+        // is elapsed-based and idempotent.
+        if !event_ready
+            && app
+                .next_wakeup
+                .map(|w| std::time::Instant::now() >= w)
+                .unwrap_or(false)
+        {
+            app.tick_notifications();
+        }
+
+        if event_ready
             && let Event::Key(key) = event::read()?
             && key.kind == KeyEventKind::Press
         {

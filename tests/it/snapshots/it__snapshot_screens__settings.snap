@@ -1,6 +1,5 @@
 ---
 source: tests/it/snapshot_screens.rs
-assertion_line: 76
 description: "MyInfo → press '5' (More tab) → Settings"
 expression: output
 ---
@@ -26,5 +25,5 @@ expression: output
 ┌  ────────────────────────────────────────────────────────────────────────────┐
 │   Advanced  →                                                                │
 └──────────────────────────────────────────────────────────────────────────────┘
-[?] help  [Esc] back  [q] quit
+[Esc] Back  [?] help  [q] quit
    1 My Card    │  2 Contacts   │  3 Exchange   │   4 Groups    │   5 ★ More
