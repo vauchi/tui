@@ -1,5 +1,6 @@
 ---
 source: tests/it/snapshot_screens.rs
+assertion_line: 385
 description: "ContactDetail → press 'e' (Edit)"
 expression: output
 ---
@@ -13,7 +14,7 @@ Display Name
 └──────────────────────────────────────────────────────────────────────────────┘
 
 ────────────────────────────────────────────────────────────────────────────────
-┌ Fields (Show/Hide) ──────────────────────────────────────────────────────────┐
+┌ Contact fields ──────────────────────────────────────────────────────────────┐
 │Type       Label           Value                            Visibility        │
 │                                                                              │
 │Phone      Mobile          +1-200-100-1000                  Shown             │
