@@ -248,9 +248,9 @@ fn field_list_show_hide_mode() {
         .draw(|f| {
             let area = f.area();
             FieldListWidget {
+                title: "Contact fields",
                 fields: &fields,
                 visibility_mode: &VisibilityMode::ShowHide,
-                available_scopes: &[],
                 selected_index: 0,
                 focused: true,
                 theme: &theme,
@@ -294,9 +294,9 @@ fn field_list_per_group_mode() {
         .draw(|f| {
             let area = f.area();
             FieldListWidget {
+                title: "Audience fields",
                 fields: &fields,
                 visibility_mode: &VisibilityMode::PerGroup,
-                available_scopes: &["Coworkers".into(), "Family".into()],
                 selected_index: 1,
                 focused: false,
                 theme: &theme,
@@ -320,9 +320,9 @@ fn field_list_empty() {
         .draw(|f| {
             let area = f.area();
             FieldListWidget {
+                title: "No fields shared",
                 fields: &[],
                 visibility_mode: &VisibilityMode::ShowHide,
-                available_scopes: &[],
                 selected_index: 0,
                 focused: false,
                 theme: &theme,

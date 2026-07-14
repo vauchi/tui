@@ -156,10 +156,12 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             } else {
                 Style::default().fg(app.theme.accent)
             };
-            let text = if app.undo_action_id.is_some() {
-                format!(" {}  [z] Undo", msg)
+            let text = if app.undo_action_id.is_some()
+                && let Some(undo_label) = &app.undo_label
+            {
+                format!(" {msg}  [z] {undo_label}")
             } else {
-                format!(" {}", msg)
+                format!(" {msg}")
             };
             let status = Paragraph::new(text).style(style);
             f.render_widget(status, chunks[bar_start]);

@@ -16,9 +16,9 @@ use vauchi_app::ui::{Field, UiFieldVisibility, VisibilityMode};
 
 /// State needed to render a field list component.
 pub struct FieldListWidget<'a> {
+    pub title: &'a str,
     pub fields: &'a [Field],
     pub visibility_mode: &'a VisibilityMode,
-    pub available_scopes: &'a [String],
     pub selected_index: usize,
     pub focused: bool,
     pub theme: &'a TuiTheme,
@@ -33,7 +33,7 @@ impl<'a> FieldListWidget<'a> {
                 .style(Style::default().fg(self.theme.fg_secondary))
                 .block(
                     Block::default()
-                        .title(" Fields ")
+                        .title(format!(" {} ", self.title))
                         .borders(Borders::ALL)
                         .border_style(Style::default().fg(self.theme.border)),
                 );
@@ -114,18 +114,7 @@ impl<'a> FieldListWidget<'a> {
             Style::default().fg(self.theme.border)
         };
 
-        let title = match self.visibility_mode {
-            VisibilityMode::ReadOnly => " Fields ".to_string(),
-            VisibilityMode::ShowHide => " Fields (Show/Hide) ".to_string(),
-            VisibilityMode::PerGroup => {
-                if self.available_scopes.is_empty() {
-                    " Fields (Per Group) ".to_string()
-                } else {
-                    format!(" Fields ({}) ", self.available_scopes.join(", "))
-                }
-            }
-            _ => " Fields ".to_string(),
-        };
+        let title = format!(" {} ", self.title);
 
         if is_read_only {
             let widths = [

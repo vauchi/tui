@@ -529,10 +529,12 @@ fn show_toast_with_undo_sets_status_and_undo_id() {
         ActionResult::ShowToast {
             message: "Field hidden".into(),
             undo_action_id: Some("undo_hide_abc".into()),
+            undo_label: Some("Restore field".into()),
         },
     );
     assert_eq!(app.status_message.as_deref(), Some("Field hidden"));
     assert_eq!(app.undo_action_id.as_deref(), Some("undo_hide_abc"));
+    assert_eq!(app.undo_label.as_deref(), Some("Restore field"));
 }
 
 // @internal
@@ -540,11 +542,13 @@ fn show_toast_with_undo_sets_status_and_undo_id() {
 fn show_toast_without_undo_clears_stale_undo_id() {
     let mut app = create_app_with_identity();
     app.undo_action_id = Some("leftover".into());
+    app.undo_label = Some("Leftover".into());
     handle_action_result(
         &mut app,
         ActionResult::ShowToast {
             message: "Done".into(),
             undo_action_id: None,
+            undo_label: None,
         },
     );
     assert_eq!(app.status_message.as_deref(), Some("Done"));
@@ -552,6 +556,7 @@ fn show_toast_without_undo_clears_stale_undo_id() {
         app.undo_action_id.is_none(),
         "undo_action_id should be cleared when toast has no undo"
     );
+    assert!(app.undo_label.is_none());
 }
 
 // @internal
@@ -559,9 +564,11 @@ fn show_toast_without_undo_clears_stale_undo_id() {
 fn clear_status_also_clears_undo_id() {
     let mut app = create_app_with_identity();
     app.undo_action_id = Some("undo_x".into());
+    app.undo_label = Some("Undo X".into());
     app.set_status("temp");
     assert!(
         app.undo_action_id.is_none(),
         "set_status should clear undo_action_id"
     );
+    assert!(app.undo_label.is_none());
 }

@@ -352,15 +352,15 @@ fn render_one_component(
                 .render(f, chunk);
             }
             Component::FieldList {
+                title,
                 fields,
                 visibility_mode,
-                available_scopes,
                 ..
             } => {
                 FieldListWidget {
+                    title,
                     fields,
                     visibility_mode,
-                    available_scopes,
                     selected_index: state.selection_for(i),
                     focused: is_focused,
                     theme,
@@ -484,10 +484,18 @@ fn render_one_component(
                 label,
                 value,
                 editing,
+                edit_text,
+                save_text,
+                cancel_text,
                 ..
             } => {
                 let indicator = if *editing { "▎" } else { "" };
-                let text = format!("  {label}: {value}{indicator}");
+                let action_hint = if *editing {
+                    format!("  [Enter] {save_text}  [Esc] {cancel_text}")
+                } else {
+                    format!("  [Enter] {edit_text}")
+                };
+                let text = format!("  {label}: {value}{indicator}{action_hint}");
                 let style = if is_focused {
                     Style::default().fg(theme.accent)
                 } else {

@@ -205,8 +205,9 @@ pub(crate) fn handle_action_result_with(
         ActionResult::ShowToast {
             message,
             undo_action_id,
+            undo_label,
         } => {
-            app.set_status_with_undo(message, undo_action_id);
+            app.set_status_with_undo(message, undo_action_id, undo_label);
         }
         ActionResult::Commands { commands } => {
             handle_exchange_commands(app, commands);

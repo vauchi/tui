@@ -89,6 +89,8 @@ pub struct App {
     pub status_message_time: Option<std::time::Instant>,
     /// Undo action ID from the most recent `ShowToast` (cleared with status).
     pub undo_action_id: Option<String>,
+    /// Core-owned label for the most recent toast undo action.
+    pub undo_label: Option<String>,
     /// Modal alert message (title, body) — requires user dismissal.
     pub alert_message: Option<(String, String)>,
     /// Selected contact index (for contacts list)
@@ -209,6 +211,7 @@ impl App {
             status_message: None,
             status_message_time: None,
             undo_action_id: None,
+            undo_label: None,
             alert_message: None,
             selected_contact: 0,
             selected_contact_id: None,
@@ -307,13 +310,20 @@ impl App {
         self.status_message = Some(msg.into());
         self.status_message_time = Some(std::time::Instant::now());
         self.undo_action_id = None;
+        self.undo_label = None;
     }
 
     /// Set a status message with an optional undo action.
-    pub fn set_status_with_undo(&mut self, msg: impl Into<String>, undo_action_id: Option<String>) {
+    pub fn set_status_with_undo(
+        &mut self,
+        msg: impl Into<String>,
+        undo_action_id: Option<String>,
+        undo_label: Option<String>,
+    ) {
         self.status_message = Some(msg.into());
         self.status_message_time = Some(std::time::Instant::now());
         self.undo_action_id = undo_action_id;
+        self.undo_label = undo_label;
     }
 
     /// Clear the status message.
@@ -322,6 +332,7 @@ impl App {
         self.status_message = None;
         self.status_message_time = None;
         self.undo_action_id = None;
+        self.undo_label = None;
     }
 
     /// Applies a completed background sync result to app state.

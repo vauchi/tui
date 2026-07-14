@@ -273,8 +273,16 @@ pub(super) fn map_component_key(
             _ => KeyResult::Unhandled,
         },
 
-        Component::EditableText { id, value, .. } => match key {
-            KeyCode::Char(c) => {
+        Component::EditableText {
+            id,
+            value,
+            editing,
+            edit_action_id,
+            save_action_id,
+            cancel_action_id,
+            ..
+        } => match key {
+            KeyCode::Char(c) if *editing => {
                 let mut new_value = value.clone();
                 new_value.push(c);
                 KeyResult::Action(UserAction::TextChanged {
@@ -282,7 +290,7 @@ pub(super) fn map_component_key(
                     value: new_value,
                 })
             }
-            KeyCode::Backspace => {
+            KeyCode::Backspace if *editing => {
                 let mut new_value = value.clone();
                 new_value.pop();
                 KeyResult::Action(UserAction::TextChanged {
@@ -291,17 +299,28 @@ pub(super) fn map_component_key(
                 })
             }
             KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
-                action_id: format!("submit_{id}"),
+                action_id: if *editing {
+                    save_action_id.clone()
+                } else {
+                    edit_action_id.clone()
+                },
+            }),
+            KeyCode::Esc if *editing => KeyResult::Action(UserAction::ActionPressed {
+                action_id: cancel_action_id.clone(),
             }),
             _ => KeyResult::Unhandled,
         },
 
-        Component::InlineConfirm { id, .. } => match key {
+        Component::InlineConfirm {
+            confirm_action_id,
+            cancel_action_id,
+            ..
+        } => match key {
             KeyCode::Enter => KeyResult::Action(UserAction::ActionPressed {
-                action_id: format!("confirm_{id}"),
+                action_id: confirm_action_id.clone(),
             }),
             KeyCode::Esc => KeyResult::Action(UserAction::ActionPressed {
-                action_id: format!("cancel_{id}"),
+                action_id: cancel_action_id.clone(),
             }),
             _ => KeyResult::Unhandled,
         },
