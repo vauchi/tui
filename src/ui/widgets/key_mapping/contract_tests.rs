@@ -24,6 +24,7 @@ fn inline_confirm() -> Component {
     }
 }
 
+// @internal
 #[test]
 fn inline_confirm_enter_forwards_core_confirm_action() {
     let screen = make_screen(vec![inline_confirm()], vec![]);
@@ -43,6 +44,7 @@ fn inline_confirm_enter_forwards_core_confirm_action() {
     }
 }
 
+// @internal
 #[test]
 fn inline_confirm_esc_forwards_core_cancel_action() {
     let screen = make_screen(vec![inline_confirm()], vec![]);
