@@ -452,21 +452,13 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
             app.apply_sync_result(result);
         }
 
-        // Poll background relay test result channel (non-blocking).
-        if let Some(rx) = &app.relay_test_rx
-            && let Ok(result) = rx.try_recv()
-        {
-            app.relay_test_rx = None;
-            app.apply_relay_test_result(result);
-        }
-
         // Use short poll timeout when a background operation is in flight or
         // a status message is flashing, so we pick up results promptly.
         let has_active_flash = app
             .status_message_time
             .map(|t| t.elapsed() < Duration::from_millis(600))
             .unwrap_or(false);
-        let has_background_op = app.sync_rx.is_some() || app.relay_test_rx.is_some();
+        let has_background_op = app.sync_rx.is_some();
         let mut poll_timeout = if has_active_flash || has_background_op {
             Duration::from_millis(100)
         } else {

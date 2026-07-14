@@ -150,8 +150,6 @@ pub struct App {
     pub next_wakeup: Option<std::time::Instant>,
     /// Channel receiver for background sync results.
     pub sync_rx: Option<std::sync::mpsc::Receiver<SyncResult>>,
-    /// Channel receiver for background relay connection test results.
-    pub relay_test_rx: Option<std::sync::mpsc::Receiver<anyhow::Result<bool>>>,
 }
 
 impl App {
@@ -239,7 +237,6 @@ impl App {
             exchange_scan_pending: false,
             next_wakeup: None,
             sync_rx: None,
-            relay_test_rx: None,
         }
     }
 
@@ -371,20 +368,6 @@ impl App {
                 "Sync failed: {}. Changes saved locally and will sync when connected.",
                 error_msg
             ));
-        }
-    }
-
-    /// Applies a completed background relay test result to app state.
-    pub fn apply_relay_test_result(&mut self, result: anyhow::Result<bool>) {
-        match result {
-            Ok(true) => {
-                self.set_status("Relay connection successful!");
-            }
-            Ok(false) | Err(_) => {
-                self.set_status(
-                    "Relay connection failed. Check your network or relay URL in Settings.",
-                );
-            }
         }
     }
 
