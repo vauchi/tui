@@ -134,17 +134,6 @@ fn show_alert_sets_modal_alert() {
     );
 }
 
-// @internal
-#[test]
-fn request_camera_sets_not_supported_status() {
-    let mut app = create_app_with_identity();
-    handle_action_result(&mut app, ActionResult::RequestCamera);
-    assert_eq!(
-        app.status_message.as_deref(),
-        Some("Camera not supported in terminal mode")
-    );
-}
-
 // --- Validation error ---
 
 // @internal

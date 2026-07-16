@@ -172,10 +172,6 @@ pub(crate) fn handle_action_result_with(
                 Err(e) => app.set_status(format!("Export failed: {e}")),
             }
         }
-        ActionResult::RequestCamera => {
-            // TUI can't open camera — show status message
-            app.set_status("Camera not supported in terminal mode");
-        }
         ActionResult::OpenEntryDetail { .. } => {
             // Handled by AppEngine (intercepted before reaching TUI)
         }
