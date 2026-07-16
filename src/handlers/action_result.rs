@@ -5,8 +5,7 @@
 //! Maps AppEngine `ActionResult` variants to TUI state changes.
 
 use vauchi_app::ui::{
-    ActionResult, AppScreen, Component, DeviceLinkRole, FormDialogType, LockScreenEngine,
-    WorkflowEngine,
+    ActionResult, AppScreen, Component, FormDialogType, LockScreenEngine, WorkflowEngine,
 };
 
 use crate::app::App;
@@ -173,28 +172,6 @@ pub(crate) fn handle_action_result_with(
                 Err(e) => app.set_status(format!("Export failed: {e}")),
             }
         }
-        // TODO(HUMBLE): D — StartDeviceLink -> navigate_to(AppScreen::DeviceLinking) (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-        ActionResult::StartDeviceLink { role } => {
-            match role {
-                // The Devices (DeviceManagement) path is intercepted in core and
-                // arrives as NavigateTo(DeviceLinking). StartDeviceLink only
-                // reaches the TUI raw from Onboarding / DeviceReplacement, which
-                // have no separate native link flow here — drive the engine to
-                // the device-link screen so the QR shows there too.
-                DeviceLinkRole::Initiator => {
-                    app.app_engine
-                        .navigate_to(vauchi_app::ui::AppScreen::DeviceLinking);
-                    app.render_state = Default::default();
-                }
-                // TUI has no camera; tell the user to use the CLI join flow.
-                DeviceLinkRole::Responder => {
-                    app.set_status("QR scan not supported in terminal mode; use 'vauchi device join <qr_data>'");
-                }
-                _ => {
-                    app.set_status("Unknown device-link role");
-                }
-            }
-        }
         ActionResult::RequestCamera => {
             // TUI can't open camera — show status message
             app.set_status("Camera not supported in terminal mode");
@@ -219,12 +196,6 @@ pub(crate) fn handle_action_result_with(
             // AppEngine's Vauchi data was wiped — navigate to Onboarding
             app.app_engine
                 .navigate_to(vauchi_app::ui::AppScreen::Onboarding);
-        }
-        ActionResult::VerifyFingerprint { contact_id } => {
-            app.selected_contact_id = Some(contact_id.clone());
-            app.app_engine
-                .navigate_to(AppScreen::VerifyFingerprint { contact_id });
-            app.render_state = Default::default();
         }
         // trust-notes-preview (core!368) — not yet implemented in TUI
         ActionResult::PreviewAs { .. } | ActionResult::ShowContactPicker => {}

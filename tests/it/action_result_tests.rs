@@ -5,9 +5,7 @@
 //! Tests for `handle_action_result` — verifies that each `ActionResult` variant
 //! produces the correct TUI state change.
 
-use vauchi_app::ui::{
-    ActionResult, AppEngine, AppScreen, DeviceLinkRole, ScreenModel, UserAction, WorkflowEngine,
-};
+use vauchi_app::ui::{ActionResult, AppEngine, AppScreen, ScreenModel, UserAction, WorkflowEngine};
 use vauchi_core::{SymmetricKey, Vauchi, VauchiConfig};
 use vauchi_tui::app::App;
 use vauchi_tui::handlers::action_result::handle_action_result;
@@ -94,23 +92,6 @@ fn open_contact_sets_contact_detail_screen() {
         app.current_app_screen(),
         AppScreen::ContactDetail { .. }
     ));
-}
-
-// @internal
-#[test]
-fn start_device_link_raw_navigates_to_device_linking() {
-    // Raw StartDeviceLink (Onboarding / DeviceReplacement) drives the engine
-    // to the device-link screen so the QR shows there too. The Devices path
-    // is intercepted in core and arrives as NavigateTo(DeviceLinking).
-    let mut app = create_app_with_identity();
-    handle_action_result(
-        &mut app,
-        ActionResult::StartDeviceLink {
-            role: DeviceLinkRole::Initiator,
-        },
-    );
-    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
-    assert_eq!(app.current_app_screen(), AppScreen::DeviceLinking);
 }
 
 // --- Status message variants ---
