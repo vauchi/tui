@@ -215,12 +215,9 @@ pub(super) fn render_qr_code(
     label: Option<&str>,
     theme: &TuiTheme,
 ) {
-    // TODO(HUMBLE): W — "QR Code" / "Scan QR Code" titles (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-    let title = match mode {
-        QrMode::Display => " QR Code ",
-        QrMode::Scan => " Scan QR Code ",
-        _ => " QR Code ",
-    };
+    // Core supplies the localized QR label (ADR-044 generic-component
+    // contract); the mode discriminant selects presentation only.
+    let title = label.map(|l| format!(" {l} ")).unwrap_or_default();
 
     let content = match mode {
         QrMode::Display => {
@@ -250,17 +247,10 @@ pub(super) fn render_qr_code(
                 }
             }
 
-            if let Some(l) = label {
-                lines.push(Line::from(""));
-                lines.push(Line::from(Span::styled(
-                    format!("  {}", l),
-                    Style::default().fg(theme.fg_secondary),
-                )));
-            }
             lines
         }
         QrMode::Scan => {
-            let mut lines = vec![
+            vec![
                 Line::from(""),
                 Line::from(Span::styled(
                     "  Point your camera at the QR code",
@@ -271,14 +261,7 @@ pub(super) fn render_qr_code(
                     "  (Not available in terminal mode)",
                     Style::default().fg(theme.fg_secondary),
                 )),
-            ];
-            if let Some(l) = label {
-                lines.push(Line::from(Span::styled(
-                    format!("  {}", l),
-                    Style::default().fg(theme.fg_secondary),
-                )));
-            }
-            lines
+            ]
         }
         _ => {
             vec![Line::from(Span::styled(

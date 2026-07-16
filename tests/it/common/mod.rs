@@ -130,13 +130,42 @@ pub fn redact_dynamic_values(s: &str) -> String {
     // Replace standalone 16-char hex sequences
     let re_hex16 = regex::Regex::new(r"\b[0-9a-f]{16}\b").unwrap();
     let s = re_hex16.replace_all(&s, "[HEX_ID]").to_string();
-    // Redact entire QR Code box content — Dense1x2 unicode QR contains ephemeral crypto keys
-    // that make every rendered QR image non-deterministic. Replace the full interior with a
-    // stable placeholder while preserving the box borders.
-    let re_qr_block = regex::Regex::new(r"(?s)(┌ QR Code [─]+┐\n).*?(└[─]+┘)").unwrap();
+    // Redact entire QR box content — Dense1x2 unicode QR contains ephemeral crypto
+    // keys that make every rendered QR image non-deterministic. The box title is
+    // the core-supplied localized label (any text), so anchor on a box whose body
+    // contains QR half-block characters rather than on a fixed English title.
+    // A QR body is a run of 3+ consecutive block-character lines; an isolated
+    // block character (e.g. a masked-PIN input) must not match.
+    let re_qr_block = regex::Regex::new(
+        r"(?s)(┌[^\n]*┐\n)((?:[^\n]*\n)*?(?:[^\n]*[▀▄█][^\n]*\n){3,}.*?)(└[─]+┘)",
+    )
+    .unwrap();
     re_qr_block
-        .replace_all(&s, "$1│  [QR_IMAGE_REDACTED]                                                         │\n$2")
+        .replace_all(&s, "$1│  [QR_IMAGE_REDACTED]                                                         │\n$3")
         .to_string()
+}
+
+// @internal
+#[test]
+fn qr_box_body_is_redacted_regardless_of_title() {
+    let buf = "┌ Scan on new device ──┐\n│ ▀▄▀▄▀▄▀▄ │\n│ ▄█▀█▄▀▄▀ │\n│ ▀▄▀▄█▄▀▄ │\n└──────────┘";
+    let redacted = redact_dynamic_values(buf);
+    assert!(redacted.contains("[QR_IMAGE_REDACTED]"), "{redacted}");
+    assert!(
+        !redacted.contains('▄'),
+        "QR modules must not survive: {redacted}"
+    );
+}
+
+// @internal
+#[test]
+fn isolated_block_char_box_is_not_redacted() {
+    let buf = "┌ Enter PIN ──┐\n│ █           │\n└─────────────┘";
+    let redacted = redact_dynamic_values(buf);
+    assert!(
+        !redacted.contains("[QR_IMAGE_REDACTED]"),
+        "masked-PIN box must not be treated as a QR: {redacted}"
+    );
 }
 
 /// Assert a snapshot with navigation context metadata.
