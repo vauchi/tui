@@ -23,7 +23,7 @@ use vauchi_app::ui::AppEngine;
 use vauchi_core::crypto::SymmetricKey;
 #[cfg(feature = "secure-storage")]
 use vauchi_core::storage::secure::{PlatformKeyring, SecureStorage};
-use vauchi_core::{Vauchi, VauchiConfig};
+use vauchi_core::{Vauchi, VauchiConfig, VauchiError};
 
 #[cfg(not(feature = "secure-storage"))]
 use vauchi_core::storage::secure::{FileKeyStorage, SecureStorage};
@@ -105,7 +105,16 @@ fn main() -> Result<()> {
         .clone()
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let vauchi_config = vauchi_config.with_relay_url(&relay_url);
-    let mut vauchi: Vauchi = Vauchi::new(vauchi_config)?;
+    let mut vauchi: Vauchi = match Vauchi::new(vauchi_config) {
+        Ok(vauchi) => vauchi,
+        Err(err) => {
+            eprintln!("Error: {err}");
+            if err.is_unreadable_storage() {
+                print_storage_recovery_hint(&data_dir);
+            }
+            std::process::exit(1);
+        }
+    };
 
     // --check: validate data integrity and exit
     if cli.check {
@@ -159,6 +168,7 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     // Run the app, capture result so cleanup always runs
+    let data_dir_for_recovery_hint = data_dir.clone();
     let mut app = App::new(app_engine, relay_url, data_dir);
     let res = run_app(&mut terminal, &mut app);
 
@@ -172,27 +182,27 @@ fn main() -> Result<()> {
     terminal.show_cursor()?;
 
     if let Err(err) = res {
-        let msg = format!("{err:?}");
-        eprintln!("Error: {msg}");
-        // TODO(HUMBLE): D — Error classification by substring ("ecryption", "corrupted", "wrong key") (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
-        if msg.contains("ecryption") || msg.contains("corrupted") || msg.contains("wrong key") {
-            let data_dir = std::env::var("VAUCHI_DATA_DIR")
-                .ok()
-                .map(PathBuf::from)
-                .unwrap_or_else(|| {
-                    dirs::data_dir()
-                        .unwrap_or_else(|| PathBuf::from("."))
-                        .join("vauchi")
-                });
-            eprintln!();
-            eprintln!("The storage appears corrupted or was encrypted with a different key.");
-            eprintln!("To start fresh, delete the data directory:");
-            eprintln!();
-            eprintln!("  rm -rf {}", data_dir.display());
+        eprintln!("Error: {err:?}");
+        // Core owns the error classification (ADR-045 Amendment 1); the
+        // TUI owns only this native stderr presentation.
+        if err.chain().any(|cause| {
+            cause
+                .downcast_ref::<VauchiError>()
+                .is_some_and(VauchiError::is_unreadable_storage)
+        }) {
+            print_storage_recovery_hint(&data_dir_for_recovery_hint);
         }
     }
 
     Ok(())
+}
+
+fn print_storage_recovery_hint(data_dir: &Path) {
+    eprintln!();
+    eprintln!("The storage appears corrupted or was encrypted with a different key.");
+    eprintln!("To start fresh, delete the data directory:");
+    eprintln!();
+    eprintln!("  rm -rf {}", data_dir.display());
 }
 
 /// Resolve relay URL with fallback hierarchy:
