@@ -128,9 +128,9 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "aws-lc-rs"
-version = "1.17.1"
+version = "1.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4342d8937fc7e5dd9b1c60292261c0670c882a2cd1719cfc11b1af41731e32ad"
+checksum = "00bdb5da18dac48ca2cc7cd4a98e533e8635a58e2361d13a1a4ee3888e0d72f1"
 dependencies = [
  "aws-lc-sys",
  "zeroize",
@@ -138,9 +138,9 @@ dependencies = [
 
 [[package]]
 name = "aws-lc-sys"
-version = "0.42.0"
+version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d9ceb1da931507a12f4fccea479dccd00da1943e1b4ae72d8e502d707361444"
+checksum = "43103168cc76fe62678a375e722fc9cb3a0146159ac5828bc4f0dfd755c2224c"
 dependencies = [
  "cc",
  "cmake",
@@ -2939,7 +2939,7 @@ dependencies = [
 [[package]]
 name = "vauchi-app"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#fa0e21fbdda660b6a0f8fcae90364f6e7dda65a6"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#56142db4658271ba4dbbe189d5c7730285415eca"
 dependencies = [
  "base64",
  "hex",
@@ -2957,7 +2957,7 @@ dependencies = [
 [[package]]
 name = "vauchi-core"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#fa0e21fbdda660b6a0f8fcae90364f6e7dda65a6"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#56142db4658271ba4dbbe189d5c7730285415eca"
 dependencies = [
  "argon2",
  "base64",
@@ -3000,7 +3000,7 @@ dependencies = [
 [[package]]
 name = "vauchi-protocol"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#fa0e21fbdda660b6a0f8fcae90364f6e7dda65a6"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#56142db4658271ba4dbbe189d5c7730285415eca"
 dependencies = [
  "serde",
  "serde_json",
