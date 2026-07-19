@@ -812,9 +812,9 @@ dependencies = [
 
 [[package]]
 name = "fastrand"
-version = "2.4.1"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
+checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 
 [[package]]
 name = "fdeflate"
@@ -2950,7 +2950,7 @@ dependencies = [
 [[package]]
 name = "vauchi-app"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#2c3d624e90efe908c769ac1288719b3a49752360"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#02b7e31f2ad80e57032553d638183dbf3d36547b"
 dependencies = [
  "base64",
  "hex",
@@ -2968,7 +2968,7 @@ dependencies = [
 [[package]]
 name = "vauchi-core"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#2c3d624e90efe908c769ac1288719b3a49752360"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#02b7e31f2ad80e57032553d638183dbf3d36547b"
 dependencies = [
  "argon2",
  "base64",
@@ -3011,7 +3011,7 @@ dependencies = [
 [[package]]
 name = "vauchi-protocol"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#2c3d624e90efe908c769ac1288719b3a49752360"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#02b7e31f2ad80e57032553d638183dbf3d36547b"
 dependencies = [
  "serde",
  "serde_json",
