@@ -217,9 +217,9 @@ checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
 name = "bytemuck"
-version = "1.25.1"
+version = "1.25.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6aedf8ae72766347502cf3cb4f41cf5e9cc37d28bee90f1fdaaae15f9cf9424"
+checksum = "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
 
 [[package]]
 name = "byteorder"
@@ -2950,7 +2950,7 @@ dependencies = [
 [[package]]
 name = "vauchi-app"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#02b7e31f2ad80e57032553d638183dbf3d36547b"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#d2324f71274be1a5f2c35db25036a8a3b366ad32"
 dependencies = [
  "base64",
  "hex",
@@ -2968,7 +2968,7 @@ dependencies = [
 [[package]]
 name = "vauchi-core"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#02b7e31f2ad80e57032553d638183dbf3d36547b"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#d2324f71274be1a5f2c35db25036a8a3b366ad32"
 dependencies = [
  "argon2",
  "base64",
@@ -3011,7 +3011,7 @@ dependencies = [
 [[package]]
 name = "vauchi-protocol"
 version = "0.55.4"
-source = "git+https://gitlab.com/vauchi/core.git?branch=main#02b7e31f2ad80e57032553d638183dbf3d36547b"
+source = "git+https://gitlab.com/vauchi/core.git?branch=main#d2324f71274be1a5f2c35db25036a8a3b366ad32"
 dependencies = [
  "serde",
  "serde_json",
