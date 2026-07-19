@@ -228,6 +228,7 @@ fn field_list_show_hide_mode() {
             value: "alice@example.com".into(),
             icon: "envelope".into(),
             visibility: UiFieldVisibility::Shown,
+            visibility_label: "Shown".into(),
             a11y: None,
         },
         Field {
@@ -237,6 +238,7 @@ fn field_list_show_hide_mode() {
             value: "+41 79 123 45 67".into(),
             icon: "phone".into(),
             visibility: UiFieldVisibility::Hidden,
+            visibility_label: "Hidden".into(),
             a11y: None,
         },
     ];
@@ -274,6 +276,7 @@ fn field_list_per_group_mode() {
             value: "alice@corp.com".into(),
             icon: "envelope".into(),
             visibility: UiFieldVisibility::Scopes(vec!["Coworkers".into()]),
+            visibility_label: "Coworkers".into(),
             a11y: None,
         },
         Field {
@@ -283,6 +286,7 @@ fn field_list_per_group_mode() {
             value: "+41 79 000 00 00".into(),
             icon: "phone".into(),
             visibility: UiFieldVisibility::Scopes(vec![]),
+            visibility_label: "No groups".into(),
             a11y: None,
         },
     ];
@@ -348,6 +352,7 @@ fn card_preview_no_groups() {
             value: "alice@example.com".into(),
             icon: "envelope".into(),
             visibility: UiFieldVisibility::Shown,
+            visibility_label: "Shown".into(),
             a11y: None,
         },
         Field {
@@ -357,6 +362,7 @@ fn card_preview_no_groups() {
             value: "+41 79 123 45 67".into(),
             icon: "phone".into(),
             visibility: UiFieldVisibility::Shown,
+            visibility_label: "Shown".into(),
             a11y: None,
         },
     ];
@@ -396,6 +402,7 @@ fn card_preview_with_groups() {
                 value: "+41 79 123 45 67".into(),
                 icon: "phone".into(),
                 visibility: UiFieldVisibility::Shown,
+                visibility_label: "Shown".into(),
                 a11y: None,
             }],
         },
@@ -409,6 +416,7 @@ fn card_preview_with_groups() {
                 value: "asmith@corp.com".into(),
                 icon: "envelope".into(),
                 visibility: UiFieldVisibility::Shown,
+                visibility_label: "Shown".into(),
                 a11y: None,
             }],
         },

@@ -606,6 +606,7 @@ mod tests {
                     value: "a@b.c".into(),
                     icon: "envelope".into(),
                     visibility: UiFieldVisibility::Shown,
+                    visibility_label: "Shown".into(),
                     a11y: None,
                 }],
                 visibility_mode: VisibilityMode::ShowHide,

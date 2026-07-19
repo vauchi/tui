@@ -362,6 +362,7 @@ fn every_known_component() -> Vec<Component> {
                 value: "a@b.com".into(),
                 icon: "envelope".into(),
                 visibility: UiFieldVisibility::Shown,
+                visibility_label: "Shown".into(),
                 a11y: None,
             }],
             visibility_mode: VisibilityMode::ShowHide,
