@@ -136,7 +136,7 @@ version = "0.10.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap]]
-version = "4.6.2"
+version = "4.6.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap_builder]]
@@ -144,7 +144,7 @@ version = "4.6.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap_derive]]
-version = "4.6.1"
+version = "4.6.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap_lex]]
@@ -744,7 +744,7 @@ version = "1.0.229"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_json]]
-version = "1.0.150"
+version = "1.0.151"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde_spanned]]
@@ -800,7 +800,7 @@ version = "2.0.119"
 criteria = "safe-to-deploy"
 
 [[exemptions.syn]]
-version = "3.0.0"
+version = "3.0.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.thiserror]]
@@ -812,11 +812,11 @@ version = "2.0.19"
 criteria = "safe-to-deploy"
 
 [[exemptions.time]]
-version = "0.3.53"
+version = "0.3.54"
 criteria = "safe-to-deploy"
 
 [[exemptions.time-macros]]
-version = "0.2.31"
+version = "0.2.32"
 criteria = "safe-to-deploy"
 
 [[exemptions.tinystr]]
@@ -1060,11 +1060,11 @@ version = "0.8.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy]]
-version = "0.8.54"
+version = "0.8.55"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerocopy-derive]]
-version = "0.8.54"
+version = "0.8.55"
 criteria = "safe-to-deploy"
 
 [[exemptions.zerofrom]]
