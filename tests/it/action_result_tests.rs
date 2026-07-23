@@ -99,10 +99,8 @@ fn open_contact_sets_contact_detail_screen() {
 // @internal
 #[test]
 fn open_url_sets_status_with_url() {
-    // Prevent xdg-open from actually opening a browser tab during tests
-    // TODO: Audit that the environment access only happens in single-threaded code.
-    unsafe { std::env::set_var("VAUCHI_NO_BROWSER", "1") };
     let mut app = create_app_with_identity();
+    app.set_url_opener(|_| false);
     handle_action_result(
         &mut app,
         ActionResult::OpenUrl {

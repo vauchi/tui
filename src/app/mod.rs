@@ -60,8 +60,12 @@ fn save_theme_preference(theme_id: &str) {
 
 /// Detect locale from environment variables (LANG, LC_ALL, LC_MESSAGES).
 fn detect_locale() -> I18n {
+    detect_locale_from(|name| std::env::var(name).ok())
+}
+
+fn detect_locale_from(mut value_for: impl FnMut(&str) -> Option<String>) -> I18n {
     for var in ["LC_ALL", "LC_MESSAGES", "LANG"] {
-        if let Ok(val) = std::env::var(var) {
+        if let Some(val) = value_for(var) {
             // Extract language code from e.g. "de_CH.UTF-8" -> "de"
             let code = val.split('_').next().unwrap_or(&val);
             let code = code.split('.').next().unwrap_or(code);
@@ -71,6 +75,23 @@ fn detect_locale() -> I18n {
         }
     }
     I18n::default()
+}
+
+fn open_external_url(url: &str) -> bool {
+    let opener = if cfg!(target_os = "macos") {
+        "open"
+    } else if cfg!(target_os = "windows") {
+        "start"
+    } else {
+        "xdg-open"
+    };
+    std::process::Command::new(opener)
+        .arg(url)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .is_ok()
 }
 
 /// Application state.
@@ -152,6 +173,7 @@ pub struct App {
     pub next_wakeup: Option<std::time::Instant>,
     /// Channel receiver for background sync results.
     pub sync_rx: Option<std::sync::mpsc::Receiver<SyncResult>>,
+    url_opener: fn(&str) -> bool,
 }
 
 impl App {
@@ -240,7 +262,17 @@ impl App {
             exchange_scan_pending: false,
             next_wakeup: None,
             sync_rx: None,
+            url_opener: open_external_url,
         }
+    }
+
+    /// Replaces the external URL boundary.
+    pub fn set_url_opener(&mut self, opener: fn(&str) -> bool) {
+        self.url_opener = opener;
+    }
+
+    pub(crate) fn open_url(&self, url: &str) -> bool {
+        (self.url_opener)(url)
     }
 
     /// Builds an owned `SyncRequest` that can be sent to a background thread.
@@ -439,65 +471,39 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
     use vauchi_app::i18n::Locale;
 
-    /// Env-var tests must be serialised — set_var/remove_var is process-global.
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    fn clear_locale_env() {
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::remove_var("LC_ALL") };
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::remove_var("LC_MESSAGES") };
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::remove_var("LANG") };
+    fn detect_test_locale(values: &[(&str, &str)]) -> I18n {
+        detect_locale_from(|name| {
+            values
+                .iter()
+                .find(|(key, _)| *key == name)
+                .map(|(_, value)| (*value).to_string())
+        })
     }
 
     #[test]
     fn test_detect_locale_german() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        clear_locale_env();
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("LANG", "de_CH.UTF-8") };
-        let i18n = detect_locale();
+        let i18n = detect_test_locale(&[("LANG", "de_CH.UTF-8")]);
         assert_eq!(i18n.locale(), Locale::German);
-        clear_locale_env();
     }
 
     #[test]
     fn test_detect_locale_french() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        clear_locale_env();
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("LANG", "fr_FR.UTF-8") };
-        let i18n = detect_locale();
+        let i18n = detect_test_locale(&[("LANG", "fr_FR.UTF-8")]);
         assert_eq!(i18n.locale(), Locale::French);
-        clear_locale_env();
     }
 
     #[test]
     fn test_detect_locale_lc_all_overrides() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        clear_locale_env();
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("LANG", "en_US.UTF-8") };
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("LC_ALL", "es_ES.UTF-8") };
-        let i18n = detect_locale();
+        let i18n = detect_test_locale(&[("LANG", "en_US.UTF-8"), ("LC_ALL", "es_ES.UTF-8")]);
         assert_eq!(i18n.locale(), Locale::Spanish);
-        clear_locale_env();
     }
 
     #[test]
     fn test_detect_locale_fallback_english() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        clear_locale_env();
-        // TODO: Audit that the environment access only happens in single-threaded code.
-        unsafe { std::env::set_var("LANG", "C") };
-        let i18n = detect_locale();
+        let i18n = detect_test_locale(&[("LANG", "C")]);
         assert_eq!(i18n.locale(), Locale::English);
-        clear_locale_env();
     }
 
     fn test_app_engine() -> (vauchi_app::ui::AppEngine, tempfile::TempDir) {
