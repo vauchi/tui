@@ -225,7 +225,7 @@ fn handle_exchange_commands(app: &mut App, commands: Vec<vauchi_core::Command>) 
             | Command::BleConnect { .. }
             | Command::BleWriteCharacteristic { .. }
             | Command::BleReadCharacteristic { .. }
-            | Command::BleDisconnect => {
+            | Command::BleDisconnect { .. } => {
                 let _ = app
                     .app_engine
                     .handle_hardware_event(Event::HardwareUnavailable {
