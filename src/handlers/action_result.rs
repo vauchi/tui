@@ -220,6 +220,8 @@ fn handle_exchange_commands(app: &mut App, commands: Vec<vauchi_core::Command>) 
                 app.exchange_scan_pending = true;
             }
             // Hardware not available in terminal
+            // WHY: Compile before and after BleDisconnect gains connection fields.
+            #[allow(clippy::unneeded_struct_pattern)]
             Command::BleStartAdvertising { .. }
             | Command::BleStartScanning { .. }
             | Command::BleConnect { .. }
