@@ -133,7 +133,7 @@ impl App {
                 result.error.unwrap_or_else(|| "Unknown error".into())
             ));
         }
-        self.app_engine.invalidate_all();
+        let _ = self.dispatch_presentation_event(Event::PresentationInvalidated);
     }
 
     pub fn set_url_opener(&mut self, opener: fn(&str) -> bool) {
