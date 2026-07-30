@@ -447,9 +447,16 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
     // Bootstrap the core-driven wakeup loop (ADR-044 Am2a). The first call
     // runs any due work and emits the initial `Command::ScheduleWakeup`.
     app.tick_notifications();
+    let mut reported_size = (0, 0);
 
     loop {
-        terminal.draw(|f| ui::draw(f, app))?;
+        let area = terminal.size()?;
+        let current_size = (u32::from(area.width), u32::from(area.height));
+        if current_size != reported_size {
+            reported_size = current_size;
+            app.report_presentation_environment(current_size.0, current_size.1);
+        }
+        terminal.draw(|f| ui::draw_presentation(f, app))?;
 
         // Periodic maintenance (ADR-031)
         app.tick_status();
@@ -464,10 +471,7 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
 
         // Use short poll timeout when a background operation is in flight or
         // a status message is flashing, so we pick up results promptly.
-        let has_active_flash = app
-            .status_message_time
-            .map(|t| t.elapsed() < Duration::from_millis(600))
-            .unwrap_or(false);
+        let has_active_flash = app.status_is_flashing();
         let has_background_op = app.sync_rx.is_some();
         let mut poll_timeout = if has_active_flash || has_background_op {
             Duration::from_millis(100)
@@ -500,7 +504,7 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
             && let Event::Key(key) = event::read()?
             && key.kind == KeyEventKind::Press
         {
-            match handlers::handle_key(app, key.code) {
+            match handlers::handle_presentation_key(app, key) {
                 handlers::Action::Quit => return Ok(()),
                 handlers::Action::Continue => {}
             }

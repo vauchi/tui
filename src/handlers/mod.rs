@@ -1,10 +1,13 @@
 // SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
-//
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! Input Handlers
+//! Generic Core command/event adapters.
 
-pub mod action_result;
-mod input;
+mod presentation;
 
-pub use input::{Action, handle_key};
+pub use presentation::handle_presentation_key;
+
+pub enum Action {
+    Continue,
+    Quit,
+}

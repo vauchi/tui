@@ -1,8 +1,0 @@
----
-source: src/ui/widget_snapshots.rs
-expression: buffer_to_string(&buf)
----
-Display Name                            
-┌──────────────────────────────────────┐
-│Alice                                 │
-└──────────────────────────────────────┘

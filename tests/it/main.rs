@@ -4,18 +4,5 @@
 
 //! Consolidated integration test binary for vauchi-tui.
 
-#[allow(dead_code)]
-#[macro_use]
-mod common;
-mod action_result_tests;
-mod backup_humble_tests;
+mod contextual_surface_architecture_tests;
 mod contract_core_api_tests;
-mod duress_humble_tests;
-mod group_detail_humble_tests;
-mod helpers_test;
-mod input_handler_tests;
-mod qr_rendering_test;
-mod smoke_appengine_tests;
-mod snapshot_screens;
-mod snapshot_workflows;
-mod ui_interaction_tests;

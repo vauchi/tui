@@ -4,7 +4,6 @@
 
 pub mod app;
 pub mod handlers;
-pub mod helpers;
 pub mod i18n;
 pub mod sync_service;
 pub mod theme;
