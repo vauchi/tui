@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
-use vauchi_app::ui::{AppEngine, AppPresentationError, AppScreen};
+use vauchi_app::ui::{AppEngine, AppPresentationError};
 use vauchi_core::{Command, Event, InputMode, MotionPreference};
 
 use crate::sync_service::SyncResult;
@@ -33,14 +33,11 @@ pub struct App {
 
 impl App {
     pub fn new(mut app_engine: AppEngine, relay_url: String, data_dir: std::path::PathBuf) -> Self {
-        let initial_screen = if !app_engine.vauchi().has_identity() {
-            AppScreen::Onboarding
-        } else if app_engine.vauchi().is_password_enabled().unwrap_or(false) {
-            AppScreen::Lock
-        } else {
-            app_engine.default_screen()
-        };
-        app_engine.set_initial_screen(initial_screen);
+        // Core resolves where to land. Deriving it here from identity and
+        // password state made this shell interpret domain state to pick
+        // navigation, which ADR-066 reserves to Core — and required
+        // importing `AppScreen`, retired from the shell boundary.
+        app_engine.bootstrap();
         let commands = app_engine
             .initial_commands()
             .expect("fresh AppEngine must prepare its initial presentation");
