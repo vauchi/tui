@@ -2,11 +2,41 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use super::presentation_protocol::PresentationState;
+use serde::Deserialize;
 use vauchi_core::{
-    AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, InteractionId, OverlayKind,
-    OverlaySpec, PaneLayout, PresentationProfile, PresentationTokens, SurfaceId, SurfaceLayout,
-    SurfaceSpec, WindowClass,
+    AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, Event, InteractionId,
+    OverlayKind, OverlaySpec, PaneLayout, PresentationProfile, PresentationTokens, SurfaceId,
+    SurfaceLayout, SurfaceSpec, WindowClass,
 };
+
+// Fixture versions are exact contracts: additive fields require an explicit
+// consumer review rather than being ignored silently.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PresentationContractFixture {
+    schema_version: u64,
+    initial_commands: Vec<Command>,
+    steps: Vec<PresentationContractStep>,
+    expected_state: ExpectedPresentationState,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PresentationContractStep {
+    // The TUI replays Core's commands, but decoding the event still verifies
+    // that this consumer agrees with the shell-to-Core wire shape.
+    #[serde(rename = "event")]
+    _event: Event,
+    commands: Vec<Command>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExpectedPresentationState {
+    active_surface_id: SurfaceId,
+    surface: SurfaceSpec,
+    context_bar: ContextBar,
+}
 
 fn action(id: &str) -> ActionSpec {
     ActionSpec {
@@ -124,6 +154,54 @@ fn transaction_installs_surface_context_bar_and_overlay_atomically() {
     assert_eq!(state.surface().unwrap().revision, 3);
     assert_eq!(state.context_actions().len(), 4);
     assert_eq!(state.overlay().unwrap().kind, OverlayKind::Navigation);
+}
+
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
+fn tui_consumes_the_core_owned_presentation_contract_fixture() {
+    let fixture: PresentationContractFixture =
+        serde_json::from_str(vauchi_app::ui::presentation_contract_fixture_json())
+            .expect("failed to deserialize Core-owned presentation contract fixture");
+    let mut state = PresentationState::default();
+
+    assert_eq!(
+        fixture.schema_version, 1,
+        "fixture schema changed; re-verify the TUI reducer contract"
+    );
+    assert!(!fixture.initial_commands.is_empty());
+    assert!(!fixture.steps.is_empty());
+    assert_eq!(
+        fixture.expected_state.surface.surface_id,
+        fixture.expected_state.active_surface_id
+    );
+
+    let effects = state.apply(&fixture.initial_commands);
+    assert!(
+        effects.is_empty(),
+        "initial fixture batch emitted effects: {effects:?}"
+    );
+    for (index, step) in fixture.steps.into_iter().enumerate() {
+        assert!(!step.commands.is_empty(), "fixture step {index} is empty");
+        let effects = state.apply(&step.commands);
+        assert!(
+            effects.is_empty(),
+            "fixture step {index} emitted effects: {effects:?}"
+        );
+    }
+
+    assert_eq!(
+        state.surface().map(|surface| surface.surface_id.as_str()),
+        Some(fixture.expected_state.active_surface_id.as_str())
+    );
+    assert_eq!(state.surface(), Some(&fixture.expected_state.surface));
+    assert_eq!(
+        state.context_bar(),
+        Some(&fixture.expected_state.context_bar)
+    );
+    assert!(
+        state.overlay().is_none(),
+        "fixture v1 ends without an active overlay"
+    );
 }
 
 // @scenario: generic_presentation_protocol.feature :: Invalid boundary input fails safely
