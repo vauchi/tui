@@ -86,7 +86,7 @@ fn renderer_keeps_content_humble_and_contextual_roles_in_one_bottom_strip() {
     let mut terminal = Terminal::new(backend).unwrap();
 
     terminal
-        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 2))
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 2, None))
         .unwrap();
 
     let buffer = terminal.backend().buffer();
@@ -135,7 +135,7 @@ fn expanded_profile_renders_primary_and_detail_as_two_native_panes() {
     let mut terminal = Terminal::new(backend).unwrap();
 
     terminal
-        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0))
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
         .unwrap();
 
     let rendered = terminal

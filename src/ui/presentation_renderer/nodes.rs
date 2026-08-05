@@ -8,8 +8,10 @@ pub(super) fn append_node_lines(
     node: &PresentationNode,
     depth: usize,
     lines: &mut Vec<Line<'static>>,
-) {
+    selected_surface_row: Option<usize>,
+) -> Option<usize> {
     let indent = "  ".repeat(depth);
+    let mut remaining = selected_surface_row;
     match node {
         PresentationNode::Text { content, .. } => {
             lines.push(Line::from(format!("{indent}{content}")));
@@ -54,7 +56,7 @@ pub(super) fn append_node_lines(
                 ));
             }
             for child in children {
-                append_node_lines(child, depth + 1, lines);
+                remaining = append_node_lines(child, depth + 1, lines, remaining);
             }
         }
         PresentationNode::List { label, rows, .. } => {
@@ -65,9 +67,32 @@ pub(super) fn append_node_lines(
                 ));
             }
             for row in rows {
-                lines.push(Line::from(format!("{indent}• {}", row.title)));
+                let is_selected = remaining == Some(0);
+                if is_selected {
+                    remaining = None;
+                } else if let Some(n) = remaining {
+                    remaining = Some(n.saturating_sub(1));
+                }
+
+                let title_style = if is_selected {
+                    Style::default().add_modifier(Modifier::REVERSED)
+                } else {
+                    Style::default()
+                };
+                lines.push(Line::styled(
+                    format!("{indent}• {}", row.title),
+                    title_style,
+                ));
                 if let Some(subtitle) = &row.subtitle {
-                    lines.push(Line::from(format!("{indent}  {subtitle}")));
+                    let subtitle_style = if is_selected {
+                        Style::default().add_modifier(Modifier::REVERSED)
+                    } else {
+                        Style::default().add_modifier(Modifier::DIM)
+                    };
+                    lines.push(Line::styled(
+                        format!("{indent}  {subtitle}"),
+                        subtitle_style,
+                    ));
                 }
             }
         }
@@ -81,10 +106,24 @@ pub(super) fn append_node_lines(
                 lines.push(Line::from(format!("{indent}  {detail}")));
             }
         }
-        PresentationNode::Qr { label, .. } => lines.push(Line::from(format!(
-            "{indent}[QR] {}",
-            label.as_deref().unwrap_or("")
-        ))),
+        PresentationNode::Qr {
+            label,
+            payloads,
+            purpose,
+            ..
+        } => {
+            lines.push(Line::from(format!(
+                "{indent}[QR] {}",
+                label.as_deref().unwrap_or("")
+            )));
+            // In Display mode, render the payload as copyable text so terminal
+            // users (and the E2E harness) can read or transcribe it.
+            if *purpose == vauchi_core::PresentationQrPurpose::Display {
+                if let Some(payload) = payloads.first() {
+                    lines.push(Line::from(format!("{indent}  {payload}")));
+                }
+            }
+        }
         PresentationNode::Confirmation { warning, .. } => {
             lines.push(Line::from(format!("{indent}! {warning}")));
         }
@@ -101,4 +140,5 @@ pub(super) fn append_node_lines(
         PresentationNode::Divider => lines.push(Line::from(format!("{indent}────────"))),
         _ => {}
     }
+    remaining
 }

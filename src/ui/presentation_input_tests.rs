@@ -7,7 +7,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use vauchi_core::{
     AccessibilitySpec, ActionSpec, ActionTone, BindingId, Command, ContextBar, Event, InputValue,
     InteractionId, OverlayKind, OverlaySpec, PresentationInputKind, PresentationNode,
-    PresentationTokens, StandardShortcut, SurfaceId, SurfaceLayout, SurfaceSpec,
+    PresentationRow, PresentationTokens, StandardShortcut, SurfaceId, SurfaceLayout, SurfaceSpec,
 };
 
 fn action(id: &str, shortcut: Option<StandardShortcut>) -> ActionSpec {
@@ -154,4 +154,120 @@ fn escape_dismisses_each_overlay_by_kind_through_core() {
             ])
         );
     }
+}
+
+fn state_with_action_list() -> PresentationState {
+    let surface_id = SurfaceId::new("exchange_mode_selection").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface {
+        surface: SurfaceSpec {
+            surface_id: surface_id.clone(),
+            revision: 1,
+            title: "Exchange Mode".into(),
+            subtitle: Some("Pick a way to connect".into()),
+            accessibility_label: "Exchange Mode".into(),
+            layout: SurfaceLayout::Scroll,
+            tokens: PresentationTokens {
+                spacing_small: 1,
+                spacing_medium: 2,
+                spacing_large: 3,
+                corner_radius: 1,
+                minimum_target_size: 1,
+            },
+            nodes: vec![PresentationNode::List {
+                id: BindingId::new("modes").unwrap(),
+                label: None,
+                rows: vec![
+                    PresentationRow {
+                        title: "Glance".into(),
+                        subtitle: Some("Show a QR code".into()),
+                        detail: None,
+                        icon_token: Some("qrcode".into()),
+                        image_data: None,
+                        fallback_text: None,
+                        selected: false,
+                        enabled: true,
+                        activation: Some(action("mode:glance", None)),
+                        secondary_actions: Vec::new(),
+                        controls: Vec::new(),
+                        accessibility: AccessibilitySpec::label("Glance"),
+                    },
+                    PresentationRow {
+                        title: "Link".into(),
+                        subtitle: Some("Share a link".into()),
+                        detail: None,
+                        icon_token: Some("link".into()),
+                        image_data: None,
+                        fallback_text: None,
+                        selected: false,
+                        enabled: true,
+                        activation: Some(action("mode:link", None)),
+                        secondary_actions: Vec::new(),
+                        controls: Vec::new(),
+                        accessibility: AccessibilitySpec::label("Link"),
+                    },
+                ],
+                searchable: false,
+                paging: None,
+                accessibility: AccessibilitySpec::label("Exchange modes"),
+            }],
+        },
+    }]);
+    state
+}
+
+// @scenario: contact_exchange.feature :: User selects an exchange mode from the TUI
+#[test]
+fn down_selects_first_surface_list_row() {
+    let state = state_with_action_list();
+    let mut interaction = InteractionState::default();
+
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(interaction.selected_surface_row(), Some(0));
+}
+
+// @scenario: contact_exchange.feature :: User activates a surface list row with Enter
+#[test]
+fn enter_activates_selected_surface_list_row() {
+    let state = state_with_action_list();
+    let mut interaction = InteractionState::default();
+
+    interaction.key_outcome(&state, KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let KeyOutcome::Events(events) =
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE))
+    else {
+        panic!("expected events");
+    };
+    assert!(matches!(
+        events.as_slice(),
+        [
+            Event::SurfaceActivated { .. },
+            Event::ActionActivated { interaction_id, .. }
+        ] if interaction_id.as_str() == "mode:glance"
+    ));
+}
+
+// @scenario: contact_exchange.feature :: User activates a surface list row by number
+#[test]
+fn digit_activates_surface_list_row_directly() {
+    let state = state_with_action_list();
+    let mut interaction = InteractionState::default();
+
+    let KeyOutcome::Events(events) = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('2'), KeyModifiers::NONE),
+    ) else {
+        panic!("expected events");
+    };
+    assert!(matches!(
+        events.as_slice(),
+        [
+            Event::SurfaceActivated { .. },
+            Event::ActionActivated { interaction_id, .. }
+        ] if interaction_id.as_str() == "mode:link"
+    ));
+    assert_eq!(interaction.selected_surface_row(), Some(1));
 }

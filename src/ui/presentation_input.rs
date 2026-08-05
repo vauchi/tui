@@ -12,6 +12,8 @@ use super::presentation_protocol::PresentationState;
 pub(crate) struct InteractionState {
     context_index: usize,
     overlay_index: usize,
+    /// Selected row index in the active surface's actionable list(s), if any.
+    surface_row_index: Option<usize>,
     focused_binding: Option<BindingId>,
 }
 
@@ -27,10 +29,16 @@ impl InteractionState {
         if let Some(outcome) = self.overlay_outcome(state, key) {
             return outcome;
         }
+        if let Some(outcome) = self.surface_list_outcome(state, key) {
+            return outcome;
+        }
         if key.code == KeyCode::Esc {
             return self.back_outcome(state);
         }
         if key.code == KeyCode::Enter {
+            if let Some(index) = self.surface_row_index {
+                return events_outcome(state.activate_surface_row(index));
+            }
             return events_outcome(
                 state.activation_events(state.context_bar().and_then(|bar| bar.primary.as_ref())),
             );
@@ -67,6 +75,48 @@ impl InteractionState {
 
     pub(crate) fn selected_overlay(&self) -> usize {
         self.overlay_index
+    }
+
+    pub(crate) fn selected_surface_row(&self) -> Option<usize> {
+        self.surface_row_index
+    }
+
+    fn surface_list_outcome(
+        &mut self,
+        state: &PresentationState,
+        key: KeyEvent,
+    ) -> Option<KeyOutcome> {
+        let rows = state.surface_list_rows();
+        let count = rows.len();
+        if count == 0 {
+            return None;
+        }
+        match key.code {
+            KeyCode::Up | KeyCode::BackTab => {
+                self.surface_row_index = Some(
+                    self.surface_row_index
+                        .unwrap_or(0)
+                        .checked_sub(1)
+                        .unwrap_or(count - 1),
+                );
+                Some(KeyOutcome::Consumed)
+            }
+            KeyCode::Down | KeyCode::Tab => {
+                let current = self.surface_row_index.unwrap_or(count - 1);
+                self.surface_row_index = Some((current + 1) % count);
+                Some(KeyOutcome::Consumed)
+            }
+            KeyCode::Char(digit) if digit.is_ascii_digit() && digit != '0' => {
+                let index = digit.to_digit(10).unwrap_or(1) as usize - 1;
+                if index < count {
+                    self.surface_row_index = Some(index);
+                    Some(events_outcome(state.activate_surface_row(index)))
+                } else {
+                    Some(KeyOutcome::Consumed)
+                }
+            }
+            _ => None,
+        }
     }
 
     fn overlay_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> Option<KeyOutcome> {

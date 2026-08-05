@@ -131,6 +131,25 @@ impl PresentationState {
         self.activation_events(action)
     }
 
+    /// All list rows from the active surface that can be activated.
+    pub(crate) fn surface_list_rows(&self) -> Vec<&vauchi_core::PresentationRow> {
+        let Some(surface) = self.surface() else {
+            return Vec::new();
+        };
+        let mut rows = Vec::new();
+        collect_list_rows(&surface.nodes, &mut rows);
+        rows
+    }
+
+    /// Activate a surface list row by its index in `surface_list_rows()`.
+    pub(crate) fn activate_surface_row(&self, index: usize) -> Vec<Event> {
+        let action = self
+            .surface_list_rows()
+            .get(index)
+            .and_then(|row| row.activation.as_ref());
+        self.activation_events(action)
+    }
+
     pub(crate) fn activation_events(&self, action: Option<&ActionSpec>) -> Vec<Event> {
         let (Some(action), Some(surface_id)) = (action, self.active_surface_id()) else {
             return Vec::new();
@@ -175,5 +194,27 @@ impl PresentationState {
         self.surfaces
             .get(surface_id)
             .is_some_and(|surface| surface.revision == revision)
+    }
+}
+
+fn collect_list_rows<'a>(
+    nodes: &'a [vauchi_core::PresentationNode],
+    rows: &mut Vec<&'a vauchi_core::PresentationRow>,
+) {
+    use vauchi_core::PresentationNode;
+    for node in nodes {
+        match node {
+            PresentationNode::List {
+                rows: list_rows, ..
+            } => {
+                for row in list_rows {
+                    if row.activation.is_some() {
+                        rows.push(row);
+                    }
+                }
+            }
+            PresentationNode::Group { children, .. } => collect_list_rows(children, rows),
+            _ => {}
+        }
     }
 }

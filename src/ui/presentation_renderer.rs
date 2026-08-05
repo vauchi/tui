@@ -19,10 +19,11 @@ pub(crate) fn draw(
     area: Rect,
     state: &PresentationState,
     selected_action: usize,
+    selected_surface_row: Option<usize>,
 ) {
     let [content_area, bar_area] =
         Layout::vertical([Constraint::Min(1), Constraint::Length(3)]).areas(area);
-    draw_surface(frame, content_area, state);
+    draw_surface(frame, content_area, state, selected_surface_row);
     draw_context_bar(frame, bar_area, state, selected_action);
     if state.overlay().is_some() {
         draw_overlay(frame, area, state, selected_action);
@@ -104,7 +105,12 @@ pub(crate) fn draw_feedback(
     }
 }
 
-fn draw_surface(frame: &mut Frame, area: Rect, state: &PresentationState) {
+fn draw_surface(
+    frame: &mut Frame,
+    area: Rect,
+    state: &PresentationState,
+    selected_surface_row: Option<usize>,
+) {
     let surfaces = state.visible_surfaces();
     if surfaces.is_empty() {
         frame.render_widget(Paragraph::new("Preparing…"), area);
@@ -114,14 +120,19 @@ fn draw_surface(frame: &mut Frame, area: Rect, state: &PresentationState) {
         let [primary, detail] =
             Layout::horizontal([Constraint::Percentage(38), Constraint::Percentage(62)])
                 .areas(area);
-        draw_surface_spec(frame, primary, surfaces[0]);
-        draw_surface_spec(frame, detail, surfaces[1]);
+        draw_surface_spec(frame, primary, surfaces[0], selected_surface_row);
+        draw_surface_spec(frame, detail, surfaces[1], None);
     } else {
-        draw_surface_spec(frame, area, surfaces[0]);
+        draw_surface_spec(frame, area, surfaces[0], selected_surface_row);
     }
 }
 
-fn draw_surface_spec(frame: &mut Frame, area: Rect, surface: &vauchi_core::SurfaceSpec) {
+fn draw_surface_spec(
+    frame: &mut Frame,
+    area: Rect,
+    surface: &vauchi_core::SurfaceSpec,
+    selected_surface_row: Option<usize>,
+) {
     let mut lines = Vec::new();
     if let Some(subtitle) = &surface.subtitle {
         lines.push(Line::styled(
@@ -130,8 +141,9 @@ fn draw_surface_spec(frame: &mut Frame, area: Rect, surface: &vauchi_core::Surfa
         ));
         lines.push(Line::default());
     }
+    let mut remaining = selected_surface_row;
     for node in &surface.nodes {
-        append_node_lines(node, 0, &mut lines);
+        remaining = append_node_lines(node, 0, &mut lines, remaining);
     }
     frame.render_widget(
         Paragraph::new(lines)
