@@ -121,12 +121,14 @@ pub(super) fn append_node_lines(
                 "{indent}[QR] {}",
                 label.as_deref().unwrap_or("")
             )));
-            // In Display mode, render the payload as copyable text so terminal
-            // users (and the E2E harness) can read or transcribe it.
-            if *purpose == vauchi_core::PresentationQrPurpose::Display {
-                if let Some(payload) = payloads.first() {
-                    lines.push(Line::from(format!("{indent}  {payload}")));
-                }
+            // A terminal cannot show a scannable code, so Display-purpose
+            // payloads are printed for transcription; e2e/src/device/tui.rs
+            // parses this line. Exposure is tracked in
+            // backlog/2026-08-05-tui-qr-payload-rendered-plaintext.
+            if *purpose == vauchi_core::PresentationQrPurpose::Display
+                && let Some(payload) = payloads.first()
+            {
+                lines.push(Line::from(format!("{indent}  {payload}")));
             }
         }
         PresentationNode::Confirmation { warning, .. } => {
