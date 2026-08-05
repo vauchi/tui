@@ -67,11 +67,16 @@ pub(super) fn append_node_lines(
                 ));
             }
             for row in rows {
-                let is_selected = remaining == Some(0);
-                if is_selected {
-                    remaining = None;
-                } else if let Some(n) = remaining {
-                    remaining = Some(n.saturating_sub(1));
+                // Only activatable rows are addressable, so only they may
+                // consume a selection index — otherwise the highlight drifts
+                // away from the row Enter would activate.
+                let is_selected = row.activation.is_some() && remaining == Some(0);
+                if row.activation.is_some() {
+                    remaining = match remaining {
+                        Some(0) => None,
+                        Some(n) => Some(n - 1),
+                        None => None,
+                    };
                 }
 
                 let title_style = if is_selected {

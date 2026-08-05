@@ -22,7 +22,8 @@ pub fn draw_presentation(frame: &mut Frame, app: &App) {
         frame.area(),
         &app.presentation,
         selected,
-        app.presentation_interaction.selected_surface_row(),
+        app.presentation_interaction
+            .selected_surface_row(&app.presentation),
     );
     if let Some(effect) = app.presentation_effects.front() {
         presentation_renderer::draw_effect_prompt(frame, frame.area(), effect, &app.input_buffer);

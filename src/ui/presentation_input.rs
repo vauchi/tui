@@ -4,7 +4,9 @@
 //! Keyboard-to-event adapter for Core's generic presentation protocol.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use vauchi_core::{ActionSpec, BindingId, Event, InputValue, PresentationNode, StandardShortcut};
+use vauchi_core::{
+    ActionSpec, BindingId, Event, InputValue, PresentationNode, StandardShortcut, SurfaceId,
+};
 
 use super::presentation_protocol::PresentationState;
 
@@ -12,8 +14,9 @@ use super::presentation_protocol::PresentationState;
 pub(crate) struct InteractionState {
     context_index: usize,
     overlay_index: usize,
-    /// Selected row index in the active surface's actionable list(s), if any.
-    surface_row_index: Option<usize>,
+    /// Selected row and the surface it belongs to, so navigating away cannot
+    /// carry an index onto a surface that never had that row.
+    surface_row: Option<(SurfaceId, usize)>,
     focused_binding: Option<BindingId>,
 }
 
@@ -36,7 +39,7 @@ impl InteractionState {
             return self.back_outcome(state);
         }
         if key.code == KeyCode::Enter {
-            if let Some(index) = self.surface_row_index {
+            if let Some(index) = self.selected_surface_row(state) {
                 return events_outcome(state.activate_surface_row(index));
             }
             return events_outcome(
@@ -77,8 +80,10 @@ impl InteractionState {
         self.overlay_index
     }
 
-    pub(crate) fn selected_surface_row(&self) -> Option<usize> {
-        self.surface_row_index
+    pub(crate) fn selected_surface_row(&self, state: &PresentationState) -> Option<usize> {
+        let (owner, index) = self.surface_row.as_ref()?;
+        let surface = state.surface()?;
+        (surface.surface_id == *owner && *index < state.surface_list_rows().len()).then_some(*index)
     }
 
     fn surface_list_outcome(
@@ -86,37 +91,44 @@ impl InteractionState {
         state: &PresentationState,
         key: KeyEvent,
     ) -> Option<KeyOutcome> {
-        let rows = state.surface_list_rows();
-        let count = rows.len();
+        let count = state.surface_list_rows().len();
         if count == 0 {
             return None;
         }
+        let current = self.selected_surface_row(state);
+        let awaits_text = self.focused_input(state).is_some();
         match key.code {
-            KeyCode::Up | KeyCode::BackTab => {
-                self.surface_row_index = Some(
-                    self.surface_row_index
-                        .unwrap_or(0)
-                        .checked_sub(1)
-                        .unwrap_or(count - 1),
-                );
+            KeyCode::Up => {
+                let previous = current.unwrap_or(0).checked_sub(1).unwrap_or(count - 1);
+                self.select_surface_row(state, previous);
                 Some(KeyOutcome::Consumed)
             }
-            KeyCode::Down | KeyCode::Tab => {
-                let current = self.surface_row_index.unwrap_or(count - 1);
-                self.surface_row_index = Some((current + 1) % count);
+            KeyCode::Down => {
+                self.select_surface_row(state, current.map_or(0, |index| (index + 1) % count));
                 Some(KeyOutcome::Consumed)
             }
-            KeyCode::Char(digit) if digit.is_ascii_digit() && digit != '0' => {
+            // A row shortcut must never outrank a field waiting for the same
+            // keystroke, or digits become untypeable wherever a list is shown.
+            KeyCode::Char(digit) if digit.is_ascii_digit() && digit != '0' && !awaits_text => {
                 let index = digit.to_digit(10).unwrap_or(1) as usize - 1;
-                if index < count {
-                    self.surface_row_index = Some(index);
-                    Some(events_outcome(state.activate_surface_row(index)))
-                } else {
-                    Some(KeyOutcome::Consumed)
+                if index >= count {
+                    return Some(KeyOutcome::Consumed);
                 }
+                self.select_surface_row(state, index);
+                Some(events_outcome(state.activate_surface_row(index)))
             }
             _ => None,
         }
+    }
+
+    fn select_surface_row(&mut self, state: &PresentationState, index: usize) {
+        if let Some(surface) = state.surface() {
+            self.surface_row = Some((surface.surface_id.clone(), index));
+        }
+    }
+
+    fn focused_input(&self, state: &PresentationState) -> Option<InputTarget> {
+        find_input(&state.surface()?.nodes, self.focused_binding.as_ref())
     }
 
     fn overlay_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> Option<KeyOutcome> {

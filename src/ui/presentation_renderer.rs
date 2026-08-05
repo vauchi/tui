@@ -120,8 +120,16 @@ fn draw_surface(
         let [primary, detail] =
             Layout::horizontal([Constraint::Percentage(38), Constraint::Percentage(62)])
                 .areas(area);
-        draw_surface_spec(frame, primary, surfaces[0], selected_surface_row);
-        draw_surface_spec(frame, detail, surfaces[1], None);
+        // The selection indexes the active surface, so highlighting the pane
+        // that merely sits first would mark rows the keyboard cannot reach.
+        let selection_for = |surface: &vauchi_core::SurfaceSpec| {
+            state
+                .surface()
+                .filter(|active| active.surface_id == surface.surface_id)
+                .and(selected_surface_row)
+        };
+        draw_surface_spec(frame, primary, surfaces[0], selection_for(surfaces[0]));
+        draw_surface_spec(frame, detail, surfaces[1], selection_for(surfaces[1]));
     } else {
         draw_surface_spec(frame, area, surfaces[0], selected_surface_row);
     }

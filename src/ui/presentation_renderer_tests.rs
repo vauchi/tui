@@ -5,10 +5,11 @@ use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
+use ratatui::style::Modifier;
 use vauchi_core::{
     AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, InteractionId, PaneLayout,
-    PresentationNode, PresentationProfile, PresentationTextStyle, PresentationTokens, SurfaceId,
-    SurfaceLayout, SurfaceSpec, WindowClass,
+    PresentationNode, PresentationProfile, PresentationRow, PresentationTextStyle,
+    PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
 };
 
 fn action(id: &str, label: &str) -> ActionSpec {
@@ -147,4 +148,140 @@ fn expanded_profile_renders_primary_and_detail_as_two_native_panes() {
         .collect::<String>();
     assert!(rendered.contains("Contacts"));
     assert!(rendered.contains("Alice"));
+}
+
+fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
+    PresentationRow {
+        title: title.into(),
+        subtitle: None,
+        detail: None,
+        icon_token: None,
+        image_data: None,
+        fallback_text: None,
+        selected: false,
+        enabled: true,
+        activation,
+        secondary_actions: Vec::new(),
+        controls: Vec::new(),
+        accessibility: AccessibilitySpec::label(title),
+    }
+}
+
+/// Reverse-video runs only — side-by-side panes share terminal rows, so a
+/// whole-row view cannot tell which pane carries the highlight.
+fn highlighted_lines(buffer: &ratatui::buffer::Buffer) -> Vec<String> {
+    buffer
+        .content
+        .chunks(buffer.area.width as usize)
+        .flat_map(|line| {
+            let mut runs = Vec::new();
+            let mut current = String::new();
+            for cell in line {
+                if cell.modifier.contains(Modifier::REVERSED) {
+                    current.push_str(cell.symbol());
+                    continue;
+                }
+                runs.extend(non_blank(std::mem::take(&mut current)));
+            }
+            runs.extend(non_blank(current));
+            runs
+        })
+        .collect()
+}
+
+fn non_blank(text: String) -> Option<String> {
+    let trimmed = text.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_string())
+}
+
+// @scenario: generic_presentation_protocol.feature :: Available window drives structural composition
+#[test]
+fn split_panes_highlight_only_the_active_surface() {
+    let mut primary = titled_surface("surface-primary", "Contacts");
+    primary.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("contacts").unwrap(),
+        label: None,
+        rows: vec![row("Grace", Some(action("open:grace", "Grace")))],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Contacts"),
+    }];
+    let mut detail = titled_surface("surface-detail", "Ada");
+    detail.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("fields").unwrap(),
+        label: None,
+        rows: vec![row("Email", Some(action("edit:email", "Email")))],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Fields"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[
+        Command::ReplaceSurface {
+            surface: primary.clone(),
+        },
+        Command::ReplaceSurface {
+            surface: detail.clone(),
+        },
+        Command::SetPresentationProfile {
+            profile: PresentationProfile {
+                window_class: WindowClass::Expanded,
+                pane_layout: PaneLayout::Split,
+                primary_surface: primary.surface_id,
+                detail_surface: Some(detail.surface_id.clone()),
+                active_surface: detail.surface_id,
+            },
+        },
+    ]);
+
+    let backend = TestBackend::new(100, 12);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, Some(0)))
+        .unwrap();
+
+    let highlighted = highlighted_lines(terminal.backend().buffer());
+    assert!(
+        highlighted.iter().any(|line| line.contains("Email")),
+        "the selection indexes the active detail surface, so its row must be highlighted: {highlighted:?}"
+    );
+    assert!(
+        !highlighted.iter().any(|line| line.contains("Grace")),
+        "the inactive primary pane must not show a selection the keyboard cannot move: {highlighted:?}"
+    );
+}
+
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn highlight_marks_the_row_that_activation_would_reach() {
+    let mut surface = titled_surface("surface-primary", "Contacts");
+    surface.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("results").unwrap(),
+        label: None,
+        rows: vec![
+            row("Unavailable", None),
+            row("Ada", Some(action("open:ada", "Ada"))),
+        ],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Results"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    let backend = TestBackend::new(60, 12);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, Some(0)))
+        .unwrap();
+
+    let highlighted = highlighted_lines(terminal.backend().buffer());
+    assert!(
+        highlighted.iter().any(|line| line.contains("Ada")),
+        "selection index 0 activates the first actionable row, so that row must be the highlighted one: {highlighted:?}"
+    );
+    assert!(
+        !highlighted.iter().any(|line| line.contains("Unavailable")),
+        "a row with no activation can never be reached by Enter, so it must never look selected: {highlighted:?}"
+    );
 }

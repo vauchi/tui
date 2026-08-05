@@ -22,6 +22,23 @@ fn action(id: &str, shortcut: Option<StandardShortcut>) -> ActionSpec {
     }
 }
 
+fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
+    PresentationRow {
+        title: title.into(),
+        subtitle: None,
+        detail: None,
+        icon_token: None,
+        image_data: None,
+        fallback_text: None,
+        selected: false,
+        enabled: true,
+        activation,
+        secondary_actions: Vec::new(),
+        controls: Vec::new(),
+        accessibility: AccessibilitySpec::label(title),
+    }
+}
+
 fn state_with_input() -> PresentationState {
     let surface_id = SurfaceId::new("onboarding").unwrap();
     let mut state = PresentationState::default();
@@ -226,7 +243,7 @@ fn down_selects_first_surface_list_row() {
         interaction.key_outcome(&state, KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)),
         KeyOutcome::Consumed
     );
-    assert_eq!(interaction.selected_surface_row(), Some(0));
+    assert_eq!(interaction.selected_surface_row(&state), Some(0));
 }
 
 // @scenario: contact_exchange.feature :: User activates a surface list row with Enter
@@ -250,6 +267,150 @@ fn enter_activates_selected_surface_list_row() {
     ));
 }
 
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn tab_keeps_cycling_context_actions_while_a_list_is_present() {
+    let mut state = state_with_action_list();
+    state.apply(&[Command::SetContextBar {
+        surface_id: SurfaceId::new("exchange_mode_selection").unwrap(),
+        revision: 1,
+        bar: Box::new(ContextBar {
+            back: Some(action("back", Some(StandardShortcut::Back))),
+            navigation: Some(action("navigation", None)),
+            primary: Some(action("continue", None)),
+            secondary: None,
+        }),
+    }]);
+    let mut interaction = InteractionState::default();
+
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(
+        interaction.selected_context(),
+        1,
+        "a list on the surface must not take Tab away from the context bar"
+    );
+    assert_eq!(interaction.selected_surface_row(&state), None);
+}
+
+fn state_with_input_and_action_list() -> PresentationState {
+    let surface_id = SurfaceId::new("contact_search").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface {
+        surface: SurfaceSpec {
+            surface_id,
+            revision: 1,
+            title: "Search".into(),
+            subtitle: None,
+            accessibility_label: "Search".into(),
+            layout: SurfaceLayout::Scroll,
+            tokens: PresentationTokens {
+                spacing_small: 1,
+                spacing_medium: 2,
+                spacing_large: 3,
+                corner_radius: 1,
+                minimum_target_size: 1,
+            },
+            nodes: vec![
+                PresentationNode::Input {
+                    binding_id: BindingId::new("query").unwrap(),
+                    label: "Phone".into(),
+                    value: "+4".into(),
+                    placeholder: None,
+                    input_kind: PresentationInputKind::Text,
+                    max_length: Some(80),
+                    validation_error: None,
+                    enabled: true,
+                    accessibility: AccessibilitySpec::label("Phone"),
+                },
+                PresentationNode::List {
+                    id: BindingId::new("results").unwrap(),
+                    label: None,
+                    rows: vec![row("Ada", Some(action("open:ada", None)))],
+                    searchable: false,
+                    paging: None,
+                    accessibility: AccessibilitySpec::label("Results"),
+                },
+            ],
+        },
+    }]);
+    state
+}
+
+// @scenario: generic_presentation_protocol.feature :: User interaction returns as an opaque event
+#[test]
+fn digits_reach_a_focused_input_instead_of_activating_a_row() {
+    let state = state_with_input_and_action_list();
+    let mut interaction = InteractionState::default();
+
+    let KeyOutcome::Events(events) = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('1'), KeyModifiers::NONE),
+    ) else {
+        panic!("expected the digit to edit the focused input");
+    };
+    assert!(
+        matches!(
+            events.as_slice(),
+            [
+                Event::SurfaceActivated { .. },
+                Event::ValueChanged {
+                    value: InputValue::Text(value),
+                    ..
+                }
+            ] if value == "+41"
+        ),
+        "typing a digit into a text field must not activate a list row: {events:?}"
+    );
+}
+
+// @scenario: generic_presentation_protocol.feature :: User interaction returns as an opaque event
+#[test]
+fn surface_replacement_clears_a_stale_row_selection() {
+    let mut state = state_with_action_list();
+    let mut interaction = InteractionState::default();
+
+    interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('2'), KeyModifiers::NONE),
+    );
+    assert_eq!(interaction.selected_surface_row(&state), Some(1));
+
+    state.apply(&[Command::ReplaceSurface {
+        surface: SurfaceSpec {
+            surface_id: SurfaceId::new("exchange_progress").unwrap(),
+            revision: 1,
+            title: "Connecting".into(),
+            subtitle: None,
+            accessibility_label: "Connecting".into(),
+            layout: SurfaceLayout::Fixed,
+            tokens: PresentationTokens {
+                spacing_small: 1,
+                spacing_medium: 2,
+                spacing_large: 3,
+                corner_radius: 1,
+                minimum_target_size: 1,
+            },
+            nodes: vec![PresentationNode::List {
+                id: BindingId::new("steps").unwrap(),
+                label: None,
+                rows: vec![row("Retry", Some(action("exchange:retry", None)))],
+                searchable: false,
+                paging: None,
+                accessibility: AccessibilitySpec::label("Steps"),
+            }],
+        },
+    }]);
+
+    assert_eq!(
+        interaction.selected_surface_row(&state),
+        None,
+        "a selection index from the previous surface must not survive navigation"
+    );
+}
+
 // @scenario: contact_exchange.feature :: User activates a surface list row by number
 #[test]
 fn digit_activates_surface_list_row_directly() {
@@ -269,5 +430,5 @@ fn digit_activates_surface_list_row_directly() {
             Event::ActionActivated { interaction_id, .. }
         ] if interaction_id.as_str() == "mode:link"
     ));
-    assert_eq!(interaction.selected_surface_row(), Some(1));
+    assert_eq!(interaction.selected_surface_row(&state), Some(1));
 }
