@@ -199,7 +199,7 @@ fn non_blank(text: String) -> Option<String> {
 fn split_panes_highlight_only_the_active_surface() {
     let mut primary = titled_surface("surface-primary", "Contacts");
     primary.nodes = vec![PresentationNode::List {
-        id: vauchi_core::BindingId::new("contacts").unwrap(),
+        id: vauchi_core::BindingId::new("entries").unwrap(),
         label: None,
         rows: vec![row("Grace", Some(action("open:grace", "Grace")))],
         searchable: false,
