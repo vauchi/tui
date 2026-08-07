@@ -113,10 +113,7 @@ test:unit:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
     - !reference [.clone-themes, before_script]
-  variables:
-    VAUCHI_LOCALES_DIR: "../locales"
   script:
     - cargo nextest run --profile ci --all-targets
   artifacts:
@@ -184,7 +181,6 @@ test:snapshots:record:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
   script:
     - echo "📸 Recording insta snapshot baselines..."
     - |
@@ -192,7 +188,7 @@ test:snapshots:record:
       # so fixed names risk EACCES from a foreign-owned leftover file.
       CARGO_LOG="/tmp/cargo-record-${CI_JOB_ID}.log"
       set +e
-      INSTA_UPDATE=always VAUCHI_LOCALES_DIR="../locales" cargo test --all-targets 2>&1 | tee "$CARGO_LOG"
+      INSTA_UPDATE=always cargo test --all-targets 2>&1 | tee "$CARGO_LOG"
       CARGO_EXIT=$?
       set -e
       if [ "$CARGO_EXIT" -ne 0 ]; then
@@ -238,9 +234,11 @@ test:snapshots:record:
     - !reference [.validation-rust, rules]
 
 # Main: full coverage with llvm-cov (uses shared .coverage-job template)
-# TUI needs themes (compile-time include_bytes) and locales (runtime) — both
-# cloned in before_script. VAUCHI_LOCALES_DIR is set via variables so the
-# template's script sees it without an inline override.
+# TUI needs themes (compile-time include_bytes), cloned in before_script.
+# Locales are no longer cloned here: vauchi-app vendors the English
+# catalogue, so building it no longer requires the content repo. The TUI
+# reads no locale file of its own — every string arrives as Core-prepared
+# command copy.
 coverage:workspace:
   extends: [.coverage-job, .rust-runner, .timeout-cold-rebuild]
   needs:
@@ -251,13 +249,11 @@ coverage:workspace:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
     - !reference [.clone-themes, before_script]
     - rustup component add llvm-tools-preview 2>/dev/null || true
   variables:
     COVERAGE_REPO_LABEL: "tui"
     COVERAGE_USE_NEXTEST: "true"
-    VAUCHI_LOCALES_DIR: "../locales"
 
 # Binary size tracking (main merges + release tags)
 perf:binary-size:
@@ -400,9 +396,6 @@ dev:test:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
-  variables:
-    VAUCHI_LOCALES_DIR: "../locales"
   script:
     - cargo nextest run --profile ci --all-targets
   rules:
@@ -441,11 +434,9 @@ rc:test:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
     - rustup component add llvm-tools-preview 2>/dev/null || true
   variables:
     COVERAGE_REPO_LABEL: "tui"
-    VAUCHI_LOCALES_DIR: "../locales"
 
 rc:mutation:
   extends: [.mutation-nightly, .rust-runner, .timeout-extended]
@@ -471,10 +462,7 @@ verify:upstream-compat:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
     - !reference [.clone-themes, before_script]
-  variables:
-    VAUCHI_LOCALES_DIR: "../locales"
   script:
     - cargo nextest run --profile ci --all-targets
 
@@ -487,10 +475,7 @@ verify:upstream-prerelease:
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
-    - !reference [.clone-locales, before_script]
     - !reference [.clone-themes, before_script]
-  variables:
-    VAUCHI_LOCALES_DIR: "../locales"
   script:
     - cargo nextest run --profile ci --all-targets
 
