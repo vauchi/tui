@@ -30,6 +30,7 @@ use vauchi_core::storage::secure::{FileKeyStorage, SecureStorage};
 
 use vauchi_tui::app::App;
 use vauchi_tui::handlers;
+use vauchi_tui::i18n;
 use vauchi_tui::ui;
 
 /// Default relay URL.
@@ -61,6 +62,21 @@ struct Cli {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Load runtime locale files before any UI string is rendered; without
+    // this every string falls back to core's 2-key bundled set.
+    let locale_source = i18n::init_from_environment();
+    if !vauchi_app::i18n::is_initialized() {
+        match locale_source.path() {
+            Some(dir) => eprintln!(
+                "vauchi-tui: failed to load locale files from {}; using built-in English strings.",
+                dir.display()
+            ),
+            None => eprintln!(
+                "vauchi-tui: no locale directory found; set VAUCHI_LOCALES_DIR to a locale JSON directory."
+            ),
+        }
+    }
 
     // Require an interactive terminal for TUI mode
     if !cli.check && !io::stdin().is_terminal() {

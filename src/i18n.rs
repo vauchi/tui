@@ -6,9 +6,112 @@
 //!
 //! Provides convenient string lookup using vauchi-core i18n.
 
+use std::path::{Path, PathBuf};
+
 use vauchi_app::i18n::{
     Locale, LocaleInfo, get_available_locales, get_locale_info, get_string, get_string_with_args,
 };
+
+/// Where runtime locale files were resolved from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LocaleSource {
+    /// `VAUCHI_LOCALES_DIR` environment variable.
+    Env(PathBuf),
+    /// `locales/` next to the repo checkout (workspace development layout).
+    WorkspaceSibling(PathBuf),
+    /// `locales/` (or `share/vauchi/locales/`) found searching upward from
+    /// the executable.
+    ExeRelative(PathBuf),
+    /// No locale directory found; core's bundled English fallback applies.
+    BundledFallback,
+}
+
+impl LocaleSource {
+    /// Directory to load, if any.
+    pub fn path(&self) -> Option<&Path> {
+        match self {
+            Self::Env(dir) | Self::WorkspaceSibling(dir) | Self::ExeRelative(dir) => Some(dir),
+            Self::BundledFallback => None,
+        }
+    }
+}
+
+/// Resolves the runtime locale directory: env override, then the
+/// workspace-sibling `locales/`, then an upward search from the executable.
+///
+/// vauchi-core is consumed as a git dependency, so its build-time locales
+/// symlink dangles in cargo git checkouts and the full string catalog must
+/// be loaded at runtime — the same contract linux-gtk and vauchi-cabi
+/// already follow. Pure: no env reads, no globals. Candidates must contain
+/// `en.json` so an unrelated directory that happens to be named `locales/`
+/// is not mistaken for a Vauchi locale catalog.
+pub fn resolve_locales_dir(
+    env_dir: Option<PathBuf>,
+    manifest_dir: Option<PathBuf>,
+    exe_path: Option<PathBuf>,
+) -> LocaleSource {
+    if let Some(dir) = env_dir {
+        return LocaleSource::Env(dir);
+    }
+
+    if let Some(dir) = manifest_dir
+        .and_then(|m| m.parent().map(|p| p.join("locales")))
+        .filter(|d| has_english_locale(d))
+    {
+        return LocaleSource::WorkspaceSibling(dir);
+    }
+
+    // 8 levels covers `<ws>/.worktrees/<branch>/tui/target/<triple>/<profile>/`
+    // (5 pops to the workspace root) with slack; installed binaries find
+    // `share/vauchi/locales` within 2.
+    if let Some(mut base) = exe_path.and_then(|e| e.parent().map(PathBuf::from)) {
+        for _ in 0..8 {
+            for candidate in [base.join("locales"), base.join("share/vauchi/locales")] {
+                if has_english_locale(&candidate) {
+                    return LocaleSource::ExeRelative(candidate);
+                }
+            }
+            if !base.pop() {
+                break;
+            }
+        }
+    }
+
+    LocaleSource::BundledFallback
+}
+
+fn has_english_locale(dir: &Path) -> bool {
+    dir.join("en.json").is_file()
+}
+
+/// Loads a resolved source into the global locale store.
+/// `BundledFallback` is a no-op; load errors are non-fatal (core keeps the
+/// bundled fallback). Callers can detect a failed load via
+/// `vauchi_app::i18n::is_initialized()` — core's `init` reports `Ok` even
+/// for a directory that yielded no locales.
+pub fn apply_locale_source(source: &LocaleSource) {
+    if let Some(dir) = source.path() {
+        let _ = vauchi_app::i18n::init(dir);
+    }
+}
+
+/// Startup bootstrap: resolve and load runtime locale files.
+/// Returns the source so the caller can report when no strings were loaded.
+pub fn init_from_environment() -> LocaleSource {
+    let source = resolve_locales_dir(
+        std::env::var_os("VAUCHI_LOCALES_DIR").map(PathBuf::from),
+        // Compile-time repo path: restricted to debug builds so a release
+        // binary never prefers a leftover build tree over installed locales.
+        if cfg!(debug_assertions) {
+            option_env!("CARGO_MANIFEST_DIR").map(PathBuf::from)
+        } else {
+            None
+        },
+        std::env::current_exe().ok(),
+    );
+    apply_locale_source(&source);
+    source
+}
 
 /// Current locale state for the TUI.
 #[derive(Debug, Clone)]
