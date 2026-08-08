@@ -42,7 +42,22 @@ impl PresentationState {
                     self.overlays
                         .insert(surface_id.clone(), (*revision, overlay.clone()));
                 }
-                Command::SetContextBar { .. } | Command::PresentOverlay { .. } => {}
+                // Core rewrites a repeat PresentOverlay into this so the
+                // context-bar buttons toggle. Matching on kind as well as
+                // surface keeps a stale dismiss from closing an overlay Core
+                // has since replaced.
+                Command::DismissOverlay {
+                    surface_id, kind, ..
+                } if self
+                    .overlays
+                    .get(surface_id)
+                    .is_some_and(|(_, open)| open.kind == *kind) =>
+                {
+                    self.overlays.remove(surface_id);
+                }
+                Command::SetContextBar { .. }
+                | Command::PresentOverlay { .. }
+                | Command::DismissOverlay { .. } => {}
                 Command::SetPresentationProfile { profile } => {
                     self.profile = Some(profile.clone());
                 }

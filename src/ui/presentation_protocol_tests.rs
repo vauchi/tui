@@ -156,6 +156,48 @@ fn transaction_installs_surface_context_bar_and_overlay_atomically() {
     assert_eq!(state.overlay().unwrap().kind, OverlayKind::Navigation);
 }
 
+// Core makes the context-bar menu buttons toggle by rewriting a repeat
+// PresentOverlay into DismissOverlay. Every shell has to map it: Android and
+// iOS dropped it into a generic effect and the menu never closed on a second
+// tap (`vauchi/android!621`). The TUI already scopes overlays per surface, so
+// this arm is the only half it was missing.
+// @internal
+#[test]
+fn dismiss_overlay_closes_the_open_overlay() {
+    let mut state = PresentationState::default();
+    let surface = surface(3);
+    let surface_id = surface.surface_id.clone();
+
+    state.apply(&[
+        Command::ReplaceSurface { surface },
+        Command::PresentOverlay {
+            surface_id: surface_id.clone(),
+            revision: 3,
+            overlay: OverlaySpec {
+                kind: OverlayKind::Navigation,
+                title: Some("Navigate".into()),
+                items: vec![action("open-primary")],
+            },
+        },
+    ]);
+    assert_eq!(state.overlay().unwrap().kind, OverlayKind::Navigation);
+
+    let effects = state.apply(&[Command::DismissOverlay {
+        surface_id,
+        revision: 3,
+        kind: OverlayKind::Navigation,
+    }]);
+
+    assert!(
+        state.overlay().is_none(),
+        "a dismissed overlay must leave nothing to render",
+    );
+    assert!(
+        effects.is_empty(),
+        "DismissOverlay must be handled, not passed through as an effect: {effects:?}",
+    );
+}
+
 // @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
 #[test]
 fn tui_consumes_the_core_owned_presentation_contract_fixture() {
