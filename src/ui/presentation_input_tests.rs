@@ -432,3 +432,37 @@ fn digit_activates_surface_list_row_directly() {
     ));
     assert_eq!(interaction.selected_surface_row(&state), Some(1));
 }
+
+/// Return in a field is the terminal's submit gesture — there is no
+/// pointer to click away with, so it is the only one available. Until a
+/// field has been typed into, Return keeps activating the primary
+/// action, which `keyboard_shortcuts_resolve_only_core_minted_context_actions`
+/// pins.
+// @scenario: generic_presentation_protocol.feature :: Return in a field reports a submission
+#[test]
+fn enter_reports_submission_once_a_field_has_focus() {
+    let state = state_with_input();
+    let mut interaction = InteractionState::default();
+
+    // Typing focuses the field.
+    let KeyOutcome::Events(_) = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('x'), KeyModifiers::NONE),
+    ) else {
+        panic!("typing must produce events");
+    };
+
+    let KeyOutcome::Events(events) =
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE))
+    else {
+        panic!("expected events");
+    };
+    assert!(
+        matches!(
+            events.as_slice(),
+            [Event::InputSubmitted { binding_id, .. }]
+                if binding_id.as_str() == "display-name"
+        ),
+        "Return must report the focused field, got {events:?}"
+    );
+}

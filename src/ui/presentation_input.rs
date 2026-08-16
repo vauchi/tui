@@ -42,6 +42,14 @@ impl InteractionState {
             if let Some(index) = self.selected_surface_row(state) {
                 return events_outcome(state.activate_surface_row(index));
             }
+            // Return in a field is the terminal's submit gesture, and the
+            // only one available here — there is no pointer to click away
+            // with. Core decides whether the screen does anything with
+            // it; where nothing does, the primary action still runs
+            // because Core answers with no command.
+            if let Some(outcome) = self.submit_outcome(state) {
+                return outcome;
+            }
             return events_outcome(
                 state.activation_events(state.context_bar().and_then(|bar| bar.primary.as_ref())),
             );
@@ -178,6 +186,18 @@ impl InteractionState {
             },
             Event::BackRequested { surface_id },
         ])
+    }
+
+    /// Report Return in a focused field. `None` when no field is focused,
+    /// so Return keeps activating the primary action on screens without
+    /// text entry.
+    fn submit_outcome(&self, state: &PresentationState) -> Option<KeyOutcome> {
+        let binding_id = self.focused_binding.clone()?;
+        let surface_id = state.surface()?.surface_id.clone();
+        Some(events_outcome(vec![Event::InputSubmitted {
+            surface_id,
+            binding_id,
+        }]))
     }
 
     fn value_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> Option<KeyOutcome> {
