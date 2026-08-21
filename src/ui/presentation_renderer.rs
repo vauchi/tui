@@ -150,17 +150,30 @@ fn draw_surface_spec(
         lines.push(Line::default());
     }
     let mut remaining = selected_surface_row;
+    let mut selected_line = None;
     for node in &surface.nodes {
-        remaining = append_node_lines(node, 0, &mut lines, remaining);
+        remaining = append_node_lines(node, 0, &mut lines, remaining, &mut selected_line);
     }
+
+    // Scroll so the selection stays on screen. Recomputed from the
+    // selected line every frame rather than kept as state: there is one
+    // right answer for a given selection and viewport, and a stored offset
+    // would be another thing that can disagree with the selection.
+    let viewport = usize::from(area.height.saturating_sub(2));
+    let offset = match selected_line {
+        Some(line) if viewport > 0 && line >= viewport => line + 1 - viewport,
+        _ => 0,
+    };
+
+    let title = match paging_summary(surface) {
+        Some(summary) => format!("{} — {summary}", surface.title),
+        None => surface.title.clone(),
+    };
     frame.render_widget(
         Paragraph::new(lines)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(surface.title.clone()),
-            )
-            .wrap(Wrap { trim: false }),
+            .block(Block::default().borders(Borders::ALL).title(title))
+            .wrap(Wrap { trim: false })
+            .scroll((u16::try_from(offset).unwrap_or(u16::MAX), 0)),
         area,
     );
 }
@@ -256,4 +269,23 @@ fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
         .flex(Flex::Center)
         .areas(vertical);
     horizontal
+}
+
+/// The count header Core already supplies via `PresentationPaging`.
+///
+/// Without it a scrolled surface gives no hint how much is below the
+/// fold — the user cannot tell 7 contacts from 200.
+fn paging_summary(surface: &vauchi_core::SurfaceSpec) -> Option<String> {
+    surface.nodes.iter().find_map(|node| match node {
+        vauchi_core::PresentationNode::List {
+            paging: Some(paging),
+            ..
+        } => Some(format!(
+            "{}-{} of {}",
+            paging.offset + 1,
+            (paging.offset + paging.window).min(paging.total_count),
+            paging.total_count
+        )),
+        _ => None,
+    })
 }

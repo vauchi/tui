@@ -115,6 +115,16 @@ impl InteractionState {
                 self.select_surface_row(state, current.map_or(0, |index| (index + 1) % count));
                 Some(KeyOutcome::Consumed)
             }
+            // Up and Down alone make the far end of a 200-contact list a
+            // war of attrition.
+            KeyCode::Home => {
+                self.select_surface_row(state, 0);
+                Some(KeyOutcome::Consumed)
+            }
+            KeyCode::End => {
+                self.select_surface_row(state, count - 1);
+                Some(KeyOutcome::Consumed)
+            }
             // A row shortcut must never outrank a field waiting for the same
             // keystroke, or digits become untypeable wherever a list is shown.
             KeyCode::Char(digit) if digit.is_ascii_digit() && digit != '0' && !awaits_text => {

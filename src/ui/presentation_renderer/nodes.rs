@@ -10,6 +10,10 @@ pub(super) fn append_node_lines(
     depth: usize,
     lines: &mut Vec<Line<'static>>,
     selected_surface_row: Option<usize>,
+    // Set to the line index the selection was painted on. The caller needs
+    // it to scroll: without it a surface taller than its viewport paints
+    // the first screenful and the selection walks off into nothing.
+    selected_line: &mut Option<usize>,
 ) -> Option<usize> {
     let indent = "  ".repeat(depth);
     let mut remaining = selected_surface_row;
@@ -57,7 +61,7 @@ pub(super) fn append_node_lines(
                 ));
             }
             for child in children {
-                remaining = append_node_lines(child, depth + 1, lines, remaining);
+                remaining = append_node_lines(child, depth + 1, lines, remaining, selected_line);
             }
         }
         PresentationNode::List { label, rows, .. } => {
@@ -95,6 +99,9 @@ pub(super) fn append_node_lines(
                     Some((_, false)) => "[ ]".to_string(),
                     None => "•".to_string(),
                 };
+                if is_selected {
+                    *selected_line = Some(lines.len());
+                }
                 lines.push(Line::styled(
                     format!("{indent}{marker} {}", row.title),
                     title_style,
