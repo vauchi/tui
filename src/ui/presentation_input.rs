@@ -27,6 +27,13 @@ pub(crate) enum KeyOutcome {
     Quit,
 }
 
+/// Rows a PageUp/PageDown moves by.
+///
+/// Not derived from the viewport: rows are variable height, so a screenful
+/// of lines is not a knowable number of rows here. A fixed step is
+/// predictable, which is what paging is for.
+const PAGE_ROWS: usize = 10;
+
 impl InteractionState {
     pub(crate) fn key_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> KeyOutcome {
         if let Some(outcome) = self.overlay_outcome(state, key) {
@@ -113,6 +120,22 @@ impl InteractionState {
             }
             KeyCode::Down => {
                 self.select_surface_row(state, current.map_or(0, |index| (index + 1) % count));
+                Some(KeyOutcome::Consumed)
+            }
+            // A row occupies one to three lines depending on whether Core
+            // gave it a subtitle and a detail, so the input layer cannot
+            // know how many rows a viewport holds without the renderer's
+            // line map. Move by a fixed, predictable row step instead of
+            // guessing a screenful, and clamp rather than wrap — running
+            // off the end is how a user loses their place in a long list.
+            KeyCode::PageDown => {
+                let next = current.map_or(0, |index| index.saturating_add(PAGE_ROWS));
+                self.select_surface_row(state, next.min(count - 1));
+                Some(KeyOutcome::Consumed)
+            }
+            KeyCode::PageUp => {
+                let previous = current.map_or(0, |index| index.saturating_sub(PAGE_ROWS));
+                self.select_surface_row(state, previous);
                 Some(KeyOutcome::Consumed)
             }
             // Up and Down alone make the far end of a 200-contact list a
