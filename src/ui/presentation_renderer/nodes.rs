@@ -99,16 +99,22 @@ pub(super) fn append_node_lines(
                     format!("{indent}{marker} {}", row.title),
                     title_style,
                 ));
+                let secondary_style = if is_selected {
+                    Style::default().add_modifier(Modifier::REVERSED)
+                } else {
+                    Style::default().add_modifier(Modifier::DIM)
+                };
                 if let Some(subtitle) = &row.subtitle {
-                    let subtitle_style = if is_selected {
-                        Style::default().add_modifier(Modifier::REVERSED)
-                    } else {
-                        Style::default().add_modifier(Modifier::DIM)
-                    };
                     lines.push(Line::styled(
                         format!("{indent}  {subtitle}"),
-                        subtitle_style,
+                        secondary_style,
                     ));
+                }
+                // A settings row's value lives in `detail`, so dropping it
+                // hides the very thing the row exists to show. Nested like
+                // the subtitle, matching how Status renders its own detail.
+                if let Some(detail) = &row.detail {
+                    lines.push(Line::styled(format!("{indent}  {detail}"), secondary_style));
                 }
             }
         }

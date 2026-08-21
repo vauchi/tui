@@ -422,3 +422,40 @@ fn a_row_carrying_a_control_can_be_selected() {
          index, or the keyboard can never reach it: {highlighted:?}"
     );
 }
+
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
+fn a_rows_detail_is_shown() {
+    let mut surface = titled_surface("surface-primary", "Settings");
+    let mut named = row("Display Name", Some(action("edit", "Edit")));
+    named.detail = Some("Bob".into());
+    surface.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("profile").unwrap(),
+        label: None,
+        rows: vec![named],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Profile"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    let backend = TestBackend::new(80, 10);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+
+    assert!(
+        rendered.contains("Bob"),
+        "Core puts a settings row's value in detail, so dropping it hides \
+         the value the row exists to show: {rendered:?}"
+    );
+}
