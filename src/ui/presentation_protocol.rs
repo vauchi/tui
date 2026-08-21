@@ -157,12 +157,32 @@ impl PresentationState {
     }
 
     /// Activate a surface list row by its index in `surface_list_rows()`.
+    ///
+    /// A row whose operable thing is a control reports a value rather than
+    /// an action: Core names the setting in the row title and sends the
+    /// toggle with no activation of its own, so there is no interaction id
+    /// to send and nothing would happen if we sent one.
     pub(crate) fn activate_surface_row(&self, index: usize) -> Vec<Event> {
-        let action = self
-            .surface_list_rows()
-            .get(index)
-            .and_then(|row| row.activation.as_ref());
-        self.activation_events(action)
+        let rows = self.surface_list_rows();
+        let Some(row) = rows.get(index) else {
+            return Vec::new();
+        };
+        if let Some((binding_id, value)) = row_toggle(row) {
+            let Some(surface_id) = self.active_surface_id() else {
+                return Vec::new();
+            };
+            return vec![
+                Event::SurfaceActivated {
+                    surface_id: surface_id.clone(),
+                },
+                Event::ValueChanged {
+                    surface_id: surface_id.clone(),
+                    binding_id,
+                    value: vauchi_core::InputValue::Boolean(!value),
+                },
+            ];
+        }
+        self.activation_events(row.activation.as_ref())
     }
 
     pub(crate) fn activation_events(&self, action: Option<&ActionSpec>) -> Vec<Event> {
@@ -223,7 +243,7 @@ fn collect_list_rows<'a>(
                 rows: list_rows, ..
             } => {
                 for row in list_rows {
-                    if row.activation.is_some() {
+                    if row_is_addressable(row) {
                         rows.push(row);
                     }
                 }
@@ -232,4 +252,27 @@ fn collect_list_rows<'a>(
             _ => {}
         }
     }
+}
+
+/// The enabled toggle a row carries, if any — its binding and current value.
+///
+/// Shared by the renderer and the input path so the row the highlight lands
+/// on is exactly the row Enter operates.
+pub(crate) fn row_toggle(
+    row: &vauchi_core::PresentationRow,
+) -> Option<(vauchi_core::BindingId, bool)> {
+    row.controls.iter().find_map(|control| match control {
+        vauchi_core::PresentationNode::Toggle {
+            binding_id,
+            value,
+            enabled,
+            ..
+        } if *enabled => Some((binding_id.clone(), *value)),
+        _ => None,
+    })
+}
+
+/// Whether the keyboard can reach this row at all.
+pub(crate) fn row_is_addressable(row: &vauchi_core::PresentationRow) -> bool {
+    row.activation.is_some() || row_toggle(row).is_some()
 }

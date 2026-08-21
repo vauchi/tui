@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+use crate::ui::presentation_protocol::{row_is_addressable, row_toggle};
 use ratatui::prelude::*;
 use vauchi_core::PresentationNode;
 
@@ -67,11 +68,13 @@ pub(super) fn append_node_lines(
                 ));
             }
             for row in rows {
-                // Only activatable rows are addressable, so only they may
-                // consume a selection index — otherwise the highlight drifts
-                // away from the row Enter would activate.
-                let is_selected = row.activation.is_some() && remaining == Some(0);
-                if row.activation.is_some() {
+                // Only addressable rows may consume a selection index —
+                // otherwise the highlight drifts away from the row Enter
+                // would operate. A row carrying a toggle is addressable
+                // even though Core gives it no activation of its own.
+                let addressable = row_is_addressable(row);
+                let is_selected = addressable && remaining == Some(0);
+                if addressable {
                     remaining = match remaining {
                         Some(0) => None,
                         Some(n) => Some(n - 1),
@@ -84,8 +87,16 @@ pub(super) fn append_node_lines(
                 } else {
                     Style::default()
                 };
+                // The row title names the setting, so Core sends the
+                // control unlabelled; rendering it on its own line would
+                // print a bare checkbox belonging to nothing.
+                let marker = match row_toggle(row) {
+                    Some((_, true)) => "[x]".to_string(),
+                    Some((_, false)) => "[ ]".to_string(),
+                    None => "•".to_string(),
+                };
                 lines.push(Line::styled(
-                    format!("{indent}• {}", row.title),
+                    format!("{indent}{marker} {}", row.title),
                     title_style,
                 ));
                 if let Some(subtitle) = &row.subtitle {
