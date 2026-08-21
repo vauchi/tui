@@ -459,3 +459,92 @@ fn a_rows_detail_is_shown() {
          the value the row exists to show: {rendered:?}"
     );
 }
+
+/// A surface taller than its viewport scrolls to keep the selection visible.
+///
+/// The renderer built every line and rendered a Paragraph with no
+/// `.scroll()`, so with 200 seeded contacts only the first screenful was
+/// ever painted and Up/Down walked the selection off-screen into nothing.
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
+fn a_surface_scrolls_to_keep_the_selection_visible() {
+    let mut surface = titled_surface("surface-primary", "Contacts");
+    let rows: Vec<_> = (0..40)
+        .map(|i| {
+            row(
+                &format!("Contact{i}"),
+                Some(action(&format!("open:{i}"), "Open")),
+            )
+        })
+        .collect();
+    surface.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("contacts").unwrap(),
+        label: None,
+        rows,
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Contacts"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    // A viewport far shorter than the list, with a late row selected.
+    let backend = TestBackend::new(80, 12);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, Some(35)))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+
+    assert!(
+        rendered.contains("Contact35"),
+        "the selected row must be painted, or the rows past the first \
+         screenful are unreachable: {rendered:?}"
+    );
+}
+
+/// A scrolled surface says how much is below the fold.
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
+fn a_paged_surface_shows_its_count() {
+    let mut surface = titled_surface("surface-primary", "Contacts");
+    surface.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("contacts").unwrap(),
+        label: None,
+        rows: vec![row("Ada", Some(action("open:ada", "Ada")))],
+        searchable: false,
+        paging: Some(vauchi_core::PresentationPaging {
+            total_count: 200,
+            offset: 0,
+            window: 25,
+        }),
+        accessibility: AccessibilitySpec::label("Contacts"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    let backend = TestBackend::new(80, 10);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+
+    assert!(
+        rendered.contains("1-25 of 200"),
+        "Core already sends PresentationPaging; without it a scrolled \
+         surface gives no hint how much is below the fold: {rendered:?}"
+    );
+}

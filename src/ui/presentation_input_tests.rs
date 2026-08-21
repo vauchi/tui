@@ -466,3 +466,27 @@ fn enter_reports_submission_once_a_field_has_focus() {
         "Return must report the focused field, got {events:?}"
     );
 }
+
+/// Home and End reach the ends of a list without holding a key down.
+///
+/// With 200 contacts, Up and Down alone make the far end of the list a
+/// war of attrition.
+// @scenario: contact_exchange.feature :: User activates a surface list row with Enter
+#[test]
+fn home_and_end_jump_to_the_ends_of_the_list() {
+    let state = state_with_action_list();
+    let last = state.surface_list_rows().len() - 1;
+    let mut interaction = InteractionState::default();
+
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::End, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(interaction.selected_surface_row(&state), Some(last));
+
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Home, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+}
