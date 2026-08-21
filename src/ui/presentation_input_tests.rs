@@ -490,3 +490,32 @@ fn home_and_end_jump_to_the_ends_of_the_list() {
     );
     assert_eq!(interaction.selected_surface_row(&state), Some(0));
 }
+
+/// PageUp and PageDown move by a fixed row step and stop at the ends.
+///
+/// Deliberately a row count, not a screenful: a row occupies one to three
+/// lines depending on whether Core gave it a subtitle and a detail, so the
+/// input layer cannot know how many rows a viewport holds without the
+/// renderer's line map. A predictable jump beats a guessed one.
+// @scenario: contact_exchange.feature :: User activates a surface list row with Enter
+#[test]
+fn page_keys_move_by_a_step_and_clamp_at_the_ends() {
+    let state = state_with_action_list();
+    let last = state.surface_list_rows().len() - 1;
+    let mut interaction = InteractionState::default();
+
+    // From nothing, PageDown starts at the top rather than jumping blind.
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageDown, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+
+    // A page beyond the end clamps to the last row instead of wrapping —
+    // wrapping past the end is how a user loses their place.
+    interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageDown, KeyModifiers::NONE));
+    assert_eq!(interaction.selected_surface_row(&state), Some(last));
+
+    interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageUp, KeyModifiers::NONE));
+    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+}
