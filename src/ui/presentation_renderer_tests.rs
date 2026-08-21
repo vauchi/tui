@@ -478,7 +478,7 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
         })
         .collect();
     surface.nodes = vec![PresentationNode::List {
-        id: vauchi_core::BindingId::new("contacts").unwrap(),
+        id: vauchi_core::BindingId::new("rows").unwrap(),
         label: None,
         rows,
         searchable: false,
@@ -515,7 +515,7 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
 fn a_paged_surface_shows_its_count() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
-        id: vauchi_core::BindingId::new("contacts").unwrap(),
+        id: vauchi_core::BindingId::new("rows").unwrap(),
         label: None,
         rows: vec![row("Ada", Some(action("open:ada", "Ada")))],
         searchable: false,
