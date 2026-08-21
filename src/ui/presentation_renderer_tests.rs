@@ -342,3 +342,83 @@ fn a_locked_app_paints_no_navigation_affordance() {
         "the terminal painted the navigation role button while locked: {rendered:?}",
     );
 }
+
+/// A settings-shaped row: Core names the setting in the row title and sends
+/// the toggle unlabelled, with no activation of its own.
+fn toggle_row(title: &str, on: bool) -> PresentationRow {
+    let mut row = row(title, None);
+    row.controls = vec![PresentationNode::Toggle {
+        binding_id: vauchi_core::BindingId::new("settings.delivery_receipts").unwrap(),
+        label: String::new(),
+        value: on,
+        enabled: true,
+        accessibility: AccessibilitySpec::label(title),
+    }];
+    row
+}
+
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
+fn a_row_control_renders_its_state() {
+    let mut surface = titled_surface("surface-primary", "Settings");
+    surface.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("privacy").unwrap(),
+        label: None,
+        rows: vec![toggle_row("Delivery Receipts", true)],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Privacy"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    let backend = TestBackend::new(80, 10);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+
+    assert!(
+        rendered.contains("[x] Delivery Receipts"),
+        "a row's toggle state must be visible — the row title names the \
+         setting and Core sends the control unlabelled: {rendered:?}"
+    );
+}
+
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
+fn a_row_carrying_a_control_can_be_selected() {
+    let mut surface = titled_surface("surface-primary", "Settings");
+    surface.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("privacy").unwrap(),
+        label: None,
+        rows: vec![toggle_row("Delivery Receipts", false)],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Privacy"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    let backend = TestBackend::new(80, 10);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, Some(0)))
+        .unwrap();
+
+    let highlighted = highlighted_lines(terminal.backend().buffer());
+    assert!(
+        highlighted
+            .iter()
+            .any(|line| line.contains("Delivery Receipts")),
+        "a row whose control is the operable thing must take a selection \
+         index, or the keyboard can never reach it: {highlighted:?}"
+    );
+}

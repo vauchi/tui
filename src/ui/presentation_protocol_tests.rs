@@ -311,3 +311,60 @@ fn activation_targets_the_surface_before_sending_the_opaque_interaction() {
         ]
     );
 }
+
+// @scenario: generic_presentation_protocol.feature :: Every shell reports the same generic events
+#[test]
+fn activating_a_control_row_reports_the_flipped_value() {
+    use vauchi_core::{InputValue, PresentationNode, PresentationRow};
+
+    let mut current = surface(1);
+    let row = PresentationRow {
+        title: "Delivery Receipts".into(),
+        subtitle: None,
+        detail: None,
+        icon_token: None,
+        image_data: None,
+        fallback_text: None,
+        selected: false,
+        enabled: true,
+        activation: None,
+        secondary_actions: Vec::new(),
+        controls: vec![PresentationNode::Toggle {
+            binding_id: vauchi_core::BindingId::new("settings.delivery_receipts").unwrap(),
+            label: String::new(),
+            value: true,
+            enabled: true,
+            accessibility: AccessibilitySpec::label("Delivery Receipts"),
+        }],
+        accessibility: AccessibilitySpec::label("Delivery Receipts"),
+    };
+    current.nodes = vec![PresentationNode::List {
+        id: vauchi_core::BindingId::new("privacy").unwrap(),
+        label: None,
+        rows: vec![row],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Privacy"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface: current }]);
+
+    let events = state.activate_surface_row(0);
+    let changed = events.iter().find_map(|event| match event {
+        vauchi_core::Event::ValueChanged {
+            binding_id, value, ..
+        } => Some((binding_id.clone(), value.clone())),
+        _ => None,
+    });
+
+    let (binding_id, value) = changed.expect(
+        "activating a row whose control is the operable thing must report a \
+         value change, not an action",
+    );
+    assert_eq!(binding_id.as_str(), "settings.delivery_receipts");
+    assert_eq!(
+        value,
+        InputValue::Boolean(false),
+        "the reported value is the flipped one"
+    );
+}
