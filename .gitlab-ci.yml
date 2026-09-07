@@ -21,7 +21,7 @@
 # Include shared templates
 include:
   - project: 'vauchi/scripts'
-    ref: ci-templates-v2026.08.10
+    ref: ci-templates-v2026.09.07
     file:
       - '/ci-templates/rust-base.yml'
       - '/ci-templates/shell-command-conformance.yml'
@@ -49,7 +49,7 @@ include:
       - '/ci-templates/cross-cutting-lint.yml'
 
 variables:
-  VAUCHI_SCRIPTS_REF: "ci-templates-v2026.08.10"
+  VAUCHI_SCRIPTS_REF: "ci-templates-v2026.09.07"
   # cargo audit runs with --deny warnings; every entry here is an
   # advisory with no fix available to us, not one we chose to skip.
   #   RUSTSEC-2024-0436  paste unmaintained, reached through ratatui 0.28.
@@ -533,7 +533,7 @@ check:parser-parity:
     FRONTEND_NAME: "tui"
     PARSER_FILE: "src/ui/presentation_renderer"
     PARSER_PROTOCOL: "presentation"
-    PARSER_SCRIPT_REF: "ci-templates-v2026.08.10"
+    PARSER_SCRIPT_REF: "ci-templates-v2026.09.07"
     CORE_REF: "main"
 
 # Fails if this shell renders an overlay it cannot close. Core opens a
