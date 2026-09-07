@@ -50,6 +50,17 @@ include:
 
 variables:
   VAUCHI_SCRIPTS_REF: "ci-templates-v2026.08.10"
+  # cargo audit runs with --deny warnings; every entry here is an
+  # advisory with no fix available to us, not one we chose to skip.
+  #   RUSTSEC-2024-0436  paste unmaintained, reached through ratatui 0.28.
+  #   RUSTSEC-2026-0002  lru 0.12 IterMut unsoundness, same path — both
+  #                      clear only by upgrading ratatui, which is its
+  #                      own change.
+  #   RUSTSEC-2026-0253  unsound lru 0.16, reached through vauchi-core's
+  #                      rqrr 0.10. Clears when a core tag carrying
+  #                      rqrr 0.11 lands. Record:
+  #                      problems/2026-09-07-core-rqrr-patch-does-not-reach-consumers
+  AUDIT_IGNORES: "--ignore RUSTSEC-2024-0436 --ignore RUSTSEC-2026-0002 --ignore RUSTSEC-2026-0253"
 
 stages:
   - auto-tag
