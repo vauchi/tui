@@ -68,6 +68,7 @@ stages:
   - test
   - mutation
   - security
+  - build
   - verify
   - deploy
 
@@ -459,6 +460,82 @@ rc:mutation:
 
 rc:security:audit:
   extends: [.rust-runner-readonly, .rc-security-audit]
+
+# ============================================================
+# Build + Publish (mirrors cli's publish:package:cli)
+# ============================================================
+# The TUI had no release artifact: RG-14 needs a real distribution
+# channel per consumer. Publish the Linux amd64 binary to the generic
+# package registry on main and on release tags, exactly like the CLI.
+
+build:release:
+  extends: [.linux-runner, .timeout-standard]
+  stage: build
+  needs:
+    - job: test:unit
+      optional: true
+    - job: lint:format
+      optional: true
+  script:
+    - cargo build --release --locked
+  artifacts:
+    paths:
+      - target/release/vauchi-tui
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+    # Run in MRs when dependency pins change so Cargo verifies the lockfile.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - Cargo.toml
+        - Cargo.lock
+        - .gitlab-ci.yml
+
+publish:package:tui:
+  stage: deploy
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/alpine:3.21
+  tags: [docker]
+  needs:
+    - job: build:release
+      artifacts: true
+  variables:
+    PACKAGE_NAME: "vauchi-tui"
+    BINARY_NAME: "vauchi-tui-linux-amd64"
+  before_script:
+    - apk add --no-cache curl coreutils
+  script:
+    - |
+      set -euo pipefail
+      cp target/release/vauchi-tui "${BINARY_NAME}"
+      sha256sum "${BINARY_NAME}" > "${BINARY_NAME}.sha256"
+
+      upload_package() {
+        local version="$1"
+        local base="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${version}"
+        curl -fsSL --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file "${BINARY_NAME}" "${base}/${BINARY_NAME}"
+        curl -fsSL --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+          --upload-file "${BINARY_NAME}.sha256" "${base}/${BINARY_NAME}.sha256"
+        echo "Published ${PACKAGE_NAME}@${version}"
+      }
+
+      upload_package "${CI_COMMIT_SHA}"
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        upload_package "${CI_COMMIT_TAG}"
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    # An upstream-triggered rerun rebuilds the same SHA with newer core
+    # main; the registry rejects the duplicate with 400. Only the push
+    # pipeline publishes.
+    - if: $CI_PIPELINE_SOURCE == "pipeline" || $CI_PIPELINE_SOURCE == "trigger"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
 
 # ============================================================
 # Verify Stage (upstream trigger only)
