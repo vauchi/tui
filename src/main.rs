@@ -295,8 +295,15 @@ fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
 /// When the `secure-storage` feature is enabled, uses the OS keychain with a
 /// key name derived from the install_id stored next to the data directory.
 /// Otherwise, falls back to encrypted file storage.
+///
+/// Mirrors `cli::config::CliConfig::storage_key` (`cli/src/config.rs`):
+/// core exposes the `SecureStorage`/`PlatformKeyring`/`FileKeyStorage`
+/// primitives but has no higher-level open-or-create entry point, since
+/// only the shell knows its own keychain service name. Both Rust-native
+/// shells resolve the key this way; there is no domain-shaped API to
+/// delegate to instead (2026-07-06-desktop-tui-web-domain-shell-violations
+/// U22, superseded by ADR-066).
 #[allow(unused_variables)]
-// TODO(HUMBLE): D — load_or_create_storage_key lifecycle (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
 fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
     /// Key name for non-keychain (file-based) storage.
     const KEY_NAME: &str = "storage_key";
@@ -363,7 +370,16 @@ fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
 ///
 /// Creates an identity, adds fields, creates groups, and adds fake contacts.
 /// Only runs when VAUCHI_SEED=1 and no identity exists yet.
-// TODO(HUMBLE): D — seed_demo_data calls core domain APIs directly (see _private/docs/problems/2026-07-06-desktop-tui-web-domain-shell-violations)
+///
+/// Runs before the `AppEngine` render loop starts, so the ADR-066 shell
+/// boundary (which governs the interactive Command/Event surface) does not
+/// apply — this is one-shot dev fixture setup, the same shape as `cli`'s
+/// non-interactive subcommands calling `Vauchi` methods directly
+/// (`cli/src/commands/init.rs`). No core-owned bulk-seed entry exists to
+/// delegate to: `Vauchi::initialize_demo_contact` is a distinct, unrelated
+/// onboarding feature (a single placeholder contact), not this tool's
+/// 200-contact load-testing fixture
+/// (2026-07-06-desktop-tui-web-domain-shell-violations U23).
 fn seed_demo_data(vauchi: &mut Vauchi) {
     use vauchi_core::contact::Contact;
     use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};
