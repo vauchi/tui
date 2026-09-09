@@ -467,6 +467,44 @@ fn enter_reports_submission_once_a_field_has_focus() {
     );
 }
 
+/// Core decides what a submission means, and a screen may decide it
+/// means nothing — onboarding's name step does. With no pointer, Tab is
+/// the only way out of the field, so it must hand Return back to the
+/// primary action or the user is stuck behind their own name.
+// @scenario: generic_presentation_protocol.feature :: Return in a field reports a submission
+#[test]
+fn tab_leaves_the_field_so_enter_activates_the_primary_action() {
+    let state = state_with_input();
+    let mut interaction = InteractionState::default();
+
+    let KeyOutcome::Events(_) = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('x'), KeyModifiers::NONE),
+    ) else {
+        panic!("typing must produce events");
+    };
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+
+    let KeyOutcome::Events(events) =
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE))
+    else {
+        panic!("expected events");
+    };
+    assert!(
+        matches!(
+            events.as_slice(),
+            [
+                Event::SurfaceActivated { .. },
+                Event::ActionActivated { interaction_id, .. }
+            ] if interaction_id.as_str() == "continue"
+        ),
+        "Return after Tab must activate the primary action, got {events:?}"
+    );
+}
+
 /// Home and End reach the ends of a list without holding a key down.
 ///
 /// With 200 contacts, Up and Down alone make the far end of the list a
