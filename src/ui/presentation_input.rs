@@ -52,8 +52,8 @@ impl InteractionState {
             // Return in a field is the terminal's submit gesture, and the
             // only one available here — there is no pointer to click away
             // with. Core decides whether the screen does anything with
-            // it; where nothing does, the primary action still runs
-            // because Core answers with no command.
+            // it; where nothing does, Tab is the way out of the field, and
+            // Return then runs the primary action.
             if let Some(outcome) = self.submit_outcome(state) {
                 return outcome;
             }
@@ -77,6 +77,7 @@ impl InteractionState {
             }
         }
         if key.code == KeyCode::Tab {
+            self.focused_binding = None;
             let count = state.context_actions().len();
             if count > 0 {
                 self.context_index = (self.context_index + 1) % count;
