@@ -5,10 +5,11 @@
 //! What a terminal can and cannot do for an in-person exchange. Core
 //! keys the exchange picker on these: without a camera, Bluetooth or
 //! NFC the picker leads with Link, whose share screen also accepts a
-//! pasted peer link (core `link_exchange`).
+//! pasted peer link (core `link_exchange`). Every capability a terminal
+//! lacks is the `DeviceCapabilities` default, so this file names only
+//! what it has; it never imports core domain types (ADR-066).
 
 use vauchi_core::exchange::capability::types::DeviceCapabilities;
-use vauchi_core::types::AudioCapability;
 
 /// A terminal session: network only.
 pub fn tui_device_capabilities() -> DeviceCapabilities {
@@ -16,7 +17,6 @@ pub fn tui_device_capabilities() -> DeviceCapabilities {
         has_camera: false,
         has_ble: false,
         has_nfc: false,
-        audio: AudioCapability::None,
         has_accelerometer: false,
         has_internet: true,
         has_usb_port: false,
