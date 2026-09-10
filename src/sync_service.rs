@@ -89,7 +89,7 @@ pub fn sync(vauchi: &mut Vauchi) -> SyncResult {
             }
             result
         }
-        VauchiSyncOutcome::TooSoon => SyncResult::skipped("Too soon since last sync"),
+        VauchiSyncOutcome::TooSoon { .. } => SyncResult::skipped("Too soon since last sync"),
         VauchiSyncOutcome::NotConnected => SyncResult::error("Not connected to relay"),
         VauchiSyncOutcome::NoIdentity => SyncResult::error("No identity found"),
     }
