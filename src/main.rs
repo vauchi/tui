@@ -174,7 +174,8 @@ fn main() -> Result<()> {
     let relay_url = cli
         .relay_url
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
-    let app_engine = AppEngine::new(vauchi);
+    let mut app_engine = AppEngine::new(vauchi);
+    app_engine.set_device_capabilities(vauchi_tui::app::tui_device_capabilities());
 
     // Setup terminal (after init — no stray eprintln output in alternate screen)
     enable_raw_mode()?;

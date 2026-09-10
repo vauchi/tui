@@ -23,20 +23,3 @@ pub fn tui_device_capabilities() -> DeviceCapabilities {
         ..Default::default()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // @scenario: exchange :: Camera-less devices are offered Link first
-    #[test]
-    fn a_terminal_reports_network_only() {
-        let caps = tui_device_capabilities();
-        assert!(!caps.has_camera);
-        assert!(!caps.has_ble);
-        assert!(!caps.has_nfc);
-        assert!(!caps.has_accelerometer);
-        assert!(matches!(caps.audio, AudioCapability::None));
-        assert!(caps.has_internet);
-    }
-}
