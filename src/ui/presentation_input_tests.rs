@@ -557,3 +557,67 @@ fn page_keys_move_by_a_step_and_clamp_at_the_ends() {
     interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageUp, KeyModifiers::NONE));
     assert_eq!(interaction.selected_surface_row(&state), Some(0));
 }
+
+/// A surface re-render (e.g. an exchange poll tick) mints a new binding id
+/// for the same input. Submitting after that must carry the *current*
+/// binding, not the one captured when the user first typed — otherwise
+/// Core drops the submit as an unknown binding and Return silently
+/// activates the primary action instead
+/// (problems/2026-09-09-tui-cannot-ingest-peer-exchange-payload).
+// @scenario: generic_presentation_protocol.feature :: User interaction returns as an opaque event
+#[test]
+fn submitting_after_a_re_render_uses_the_current_input_binding() {
+    let mut state = state_with_input();
+    let mut interaction = InteractionState::default();
+
+    // Type a character so the input is focused.
+    let _ = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('i'), KeyModifiers::NONE),
+    );
+
+    // The surface re-renders at a new revision with a new binding id.
+    let surface_id = SurfaceId::new("onboarding").unwrap();
+    state.apply(&[Command::ReplaceSurface {
+        surface: SurfaceSpec {
+            surface_id: surface_id.clone(),
+            revision: 2,
+            title: "Welcome".into(),
+            subtitle: None,
+            accessibility_label: "Welcome".into(),
+            layout: SurfaceLayout::Fixed,
+            tokens: PresentationTokens {
+                spacing_small: 1,
+                spacing_medium: 2,
+                spacing_large: 3,
+                corner_radius: 1,
+                minimum_target_size: 1,
+            },
+            nodes: vec![PresentationNode::Input {
+                binding_id: BindingId::new("display-name-v2").unwrap(),
+                label: "Name".into(),
+                value: "Ali".into(),
+                placeholder: None,
+                input_kind: PresentationInputKind::Text,
+                max_length: Some(80),
+                validation_error: None,
+                enabled: true,
+                accessibility: AccessibilitySpec::label("Name"),
+            }],
+        },
+    }]);
+
+    let outcome =
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+    let KeyOutcome::Events(events) = outcome else {
+        panic!("Return with a focused input must submit it, got {outcome:?}");
+    };
+    assert!(
+        events.iter().any(|event| matches!(
+            event,
+            Event::InputSubmitted { binding_id, .. }
+                if binding_id.as_str() == "display-name-v2"
+        )),
+        "submit must carry the current binding, got {events:?}"
+    );
+}
