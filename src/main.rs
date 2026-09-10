@@ -121,6 +121,7 @@ fn main() -> Result<()> {
         .clone()
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let vauchi_config = vauchi_config.with_relay_url(&relay_url);
+    let vauchi_config = vauchi_tui::apply_ohttp_test_overrides(vauchi_config);
     let mut vauchi: Vauchi = match Vauchi::new(vauchi_config) {
         Ok(vauchi) => vauchi,
         Err(err) => {

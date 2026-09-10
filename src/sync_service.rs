@@ -115,6 +115,9 @@ pub fn sync_owned(req: SyncRequest) -> SyncResult {
     let config = VauchiConfig::with_storage_path(req.storage_path)
         .with_relay_url(&req.relay_url)
         .with_storage_key(req.storage_key);
+    // Same OHTTP test overrides as the foreground config (`main.rs`); the
+    // background sync instance must reach the same (local, in e2e) relay.
+    let config = crate::apply_ohttp_test_overrides(config);
     let mut vauchi = match Vauchi::new(config) {
         Ok(v) => v,
         Err(e) => return SyncResult::error(format!("Vauchi init failed: {}", e)),
