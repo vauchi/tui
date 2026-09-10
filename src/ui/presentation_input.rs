@@ -226,11 +226,16 @@ impl InteractionState {
     /// so Return keeps activating the primary action on screens without
     /// text entry.
     fn submit_outcome(&self, state: &PresentationState) -> Option<KeyOutcome> {
-        let binding_id = self.focused_binding.clone()?;
+        // Submit only while an input is focused, but resolve the binding
+        // against the *current* surface: a re-render between the last
+        // keystroke and Return re-mints the binding id, and the captured
+        // `focused_binding` would then be unknown to Core.
+        self.focused_binding.as_ref()?;
+        let input = find_input(&state.surface()?.nodes, self.focused_binding.as_ref())?;
         let surface_id = state.surface()?.surface_id.clone();
         Some(events_outcome(vec![Event::InputSubmitted {
             surface_id,
-            binding_id,
+            binding_id: input.binding_id,
         }]))
     }
 
