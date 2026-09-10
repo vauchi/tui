@@ -6,3 +6,4 @@
 
 mod contextual_surface_architecture_tests;
 mod contract_core_api_tests;
+mod device_capabilities_tests;

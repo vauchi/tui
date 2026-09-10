@@ -3,6 +3,9 @@
 
 //! Humble terminal session around Core's application reducer.
 
+pub mod capabilities;
+pub use capabilities::tui_device_capabilities;
+
 use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
