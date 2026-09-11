@@ -6,6 +6,7 @@
 pub(crate) mod presentation_input;
 pub(crate) mod presentation_protocol;
 pub(crate) mod presentation_renderer;
+pub mod screen_catalog;
 
 use ratatui::Frame;
 

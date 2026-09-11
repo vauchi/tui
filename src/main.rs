@@ -58,10 +58,20 @@ struct Cli {
     /// Validate data integrity and exit
     #[arg(long)]
     check: bool,
+
+    /// Render every screen of a Core screen catalog to .snap frames and exit
+    #[arg(long, num_args = 2..=4, value_names = ["CATALOG", "OUT_DIR", "COLS", "ROWS"])]
+    render_catalog: Option<Vec<String>>,
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Catalog strings arrive already localized by Core, so this needs no
+    // locale files, data directory, or terminal.
+    if let Some(args) = &cli.render_catalog {
+        return vauchi_tui::ui::screen_catalog::run_cli(args);
+    }
 
     // Load runtime locale files before any UI string is rendered; without
     // this every string falls back to core's 2-key bundled set.
