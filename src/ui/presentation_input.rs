@@ -70,6 +70,7 @@ impl InteractionState {
             let action = match key.code {
                 KeyCode::Char('m') => state.context_bar().and_then(|bar| bar.navigation.as_ref()),
                 KeyCode::Char('a') => state.context_bar().and_then(|bar| bar.secondary.as_ref()),
+                KeyCode::Char('s') => state.status_activation(),
                 _ => None,
             };
             if action.is_some() {

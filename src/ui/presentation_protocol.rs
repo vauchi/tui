@@ -136,6 +136,14 @@ impl PresentationState {
         .collect()
     }
 
+    /// The first activatable `Status` node on the active surface — the
+    /// sync chrome chip every other shell taps. Nothing else in the key map
+    /// reaches a status node, so this is the terminal's only way to it.
+    pub(crate) fn status_activation(&self) -> Option<&ActionSpec> {
+        let surface = self.surface()?;
+        first_status_activation(&surface.nodes)
+    }
+
     #[cfg(test)]
     pub(crate) fn activate_context(&self, index: usize) -> Vec<Event> {
         self.activation_events(self.context_actions().get(index).copied())
@@ -230,6 +238,18 @@ impl PresentationState {
             .get(surface_id)
             .is_some_and(|surface| surface.revision == revision)
     }
+}
+
+fn first_status_activation(nodes: &[vauchi_core::PresentationNode]) -> Option<&ActionSpec> {
+    use vauchi_core::PresentationNode;
+    nodes.iter().find_map(|node| match node {
+        PresentationNode::Status {
+            activation: Some(action),
+            ..
+        } if action.enabled => Some(action),
+        PresentationNode::Group { children, .. } => first_status_activation(children),
+        _ => None,
+    })
 }
 
 fn collect_list_rows<'a>(
