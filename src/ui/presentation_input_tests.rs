@@ -621,3 +621,78 @@ fn submitting_after_a_re_render_uses_the_current_input_binding() {
         "submit must carry the current binding, got {events:?}"
     );
 }
+
+fn state_with_status_chip() -> PresentationState {
+    let surface_id = SurfaceId::new("home_list").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface {
+        surface: SurfaceSpec {
+            surface_id: surface_id.clone(),
+            revision: 1,
+            title: "Contacts".into(),
+            subtitle: None,
+            accessibility_label: "Contacts".into(),
+            layout: SurfaceLayout::Scroll,
+            tokens: PresentationTokens {
+                spacing_small: 1,
+                spacing_medium: 2,
+                spacing_large: 3,
+                corner_radius: 1,
+                minimum_target_size: 1,
+            },
+            nodes: vec![
+                PresentationNode::Text {
+                    id: None,
+                    content: "No contacts yet".into(),
+                    style: vauchi_core::PresentationTextStyle::Body,
+                    accessibility: AccessibilitySpec::label("No contacts yet"),
+                },
+                PresentationNode::Status {
+                    id: Some(BindingId::new("sync_chrome").unwrap()),
+                    title: "Sync".into(),
+                    detail: None,
+                    icon_token: None,
+                    badge: None,
+                    tone: vauchi_core::PresentationTone::Neutral,
+                    activation: Some(action("sync_now", None)),
+                    accessibility: AccessibilitySpec::label("Sync"),
+                },
+            ],
+        },
+    }]);
+    state
+}
+
+// @scenario: generic_presentation_protocol.feature :: A status chip is reachable from the keyboard
+/// The sync chrome is a `Status` node with an activation. Every other
+/// shell taps it; a terminal has no pointer, and neither the context bar
+/// nor the list keys reach it — so a TUI user could never sync by hand.
+#[test]
+fn alt_s_activates_the_surface_status_chip() {
+    let state = state_with_status_chip();
+    let mut interaction = InteractionState::default();
+
+    let KeyOutcome::Events(events) =
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Char('s'), KeyModifiers::ALT))
+    else {
+        panic!("expected events");
+    };
+    assert!(matches!(
+        events.as_slice(),
+        [
+            Event::SurfaceActivated { .. },
+            Event::ActionActivated { interaction_id, .. }
+        ] if interaction_id.as_str() == "sync_now"
+    ));
+}
+
+// @internal
+#[test]
+fn alt_s_without_a_status_chip_is_consumed() {
+    let state = state_with_action_list();
+    let mut interaction = InteractionState::default();
+
+    let outcome =
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Char('s'), KeyModifiers::ALT));
+    assert!(matches!(outcome, KeyOutcome::Consumed));
+}
