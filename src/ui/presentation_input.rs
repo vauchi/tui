@@ -8,7 +8,7 @@ use vauchi_core::{
     ActionSpec, BindingId, Event, InputValue, PresentationNode, StandardShortcut, SurfaceId,
 };
 
-use super::presentation_protocol::PresentationState;
+use super::presentation_protocol::{ChoiceStep, PresentationState};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct InteractionState {
@@ -39,15 +39,15 @@ impl InteractionState {
         if let Some(outcome) = self.overlay_outcome(state, key) {
             return outcome;
         }
-        if let Some(outcome) = self.surface_list_outcome(state, key) {
+        if let Some(outcome) = self.surface_target_outcome(state, key) {
             return outcome;
         }
         if key.code == KeyCode::Esc {
             return self.back_outcome(state);
         }
         if key.code == KeyCode::Enter {
-            if let Some(index) = self.selected_surface_row(state) {
-                return events_outcome(state.activate_surface_row(index));
+            if let Some(index) = self.selected_surface_target(state) {
+                return events_outcome(state.activate_surface_target(index));
             }
             // Return in a field is the terminal's submit gesture, and the
             // only one available here — there is no pointer to click away
@@ -97,31 +97,31 @@ impl InteractionState {
         self.overlay_index
     }
 
-    pub(crate) fn selected_surface_row(&self, state: &PresentationState) -> Option<usize> {
+    pub(crate) fn selected_surface_target(&self, state: &PresentationState) -> Option<usize> {
         let (owner, index) = self.surface_row.as_ref()?;
         let surface = state.surface()?;
-        (surface.surface_id == *owner && *index < state.surface_list_rows().len()).then_some(*index)
+        (surface.surface_id == *owner && *index < state.surface_targets().len()).then_some(*index)
     }
 
-    fn surface_list_outcome(
+    fn surface_target_outcome(
         &mut self,
         state: &PresentationState,
         key: KeyEvent,
     ) -> Option<KeyOutcome> {
-        let count = state.surface_list_rows().len();
+        let count = state.surface_targets().len();
         if count == 0 {
             return None;
         }
-        let current = self.selected_surface_row(state);
+        let current = self.selected_surface_target(state);
         let awaits_text = self.focused_input(state).is_some();
         match key.code {
             KeyCode::Up => {
                 let previous = current.unwrap_or(0).checked_sub(1).unwrap_or(count - 1);
-                self.select_surface_row(state, previous);
+                self.select_surface_target(state, previous);
                 Some(KeyOutcome::Consumed)
             }
             KeyCode::Down => {
-                self.select_surface_row(state, current.map_or(0, |index| (index + 1) % count));
+                self.select_surface_target(state, current.map_or(0, |index| (index + 1) % count));
                 Some(KeyOutcome::Consumed)
             }
             // A row occupies one to three lines depending on whether Core
@@ -132,22 +132,32 @@ impl InteractionState {
             // off the end is how a user loses their place in a long list.
             KeyCode::PageDown => {
                 let next = current.map_or(0, |index| index.saturating_add(PAGE_ROWS));
-                self.select_surface_row(state, next.min(count - 1));
+                self.select_surface_target(state, next.min(count - 1));
                 Some(KeyOutcome::Consumed)
             }
             KeyCode::PageUp => {
                 let previous = current.map_or(0, |index| index.saturating_sub(PAGE_ROWS));
-                self.select_surface_row(state, previous);
+                self.select_surface_target(state, previous);
                 Some(KeyOutcome::Consumed)
+            }
+            // A choice is stepped in place rather than opened: a terminal
+            // has no room for a popup and the options are already painted.
+            KeyCode::Left | KeyCode::Right => {
+                let step = if key.code == KeyCode::Left {
+                    ChoiceStep::Previous
+                } else {
+                    ChoiceStep::Next
+                };
+                Some(events_outcome(state.step_surface_choice(current?, step)))
             }
             // Up and Down alone make the far end of a 200-contact list a
             // war of attrition.
             KeyCode::Home => {
-                self.select_surface_row(state, 0);
+                self.select_surface_target(state, 0);
                 Some(KeyOutcome::Consumed)
             }
             KeyCode::End => {
-                self.select_surface_row(state, count - 1);
+                self.select_surface_target(state, count - 1);
                 Some(KeyOutcome::Consumed)
             }
             // A row shortcut must never outrank a field waiting for the same
@@ -157,14 +167,14 @@ impl InteractionState {
                 if index >= count {
                     return Some(KeyOutcome::Consumed);
                 }
-                self.select_surface_row(state, index);
-                Some(events_outcome(state.activate_surface_row(index)))
+                self.select_surface_target(state, index);
+                Some(events_outcome(state.activate_surface_target(index)))
             }
             _ => None,
         }
     }
 
-    fn select_surface_row(&mut self, state: &PresentationState, index: usize) {
+    fn select_surface_target(&mut self, state: &PresentationState, index: usize) {
         if let Some(surface) = state.surface() {
             self.surface_row = Some((surface.surface_id.clone(), index));
         }

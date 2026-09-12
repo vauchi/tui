@@ -243,7 +243,7 @@ fn down_selects_first_surface_list_row() {
         interaction.key_outcome(&state, KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)),
         KeyOutcome::Consumed
     );
-    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+    assert_eq!(interaction.selected_surface_target(&state), Some(0));
 }
 
 // @scenario: contact_exchange.feature :: User activates a surface list row with Enter
@@ -292,7 +292,7 @@ fn tab_keeps_cycling_context_actions_while_a_list_is_present() {
         1,
         "a list on the surface must not take Tab away from the context bar"
     );
-    assert_eq!(interaction.selected_surface_row(&state), None);
+    assert_eq!(interaction.selected_surface_target(&state), None);
 }
 
 fn state_with_input_and_action_list() -> PresentationState {
@@ -376,7 +376,7 @@ fn surface_replacement_clears_a_stale_row_selection() {
         &state,
         KeyEvent::new(KeyCode::Char('2'), KeyModifiers::NONE),
     );
-    assert_eq!(interaction.selected_surface_row(&state), Some(1));
+    assert_eq!(interaction.selected_surface_target(&state), Some(1));
 
     state.apply(&[Command::ReplaceSurface {
         surface: SurfaceSpec {
@@ -405,7 +405,7 @@ fn surface_replacement_clears_a_stale_row_selection() {
     }]);
 
     assert_eq!(
-        interaction.selected_surface_row(&state),
+        interaction.selected_surface_target(&state),
         None,
         "a selection index from the previous surface must not survive navigation"
     );
@@ -430,7 +430,7 @@ fn digit_activates_surface_list_row_directly() {
             Event::ActionActivated { interaction_id, .. }
         ] if interaction_id.as_str() == "mode:link"
     ));
-    assert_eq!(interaction.selected_surface_row(&state), Some(1));
+    assert_eq!(interaction.selected_surface_target(&state), Some(1));
 }
 
 /// Return in a field is the terminal's submit gesture — there is no
@@ -513,20 +513,20 @@ fn tab_leaves_the_field_so_enter_activates_the_primary_action() {
 #[test]
 fn home_and_end_jump_to_the_ends_of_the_list() {
     let state = state_with_action_list();
-    let last = state.surface_list_rows().len() - 1;
+    let last = state.surface_targets().len() - 1;
     let mut interaction = InteractionState::default();
 
     assert_eq!(
         interaction.key_outcome(&state, KeyEvent::new(KeyCode::End, KeyModifiers::NONE)),
         KeyOutcome::Consumed
     );
-    assert_eq!(interaction.selected_surface_row(&state), Some(last));
+    assert_eq!(interaction.selected_surface_target(&state), Some(last));
 
     assert_eq!(
         interaction.key_outcome(&state, KeyEvent::new(KeyCode::Home, KeyModifiers::NONE)),
         KeyOutcome::Consumed
     );
-    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+    assert_eq!(interaction.selected_surface_target(&state), Some(0));
 }
 
 /// PageUp and PageDown move by a fixed row step and stop at the ends.
@@ -539,7 +539,7 @@ fn home_and_end_jump_to_the_ends_of_the_list() {
 #[test]
 fn page_keys_move_by_a_step_and_clamp_at_the_ends() {
     let state = state_with_action_list();
-    let last = state.surface_list_rows().len() - 1;
+    let last = state.surface_targets().len() - 1;
     let mut interaction = InteractionState::default();
 
     // From nothing, PageDown starts at the top rather than jumping blind.
@@ -547,15 +547,15 @@ fn page_keys_move_by_a_step_and_clamp_at_the_ends() {
         interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageDown, KeyModifiers::NONE)),
         KeyOutcome::Consumed
     );
-    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+    assert_eq!(interaction.selected_surface_target(&state), Some(0));
 
     // A page beyond the end clamps to the last row instead of wrapping —
     // wrapping past the end is how a user loses their place.
     interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageDown, KeyModifiers::NONE));
-    assert_eq!(interaction.selected_surface_row(&state), Some(last));
+    assert_eq!(interaction.selected_surface_target(&state), Some(last));
 
     interaction.key_outcome(&state, KeyEvent::new(KeyCode::PageUp, KeyModifiers::NONE));
-    assert_eq!(interaction.selected_surface_row(&state), Some(0));
+    assert_eq!(interaction.selected_surface_target(&state), Some(0));
 }
 
 /// A surface re-render (e.g. an exchange poll tick) mints a new binding id

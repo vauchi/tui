@@ -349,7 +349,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
     let mut state = PresentationState::default();
     state.apply(&[Command::ReplaceSurface { surface: current }]);
 
-    let events = state.activate_surface_row(0);
+    let events = state.activate_surface_target(0);
     let changed = events.iter().find_map(|event| match event {
         vauchi_core::Event::ValueChanged {
             binding_id, value, ..

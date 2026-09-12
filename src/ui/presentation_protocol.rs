@@ -154,43 +154,70 @@ impl PresentationState {
         self.activation_events(action)
     }
 
-    /// All list rows from the active surface that can be activated.
-    pub(crate) fn surface_list_rows(&self) -> Vec<&vauchi_core::PresentationRow> {
+    /// Everything on the active surface the row keys can land on — list
+    /// rows and choices — in the order the renderer paints them, so the
+    /// highlight and the keys agree on which thing is next.
+    pub(crate) fn surface_targets(&self) -> Vec<SurfaceTarget<'_>> {
         let Some(surface) = self.surface() else {
             return Vec::new();
         };
-        let mut rows = Vec::new();
-        collect_list_rows(&surface.nodes, &mut rows);
-        rows
+        let mut targets = Vec::new();
+        collect_targets(&surface.nodes, &mut targets);
+        targets
     }
 
-    /// Activate a surface list row by its index in `surface_list_rows()`.
+    /// Activate a surface target by its index in `surface_targets()`.
     ///
     /// A row whose operable thing is a control reports a value rather than
     /// an action: Core names the setting in the row title and sends the
     /// toggle with no activation of its own, so there is no interaction id
-    /// to send and nothing would happen if we sent one.
-    pub(crate) fn activate_surface_row(&self, index: usize) -> Vec<Event> {
-        let rows = self.surface_list_rows();
-        let Some(row) = rows.get(index) else {
+    /// to send and nothing would happen if we sent one. A choice has no
+    /// activation either; Enter steps it to its next option.
+    pub(crate) fn activate_surface_target(&self, index: usize) -> Vec<Event> {
+        let targets = self.surface_targets();
+        match targets.get(index) {
+            Some(SurfaceTarget::Choice(choice)) => {
+                self.value_events(choice.binding_id.clone(), choice.stepped(ChoiceStep::Next))
+            }
+            Some(SurfaceTarget::Row(row)) => match row_toggle(row) {
+                Some((binding_id, value)) => {
+                    self.value_events(binding_id, vauchi_core::InputValue::Boolean(!value))
+                }
+                None => self.activation_events(row.activation.as_ref()),
+            },
+            None => Vec::new(),
+        }
+    }
+
+    /// Move the choice at `index` one option along; empty when the target
+    /// is not a choice, so the arrows can fall through to whatever else
+    /// wants them.
+    pub(crate) fn step_surface_choice(&self, index: usize, step: ChoiceStep) -> Vec<Event> {
+        let targets = self.surface_targets();
+        let Some(SurfaceTarget::Choice(choice)) = targets.get(index) else {
             return Vec::new();
         };
-        if let Some((binding_id, value)) = row_toggle(row) {
-            let Some(surface_id) = self.active_surface_id() else {
-                return Vec::new();
-            };
-            return vec![
-                Event::SurfaceActivated {
-                    surface_id: surface_id.clone(),
-                },
-                Event::ValueChanged {
-                    surface_id: surface_id.clone(),
-                    binding_id,
-                    value: vauchi_core::InputValue::Boolean(!value),
-                },
-            ];
-        }
-        self.activation_events(row.activation.as_ref())
+        self.value_events(choice.binding_id.clone(), choice.stepped(step))
+    }
+
+    fn value_events(
+        &self,
+        binding_id: vauchi_core::BindingId,
+        value: vauchi_core::InputValue,
+    ) -> Vec<Event> {
+        let Some(surface_id) = self.active_surface_id() else {
+            return Vec::new();
+        };
+        vec![
+            Event::SurfaceActivated {
+                surface_id: surface_id.clone(),
+            },
+            Event::ValueChanged {
+                surface_id: surface_id.clone(),
+                binding_id,
+                value,
+            },
+        ]
     }
 
     pub(crate) fn activation_events(&self, action: Option<&ActionSpec>) -> Vec<Event> {
@@ -252,24 +279,80 @@ fn first_status_activation(nodes: &[vauchi_core::PresentationNode]) -> Option<&A
     })
 }
 
-fn collect_list_rows<'a>(
+pub(crate) enum SurfaceTarget<'a> {
+    Row(&'a vauchi_core::PresentationRow),
+    Choice(ChoiceTarget<'a>),
+}
+
+/// An enabled choice with something to pick from.
+pub(crate) struct ChoiceTarget<'a> {
+    pub(crate) binding_id: &'a vauchi_core::BindingId,
+    pub(crate) selected: Option<&'a str>,
+    pub(crate) options: &'a [vauchi_core::ChoiceOption],
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ChoiceStep {
+    Previous,
+    Next,
+}
+
+impl ChoiceTarget<'_> {
+    /// The option one step from the current selection, wrapping at both
+    /// ends. With nothing selected, Next lands on the first option and
+    /// Previous on the last — the ends nearest each key.
+    fn stepped(&self, step: ChoiceStep) -> vauchi_core::InputValue {
+        let count = self.options.len();
+        let current = self
+            .selected
+            .and_then(|selected| self.options.iter().position(|option| option.id == selected));
+        let index = match (step, current) {
+            (ChoiceStep::Next, Some(current)) => (current + 1) % count,
+            (ChoiceStep::Next, None) => 0,
+            (ChoiceStep::Previous, Some(current)) => current.checked_sub(1).unwrap_or(count - 1),
+            (ChoiceStep::Previous, None) => count - 1,
+        };
+        vauchi_core::InputValue::Choice(Some(self.options[index].id.clone()))
+    }
+}
+
+/// The choice a node offers, if the keyboard can operate it at all.
+///
+/// Shared by the renderer and the input path so the line the highlight
+/// lands on is exactly the choice the arrows step.
+pub(crate) fn choice_target(node: &vauchi_core::PresentationNode) -> Option<ChoiceTarget<'_>> {
+    match node {
+        vauchi_core::PresentationNode::Choice {
+            binding_id,
+            selected,
+            options,
+            enabled: true,
+            ..
+        } if !options.is_empty() => Some(ChoiceTarget {
+            binding_id,
+            selected: selected.as_deref(),
+            options,
+        }),
+        _ => None,
+    }
+}
+
+fn collect_targets<'a>(
     nodes: &'a [vauchi_core::PresentationNode],
-    rows: &mut Vec<&'a vauchi_core::PresentationRow>,
+    targets: &mut Vec<SurfaceTarget<'a>>,
 ) {
     use vauchi_core::PresentationNode;
     for node in nodes {
         match node {
-            PresentationNode::List {
-                rows: list_rows, ..
-            } => {
-                for row in list_rows {
-                    if row_is_addressable(row) {
-                        rows.push(row);
-                    }
-                }
+            PresentationNode::List { rows, .. } => {
+                targets.extend(
+                    rows.iter()
+                        .filter(|row| row_is_addressable(row))
+                        .map(SurfaceTarget::Row),
+                );
             }
-            PresentationNode::Group { children, .. } => collect_list_rows(children, rows),
-            _ => {}
+            PresentationNode::Group { children, .. } => collect_targets(children, targets),
+            _ => targets.extend(choice_target(node).map(SurfaceTarget::Choice)),
         }
     }
 }

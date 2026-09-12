@@ -19,11 +19,11 @@ pub(crate) fn draw(
     area: Rect,
     state: &PresentationState,
     selected_action: usize,
-    selected_surface_row: Option<usize>,
+    selected_surface_target: Option<usize>,
 ) {
     let [content_area, bar_area] =
         Layout::vertical([Constraint::Min(1), Constraint::Length(3)]).areas(area);
-    draw_surface(frame, content_area, state, selected_surface_row);
+    draw_surface(frame, content_area, state, selected_surface_target);
     draw_context_bar(frame, bar_area, state, selected_action);
     if state.overlay().is_some() {
         draw_overlay(frame, area, state, selected_action);
@@ -109,7 +109,7 @@ fn draw_surface(
     frame: &mut Frame,
     area: Rect,
     state: &PresentationState,
-    selected_surface_row: Option<usize>,
+    selected_surface_target: Option<usize>,
 ) {
     let surfaces = state.visible_surfaces();
     if surfaces.is_empty() {
@@ -126,12 +126,12 @@ fn draw_surface(
             state
                 .surface()
                 .filter(|active| active.surface_id == surface.surface_id)
-                .and(selected_surface_row)
+                .and(selected_surface_target)
         };
         draw_surface_spec(frame, primary, surfaces[0], selection_for(surfaces[0]));
         draw_surface_spec(frame, detail, surfaces[1], selection_for(surfaces[1]));
     } else {
-        draw_surface_spec(frame, area, surfaces[0], selected_surface_row);
+        draw_surface_spec(frame, area, surfaces[0], selected_surface_target);
     }
 }
 
@@ -139,7 +139,7 @@ fn draw_surface_spec(
     frame: &mut Frame,
     area: Rect,
     surface: &vauchi_core::SurfaceSpec,
-    selected_surface_row: Option<usize>,
+    selected_surface_target: Option<usize>,
 ) {
     let mut lines = Vec::new();
     if let Some(subtitle) = &surface.subtitle {
@@ -149,10 +149,18 @@ fn draw_surface_spec(
         ));
         lines.push(Line::default());
     }
-    let mut remaining = selected_surface_row;
+    let mut remaining = selected_surface_target;
     let mut selected_line = None;
+    let usable_width = usize::from(area.width.saturating_sub(2));
     for node in &surface.nodes {
-        remaining = append_node_lines(node, 0, &mut lines, remaining, &mut selected_line);
+        remaining = append_node_lines(
+            node,
+            0,
+            &mut lines,
+            remaining,
+            &mut selected_line,
+            usable_width,
+        );
     }
 
     // Scroll so the selection stays on screen. Recomputed from the

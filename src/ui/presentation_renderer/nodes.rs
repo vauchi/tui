@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::ui::presentation_protocol::{row_is_addressable, row_toggle};
+use crate::ui::presentation_protocol::{
+    ChoiceTarget, choice_target, row_is_addressable, row_toggle,
+};
 use ratatui::prelude::*;
 use vauchi_core::PresentationNode;
 
@@ -9,14 +11,15 @@ pub(super) fn append_node_lines(
     node: &PresentationNode,
     depth: usize,
     lines: &mut Vec<Line<'static>>,
-    selected_surface_row: Option<usize>,
+    selected_surface_target: Option<usize>,
     // Set to the line index the selection was painted on. The caller needs
     // it to scroll: without it a surface taller than its viewport paints
     // the first screenful and the selection walks off into nothing.
     selected_line: &mut Option<usize>,
+    usable_width: usize,
 ) -> Option<usize> {
     let indent = "  ".repeat(depth);
-    let mut remaining = selected_surface_row;
+    let mut remaining = selected_surface_target;
     match node {
         PresentationNode::Text { content, .. } => {
             lines.push(Line::from(format!("{indent}{content}")));
@@ -47,10 +50,27 @@ pub(super) fn append_node_lines(
         ))),
         PresentationNode::Choice {
             label, selected, ..
-        } => lines.push(Line::from(format!(
-            "{indent}{label}: {}",
-            selected.as_deref().unwrap_or("—")
-        ))),
+        } => {
+            let Some(choice) = choice_target(node) else {
+                lines.push(Line::from(format!(
+                    "{indent}{label}: {}",
+                    selected.as_deref().unwrap_or("—")
+                )));
+                return remaining;
+            };
+            let is_selected = remaining == Some(0);
+            remaining = remaining.and_then(|n| n.checked_sub(1));
+            if is_selected {
+                *selected_line = Some(lines.len());
+            }
+            lines.push(choice_line(
+                &indent,
+                label,
+                &choice,
+                is_selected,
+                usable_width,
+            ));
+        }
         PresentationNode::Group {
             label, children, ..
         } => {
@@ -61,7 +81,14 @@ pub(super) fn append_node_lines(
                 ));
             }
             for child in children {
-                remaining = append_node_lines(child, depth + 1, lines, remaining, selected_line);
+                remaining = append_node_lines(
+                    child,
+                    depth + 1,
+                    lines,
+                    remaining,
+                    selected_line,
+                    usable_width,
+                );
             }
         }
         PresentationNode::List { label, rows, .. } => {
@@ -172,4 +199,59 @@ pub(super) fn append_node_lines(
         _ => {}
     }
     remaining
+}
+
+/// `label: A  [ B ]  C` while the options fit, else `label: ‹ B ›` — the
+/// selection stays legible in a narrow pane instead of wrapping into
+/// noise. A focused choice carries the row highlight plus the keys that
+/// step it, since nothing else on screen says how a choice is operated.
+fn choice_line(
+    indent: &str,
+    label: &str,
+    choice: &ChoiceTarget<'_>,
+    is_selected: bool,
+    usable_width: usize,
+) -> Line<'static> {
+    let label_style = if is_selected {
+        Style::default().add_modifier(Modifier::REVERSED)
+    } else {
+        Style::default()
+    };
+    let picked_style = Style::default().add_modifier(Modifier::BOLD);
+    let hint = if is_selected {
+        Span::styled("  ←/→ picks", Style::default().add_modifier(Modifier::DIM))
+    } else {
+        Span::raw("")
+    };
+
+    let mut spans = vec![Span::styled(format!("{indent}{label}: "), label_style)];
+    let picked = choice
+        .selected
+        .and_then(|selected| choice.options.iter().find(|option| option.id == selected));
+    if picked.is_none() {
+        spans.push(Span::styled("[ — ]", picked_style));
+    }
+    for (index, option) in choice.options.iter().enumerate() {
+        if index > 0 || picked.is_none() {
+            spans.push(Span::raw("  "));
+        }
+        if picked.is_some_and(|picked| picked.id == option.id) {
+            spans.push(Span::styled(format!("[ {} ]", option.label), picked_style));
+        } else {
+            spans.push(Span::raw(option.label.clone()));
+        }
+    }
+    spans.push(hint.clone());
+    let expanded = Line::from(spans);
+    if expanded.width() <= usable_width {
+        return expanded;
+    }
+    Line::from(vec![
+        Span::styled(format!("{indent}{label}: "), label_style),
+        Span::styled(
+            format!("‹ {} ›", picked.map_or("—", |option| option.label.as_str())),
+            picked_style,
+        ),
+        hint,
+    ])
 }
