@@ -50,3 +50,7 @@ mod presentation_protocol_tests;
 #[cfg(test)]
 #[path = "presentation_renderer_tests.rs"]
 mod presentation_renderer_tests;
+
+#[cfg(test)]
+#[path = "presentation_choice_tests.rs"]
+mod presentation_choice_tests;
