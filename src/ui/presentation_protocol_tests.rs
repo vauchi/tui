@@ -5,8 +5,8 @@ use super::presentation_protocol::PresentationState;
 use serde::Deserialize;
 use vauchi_core::{
     AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, Event, InteractionId,
-    OverlayKind, OverlaySpec, PaneLayout, PresentationProfile, PresentationTokens, SurfaceId,
-    SurfaceLayout, SurfaceSpec, WindowClass,
+    NavigationItem, NavigationSpec, OverlayKind, OverlaySpec, PaneLayout, PresentationProfile,
+    PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
 };
 
 // Fixture versions are exact contracts: additive fields require an explicit
@@ -366,5 +366,62 @@ fn activating_a_control_row_reports_the_flipped_value() {
         value,
         InputValue::Boolean(false),
         "the reported value is the flipped one"
+    );
+}
+
+fn nav_item(id: &str, selected: bool) -> NavigationItem {
+    NavigationItem {
+        interaction_id: InteractionId::new(id).unwrap(),
+        label: id.into(),
+        accessibility_label: id.into(),
+        icon_token: None,
+        selected,
+        badge_count: 0,
+    }
+}
+
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+/// Core publishes the persistent navigation beside the context bar; a shell
+/// that does not consume it leaks it as a native effect and fails the
+/// contract fixture (core 0.67.1). Same revision gate and same lifetime as
+/// the context bar: stale chrome is dropped, a new surface clears it.
+#[test]
+fn navigation_is_consumed_for_the_current_revision_and_stale_navigation_is_dropped() {
+    let mut state = PresentationState::default();
+    let current = surface(4);
+    let surface_id = current.surface_id.clone();
+    state.apply(&[Command::ReplaceSurface { surface: current }]);
+
+    let effects = state.apply(&[Command::SetNavigation {
+        surface_id: surface_id.clone(),
+        revision: 4,
+        navigation: NavigationSpec {
+            items: vec![nav_item("nav.home", true), nav_item("nav.contacts", false)],
+        },
+    }]);
+    assert!(
+        effects.is_empty(),
+        "navigation must be consumed, got {effects:?}"
+    );
+    assert_eq!(state.navigation().map(|nav| nav.items.len()), Some(2));
+
+    let effects = state.apply(&[Command::SetNavigation {
+        surface_id: surface_id.clone(),
+        revision: 3,
+        navigation: NavigationSpec::default(),
+    }]);
+    assert!(effects.is_empty(), "stale chrome is dropped, not echoed");
+    assert_eq!(
+        state.navigation().map(|nav| nav.items.len()),
+        Some(2),
+        "a stale SetNavigation must not replace the current one"
+    );
+
+    state.apply(&[Command::ReplaceSurface {
+        surface: surface(5),
+    }]);
+    assert!(
+        state.navigation().is_none(),
+        "a replaced surface starts without navigation until Core publishes it"
     );
 }
