@@ -6,14 +6,15 @@
 use std::collections::HashMap;
 
 use vauchi_core::{
-    ActionSpec, Command, ContextBar, Event, OverlaySpec, PaneLayout, PresentationProfile,
-    SurfaceId, SurfaceSpec,
+    ActionSpec, Command, ContextBar, Event, NavigationSpec, OverlaySpec, PaneLayout,
+    PresentationProfile, SurfaceId, SurfaceSpec,
 };
 
 #[derive(Default)]
 pub(crate) struct PresentationState {
     surfaces: HashMap<SurfaceId, SurfaceSpec>,
     context_bars: HashMap<SurfaceId, (u64, ContextBar)>,
+    navigations: HashMap<SurfaceId, (u64, NavigationSpec)>,
     overlays: HashMap<SurfaceId, (u64, OverlaySpec)>,
     profile: Option<PresentationProfile>,
     last_surface: Option<SurfaceId>,
@@ -33,6 +34,14 @@ impl PresentationState {
                 } if self.is_current_revision(surface_id, *revision) => {
                     self.context_bars
                         .insert(surface_id.clone(), (*revision, (**bar).clone()));
+                }
+                Command::SetNavigation {
+                    surface_id,
+                    revision,
+                    navigation,
+                } if self.is_current_revision(surface_id, *revision) => {
+                    self.navigations
+                        .insert(surface_id.clone(), (*revision, navigation.clone()));
                 }
                 Command::PresentOverlay {
                     surface_id,
@@ -56,6 +65,7 @@ impl PresentationState {
                     self.overlays.remove(surface_id);
                 }
                 Command::SetContextBar { .. }
+                | Command::SetNavigation { .. }
                 | Command::PresentOverlay { .. }
                 | Command::DismissOverlay { .. } => {}
                 Command::SetPresentationProfile { profile } => {
@@ -104,6 +114,17 @@ impl PresentationState {
         self.active_surface_id()
             .and_then(|surface_id| self.context_bars.get(surface_id))
             .map(|(_, bar)| bar)
+    }
+
+    /// The persistent navigation Core published for the active surface.
+    /// Consumed so the contract fixture stays clean; the terminal still
+    /// reaches destinations through the Alt+M overlay, as the command's
+    /// contract allows, until a bar renders it.
+    #[cfg(test)]
+    pub(crate) fn navigation(&self) -> Option<&NavigationSpec> {
+        self.active_surface_id()
+            .and_then(|surface_id| self.navigations.get(surface_id))
+            .map(|(_, navigation)| navigation)
     }
 
     pub(crate) fn overlay(&self) -> Option<&OverlaySpec> {
@@ -255,6 +276,7 @@ impl PresentationState {
         if !stale {
             self.surfaces.insert(surface_id.clone(), candidate);
             self.context_bars.remove(&surface_id);
+            self.navigations.remove(&surface_id);
             self.overlays.remove(&surface_id);
             self.last_surface = Some(surface_id);
         }
