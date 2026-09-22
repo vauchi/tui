@@ -20,13 +20,30 @@ use vauchi_core::VauchiConfig;
 /// enable direct fetch, so ADR-037 holds. Without this the TUI carries the
 /// compiled-in production key and cannot reach a local test relay (see the
 /// backlog record 2026-09-10-tui-link-initiator-does-not-complete-handshake).
-pub fn apply_ohttp_test_overrides(mut config: VauchiConfig) -> VauchiConfig {
-    if let Ok(url) = std::env::var("VAUCHI_OHTTP_RELAY_URL")
-        && !url.trim().is_empty()
+pub fn apply_ohttp_test_overrides(config: VauchiConfig) -> VauchiConfig {
+    ohttp_overrides(
+        config,
+        std::env::var("VAUCHI_OHTTP_RELAY_URL").ok(),
+        std::env::var("VAUCHI_OVERRIDE_BUNDLED_OHTTP_KEY_HEX").ok(),
+    )
+}
+
+/// The overrides without the environment: `relay_url` replaces the OHTTP
+/// route unless blank; `key_hex` replaces the bundled gateway key when it
+/// decodes and is reported and ignored when it does not.
+pub fn ohttp_overrides(
+    mut config: VauchiConfig,
+    relay_url: Option<String>,
+    key_hex: Option<String>,
+) -> VauchiConfig {
+    if let Some(url) = relay_url
+        .as_deref()
+        .map(str::trim)
+        .filter(|url| !url.is_empty())
     {
-        config = config.with_ohttp_relay_url(url.trim());
+        config = config.with_ohttp_relay_url(url);
     }
-    if let Ok(hex) = std::env::var("VAUCHI_OVERRIDE_BUNDLED_OHTTP_KEY_HEX") {
+    if let Some(hex) = key_hex {
         match hex::decode(hex.trim()) {
             Ok(bytes) => {
                 eprintln!(

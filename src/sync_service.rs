@@ -74,7 +74,11 @@ pub fn sync(vauchi: &mut Vauchi) -> SyncResult {
     };
 
     vauchi.disconnect();
+    sync_result_from(outcome)
+}
 
+/// Maps a sync outcome onto the status line the TUI shows.
+pub fn sync_result_from(outcome: VauchiSyncOutcome) -> SyncResult {
     match outcome {
         VauchiSyncOutcome::Ok {
             received,
