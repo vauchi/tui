@@ -14,12 +14,7 @@ use vauchi_core::exchange::capability::types::DeviceCapabilities;
 /// A terminal session: network only.
 pub fn tui_device_capabilities() -> DeviceCapabilities {
     DeviceCapabilities {
-        has_camera: false,
-        has_ble: false,
-        has_nfc: false,
-        has_accelerometer: false,
         has_internet: true,
-        has_usb_port: false,
         ..Default::default()
     }
 }

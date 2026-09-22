@@ -8,9 +8,7 @@
 
 use std::path::{Path, PathBuf};
 
-use vauchi_app::i18n::{
-    Locale, LocaleInfo, get_available_locales, get_locale_info, get_string, get_string_with_args,
-};
+use vauchi_app::i18n::{Locale, LocaleInfo, get_available_locales, get_locale_info, get_string};
 
 /// Where runtime locale files were resolved from.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -147,26 +145,9 @@ impl I18n {
         self.locale
     }
 
-    /// Set the current locale.
-    pub fn set_locale(&mut self, locale: Locale) {
-        self.locale = locale;
-    }
-
-    /// Set the locale from a code string.
-    pub fn set_locale_code(&mut self, code: &str) {
-        if let Some(locale) = Locale::from_code(code) {
-            self.locale = locale;
-        }
-    }
-
     /// Get a localized string by key.
     pub fn t(&self, key: &str) -> String {
         get_string(self.locale, key)
-    }
-
-    /// Get a localized string with argument interpolation.
-    pub fn t_args(&self, key: &str, args: &[(&str, &str)]) -> String {
-        get_string_with_args(self.locale, key, args)
     }
 
     /// Get info about the current locale.
@@ -179,21 +160,6 @@ impl I18n {
         get_available_locales()
             .into_iter()
             .map(|l| (l, get_locale_info(l)))
-            .collect()
-    }
-
-    /// List locale codes and names.
-    pub fn list_locales() -> Vec<(String, String, String)> {
-        get_available_locales()
-            .into_iter()
-            .map(|l| {
-                let info = get_locale_info(l);
-                (
-                    info.code.to_string(),
-                    info.name.to_string(),
-                    info.english_name.to_string(),
-                )
-            })
             .collect()
     }
 }
