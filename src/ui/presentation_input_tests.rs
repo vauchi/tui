@@ -10,7 +10,7 @@ use vauchi_core::{
     PresentationRow, PresentationTokens, StandardShortcut, SurfaceId, SurfaceLayout, SurfaceSpec,
 };
 
-fn action(id: &str, shortcut: Option<StandardShortcut>) -> ActionSpec {
+pub(super) fn action(id: &str, shortcut: Option<StandardShortcut>) -> ActionSpec {
     ActionSpec {
         interaction_id: InteractionId::new(id).unwrap(),
         label: id.into(),
@@ -22,7 +22,7 @@ fn action(id: &str, shortcut: Option<StandardShortcut>) -> ActionSpec {
     }
 }
 
-fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
+pub(super) fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
     PresentationRow {
         title: title.into(),
         subtitle: None,
@@ -39,7 +39,7 @@ fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
     }
 }
 
-fn state_with_input() -> PresentationState {
+pub(super) fn state_with_input() -> PresentationState {
     let surface_id = SurfaceId::new("onboarding").unwrap();
     let mut state = PresentationState::default();
     state.apply(&[
@@ -175,7 +175,7 @@ fn escape_dismisses_each_overlay_by_kind_through_core() {
     }
 }
 
-fn state_with_action_list() -> PresentationState {
+pub(super) fn state_with_action_list() -> PresentationState {
     let surface_id = SurfaceId::new("exchange_mode_selection").unwrap();
     let mut state = PresentationState::default();
     state.apply(&[Command::ReplaceSurface {
@@ -299,7 +299,7 @@ fn tab_keeps_cycling_context_actions_while_a_list_is_present() {
     assert_eq!(interaction.selected_surface_target(&state), None);
 }
 
-fn state_with_input_and_action_list() -> PresentationState {
+pub(super) fn state_with_input_and_action_list() -> PresentationState {
     let surface_id = SurfaceId::new("contact_search").unwrap();
     let mut state = PresentationState::default();
     state.apply(&[Command::ReplaceSurface {
@@ -628,7 +628,7 @@ fn submitting_after_a_re_render_uses_the_current_input_binding() {
     );
 }
 
-fn state_with_status_chip() -> PresentationState {
+pub(super) fn state_with_status_chip() -> PresentationState {
     let surface_id = SurfaceId::new("home_list").unwrap();
     let mut state = PresentationState::default();
     state.apply(&[Command::ReplaceSurface {

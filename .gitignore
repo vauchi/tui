@@ -15,7 +15,8 @@ Thumbs.db
 
 # TUI data
 .vauchi/
-.cargo/
+.cargo/*
+!.cargo/mutants.toml
 
 # CI local testing
 .gitlab-ci-local/
