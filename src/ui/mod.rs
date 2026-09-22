@@ -45,6 +45,10 @@ pub fn draw_presentation(frame: &mut Frame, app: &App) {
 mod presentation_input_tests;
 
 #[cfg(test)]
+#[path = "draw_tests.rs"]
+mod draw_tests;
+
+#[cfg(test)]
 #[path = "presentation_input_keys_tests.rs"]
 mod presentation_input_keys_tests;
 

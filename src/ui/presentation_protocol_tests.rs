@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use super::presentation_protocol::PresentationState;
+use super::presentation_protocol::{ChoiceStep, PresentationState};
 use serde::Deserialize;
 use vauchi_core::{
     AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, Event, InteractionId,
@@ -428,5 +428,208 @@ fn navigation_is_consumed_for_the_current_revision_and_stale_navigation_is_dropp
     assert!(
         state.navigation().is_none(),
         "a replaced surface starts without navigation until Core publishes it"
+    );
+}
+
+fn state_showing(nodes: Vec<vauchi_core::PresentationNode>) -> PresentationState {
+    let mut spec = surface(1);
+    spec.nodes = nodes;
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface: spec }]);
+    state
+}
+
+fn status_chip(enabled: bool) -> vauchi_core::PresentationNode {
+    let mut activation = action("status");
+    activation.enabled = enabled;
+    vauchi_core::PresentationNode::Status {
+        id: None,
+        title: "Synced".into(),
+        detail: None,
+        icon_token: None,
+        badge: None,
+        tone: vauchi_core::PresentationTone::Neutral,
+        activation: Some(activation),
+        accessibility: AccessibilitySpec::label("Synced"),
+    }
+}
+
+fn choice(selected: Option<&str>, options: &[&str]) -> vauchi_core::PresentationNode {
+    vauchi_core::PresentationNode::Choice {
+        binding_id: vauchi_core::BindingId::new("pick").unwrap(),
+        label: "Pick".into(),
+        selected: selected.map(Into::into),
+        options: options
+            .iter()
+            .map(|id| vauchi_core::ChoiceOption {
+                id: (*id).into(),
+                label: (*id).into(),
+            })
+            .collect(),
+        enabled: true,
+        accessibility: AccessibilitySpec::label("Pick"),
+    }
+}
+
+fn toggle_row(enabled: bool) -> vauchi_core::PresentationRow {
+    vauchi_core::PresentationRow {
+        title: "Setting".into(),
+        subtitle: None,
+        detail: None,
+        icon_token: None,
+        image_data: None,
+        fallback_text: None,
+        selected: false,
+        enabled: true,
+        activation: None,
+        secondary_actions: Vec::new(),
+        controls: vec![vauchi_core::PresentationNode::Toggle {
+            binding_id: vauchi_core::BindingId::new("flag").unwrap(),
+            label: "Flag".into(),
+            value: false,
+            enabled,
+            accessibility: AccessibilitySpec::label("Flag"),
+        }],
+        accessibility: AccessibilitySpec::label("Setting"),
+    }
+}
+
+fn chosen(events: &[Event]) -> Option<&str> {
+    events.iter().find_map(|event| match event {
+        Event::ValueChanged {
+            value: vauchi_core::InputValue::Choice(Some(id)),
+            ..
+        } => Some(id.as_str()),
+        _ => None,
+    })
+}
+
+// @internal
+#[test]
+fn dismissing_an_overlay_of_another_kind_leaves_it_open() {
+    let mut state = PresentationState::default();
+    let surface = surface(1);
+    let surface_id = surface.surface_id.clone();
+    state.apply(&[
+        Command::ReplaceSurface { surface },
+        Command::PresentOverlay {
+            surface_id: surface_id.clone(),
+            revision: 1,
+            overlay: OverlaySpec {
+                kind: OverlayKind::ActionMenu,
+                title: None,
+                body: None,
+                items: vec![action("item")],
+            },
+        },
+    ]);
+
+    let effects = state.apply(&[Command::DismissOverlay {
+        surface_id,
+        revision: 1,
+        kind: OverlayKind::Navigation,
+    }]);
+
+    assert_eq!(state.overlay().unwrap().kind, OverlayKind::ActionMenu);
+    assert!(effects.is_empty(), "{effects:?}");
+}
+
+// @internal
+#[test]
+fn native_back_is_requested_only_after_core_asks_for_it() {
+    let mut state = state_showing(Vec::new());
+    assert!(!state.native_back_requested());
+
+    state.apply(&[Command::PerformNativeBack]);
+
+    assert!(state.native_back_requested());
+}
+
+// @internal
+#[test]
+fn the_status_chip_is_found_inside_a_group_and_skipped_when_disabled() {
+    let grouped = state_showing(vec![vauchi_core::PresentationNode::Group {
+        id: None,
+        label: None,
+        axis: vauchi_core::PresentationAxis::Vertical,
+        children: vec![status_chip(true)],
+        accessibility: AccessibilitySpec::label("group"),
+    }]);
+    assert_eq!(
+        grouped
+            .status_activation()
+            .map(|a| a.interaction_id.as_str()),
+        Some("status")
+    );
+
+    let disabled = state_showing(vec![status_chip(false)]);
+    assert!(disabled.status_activation().is_none());
+}
+
+// @internal
+#[test]
+fn stepping_a_choice_wraps_from_either_end() {
+    let unselected = state_showing(vec![choice(None, &["a", "b", "c"])]);
+    assert_eq!(
+        chosen(&unselected.step_surface_choice(0, ChoiceStep::Previous)),
+        Some("c")
+    );
+    assert_eq!(
+        chosen(&unselected.step_surface_choice(0, ChoiceStep::Next)),
+        Some("a")
+    );
+
+    let first = state_showing(vec![choice(Some("a"), &["a", "b", "c"])]);
+    assert_eq!(
+        chosen(&first.step_surface_choice(0, ChoiceStep::Previous)),
+        Some("c")
+    );
+    assert_eq!(
+        chosen(&first.step_surface_choice(0, ChoiceStep::Next)),
+        Some("b")
+    );
+}
+
+// @internal
+#[test]
+fn a_choice_without_options_is_not_a_target() {
+    assert_eq!(
+        state_showing(vec![choice(None, &[])])
+            .surface_targets()
+            .len(),
+        0
+    );
+    assert_eq!(
+        state_showing(vec![choice(None, &["only"])])
+            .surface_targets()
+            .len(),
+        1
+    );
+}
+
+// @internal
+#[test]
+fn a_row_whose_only_control_is_disabled_cannot_be_reached() {
+    let list = |row| vauchi_core::PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
+        id: vauchi_core::BindingId::new("settings").unwrap(),
+        label: None,
+        rows: vec![row],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Settings"),
+    };
+
+    assert_eq!(
+        state_showing(vec![list(toggle_row(false))])
+            .surface_targets()
+            .len(),
+        0
+    );
+    assert_eq!(
+        state_showing(vec![list(toggle_row(true))])
+            .surface_targets()
+            .len(),
+        1
     );
 }

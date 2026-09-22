@@ -6,4 +6,8 @@
 exclude_re = [
     # CONTROL and ALT are disjoint bit flags, so `|` and `^` build the same mask.
     "replace \\| with \\^ in InteractionState::value_outcome",
+    # Reads the process environment; the logic it feeds is `ohttp_overrides`.
+    "replace apply_ohttp_test_overrides",
+    # Guards a stderr-only report of skipped variants.
+    "delete ! in run_cli",
 ]
