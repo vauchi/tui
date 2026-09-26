@@ -59,11 +59,13 @@ cargo build -p vauchi-tui --release
 
 ## Project Structure
 
-`src/` holds the binary entry point plus `ui/` (widget renderers and
-snapshot tests) and `handlers/` (input handling mapped to core
-`UserAction`s). All screens are core-driven `ScreenModel` renders —
-run `ls src/` for the live tree; this README deliberately carries no
-file inventory.
+`src/` holds the binary entry point plus `app/` (reports terminal
+capabilities to core), `ui/` (decodes core's generic presentation
+commands and renders them, with snapshot tests) and `handlers/` (reports
+key input to core as opaque events). Core prepares every command —
+copy, state, tokens, identifiers — and interprets every event; the TUI
+carries no Vauchi domain vocabulary. Run `ls src/` for the live tree;
+this README deliberately carries no file inventory.
 
 ## ⚠️ Mandatory Development Rules
 
