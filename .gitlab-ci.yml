@@ -464,6 +464,14 @@ lint:humble:
           - ".gitlab-ci.yml"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+# Exact-zero release gate (ADR-066): a release tag may carry no remaining
+# Humble UI boundary violations, unlike MR ratchets which let existing
+# debt shrink over time. Wired into build:release's needs below so a
+# failing gate blocks publish:package:tui even though needs: makes that
+# job DAG-ordered past the lint stage.
+release:ratchet-zero:
+  extends: .release-ratchet-zero
+
 # ============================================================
 # Dev Tag Pipeline (lightweight — lint + test only)
 # ============================================================
@@ -553,6 +561,8 @@ build:release:
     - job: test:unit
       optional: true
     - job: lint:format
+      optional: true
+    - job: release:ratchet-zero
       optional: true
   script:
     - cargo build --release --locked
