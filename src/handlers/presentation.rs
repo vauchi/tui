@@ -29,7 +29,7 @@ pub fn handle_presentation_key(app: &mut App, key: KeyEvent) -> Action {
         KeyOutcome::Events(events) => {
             for event in events {
                 if let Err(error) = app.dispatch_presentation_event(event) {
-                    app.alert_message = Some(("Presentation error".into(), error.to_string()));
+                    app.present_rejection(&error);
                     break;
                 }
             }
@@ -136,6 +136,6 @@ fn handle_interactive_effect(app: &mut App, key: KeyEvent) -> Option<Action> {
 
 fn dispatch_effect_result(app: &mut App, event: Event) {
     if let Err(error) = app.dispatch_presentation_event(event) {
-        app.alert_message = Some(("Presentation error".into(), error.to_string()));
+        app.present_rejection(&error);
     }
 }

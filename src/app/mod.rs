@@ -77,6 +77,13 @@ impl App {
         Ok(())
     }
 
+    /// Core prepares the alert for a rejected event (ADR-045 Am1): the
+    /// error's own text can echo user input, so it is never shown.
+    pub(crate) fn present_rejection(&mut self, error: &AppPresentationError) {
+        let commands = self.app_engine.reject_dispatch(error);
+        self.apply_presentation_commands(commands);
+    }
+
     pub(crate) fn apply_presentation_commands(&mut self, commands: Vec<Command>) {
         for effect in self.presentation.apply(&commands) {
             self.apply_native_effect(effect);
