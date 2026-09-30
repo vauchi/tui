@@ -359,10 +359,18 @@ perf:binary-size:
 # Mutation Stage (uses shared template from vauchi/scripts)
 # ============================================================
 
+# --in-place because theme.rs include_bytes!("../../themes/...") resolves
+# against the source tree: cargo-mutants' default copy to a temp dir has
+# no ../themes sibling, so the unmutated baseline could not compile.
 mutation:nightly:
   extends: [.mutation-nightly, .rust-runner, .timeout-extended]
+  before_script:
+    - !reference [.self-hosted, before_script]
+    - !reference [.git-credentials, before_script]
+    - !reference [.clone-themes, before_script]
   variables:
     MUTATION_TIMEOUT_NIGHTLY: "120"
+    MUTATION_EXTRA_FLAGS: "--in-place"
 
 # ============================================================
 # Security Stage (runs on dependency changes, gated by lint, parallel with test)
