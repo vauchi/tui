@@ -95,10 +95,14 @@ fn command_variants_the_pinned_core_lacks_are_skipped_and_reported() {
 fn code_ids_that_are_not_plain_file_names_are_rejected() {
     let mut catalog = two_entry_catalog();
     catalog.screens[0].code_id = "../escaped".into();
-    let out = tempfile::tempdir().unwrap();
+    // A bare tempdir's parent is the runner-wide temp dir, where an earlier
+    // run (e.g. a mutant of the name check) may have left escaped.snap.
+    let owned_root = tempfile::tempdir().unwrap();
+    let out = owned_root.path().join("out");
+    std::fs::create_dir(&out).unwrap();
 
-    let result = render_catalog(&catalog, out.path(), FULL_FRAME);
+    let result = render_catalog(&catalog, &out, FULL_FRAME);
 
     assert!(result.is_err());
-    assert!(!out.path().parent().unwrap().join("escaped.snap").exists());
+    assert!(!owned_root.path().join("escaped.snap").exists());
 }
