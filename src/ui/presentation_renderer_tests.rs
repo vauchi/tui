@@ -199,6 +199,7 @@ fn non_blank(text: String) -> Option<String> {
 fn split_panes_highlight_only_the_active_surface() {
     let mut primary = titled_surface("surface-primary", "Contacts");
     primary.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("entries").unwrap(),
         label: None,
         rows: vec![row("Grace", Some(action("open:grace", "Grace")))],
@@ -208,6 +209,7 @@ fn split_panes_highlight_only_the_active_surface() {
     }];
     let mut detail = titled_surface("surface-detail", "Ada");
     detail.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("fields").unwrap(),
         label: None,
         rows: vec![row("Email", Some(action("edit:email", "Email")))],
@@ -256,6 +258,7 @@ fn split_panes_highlight_only_the_active_surface() {
 fn highlight_marks_the_row_that_activation_would_reach() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("results").unwrap(),
         label: None,
         rows: vec![
@@ -362,6 +365,7 @@ fn toggle_row(title: &str, on: bool) -> PresentationRow {
 fn a_row_control_renders_its_state() {
     let mut surface = titled_surface("surface-primary", "Settings");
     surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
         rows: vec![toggle_row("Delivery Receipts", true)],
@@ -397,6 +401,7 @@ fn a_row_control_renders_its_state() {
 fn a_row_carrying_a_control_can_be_selected() {
     let mut surface = titled_surface("surface-primary", "Settings");
     surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
         rows: vec![toggle_row("Delivery Receipts", false)],
@@ -430,6 +435,7 @@ fn a_rows_detail_is_shown() {
     let mut named = row("Display Name", Some(action("edit", "Edit")));
     named.detail = Some("Bob".into());
     surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("profile").unwrap(),
         label: None,
         rows: vec![named],
@@ -478,6 +484,7 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
         })
         .collect();
     surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("rows").unwrap(),
         label: None,
         rows,
@@ -515,6 +522,7 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
 fn a_paged_surface_shows_its_count() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("rows").unwrap(),
         label: None,
         rows: vec![row("Ada", Some(action("open:ada", "Ada")))],

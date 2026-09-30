@@ -339,6 +339,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
         accessibility: AccessibilitySpec::label("Delivery Receipts"),
     };
     current.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
         rows: vec![row],

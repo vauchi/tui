@@ -260,6 +260,7 @@ fn enter_cycles_a_selected_choice_forward() {
 #[test]
 fn arrows_leave_a_selected_list_row_alone() {
     let state = state_with(vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
         id: BindingId::new("rows").unwrap(),
         label: None,
         rows: vec![action_row("Display Name", "edit")],
@@ -281,6 +282,7 @@ fn arrows_leave_a_selected_list_row_alone() {
 fn a_choice_takes_its_place_in_the_surface_order() {
     let state = state_with(vec![
         PresentationNode::List {
+            style: vauchi_core::PresentationListStyle::Rows,
             id: BindingId::new("rows").unwrap(),
             label: None,
             rows: vec![action_row("Display Name", "edit")],

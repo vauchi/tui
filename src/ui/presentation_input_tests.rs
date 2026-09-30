@@ -192,6 +192,7 @@ fn state_with_action_list() -> PresentationState {
                 minimum_target_size: 1,
             },
             nodes: vec![PresentationNode::List {
+                style: vauchi_core::PresentationListStyle::Rows,
                 id: BindingId::new("modes").unwrap(),
                 label: None,
                 rows: vec![
@@ -326,6 +327,7 @@ fn state_with_input_and_action_list() -> PresentationState {
                     accessibility: AccessibilitySpec::label("Phone"),
                 },
                 PresentationNode::List {
+                    style: vauchi_core::PresentationListStyle::Rows,
                     id: BindingId::new("results").unwrap(),
                     label: None,
                     rows: vec![row("Ada", Some(action("open:ada", None)))],
@@ -394,6 +396,7 @@ fn surface_replacement_clears_a_stale_row_selection() {
                 minimum_target_size: 1,
             },
             nodes: vec![PresentationNode::List {
+                style: vauchi_core::PresentationListStyle::Rows,
                 id: BindingId::new("steps").unwrap(),
                 label: None,
                 rows: vec![row("Retry", Some(action("exchange:retry", None)))],
