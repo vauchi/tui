@@ -363,7 +363,10 @@ perf:binary-size:
 # against the source tree: cargo-mutants' default copy to a temp dir has
 # no ../themes sibling, so the unmutated baseline could not compile.
 mutation:nightly:
-  extends: [.mutation-nightly, .rust-runner, .timeout-extended]
+  extends: [.mutation-nightly, .rust-runner]
+  # 421 mutants took 32 min on a warm nell-shell but overran
+  # .timeout-extended's 45 min on a cold allyson-shell (job 16854327300).
+  timeout: 2h
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
