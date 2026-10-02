@@ -3022,7 +3022,6 @@ dependencies = [
  "dirs",
  "hex",
  "insta",
- "libc",
  "open",
  "qrcode",
  "ratatui",

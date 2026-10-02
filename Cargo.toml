@@ -28,10 +28,6 @@ clap = { version = "4", default-features = false, features = ["derive", "std", "
 # Error handling
 anyhow = "1.0"
 
-# Instance locking (flock)
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-
 # Directories for config
 dirs = "5.0"
 

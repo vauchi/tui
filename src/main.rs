@@ -168,16 +168,10 @@ fn main() -> Result<()> {
     let lock_path = data_dir.join(".vauchi.lock");
     let lock_file = std::fs::File::create(&lock_path).context("Failed to create lock file")?;
     #[cfg(unix)]
-    {
-        use std::os::unix::io::AsRawFd;
-        let fd = lock_file.as_raw_fd();
-        // Try non-blocking exclusive lock
-        let ret = unsafe { libc::flock(fd, libc::LOCK_EX | libc::LOCK_NB) };
-        if ret != 0 {
-            eprintln!("Another vauchi-tui instance is already running on this data directory.");
-            eprintln!("Data dir: {}", data_dir.display());
-            std::process::exit(1);
-        }
+    if lock_file.try_lock().is_err() {
+        eprintln!("Another vauchi-tui instance is already running on this data directory.");
+        eprintln!("Data dir: {}", data_dir.display());
+        std::process::exit(1);
     }
     // Keep lock_file alive for the duration of the process (dropped on exit/crash)
     let _lock = lock_file;
