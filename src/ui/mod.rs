@@ -54,3 +54,7 @@ mod presentation_renderer_tests;
 #[cfg(test)]
 #[path = "presentation_choice_tests.rs"]
 mod presentation_choice_tests;
+
+#[cfg(test)]
+#[path = "pictogram_glyph_tests.rs"]
+mod pictogram_glyph_tests;
