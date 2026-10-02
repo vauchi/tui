@@ -107,6 +107,7 @@ pub fn init_from_environment() -> LocaleSource {
         } else {
             None
         },
+        // nosemgrep: rust.lang.security.current-exe.current-exe — locates bundled locale files, no security decision
         std::env::current_exe().ok(),
     );
     apply_locale_source(&source);
