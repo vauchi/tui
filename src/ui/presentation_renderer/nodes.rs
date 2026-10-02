@@ -124,7 +124,9 @@ pub(super) fn append_node_lines(
                 let marker = match row_toggle(row) {
                     Some((_, true)) => "[x]".to_string(),
                     Some((_, false)) => "[ ]".to_string(),
-                    None => "•".to_string(),
+                    None => crate::ui::pictogram_glyphs::glyph(row.icon_token.as_deref())
+                        .unwrap_or("•")
+                        .to_string(),
                 };
                 if is_selected {
                     *selected_line = Some(lines.len());
@@ -156,8 +158,16 @@ pub(super) fn append_node_lines(
             "{indent}{}",
             fallback_text.as_deref().unwrap_or("[image]")
         ))),
-        PresentationNode::Status { title, detail, .. } => {
-            lines.push(Line::from(format!("{indent}{title}")));
+        PresentationNode::Status {
+            title,
+            detail,
+            icon_token,
+            ..
+        } => {
+            let lead = crate::ui::pictogram_glyphs::glyph(icon_token.as_deref())
+                .map(|glyph| format!("{glyph} "))
+                .unwrap_or_default();
+            lines.push(Line::from(format!("{indent}{lead}{title}")));
             if let Some(detail) = detail {
                 lines.push(Line::from(format!("{indent}  {detail}")));
             }

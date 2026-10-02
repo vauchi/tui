@@ -46,7 +46,7 @@ fn row(title: &str, icon_token: &str) -> PresentationRow {
         selected: false,
         enabled: true,
         activation: Some(ActionSpec {
-            interaction_id: InteractionId::new(&format!("pick-{title}")).unwrap(),
+            interaction_id: InteractionId::new(format!("pick-{title}")).unwrap(),
             label: title.into(),
             accessibility_label: title.into(),
             icon_token: None,
