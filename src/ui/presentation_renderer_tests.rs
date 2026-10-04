@@ -80,6 +80,7 @@ fn renderer_keeps_content_humble_and_contextual_roles_in_one_bottom_strip() {
                 navigation: Some(action("nav", "Navigate")),
                 primary: Some(action("primary", "Continue")),
                 secondary: Some(action("secondary", "More")),
+                info: None,
             }),
         },
     ]);

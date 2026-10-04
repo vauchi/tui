@@ -79,6 +79,7 @@ fn state_with_input() -> PresentationState {
                 navigation: Some(action("navigation", None)),
                 primary: Some(action("continue", Some(StandardShortcut::ActivatePrimary))),
                 secondary: Some(action("secondary", None)),
+                info: None,
             }),
         },
     ]);
@@ -154,6 +155,7 @@ fn escape_dismisses_each_overlay_by_kind_through_core() {
                 kind,
                 title: None,
                 items: vec![action("item", None)],
+                body: None,
             },
         }]);
         let mut interaction = InteractionState::default();
@@ -280,6 +282,7 @@ fn tab_keeps_cycling_context_actions_while_a_list_is_present() {
             navigation: Some(action("navigation", None)),
             primary: Some(action("continue", None)),
             secondary: None,
+            info: None,
         }),
     }]);
     let mut interaction = InteractionState::default();

@@ -137,6 +137,7 @@ fn transaction_installs_surface_context_bar_and_overlay_atomically() {
                 navigation: Some(action("navigation")),
                 primary: Some(action("primary")),
                 secondary: Some(action("secondary")),
+                info: None,
             }),
         },
         Command::PresentOverlay {
@@ -146,6 +147,7 @@ fn transaction_installs_surface_context_bar_and_overlay_atomically() {
                 kind: OverlayKind::Navigation,
                 title: Some("Navigate".into()),
                 items: vec![action("open-primary")],
+                body: None,
             },
         },
     ]);
@@ -177,6 +179,7 @@ fn dismiss_overlay_closes_the_open_overlay() {
                 kind: OverlayKind::Navigation,
                 title: Some("Navigate".into()),
                 items: vec![action("open-primary")],
+                body: None,
             },
         },
     ]);
@@ -270,6 +273,7 @@ fn stale_chrome_is_rejected_and_effects_are_returned_to_the_shell() {
                 kind: OverlayKind::ActionMenu,
                 title: None,
                 items: vec![action("stale")],
+                body: None,
             },
         },
         Command::ResetApplication,
