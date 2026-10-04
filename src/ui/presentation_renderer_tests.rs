@@ -7,9 +7,9 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::style::Modifier;
 use vauchi_core::{
-    AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, InteractionId, PaneLayout,
-    PresentationNode, PresentationProfile, PresentationRow, PresentationTextStyle,
-    PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
+    AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, InteractionId, OverlayKind,
+    OverlaySpec, PaneLayout, PresentationNode, PresentationProfile, PresentationRow,
+    PresentationTextStyle, PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
 };
 
 pub(super) fn action(id: &str, label: &str) -> ActionSpec {
@@ -555,5 +555,71 @@ fn a_paged_surface_shows_its_count() {
         rendered.contains("1-25 of 200"),
         "Core already sends PresentationPaging; without it a scrolled \
          surface gives no hint how much is below the fold: {rendered:?}"
+    );
+}
+
+/// Core's fifth slot explains the surface (vauchi/private#479): it is
+/// drawn after the launchers, and its overlay is text to read, not items
+/// to pick.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn the_info_slot_is_drawn_last_and_its_overlay_shows_the_text() {
+    let surface_id = SurfaceId::new("surface-primary").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[
+        Command::ReplaceSurface {
+            surface: titled_surface("surface-primary", "People"),
+        },
+        Command::SetContextBar {
+            surface_id: surface_id.clone(),
+            revision: 1,
+            bar: Box::new(ContextBar {
+                back: Some(action("back", "Back")),
+                navigation: None,
+                primary: Some(action("primary", "Add")),
+                secondary: Some(action("secondary", "More")),
+                info: Some(action("info", "Info")),
+            }),
+        },
+    ]);
+    let backend = TestBackend::new(80, 16);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+    let more = rendered.find("… More").expect("the launcher is drawn");
+    let info = rendered.find("(i) Info").expect("the info slot is drawn");
+    assert!(more < info, "info comes after the launchers: {rendered}");
+
+    state.apply(&[Command::PresentOverlay {
+        surface_id,
+        revision: 1,
+        overlay: OverlaySpec {
+            kind: OverlayKind::Information,
+            title: Some("People".into()),
+            items: Vec::new(),
+            body: Some("Here are the people you have exchanged cards with.".into()),
+        },
+    }]);
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, Some(0)))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+    assert!(
+        rendered.contains("Here are the people you have exchanged"),
+        "the overlay shows the text: {rendered}"
     );
 }

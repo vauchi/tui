@@ -702,3 +702,88 @@ fn alt_s_without_a_status_chip_is_consumed() {
         interaction.key_outcome(&state, KeyEvent::new(KeyCode::Char('s'), KeyModifiers::ALT));
     assert!(matches!(outcome, KeyOutcome::Consumed));
 }
+
+fn state_with_info() -> PresentationState {
+    let mut state = state_with_input();
+    state.apply(&[Command::SetContextBar {
+        surface_id: SurfaceId::new("onboarding").unwrap(),
+        revision: 1,
+        bar: Box::new(ContextBar {
+            back: Some(action("back", Some(StandardShortcut::Back))),
+            navigation: Some(action("navigation", None)),
+            primary: Some(action("continue", Some(StandardShortcut::ActivatePrimary))),
+            secondary: Some(action("secondary", None)),
+            info: Some(action("info", None)),
+        }),
+    }]);
+    state
+}
+
+/// Alt+I opens what the surface is about (vauchi/private#479), and Tab
+/// reaches the slot after the four others.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn alt_i_activates_the_info_slot_and_tab_reaches_it_last() {
+    let state = state_with_info();
+    let mut interaction = InteractionState::default();
+
+    assert_eq!(
+        state
+            .context_actions()
+            .last()
+            .map(|action| action.interaction_id.as_str()),
+        Some("info")
+    );
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Char('i'), KeyModifiers::ALT)),
+        KeyOutcome::Events(vec![
+            Event::SurfaceActivated {
+                surface_id: SurfaceId::new("onboarding").unwrap(),
+            },
+            Event::ActionActivated {
+                surface_id: SurfaceId::new("onboarding").unwrap(),
+                interaction_id: InteractionId::new("info").unwrap(),
+            },
+        ])
+    );
+}
+
+/// An information overlay has text and no items: arrows have nothing to
+/// move between and must not panic, and Escape reports its kind.
+// @scenario: generic_presentation_protocol.feature :: Overlay kinds remain distinct with reduced motion
+#[test]
+fn an_information_overlay_is_read_and_dismissed_without_items() {
+    let mut state = state_with_info();
+    state.apply(&[Command::PresentOverlay {
+        surface_id: SurfaceId::new("onboarding").unwrap(),
+        revision: 1,
+        overlay: OverlaySpec {
+            kind: OverlayKind::Information,
+            title: Some("Welcome".into()),
+            items: Vec::new(),
+            body: Some("What this screen is for.".into()),
+        },
+    }]);
+    let mut interaction = InteractionState::default();
+
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Up, KeyModifiers::NONE)),
+        KeyOutcome::Consumed
+    );
+    assert_eq!(
+        interaction.key_outcome(&state, KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE)),
+        KeyOutcome::Events(vec![
+            Event::SurfaceActivated {
+                surface_id: SurfaceId::new("onboarding").unwrap(),
+            },
+            Event::OverlayDismissed {
+                surface_id: SurfaceId::new("onboarding").unwrap(),
+                kind: OverlayKind::Information,
+            },
+        ])
+    );
+}
