@@ -106,9 +106,13 @@ impl App {
     }
 
     pub fn tick_status(&mut self) {
+        self.tick_status_at(Instant::now());
+    }
+
+    fn tick_status_at(&mut self, now: Instant) {
         if self
             .status_message_time
-            .is_some_and(|time| time.elapsed() >= Duration::from_secs(3))
+            .is_some_and(|time| now.saturating_duration_since(time) >= Duration::from_secs(3))
         {
             self.status_message = None;
             self.status_message_time = None;
@@ -116,8 +120,12 @@ impl App {
     }
 
     pub fn status_is_flashing(&self) -> bool {
+        self.status_is_flashing_at(Instant::now())
+    }
+
+    fn status_is_flashing_at(&self, now: Instant) -> bool {
         self.status_message_time
-            .is_some_and(|time| time.elapsed() < Duration::from_millis(600))
+            .is_some_and(|time| now.saturating_duration_since(time) < Duration::from_millis(600))
     }
 
     pub fn tick_notifications(&mut self) {
@@ -179,8 +187,12 @@ impl App {
     }
 
     fn set_status(&mut self, message: impl Into<String>) {
+        self.set_status_at(message, Instant::now());
+    }
+
+    fn set_status_at(&mut self, message: impl Into<String>, now: Instant) {
         self.status_message = Some(message.into());
-        self.status_message_time = Some(Instant::now());
+        self.status_message_time = Some(now);
     }
 }
 
@@ -229,5 +241,130 @@ mod tests {
             app.presentation.profile().unwrap().window_class,
             vauchi_core::WindowClass::Expanded
         );
+    }
+
+    // @internal
+    #[test]
+    fn a_status_flashes_for_600ms_and_clears_after_three_seconds() {
+        let mut app = app();
+        let set_at = Instant::now();
+        app.set_status_at("Saved", set_at);
+
+        assert!(app.status_is_flashing_at(set_at + Duration::from_millis(599)));
+        assert!(!app.status_is_flashing_at(set_at + Duration::from_millis(600)));
+
+        app.tick_status_at(set_at + Duration::from_millis(2999));
+        assert_eq!(app.status_message.as_deref(), Some("Saved"));
+        app.tick_status_at(set_at + Duration::from_secs(3));
+        assert_eq!(app.status_message, None);
+        assert!(!app.status_is_flashing_at(set_at + Duration::from_secs(3)));
+    }
+
+    // @internal
+    #[test]
+    fn the_live_clock_variants_read_the_same_status_timing() {
+        let mut app = app();
+        app.set_status("Fresh");
+        assert!(app.status_is_flashing());
+        app.tick_status();
+        assert_eq!(app.status_message.as_deref(), Some("Fresh"));
+
+        app.set_status_at("Stale", Instant::now() - Duration::from_secs(4));
+        assert!(!app.status_is_flashing());
+        app.tick_status();
+        assert_eq!(app.status_message, None);
+    }
+
+    // @internal
+    #[test]
+    fn without_a_status_nothing_flashes_or_clears() {
+        let mut app = app();
+        let now = Instant::now();
+
+        assert!(!app.status_is_flashing_at(now));
+        app.tick_status_at(now + Duration::from_secs(10));
+        assert_eq!(app.status_message, None);
+    }
+
+    // @internal
+    #[test]
+    fn a_sync_result_becomes_a_status_line() {
+        let mut app = app();
+        app.apply_sync_result(SyncResult {
+            cards_updated: 3,
+            updates_sent: 2,
+            acknowledged: 1,
+            success: true,
+            error: None,
+        });
+        assert_eq!(
+            app.status_message.as_deref(),
+            Some("Sync complete: 3 received, 2 sent, 1 acknowledged")
+        );
+
+        app.apply_sync_result(SyncResult::error("boom"));
+        assert_eq!(app.status_message.as_deref(), Some("Sync failed: boom"));
+
+        app.apply_sync_result(SyncResult {
+            cards_updated: 0,
+            updates_sent: 0,
+            acknowledged: 0,
+            success: false,
+            error: None,
+        });
+        assert_eq!(
+            app.status_message.as_deref(),
+            Some("Sync failed: Unknown error")
+        );
+    }
+
+    // @internal
+    #[test]
+    fn a_url_the_opener_refuses_is_reported_and_an_accepted_one_is_silent() {
+        let mut refused = app();
+        refused.set_url_opener(|_| false);
+        refused.apply_native_effect(Command::OpenExternalUrl {
+            url: "https://vauchi.app".into(),
+        });
+        assert_eq!(
+            refused.status_message.as_deref(),
+            Some("Unable to open https://vauchi.app")
+        );
+
+        let mut accepted = app();
+        accepted.set_url_opener(|_| true);
+        accepted.apply_native_effect(Command::OpenExternalUrl {
+            url: "https://vauchi.app".into(),
+        });
+        assert_eq!(accepted.status_message, None);
+    }
+
+    // @internal
+    #[test]
+    fn a_wakeup_request_is_scheduled_that_many_seconds_ahead() {
+        let mut app = app();
+        let before = Instant::now();
+        app.apply_native_effect(Command::ScheduleWakeup {
+            earliest_secs: 5,
+            deadline_secs: 10,
+            min_interval_secs: 1,
+            earliest_millis: None,
+        });
+        let after = Instant::now();
+
+        let wakeup = app.next_wakeup.expect("a wakeup is scheduled");
+        assert!(wakeup.duration_since(before) >= Duration::from_secs(5));
+        assert!(wakeup.duration_since(after) <= Duration::from_secs(5));
+    }
+
+    // @internal
+    #[test]
+    fn the_first_heartbeat_installs_cores_wakeup_schedule() {
+        let mut app = app();
+        assert_eq!(app.next_wakeup, None);
+
+        app.tick_notifications();
+
+        assert!(app.next_wakeup.is_some());
     }
 }

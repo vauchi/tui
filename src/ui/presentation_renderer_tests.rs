@@ -12,7 +12,7 @@ use vauchi_core::{
     PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
 };
 
-fn action(id: &str, label: &str) -> ActionSpec {
+pub(super) fn action(id: &str, label: &str) -> ActionSpec {
     ActionSpec {
         interaction_id: InteractionId::new(id).unwrap(),
         label: label.into(),
@@ -24,7 +24,7 @@ fn action(id: &str, label: &str) -> ActionSpec {
     }
 }
 
-fn titled_surface(id: &str, title: &str) -> SurfaceSpec {
+pub(super) fn titled_surface(id: &str, title: &str) -> SurfaceSpec {
     SurfaceSpec {
         surface_id: SurfaceId::new(id).unwrap(),
         revision: 1,
@@ -151,7 +151,7 @@ fn expanded_profile_renders_primary_and_detail_as_two_native_panes() {
     assert!(rendered.contains("Alice"));
 }
 
-fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
+pub(super) fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
     PresentationRow {
         title: title.into(),
         subtitle: None,
@@ -170,7 +170,7 @@ fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRow {
 
 /// Reverse-video runs only — side-by-side panes share terminal rows, so a
 /// whole-row view cannot tell which pane carries the highlight.
-fn highlighted_lines(buffer: &ratatui::buffer::Buffer) -> Vec<String> {
+pub(super) fn highlighted_lines(buffer: &ratatui::buffer::Buffer) -> Vec<String> {
     buffer
         .content
         .chunks(buffer.area.width as usize)

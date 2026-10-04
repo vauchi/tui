@@ -10,4 +10,12 @@ exclude_re = [
     "replace apply_ohttp_test_overrides",
     # Guards a stderr-only report of skipped variants.
     "delete ! in run_cli",
+    # Spawns the platform URL opener; an OS boundary.
+    "replace open_external_url",
+    # A zero-line viewport paints nothing whichever way it is scrolled.
+    "replace > with >= in draw_surface_spec",
+    # Forwards one event to Core; Core answers the events this shell can
+    # reach in a test (QR, file and image results outside an exchange)
+    # with no command at all, so nothing in the shell can tell.
+    "replace dispatch_effect_result",
 ]

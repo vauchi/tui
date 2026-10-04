@@ -7,7 +7,7 @@ use vauchi_app::ui::AppEngine;
 use vauchi_core::api::Vauchi;
 use vauchi_core::{Command, Event, SurfaceId};
 
-use super::handle_presentation_key;
+use super::{Action, handle_presentation_key};
 use crate::app::App;
 
 fn app_showing_a_surface_core_never_prepared() -> App {
@@ -66,4 +66,137 @@ fn rejected_event_shows_core_prepared_alert_instead_of_error_text() {
         !shown_title.contains(&raw_error) && !shown_message.contains(&raw_error),
         "raw error text leaked"
     );
+}
+
+fn fresh_app() -> App {
+    App::new(
+        AppEngine::new(Vauchi::in_memory().expect("in-memory core")),
+        "wss://relay.vauchi.app".into(),
+        std::path::PathBuf::from("."),
+    )
+}
+
+fn key(code: KeyCode) -> KeyEvent {
+    KeyEvent::new(code, KeyModifiers::NONE)
+}
+
+fn type_text(app: &mut App, text: &str) {
+    for character in text.chars() {
+        handle_presentation_key(app, key(KeyCode::Char(character)));
+    }
+}
+
+fn file_pick() -> Command {
+    Command::FilePickFromUser {
+        accepted_mime_types: Vec::new(),
+        accepted_extensions: Vec::new(),
+        purpose: vauchi_core::FilePickPurpose::ImportContacts,
+    }
+}
+
+// @internal
+#[test]
+fn typing_fills_the_request_prompt_and_control_chords_do_not() {
+    let mut app = fresh_app();
+    app.presentation_effects.push_back(Command::QrRequestScan);
+
+    type_text(&mut app, "ab");
+    handle_presentation_key(
+        &mut app,
+        KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL),
+    );
+    assert_eq!(app.input_buffer, "ab");
+
+    handle_presentation_key(&mut app, key(KeyCode::Backspace));
+    assert_eq!(app.input_buffer, "a");
+}
+
+// @internal
+#[test]
+fn escape_cancels_whichever_request_is_pending() {
+    for effect in [
+        Command::QrRequestScan,
+        file_pick(),
+        Command::ImagePickFromFile,
+        Command::ImagePickFromLibrary,
+        Command::ImageCaptureFromCamera,
+    ] {
+        let mut app = fresh_app();
+        app.presentation_effects.push_back(effect.clone());
+        type_text(&mut app, "half");
+
+        let action = handle_presentation_key(&mut app, key(KeyCode::Esc));
+
+        assert!(matches!(action, Action::Continue), "{effect:?}");
+        assert!(app.presentation_effects.is_empty(), "{effect:?}");
+        assert_eq!(app.input_buffer, "", "{effect:?}");
+    }
+}
+
+// @internal
+#[test]
+fn enter_with_nothing_typed_keeps_the_request_waiting() {
+    let mut app = fresh_app();
+    app.presentation_effects.push_back(Command::QrRequestScan);
+
+    handle_presentation_key(&mut app, key(KeyCode::Enter));
+
+    assert_eq!(app.presentation_effects.len(), 1);
+}
+
+// @internal
+#[test]
+fn enter_submits_the_typed_qr_payload() {
+    let mut app = fresh_app();
+    app.presentation_effects.push_back(Command::QrRequestScan);
+    type_text(&mut app, "not-a-vauchi-code");
+
+    handle_presentation_key(&mut app, key(KeyCode::Enter));
+
+    assert!(app.presentation_effects.is_empty());
+    assert_eq!(app.input_buffer, "");
+}
+
+// @internal
+#[test]
+fn enter_reads_the_named_file_or_image_and_reports_a_missing_one() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("contacts.vcf");
+    std::fs::write(&path, b"BEGIN:VCARD").unwrap();
+
+    for (effect, missing_title) in [
+        (file_pick(), "Unable to read file"),
+        (Command::ImagePickFromFile, "Unable to read image"),
+        (Command::ImagePickFromLibrary, "Unable to read image"),
+        (Command::ImageCaptureFromCamera, "Unable to read image"),
+    ] {
+        let mut app = fresh_app();
+        app.presentation_effects.push_back(effect.clone());
+        type_text(&mut app, path.to_str().unwrap());
+        handle_presentation_key(&mut app, key(KeyCode::Enter));
+        assert!(app.presentation_effects.is_empty(), "{effect:?}");
+        assert_eq!(app.input_buffer, "", "{effect:?}");
+
+        let mut app = fresh_app();
+        app.presentation_effects.push_back(effect.clone());
+        type_text(&mut app, dir.path().join("missing").to_str().unwrap());
+        handle_presentation_key(&mut app, key(KeyCode::Enter));
+        assert_eq!(app.presentation_effects.len(), 1, "{effect:?}");
+        assert_eq!(
+            app.alert_message.as_ref().map(|(title, _)| title.as_str()),
+            Some(missing_title),
+            "{effect:?}"
+        );
+    }
+}
+
+// @internal
+#[test]
+fn a_set_quit_flag_ends_the_loop_on_the_next_key() {
+    let mut app = fresh_app();
+    app.should_quit = true;
+
+    let action = handle_presentation_key(&mut app, key(KeyCode::Char('x')));
+
+    assert!(matches!(action, Action::Quit));
 }
