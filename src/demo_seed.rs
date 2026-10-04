@@ -70,12 +70,12 @@ pub fn seed_demo_data(vauchi: &mut Vauchi) {
 
     // Field templates — each contact gets (i % 6 + 1) fields
     let field_templates: &[(FieldType, &str, &str)] = &[
-        (FieldType::Phone, "Mobile", "+41 79 {} 00"),
+        (FieldType::Phone, "Mobile", "+41 79 {n} 00"),
         (FieldType::Email, "Personal", "{}@example.com"),
-        (FieldType::Phone, "Work", "+41 44 {} 00"),
+        (FieldType::Phone, "Work", "+41 44 {n} 00"),
         (FieldType::Website, "Website", "https://{}.dev"),
         (FieldType::Email, "Work", "{}@corp.ch"),
-        (FieldType::Phone, "Home", "+41 31 {} 00"),
+        (FieldType::Phone, "Home", "+41 31 {n} 00"),
     ];
 
     let groups = [&family, &friends, &work];
@@ -85,7 +85,11 @@ pub fn seed_demo_data(vauchi: &mut Vauchi) {
         let num_fields = (i % 6) + 1;
         for item in field_templates.iter().take(num_fields) {
             let (ref ft, label, template) = *item;
-            let value = template.replace("{}", &name.to_lowercase());
+            // A phone number cannot carry the name: Core rejects letters in
+            // it and the contact silently lost those fields.
+            let value = template
+                .replace("{}", &name.to_lowercase())
+                .replace("{n}", &format!("{i:03}"));
             let _ = card.add_field(ContactField::new(ft.clone(), label, &value, now));
         }
 
