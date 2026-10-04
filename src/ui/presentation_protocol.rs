@@ -151,6 +151,7 @@ impl PresentationState {
             bar.navigation.as_ref(),
             bar.primary.as_ref(),
             bar.secondary.as_ref(),
+            bar.info.as_ref(),
         ]
         .into_iter()
         .flatten()

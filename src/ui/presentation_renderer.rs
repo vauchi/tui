@@ -196,6 +196,7 @@ fn draw_context_bar(frame: &mut Frame, area: Rect, state: &PresentationState, se
         (bar.navigation.as_ref(), "≡ ", false),
         (bar.primary.as_ref(), "", true),
         (bar.secondary.as_ref(), "… ", false),
+        (bar.info.as_ref(), "(i) ", false),
     ];
     let spans = roles
         .into_iter()
@@ -239,22 +240,27 @@ fn draw_overlay(frame: &mut Frame, area: Rect, state: &PresentationState, select
     let (fallback_title, border_type) = match overlay.kind {
         OverlayKind::Navigation => ("Navigate", BorderType::Double),
         OverlayKind::ActionMenu => ("Actions", BorderType::Rounded),
+        OverlayKind::Information => ("Info", BorderType::Rounded),
         _ => ("Commands", BorderType::Plain),
     };
-    let lines = overlay
-        .items
-        .iter()
-        .enumerate()
-        .map(|(index, action)| {
-            Line::styled(
-                format!("{}. {}", index + 1, action.label),
-                action_style(action, index == selected, false),
-            )
-        })
-        .collect::<Vec<_>>();
+    // Text to read (vauchi/private#479) wraps; items to pick are numbered.
+    let lines = match overlay.body.as_deref().filter(|_| overlay.items.is_empty()) {
+        Some(body) => vec![Line::raw(body.to_owned())],
+        None => overlay
+            .items
+            .iter()
+            .enumerate()
+            .map(|(index, action)| {
+                Line::styled(
+                    format!("{}. {}", index + 1, action.label),
+                    action_style(action, index == selected, false),
+                )
+            })
+            .collect::<Vec<_>>(),
+    };
     frame.render_widget(Clear, area);
     frame.render_widget(
-        Paragraph::new(lines).block(
+        Paragraph::new(lines).wrap(Wrap { trim: false }).block(
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(border_type)
