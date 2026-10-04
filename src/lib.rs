@@ -3,8 +3,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 pub mod app;
+pub mod demo_seed;
 pub mod handlers;
 pub mod i18n;
+pub mod startup;
 pub mod sync_service;
 pub mod theme;
 pub mod ui;

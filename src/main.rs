@@ -8,7 +8,6 @@
 
 use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -31,10 +30,8 @@ use vauchi_core::storage::secure::{FileKeyStorage, SecureStorage};
 use vauchi_tui::app::App;
 use vauchi_tui::handlers;
 use vauchi_tui::i18n;
+use vauchi_tui::startup;
 use vauchi_tui::ui;
-
-/// Default relay URL.
-const DEFAULT_RELAY_URL: &str = "wss://relay.vauchi.app";
 
 /// Vauchi — privacy-focused contact card exchange.
 ///
@@ -160,7 +157,7 @@ fn main() -> Result<()> {
 
     // Seed with demo data if --seed or VAUCHI_SEED=1 and no identity exists yet
     if (cli.seed || std::env::var("VAUCHI_SEED").is_ok()) && !vauchi.has_identity() {
-        seed_demo_data(&mut vauchi);
+        vauchi_tui::demo_seed::seed_demo_data(&mut vauchi);
     }
 
     // Acquire an exclusive lock to prevent concurrent instances on the same data.
@@ -227,22 +224,13 @@ fn print_storage_recovery_hint(data_dir: &Path) {
     eprintln!("  rm -rf {}", data_dir.display());
 }
 
-/// Resolve relay URL with fallback hierarchy:
-/// 1. User-configured URL (stored in config file)
-/// 2. VAUCHI_RELAY_URL environment variable
-/// 3. Default: wss://relay.vauchi.app
+/// Relay URL: `<data_dir>/relay_url.txt`, then `VAUCHI_RELAY_URL`, then
+/// the default.
 fn resolve_relay_url(data_dir: &Path) -> String {
-    let relay_config_path = data_dir.join("relay_url.txt");
-    std::fs::read_to_string(&relay_config_path)
-        .ok()
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .or_else(|| {
-            std::env::var("VAUCHI_RELAY_URL")
-                .ok()
-                .filter(|s| !s.is_empty())
-        })
-        .unwrap_or_else(|| DEFAULT_RELAY_URL.to_string())
+    startup::resolve_relay_url(
+        std::fs::read_to_string(data_dir.join("relay_url.txt")).ok(),
+        std::env::var("VAUCHI_RELAY_URL").ok(),
+    )
 }
 
 /// Derives a stable per-install keychain key name from the install_id stored
@@ -309,168 +297,71 @@ fn load_or_generate_fallback_key(data_dir: &Path) -> Result<SymmetricKey> {
 /// shells resolve the key this way; there is no domain-shaped API to
 /// delegate to instead (2026-07-06-desktop-tui-web-domain-shell-violations
 /// U22, superseded by ADR-066).
-#[allow(unused_variables)]
 fn load_or_create_storage_key(data_dir: &Path) -> Result<SymmetricKey> {
-    /// Key name for non-keychain (file-based) storage.
-    const KEY_NAME: &str = "storage_key";
-
     #[cfg(feature = "secure-storage")]
     {
-        let storage = PlatformKeyring::new("vauchi-tui");
-        let key_name = keychain_key_name(data_dir)?;
-
-        match storage.load_key(&key_name) {
-            Ok(Some(bytes)) if bytes.len() == 32 => {
-                let mut arr = [0u8; 32];
-                arr.copy_from_slice(&bytes);
-                Ok(SymmetricKey::from_bytes(arr))
-            }
-            Ok(Some(_)) => {
-                anyhow::bail!("Invalid storage key length in keychain");
-            }
-            Ok(None) => {
-                let key = SymmetricKey::generate();
-                storage
-                    .save_key(&key_name, key.as_bytes())
-                    .map_err(|e| anyhow::anyhow!("Failed to save key to keychain: {}", e))?;
-                Ok(key)
-            }
-            Err(e) => {
-                anyhow::bail!("Keychain error: {}", e);
-            }
-        }
+        storage_key_from_keychain(data_dir)
     }
-
     #[cfg(not(feature = "secure-storage"))]
     {
-        let fallback_key = load_or_generate_fallback_key(data_dir)?;
+        storage_key_from_file(data_dir)
+    }
+}
 
-        let key_dir = data_dir.join("keys");
-        let storage = FileKeyStorage::new(key_dir, fallback_key);
+#[cfg(feature = "secure-storage")]
+fn storage_key_from_keychain(data_dir: &Path) -> Result<SymmetricKey> {
+    let storage = PlatformKeyring::new("vauchi-tui");
+    let key_name = keychain_key_name(data_dir)?;
 
-        match storage.load_key(KEY_NAME) {
-            Ok(Some(bytes)) if bytes.len() == 32 => {
-                let mut arr = [0u8; 32];
-                arr.copy_from_slice(&bytes);
-                Ok(SymmetricKey::from_bytes(arr))
-            }
-            Ok(Some(_)) => {
-                anyhow::bail!("Invalid storage key length");
-            }
-            Ok(None) => {
-                // Generate and save new key
-                let key = SymmetricKey::generate();
-                storage
-                    .save_key(KEY_NAME, key.as_bytes())
-                    .map_err(|e| anyhow::anyhow!("Failed to save storage key: {}", e))?;
-                Ok(key)
-            }
-            Err(e) => {
-                anyhow::bail!("Storage error: {}", e);
-            }
+    match storage.load_key(&key_name) {
+        Ok(Some(bytes)) if bytes.len() == 32 => {
+            let mut arr = [0u8; 32];
+            arr.copy_from_slice(&bytes);
+            Ok(SymmetricKey::from_bytes(arr))
+        }
+        Ok(Some(_)) => {
+            anyhow::bail!("Invalid storage key length in keychain");
+        }
+        Ok(None) => {
+            let key = SymmetricKey::generate();
+            storage
+                .save_key(&key_name, key.as_bytes())
+                .map_err(|e| anyhow::anyhow!("Failed to save key to keychain: {}", e))?;
+            Ok(key)
+        }
+        Err(e) => {
+            anyhow::bail!("Keychain error: {}", e);
         }
     }
 }
 
-/// Seeds the Vauchi instance with demo data for local testing.
-///
-/// Creates an identity, adds fields, creates groups, and adds fake contacts.
-/// Only runs when VAUCHI_SEED=1 and no identity exists yet.
-///
-/// Runs before the `AppEngine` render loop starts, so the ADR-066 shell
-/// boundary (which governs the interactive Command/Event surface) does not
-/// apply — this is one-shot dev fixture setup, the same shape as `cli`'s
-/// non-interactive subcommands calling `Vauchi` methods directly
-/// (`cli/src/commands/init.rs`). No core-owned bulk-seed entry exists to
-/// delegate to: `Vauchi::initialize_demo_contact` is a distinct, unrelated
-/// onboarding feature (a single placeholder contact), not this tool's
-/// 200-contact load-testing fixture
-/// (2026-07-06-desktop-tui-web-domain-shell-violations U23).
-fn seed_demo_data(vauchi: &mut Vauchi) {
-    use vauchi_core::contact::Contact;
-    use vauchi_core::contact_card::{ContactCard, ContactField, FieldType};
-    use vauchi_core::crypto::SymmetricKey;
+/// Key name for non-keychain (file-based) storage.
+#[cfg(not(feature = "secure-storage"))]
+const FILE_STORAGE_KEY_NAME: &str = "storage_key";
 
-    if vauchi.create_identity("Demo User").is_err() {
-        return;
-    }
+#[cfg(not(feature = "secure-storage"))]
+fn storage_key_from_file(data_dir: &Path) -> Result<SymmetricKey> {
+    let fallback_key = load_or_generate_fallback_key(data_dir)?;
+    let storage = FileKeyStorage::new(data_dir.join("keys"), fallback_key);
 
-    // Add own fields
-    let own_fields = [
-        (FieldType::Phone, "Mobile", "+41 79 123 45 67"),
-        (FieldType::Email, "Work", "demo@vauchi.app"),
-        (FieldType::Website, "Website", "https://vauchi.app"),
-    ];
-    let now = vauchi.clock().unix_seconds();
-    for (ft, label, value) in own_fields {
-        let _ = vauchi.add_own_field(ContactField::new(ft, label, value, now));
-    }
-
-    // Create groups
-    let family = vauchi.create_group("Family").ok();
-    let friends = vauchi.create_group("Friends").ok();
-    let work = vauchi.create_group("Work").ok();
-
-    // Base names — combined with numeric suffixes to generate up to 200 contacts
-    let base_names = [
-        "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack",
-        "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rosa", "Sam", "Tina", "Uma",
-        "Victor", "Wendy", "Xavier", "Yuki", "Zara", "Amber", "Brian", "Clara", "David", "Elena",
-        "Felix", "Gina", "Hugo", "Iris", "James", "Kira", "Liam", "Maya", "Nora", "Oscar", "Petra",
-        "Rafael", "Sofia", "Theo", "Ursula", "Vera", "Walter", "Xena", "Yara", "Zoe", "Aria",
-        "Blake", "Cleo", "Dario", "Elsa", "Finn",
-    ];
-
-    // Generate 200 names: first 57 as-is, then with numeric suffixes
-    let names: Vec<String> = (0..200)
-        .map(|i| {
-            let base = base_names[i % base_names.len()];
-            if i < base_names.len() {
-                base.to_string()
-            } else {
-                format!("{} {}", base, i / base_names.len() + 1)
-            }
-        })
-        .collect();
-
-    // Field templates — each contact gets (i % 6 + 1) fields
-    let field_templates: &[(FieldType, &str, &str)] = &[
-        (FieldType::Phone, "Mobile", "+41 79 {} 00"),
-        (FieldType::Email, "Personal", "{}@example.com"),
-        (FieldType::Phone, "Work", "+41 44 {} 00"),
-        (FieldType::Website, "Website", "https://{}.dev"),
-        (FieldType::Email, "Work", "{}@corp.ch"),
-        (FieldType::Phone, "Home", "+41 31 {} 00"),
-    ];
-
-    let groups = [&family, &friends, &work];
-
-    for (i, name) in names.iter().enumerate() {
-        let mut card = ContactCard::new(name);
-        let num_fields = (i % 6) + 1;
-        for item in field_templates.iter().take(num_fields) {
-            let (ref ft, label, template) = *item;
-            let value = template.replace("{}", &name.to_lowercase());
-            let _ = card.add_field(ContactField::new(ft.clone(), label, &value, now));
+    match storage.load_key(FILE_STORAGE_KEY_NAME) {
+        Ok(Some(bytes)) if bytes.len() == 32 => {
+            let mut arr = [0u8; 32];
+            arr.copy_from_slice(&bytes);
+            Ok(SymmetricKey::from_bytes(arr))
         }
-
-        let shared_key = SymmetricKey::generate();
-        let extra_key = SymmetricKey::generate();
-        let pubkey: [u8; 32] = *extra_key.as_bytes();
-        let contact = Contact::from_exchange(
-            pubkey,
-            card,
-            shared_key,
-            vauchi_core::clock::SystemClock::shared().unix_seconds(),
-        );
-        let contact_id = contact.id().to_string();
-        if vauchi.add_contact(contact).is_err() {
-            continue;
+        Ok(Some(_)) => {
+            anyhow::bail!("Invalid storage key length");
         }
-
-        // Assign to groups round-robin
-        if let Some(g) = groups[i % 3] {
-            let _ = vauchi.add_contact_to_group(g.id(), &contact_id);
+        Ok(None) => {
+            let key = SymmetricKey::generate();
+            storage
+                .save_key(FILE_STORAGE_KEY_NAME, key.as_bytes())
+                .map_err(|e| anyhow::anyhow!("Failed to save storage key: {}", e))?;
+            Ok(key)
+        }
+        Err(e) => {
+            anyhow::bail!("Storage error: {}", e);
         }
     }
 }
@@ -507,34 +398,17 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
             app.apply_sync_result(result);
         }
 
-        // Use short poll timeout when a background operation is in flight or
-        // a status message is flashing, so we pick up results promptly.
-        let has_active_flash = app.status_is_flashing();
-        let has_background_op = app.sync_rx.is_some();
-        let mut poll_timeout = if has_active_flash || has_background_op {
-            Duration::from_millis(100)
-        } else {
-            Duration::from_secs(1)
-        };
-
-        // ADR-044 Am2a: honor core's wakeup schedule. Cap the poll timeout so
-        // we wake in time to call `on_wakeup()` when it is due.
-        let now = std::time::Instant::now();
-        if let Some(wakeup) = app.next_wakeup {
-            poll_timeout = poll_timeout.min(wakeup.saturating_duration_since(now));
-        }
-
+        // ADR-044 Am2a: Core's wakeup schedule caps the wait, so `on_wakeup()`
+        // runs when it is due; a delayed or coalesced wake is safe because
+        // `on_wakeup` is elapsed-based and idempotent.
+        let poll_timeout = startup::poll_timeout(
+            app.status_is_flashing(),
+            app.sync_rx.is_some(),
+            app.next_wakeup,
+            std::time::Instant::now(),
+        );
         let event_ready = event::poll(poll_timeout)?;
-
-        // If no input event arrived and the scheduled wakeup is due, run the
-        // core heartbeat. A delayed or coalesced wake is safe — `on_wakeup`
-        // is elapsed-based and idempotent.
-        if !event_ready
-            && app
-                .next_wakeup
-                .map(|w| std::time::Instant::now() >= w)
-                .unwrap_or(false)
-        {
+        if startup::wakeup_due(event_ready, app.next_wakeup, std::time::Instant::now()) {
             app.tick_notifications();
         }
 
@@ -593,5 +467,69 @@ mod tests {
         let name_a = keychain_key_name(dir_a.path()).unwrap();
         let name_b = keychain_key_name(dir_b.path()).unwrap();
         assert_ne!(name_a, name_b);
+    }
+
+    #[cfg(not(feature = "secure-storage"))]
+    // @internal
+    #[test]
+    fn the_fallback_key_is_created_once_and_reread() {
+        let dir = tempdir().unwrap();
+
+        let first = load_or_generate_fallback_key(dir.path()).unwrap();
+        let second = load_or_generate_fallback_key(dir.path()).unwrap();
+
+        assert_eq!(first.as_bytes(), second.as_bytes());
+        assert_eq!(
+            std::fs::read(dir.path().join(".fallback-key"))
+                .unwrap()
+                .len(),
+            32
+        );
+    }
+
+    #[cfg(not(feature = "secure-storage"))]
+    // @internal
+    #[test]
+    fn a_fallback_key_of_the_wrong_length_is_refused() {
+        let dir = tempdir().unwrap();
+        std::fs::write(dir.path().join(".fallback-key"), [7u8; 31]).unwrap();
+
+        let error = load_or_generate_fallback_key(dir.path())
+            .unwrap_err()
+            .to_string();
+
+        assert!(
+            error.contains("Invalid fallback key length (31)"),
+            "{error}"
+        );
+    }
+
+    #[cfg(not(feature = "secure-storage"))]
+    // @internal
+    #[test]
+    fn the_storage_key_is_created_once_and_reread() {
+        let dir = tempdir().unwrap();
+
+        let first = load_or_create_storage_key(dir.path()).unwrap();
+        let second = load_or_create_storage_key(dir.path()).unwrap();
+
+        assert_eq!(first.as_bytes(), second.as_bytes());
+    }
+
+    #[cfg(not(feature = "secure-storage"))]
+    // @internal
+    #[test]
+    fn a_stored_key_of_the_wrong_length_is_refused() {
+        let dir = tempdir().unwrap();
+        let fallback = load_or_generate_fallback_key(dir.path()).unwrap();
+        FileKeyStorage::new(dir.path().join("keys"), fallback)
+            .save_key(FILE_STORAGE_KEY_NAME, &[7u8; 31])
+            .unwrap();
+
+        let error = load_or_create_storage_key(dir.path())
+            .unwrap_err()
+            .to_string();
+
+        assert!(error.contains("Invalid storage key length"), "{error}");
     }
 }
