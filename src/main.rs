@@ -469,6 +469,19 @@ mod tests {
         assert_ne!(name_a, name_b);
     }
 
+    // @internal
+    #[test]
+    fn a_relay_url_file_in_the_data_dir_wins() {
+        let dir = tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("relay_url.txt"),
+            " wss://configured.example \n",
+        )
+        .unwrap();
+
+        assert_eq!(resolve_relay_url(dir.path()), "wss://configured.example");
+    }
+
     #[cfg(not(feature = "secure-storage"))]
     // @internal
     #[test]

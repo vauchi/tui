@@ -18,4 +18,14 @@ exclude_re = [
     # reach in a test (QR, file and image results outside an exchange)
     # with no command at all, so nothing in the shell can tell.
     "replace dispatch_effect_result",
+    # The binary's entry point and its terminal loop: process exit, stdin,
+    # raw mode and crossterm polling. Their decisions live in `startup`.
+    "replace main -> ",
+    " in main$",
+    "in run_app",
+    "replace restore_terminal",
+    "replace print_storage_recovery_hint",
+    # Compiled only with the secure-storage feature, which the mutation
+    # build does not enable; a mutant there changes nothing that runs.
+    "storage_key_from_keychain",
 ]

@@ -6,7 +6,9 @@
 
 mod contextual_surface_architecture_tests;
 mod contract_core_api_tests;
+mod demo_seed_tests;
 mod device_capabilities_tests;
 mod ohttp_overrides_tests;
 mod screen_catalog_render_tests;
+mod startup_tests;
 mod sync_result_tests;
