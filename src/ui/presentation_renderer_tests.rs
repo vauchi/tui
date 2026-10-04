@@ -165,6 +165,7 @@ pub(super) fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRo
         secondary_actions: Vec::new(),
         controls: Vec::new(),
         accessibility: AccessibilitySpec::label(title),
+        info: None,
     }
 }
 
@@ -606,6 +607,7 @@ fn the_info_slot_is_drawn_last_and_its_overlay_shows_the_text() {
             title: Some("People".into()),
             items: Vec::new(),
             body: Some("Here are the people you have exchanged cards with.".into()),
+            close_label: None,
         },
     }]);
     terminal

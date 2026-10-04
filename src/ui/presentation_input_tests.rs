@@ -36,6 +36,7 @@ pub(super) fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRo
         secondary_actions: Vec::new(),
         controls: Vec::new(),
         accessibility: AccessibilitySpec::label(title),
+        info: None,
     }
 }
 
@@ -156,6 +157,7 @@ fn escape_dismisses_each_overlay_by_kind_through_core() {
                 title: None,
                 items: vec![action("item", None)],
                 body: None,
+                close_label: None,
             },
         }]);
         let mut interaction = InteractionState::default();
@@ -211,6 +213,7 @@ pub(super) fn state_with_action_list() -> PresentationState {
                         secondary_actions: Vec::new(),
                         controls: Vec::new(),
                         accessibility: AccessibilitySpec::label("Glance"),
+                        info: None,
                     },
                     PresentationRow {
                         title: "Link".into(),
@@ -225,6 +228,7 @@ pub(super) fn state_with_action_list() -> PresentationState {
                         secondary_actions: Vec::new(),
                         controls: Vec::new(),
                         accessibility: AccessibilitySpec::label("Link"),
+                        info: None,
                     },
                 ],
                 searchable: false,
@@ -762,6 +766,7 @@ fn an_information_overlay_is_read_and_dismissed_without_items() {
             title: Some("Welcome".into()),
             items: Vec::new(),
             body: Some("What this screen is for.".into()),
+            close_label: None,
         },
     }]);
     let mut interaction = InteractionState::default();

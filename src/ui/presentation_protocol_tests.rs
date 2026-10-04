@@ -148,6 +148,7 @@ fn transaction_installs_surface_context_bar_and_overlay_atomically() {
                 title: Some("Navigate".into()),
                 items: vec![action("open-primary")],
                 body: None,
+                close_label: None,
             },
         },
     ]);
@@ -180,6 +181,7 @@ fn dismiss_overlay_closes_the_open_overlay() {
                 title: Some("Navigate".into()),
                 items: vec![action("open-primary")],
                 body: None,
+                close_label: None,
             },
         },
     ]);
@@ -274,6 +276,7 @@ fn stale_chrome_is_rejected_and_effects_are_returned_to_the_shell() {
                 title: None,
                 items: vec![action("stale")],
                 body: None,
+                close_label: None,
             },
         },
         Command::ResetApplication,
@@ -341,6 +344,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
             accessibility: AccessibilitySpec::label("Delivery Receipts"),
         }],
         accessibility: AccessibilitySpec::label("Delivery Receipts"),
+        info: None,
     };
     current.nodes = vec![PresentationNode::List {
         style: vauchi_core::PresentationListStyle::Rows,
@@ -491,6 +495,7 @@ fn toggle_row(enabled: bool) -> vauchi_core::PresentationRow {
             accessibility: AccessibilitySpec::label("Flag"),
         }],
         accessibility: AccessibilitySpec::label("Setting"),
+        info: None,
     }
 }
 
@@ -520,6 +525,7 @@ fn dismissing_an_overlay_of_another_kind_leaves_it_open() {
                 title: None,
                 body: None,
                 items: vec![action("item")],
+                close_label: None,
             },
         },
     ]);

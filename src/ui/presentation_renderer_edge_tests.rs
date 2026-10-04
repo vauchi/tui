@@ -183,6 +183,7 @@ fn overlays_take_their_kinds_frame_and_highlight_the_selected_item() {
                 title: None,
                 body: None,
                 items: vec![action("first", "First"), action("second", "Second")],
+                close_label: None,
             },
         }]);
 

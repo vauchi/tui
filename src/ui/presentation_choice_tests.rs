@@ -62,6 +62,7 @@ fn action_row(title: &str, id: &str) -> PresentationRow {
         secondary_actions: Vec::new(),
         controls: Vec::new(),
         accessibility: AccessibilitySpec::label(title),
+        info: None,
     }
 }
 

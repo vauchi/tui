@@ -57,6 +57,7 @@ fn row(title: &str, icon_token: &str) -> PresentationRow {
         secondary_actions: Vec::new(),
         controls: Vec::new(),
         accessibility: AccessibilitySpec::label(title),
+        info: None,
     }
 }
 

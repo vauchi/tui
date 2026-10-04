@@ -118,6 +118,7 @@ fn state_with_overlay(items: &[&str]) -> PresentationState {
             title: None,
             body: None,
             items: items.iter().map(|id| action(id, None)).collect(),
+            close_label: None,
         },
     }]);
     state
