@@ -244,7 +244,7 @@ fn draw_overlay(frame: &mut Frame, area: Rect, state: &PresentationState, select
         _ => ("Commands", BorderType::Plain),
     };
     // Text to read (vauchi/private#479) wraps; items to pick are numbered.
-    let lines = match overlay.body.as_deref().filter(|_| overlay.items.is_empty()) {
+    let mut lines = match overlay.body.as_deref().filter(|_| overlay.items.is_empty()) {
         Some(body) => vec![Line::raw(body.to_owned())],
         None => overlay
             .items
@@ -258,6 +258,11 @@ fn draw_overlay(frame: &mut Frame, area: Rect, state: &PresentationState, select
             })
             .collect::<Vec<_>>(),
     };
+    lines.push(Line::default());
+    lines.push(Line::styled(
+        overlay_dismiss_hint(overlay.close_label.as_deref()),
+        Style::default().add_modifier(Modifier::DIM),
+    ));
     frame.render_widget(Clear, area);
     frame.render_widget(
         Paragraph::new(lines).wrap(Wrap { trim: false }).block(
@@ -273,6 +278,18 @@ fn draw_overlay(frame: &mut Frame, area: Rect, state: &PresentationState, select
         ),
         area,
     );
+}
+
+/// Core names the overlay's own way out (vauchi/private#479); a shell
+/// that knows the label should say it instead of guessing generic
+/// wording that may not even match (Enter has nothing to activate on a
+/// body-only overlay). Older Core leaves `close_label` off the wire, so
+/// the generic phrasing stays the fallback.
+fn overlay_dismiss_hint(close_label: Option<&str>) -> String {
+    match close_label {
+        Some(label) => format!("Esc: {label}"),
+        None => "Enter or Esc dismisses".to_string(),
+    }
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {

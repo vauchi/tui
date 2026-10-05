@@ -8,7 +8,7 @@ use vauchi_core::{
     ActionSpec, BindingId, Event, InputValue, PresentationNode, StandardShortcut, SurfaceId,
 };
 
-use super::presentation_protocol::{ChoiceStep, PresentationState};
+use super::presentation_protocol::{ChoiceStep, PresentationState, SurfaceTarget};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct InteractionState {
@@ -77,6 +77,12 @@ impl InteractionState {
             if action.is_some() {
                 return events_outcome(state.activation_events(action));
             }
+        }
+        if key.modifiers.is_empty()
+            && key.code == KeyCode::Char('i')
+            && let Some(outcome) = self.info_outcome(state)
+        {
+            return outcome;
         }
         if key.code == KeyCode::Tab {
             self.focused_binding = None;
@@ -183,6 +189,27 @@ impl InteractionState {
 
     fn focused_input(&self, state: &PresentationState) -> Option<InputTarget> {
         find_input(&state.surface()?.nodes, self.focused_binding.as_ref())
+    }
+
+    /// `i` opens the selected row's own info (vauchi/private#516) when it
+    /// carries one, else the context bar's — Alt+i always reaches the
+    /// bar's, but the row's own info is the common case and deserves the
+    /// one-keystroke binding. Yields to a focused field so the letter
+    /// still types, same guard the digit row-shortcuts use.
+    fn info_outcome(&self, state: &PresentationState) -> Option<KeyOutcome> {
+        if self.focused_input(state).is_some() {
+            return None;
+        }
+        let targets = state.surface_targets();
+        let row_info = self
+            .selected_surface_target(state)
+            .and_then(|index| targets.get(index))
+            .and_then(|target| match target {
+                SurfaceTarget::Row(row) => row.info.as_ref(),
+                SurfaceTarget::Choice(_) => None,
+            });
+        let action = row_info.or_else(|| state.context_bar().and_then(|bar| bar.info.as_ref()));
+        Some(events_outcome(state.activation_events(action)))
     }
 
     fn overlay_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> Option<KeyOutcome> {

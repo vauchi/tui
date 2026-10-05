@@ -131,8 +131,11 @@ pub(super) fn append_node_lines(
                 if is_selected {
                     *selected_line = Some(lines.len());
                 }
+                // Names that `i` reaches the row's own info
+                // (vauchi/private#516) — nothing else on screen says so.
+                let info_marker = if row.info.is_some() { " (i)" } else { "" };
                 lines.push(Line::styled(
-                    format!("{indent}{marker} {}", row.title),
+                    format!("{indent}{marker} {}{info_marker}", row.title),
                     title_style,
                 ));
                 let secondary_style = if is_selected {
