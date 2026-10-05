@@ -794,16 +794,16 @@ fn an_information_overlay_is_read_and_dismissed_without_items() {
 }
 
 pub(super) fn state_with_row_info() -> PresentationState {
-    let surface_id = SurfaceId::new("contacts").unwrap();
+    let surface_id = SurfaceId::new("people").unwrap();
     let mut state = PresentationState::default();
     state.apply(&[
         Command::ReplaceSurface {
             surface: SurfaceSpec {
                 surface_id: surface_id.clone(),
                 revision: 1,
-                title: "Contacts".into(),
+                title: "People".into(),
                 subtitle: None,
-                accessibility_label: "Contacts".into(),
+                accessibility_label: "People".into(),
                 layout: SurfaceLayout::Scroll,
                 tokens: PresentationTokens {
                     spacing_small: 1,
@@ -814,7 +814,7 @@ pub(super) fn state_with_row_info() -> PresentationState {
                 },
                 nodes: vec![PresentationNode::List {
                     style: vauchi_core::PresentationListStyle::Rows,
-                    id: BindingId::new("contacts").unwrap(),
+                    id: BindingId::new("entries").unwrap(),
                     label: None,
                     rows: vec![{
                         let mut ada = row("Ada", Some(action("open:ada", None)));
@@ -823,7 +823,7 @@ pub(super) fn state_with_row_info() -> PresentationState {
                     }],
                     searchable: false,
                     paging: None,
-                    accessibility: AccessibilitySpec::label("Contacts"),
+                    accessibility: AccessibilitySpec::label("People"),
                 }],
             },
         },
