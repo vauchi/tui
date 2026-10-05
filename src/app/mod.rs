@@ -359,6 +359,24 @@ mod tests {
 
     // @internal
     #[test]
+    fn a_sub_second_wakeup_request_is_scheduled_in_milliseconds() {
+        let mut app = app();
+        let before = Instant::now();
+        app.apply_native_effect(Command::ScheduleWakeup {
+            earliest_secs: 0,
+            deadline_secs: 1,
+            min_interval_secs: 0,
+            earliest_millis: Some(120),
+        });
+        let after = Instant::now();
+
+        let wakeup = app.next_wakeup.expect("a wakeup is scheduled");
+        assert!(wakeup.duration_since(before) >= Duration::from_millis(120));
+        assert!(wakeup.duration_since(after) <= Duration::from_millis(120));
+    }
+
+    // @internal
+    #[test]
     fn the_first_heartbeat_installs_cores_wakeup_schedule() {
         let mut app = app();
         assert_eq!(app.next_wakeup, None);
