@@ -625,3 +625,118 @@ fn the_info_slot_is_drawn_last_and_its_overlay_shows_the_text() {
         "the overlay shows the text: {rendered}"
     );
 }
+
+/// A row that offers its own info (vauchi/private#479) must say so, or
+/// the keyboard-only `i` shortcut (vauchi/private#516) is undiscoverable.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn a_row_with_info_shows_its_i_marker() {
+    let mut state = PresentationState::default();
+    let mut surface = titled_surface("surface-primary", "Contacts");
+    let mut ada = row("Ada", Some(action("open:ada", "Ada")));
+    ada.info = Some(action("info:ada", "Info"));
+    surface.nodes = vec![PresentationNode::List {
+        style: vauchi_core::PresentationListStyle::Rows,
+        id: vauchi_core::BindingId::new("entries").unwrap(),
+        label: None,
+        rows: vec![ada],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Contacts"),
+    }];
+    state.apply(&[Command::ReplaceSurface { surface }]);
+    let backend = TestBackend::new(80, 16);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+    assert!(
+        rendered.contains("Ada (i)"),
+        "the row marks that it carries info: {rendered}"
+    );
+}
+
+/// Core names the overlay's way out (vauchi/private#479); the hint must
+/// use that label instead of the generic phrasing once Core gives one.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn an_overlay_hint_names_cores_close_label() {
+    let surface_id = SurfaceId::new("surface-primary").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface {
+        surface: titled_surface("surface-primary", "People"),
+    }]);
+    state.apply(&[Command::PresentOverlay {
+        surface_id,
+        revision: 1,
+        overlay: OverlaySpec {
+            kind: OverlayKind::Information,
+            title: Some("People".into()),
+            items: Vec::new(),
+            body: Some("Here are the people you have exchanged cards with.".into()),
+            close_label: Some("Done".into()),
+        },
+    }]);
+    let backend = TestBackend::new(80, 16);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+    assert!(
+        rendered.contains("Esc: Done"),
+        "the hint names Core's close label: {rendered}"
+    );
+}
+
+/// Without a `close_label` (a pre-#479 Core, or an overlay that never set
+/// one), the hint keeps the generic phrasing rather than showing nothing.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn an_overlay_hint_keeps_the_generic_phrasing_without_a_close_label() {
+    let surface_id = SurfaceId::new("surface-primary").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface {
+        surface: titled_surface("surface-primary", "People"),
+    }]);
+    state.apply(&[Command::PresentOverlay {
+        surface_id,
+        revision: 1,
+        overlay: OverlaySpec {
+            kind: OverlayKind::Information,
+            title: Some("People".into()),
+            items: Vec::new(),
+            body: Some("Here are the people you have exchanged cards with.".into()),
+            close_label: None,
+        },
+    }]);
+    let backend = TestBackend::new(80, 16);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let rendered = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+    assert!(
+        rendered.contains("Enter or Esc dismisses"),
+        "the hint keeps today's phrasing: {rendered}"
+    );
+}

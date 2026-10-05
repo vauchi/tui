@@ -792,3 +792,107 @@ fn an_information_overlay_is_read_and_dismissed_without_items() {
         ])
     );
 }
+
+pub(super) fn state_with_row_info() -> PresentationState {
+    let surface_id = SurfaceId::new("contacts").unwrap();
+    let mut state = PresentationState::default();
+    state.apply(&[
+        Command::ReplaceSurface {
+            surface: SurfaceSpec {
+                surface_id: surface_id.clone(),
+                revision: 1,
+                title: "Contacts".into(),
+                subtitle: None,
+                accessibility_label: "Contacts".into(),
+                layout: SurfaceLayout::Scroll,
+                tokens: PresentationTokens {
+                    spacing_small: 1,
+                    spacing_medium: 2,
+                    spacing_large: 3,
+                    corner_radius: 1,
+                    minimum_target_size: 1,
+                },
+                nodes: vec![PresentationNode::List {
+                    style: vauchi_core::PresentationListStyle::Rows,
+                    id: BindingId::new("contacts").unwrap(),
+                    label: None,
+                    rows: vec![{
+                        let mut ada = row("Ada", Some(action("open:ada", None)));
+                        ada.info = Some(action("info:ada", None));
+                        ada
+                    }],
+                    searchable: false,
+                    paging: None,
+                    accessibility: AccessibilitySpec::label("Contacts"),
+                }],
+            },
+        },
+        Command::SetContextBar {
+            surface_id,
+            revision: 1,
+            bar: Box::new(ContextBar {
+                back: None,
+                navigation: None,
+                primary: None,
+                secondary: None,
+                info: Some(action("surface-info", None)),
+            }),
+        },
+    ]);
+    state
+}
+
+/// Plain `i` reaches the selected row's own info first — Alt+i always
+/// reaches the context bar's, so a second, one-keystroke way to the
+/// common case (vauchi/private#516) needs its own key, not a reuse of
+/// Alt+i's binding.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn bare_i_activates_the_selected_rows_info_when_it_has_one() {
+    let state = state_with_row_info();
+    let mut interaction = InteractionState::default();
+    interaction.key_outcome(&state, KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+
+    let KeyOutcome::Events(events) = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('i'), KeyModifiers::NONE),
+    ) else {
+        panic!("expected events");
+    };
+    assert!(
+        matches!(
+            events.as_slice(),
+            [
+                Event::SurfaceActivated { .. },
+                Event::ActionActivated { interaction_id, .. }
+            ] if interaction_id.as_str() == "info:ada"
+        ),
+        "expected the row's own info action, got {events:?}"
+    );
+}
+
+/// With no row selected, plain `i` still means something: it falls back
+/// to the surface's own info, the same action Alt+i would reach.
+// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
+#[test]
+fn bare_i_falls_back_to_the_bars_info_without_a_selected_row() {
+    let state = state_with_row_info();
+    let mut interaction = InteractionState::default();
+
+    let KeyOutcome::Events(events) = interaction.key_outcome(
+        &state,
+        KeyEvent::new(KeyCode::Char('i'), KeyModifiers::NONE),
+    ) else {
+        panic!("expected events");
+    };
+    assert!(
+        matches!(
+            events.as_slice(),
+            [
+                Event::SurfaceActivated { .. },
+                Event::ActionActivated { interaction_id, .. }
+            ] if interaction_id.as_str() == "surface-info"
+        ),
+        "expected the bar's info action, got {events:?}"
+    );
+}
