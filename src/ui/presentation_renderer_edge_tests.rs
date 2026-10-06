@@ -237,6 +237,7 @@ fn every_node_kind_paints_its_text() {
             label: Some("Scan me".into()),
             placement: None,
             error_correction: None,
+            size: None,
             accessibility: AccessibilitySpec::label("QR"),
         },
         PresentationNode::Qr {
@@ -246,6 +247,7 @@ fn every_node_kind_paints_its_text() {
             label: Some("Capture".into()),
             placement: None,
             error_correction: None,
+            size: None,
             accessibility: AccessibilitySpec::label("QR"),
         },
         PresentationNode::Confirmation {
