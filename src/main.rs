@@ -48,6 +48,11 @@ struct Cli {
     #[arg(long, value_name = "URL")]
     relay_url: Option<String>,
 
+    /// The relay's OHTTP trust anchor, 64 hex characters
+    /// [env: VAUCHI_RELAY_ANCHOR]
+    #[arg(long, value_name = "HEX")]
+    relay_anchor: Option<String>,
+
     /// Seed demo data on first run
     #[arg(long)]
     seed: bool,
@@ -128,7 +133,14 @@ fn main() -> Result<()> {
         .clone()
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let vauchi_config = vauchi_config.with_relay_url(&relay_url);
-    let vauchi_config = vauchi_tui::apply_ohttp_test_overrides(vauchi_config);
+    let vauchi_config =
+        match vauchi_tui::apply_ohttp_test_overrides(vauchi_config, cli.relay_anchor.clone()) {
+            Ok(config) => config,
+            Err(err) => {
+                eprintln!("Error: {err}");
+                std::process::exit(2);
+            }
+        };
     let mut vauchi: Vauchi = match Vauchi::new(vauchi_config) {
         Ok(vauchi) => vauchi,
         Err(err) => {

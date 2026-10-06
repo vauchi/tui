@@ -13,31 +13,32 @@ pub mod ui;
 
 use vauchi_core::VauchiConfig;
 
-/// Apply the e2e test-only OHTTP overrides to a config, mirroring the CLI
+/// Apply the relay overrides to a config, mirroring the CLI
 /// (`cli/src/commands/common.rs`). `VAUCHI_OHTTP_RELAY_URL` sets the OHTTP
-/// route; `VAUCHI_OVERRIDE_BUNDLED_OHTTP_KEY_HEX` injects a locally-spawned
-/// relay's ephemeral gateway key so the TUI can encap to a key that relay can
-/// decrypt. Both are test/dev-only and WARN-loud — production must never set
-/// them. The key override changes only which bytes are used; it does not
-/// enable direct fetch, so ADR-037 holds. Without this the TUI carries the
-/// compiled-in production key and cannot reach a local test relay (see the
-/// backlog record 2026-09-10-tui-link-initiator-does-not-complete-handshake).
-pub fn apply_ohttp_test_overrides(config: VauchiConfig) -> VauchiConfig {
+/// route (e2e/dev). `relay_anchor` — the `--relay-anchor` flag, else
+/// `VAUCHI_RELAY_ANCHOR` — is the relay's OHTTP trust anchor (#288): its
+/// gateway keys are then accepted only through its signed chain. No key is
+/// compiled in, so e2e hands a local relay's test anchor here.
+pub fn apply_ohttp_test_overrides(
+    config: VauchiConfig,
+    relay_anchor: Option<String>,
+) -> Result<VauchiConfig, String> {
     ohttp_overrides(
         config,
         std::env::var("VAUCHI_OHTTP_RELAY_URL").ok(),
-        std::env::var("VAUCHI_OVERRIDE_BUNDLED_OHTTP_KEY_HEX").ok(),
+        relay_anchor.or_else(|| std::env::var("VAUCHI_RELAY_ANCHOR").ok()),
     )
 }
 
 /// The overrides without the environment: `relay_url` replaces the OHTTP
-/// route unless blank; `key_hex` replaces the bundled gateway key when it
-/// decodes and is reported and ignored when it does not.
+/// route unless blank; `anchor_hex` (64 hex characters) becomes the
+/// configured relay's anchor. A malformed anchor is refused, not ignored:
+/// ignoring it would quietly leave the relay without one (DC-01).
 pub fn ohttp_overrides(
     mut config: VauchiConfig,
     relay_url: Option<String>,
-    key_hex: Option<String>,
-) -> VauchiConfig {
+    anchor_hex: Option<String>,
+) -> Result<VauchiConfig, String> {
     if let Some(url) = relay_url
         .as_deref()
         .map(str::trim)
@@ -45,21 +46,12 @@ pub fn ohttp_overrides(
     {
         config = config.with_ohttp_relay_url(url);
     }
-    if let Some(hex) = key_hex {
-        match hex::decode(hex.trim()) {
-            Ok(bytes) => {
-                eprintln!(
-                    "OHTTP bundled key overridden via \
-                     VAUCHI_OVERRIDE_BUNDLED_OHTTP_KEY_HEX ({} bytes) — \
-                     must NOT be set in production",
-                    bytes.len()
-                );
-                config.ohttp.bundled_gateway_key = Some(bytes);
-            }
-            Err(e) => {
-                eprintln!("VAUCHI_OVERRIDE_BUNDLED_OHTTP_KEY_HEX is not valid hex: {e}");
-            }
-        }
+    if let Some(hex) = anchor_hex {
+        let mut anchor = [0u8; 32];
+        hex::decode_to_slice(hex.trim(), &mut anchor)
+            .map_err(|_| "a relay anchor is 64 hex characters".to_string())?;
+        let server_url = config.relay.server_url.clone();
+        config = config.with_relay(server_url, anchor);
     }
-    config
+    Ok(config)
 }

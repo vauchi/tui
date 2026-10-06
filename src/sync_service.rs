@@ -110,18 +110,27 @@ pub struct SyncRequest {
     pub storage_key: vauchi_core::crypto::SymmetricKey,
     /// Relay URL.
     pub relay_url: String,
+    /// The relay's OHTTP trust anchor, from the foreground config (#288).
+    pub relay_anchor: Option<[u8; 32]>,
 }
 
 /// Performs a full sync in a self-contained way using owned, `Send` data.
 ///
 /// Creates a fresh `Vauchi` instance on the background thread.
 pub fn sync_owned(req: SyncRequest) -> SyncResult {
-    let config = VauchiConfig::with_storage_path(req.storage_path)
-        .with_relay_url(&req.relay_url)
-        .with_storage_key(req.storage_key);
-    // Same OHTTP test overrides as the foreground config (`main.rs`); the
-    // background sync instance must reach the same (local, in e2e) relay.
-    let config = crate::apply_ohttp_test_overrides(config);
+    let config = VauchiConfig::with_storage_path(req.storage_path);
+    let config = match req.relay_anchor {
+        Some(anchor) => config.with_relay(&req.relay_url, anchor),
+        None => config.with_relay_url(&req.relay_url),
+    }
+    .with_storage_key(req.storage_key);
+    // Same OHTTP route as the foreground config (`main.rs`); the background
+    // sync instance must reach the same (local, in e2e) relay.
+    let config =
+        match crate::ohttp_overrides(config, std::env::var("VAUCHI_OHTTP_RELAY_URL").ok(), None) {
+            Ok(config) => config,
+            Err(e) => return SyncResult::error(e),
+        };
     let mut vauchi = match Vauchi::new(config) {
         Ok(v) => v,
         Err(e) => return SyncResult::error(format!("Vauchi init failed: {}", e)),
