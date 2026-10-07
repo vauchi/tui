@@ -10,6 +10,7 @@ use vauchi_core::Command;
 use vauchi_core::{ActionSpec, OverlayKind};
 
 use super::presentation_protocol::PresentationState;
+use crate::i18n::I18n;
 
 mod nodes;
 use nodes::append_node_lines;
@@ -113,7 +114,7 @@ fn draw_surface(
 ) {
     let surfaces = state.visible_surfaces();
     if surfaces.is_empty() {
-        frame.render_widget(Paragraph::new("Preparing…"), area);
+        frame.render_widget(Paragraph::new(I18n::default().t("app.loading")), area);
         return;
     }
     if surfaces.len() == 2 {
