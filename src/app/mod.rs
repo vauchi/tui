@@ -373,6 +373,21 @@ mod tests {
         assert!(wakeup.duration_since(after) <= Duration::from_millis(120));
     }
 
+    // The TUI waited `earliest_secs` even when the deadline came sooner;
+    // Core's `delay_millis` never passes the deadline (vauchi/private#548).
+    // @internal
+    #[test]
+    fn a_wakeup_never_waits_past_its_deadline() {
+        let mut app = app();
+        let before = Instant::now();
+        app.apply_native_effect(Command::schedule_wakeup(5, 2, 1, None));
+        let after = Instant::now();
+
+        let wakeup = app.next_wakeup.expect("a wakeup is scheduled");
+        assert!(wakeup.duration_since(before) >= Duration::from_secs(2));
+        assert!(wakeup.duration_since(after) <= Duration::from_secs(2));
+    }
+
     // @internal
     #[test]
     fn the_first_heartbeat_installs_cores_wakeup_schedule() {
