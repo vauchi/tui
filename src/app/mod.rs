@@ -169,16 +169,9 @@ impl App {
             Command::PostNotification { notification } => {
                 self.set_status(format!("{} — {}", notification.title, notification.body));
             }
-            Command::ScheduleWakeup {
-                earliest_secs,
-                earliest_millis,
-                ..
-            } => {
-                let delay = earliest_millis.map_or_else(
-                    || Duration::from_secs(earliest_secs.into()),
-                    |millis| Duration::from_millis(millis.into()),
-                );
-                self.next_wakeup = Some(Instant::now() + delay);
+            Command::ScheduleWakeup { delay_millis, .. } => {
+                self.next_wakeup =
+                    Some(Instant::now() + Duration::from_millis(delay_millis.into()));
             }
             Command::ExportFile { file } => {
                 let destination = self.data_dir.join(&file.suggested_name);
