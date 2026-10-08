@@ -352,12 +352,7 @@ mod tests {
     fn a_wakeup_request_is_scheduled_that_many_seconds_ahead() {
         let mut app = app();
         let before = Instant::now();
-        app.apply_native_effect(Command::ScheduleWakeup {
-            earliest_secs: 5,
-            deadline_secs: 10,
-            min_interval_secs: 1,
-            earliest_millis: None,
-        });
+        app.apply_native_effect(Command::schedule_wakeup(5, 10, 1, None));
         let after = Instant::now();
 
         let wakeup = app.next_wakeup.expect("a wakeup is scheduled");
@@ -370,12 +365,7 @@ mod tests {
     fn a_sub_second_wakeup_request_is_scheduled_in_milliseconds() {
         let mut app = app();
         let before = Instant::now();
-        app.apply_native_effect(Command::ScheduleWakeup {
-            earliest_secs: 0,
-            deadline_secs: 1,
-            min_interval_secs: 0,
-            earliest_millis: Some(120),
-        });
+        app.apply_native_effect(Command::schedule_wakeup(0, 1, 0, Some(120)));
         let after = Instant::now();
 
         let wakeup = app.next_wakeup.expect("a wakeup is scheduled");
