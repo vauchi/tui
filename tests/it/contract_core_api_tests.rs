@@ -36,21 +36,13 @@ fn contract_storage_save_and_load_identity() {
     let key = SymmetricKey::generate();
     let storage = Storage::open(db_path.to_str().unwrap(), key).unwrap();
 
-    let identity = Identity::create(
-        "TuiContractTest",
-        vauchi_core::clock::SystemClock::shared().unix_seconds(),
-    );
     let backup_data = b"test-backup-data".to_vec();
-    storage
-        .identity()
-        .save_identity(&backup_data, identity.display_name())
-        .unwrap();
+    storage.identity().save_identity(&backup_data).unwrap();
 
-    let loaded = storage.identity().load_identity().unwrap();
-    assert!(loaded.is_some());
-    let (data, name) = loaded.unwrap();
-    assert_eq!(data, backup_data);
-    assert_eq!(name, "TuiContractTest");
+    assert_eq!(
+        storage.identity().load_identity().unwrap(),
+        Some(backup_data)
+    );
 }
 
 // @internal
