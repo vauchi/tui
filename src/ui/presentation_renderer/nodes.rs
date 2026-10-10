@@ -5,7 +5,7 @@ use crate::ui::presentation_protocol::{
     ChoiceTarget, choice_target, row_is_addressable, row_toggle,
 };
 use ratatui::prelude::*;
-use vauchi_core::PresentationNode;
+use vauchi_core::{PresentationInputKind, PresentationNode};
 
 pub(super) fn append_node_lines(
     node: &PresentationNode,
@@ -28,11 +28,19 @@ pub(super) fn append_node_lines(
             label,
             value,
             placeholder,
+            input_kind,
             validation_error,
             ..
         } => {
+            let masked;
             let shown = if value.is_empty() {
                 placeholder.as_deref().unwrap_or("")
+            } else if matches!(
+                input_kind,
+                PresentationInputKind::Password | PresentationInputKind::Pin
+            ) {
+                masked = "•".repeat(value.chars().count());
+                &masked
             } else {
                 value
             };
