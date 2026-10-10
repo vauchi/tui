@@ -49,6 +49,10 @@ mod presentation_input_tests;
 mod presentation_renderer_edge_tests;
 
 #[cfg(test)]
+#[path = "presentation_secret_input_tests.rs"]
+mod presentation_secret_input_tests;
+
+#[cfg(test)]
 #[path = "draw_tests.rs"]
 mod draw_tests;
 
