@@ -394,20 +394,11 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
         // Periodic maintenance (ADR-031)
         app.tick_status();
 
-        // Poll background sync result channel (non-blocking).
-        if let Some(rx) = &app.sync_rx
-            && let Ok(result) = rx.try_recv()
-        {
-            app.sync_rx = None;
-            app.apply_sync_result(result);
-        }
-
         // ADR-044 Am2a: Core's wakeup schedule caps the wait, so `on_wakeup()`
         // runs when it is due; a delayed or coalesced wake is safe because
         // `on_wakeup` is elapsed-based and idempotent.
         let poll_timeout = startup::poll_timeout(
             app.status_is_flashing(),
-            app.sync_rx.is_some(),
             app.next_wakeup,
             std::time::Instant::now(),
         );

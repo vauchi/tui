@@ -9,7 +9,6 @@ pub mod external_url;
 pub mod handlers;
 pub mod i18n;
 pub mod startup;
-pub mod sync_service;
 pub mod theme;
 pub mod ui;
 

@@ -7,13 +7,11 @@ pub mod capabilities;
 pub use capabilities::tui_device_capabilities;
 
 use std::collections::VecDeque;
-use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 use vauchi_app::ui::{AppEngine, AppPresentationError};
 use vauchi_core::{Command, Event, InputMode, MotionPreference};
 
-use crate::sync_service::SyncResult;
 use crate::ui::presentation_input::InteractionState;
 use crate::ui::presentation_protocol::PresentationState;
 
@@ -28,7 +26,6 @@ pub struct App {
     status_message_time: Option<Instant>,
     pub(crate) should_quit: bool,
     pub next_wakeup: Option<Instant>,
-    pub sync_rx: Option<mpsc::Receiver<SyncResult>>,
     pub data_dir: std::path::PathBuf,
     pub relay_url: String,
     url_opener: fn(&str) -> bool,
@@ -57,7 +54,6 @@ impl App {
             status_message_time: None,
             should_quit: false,
             next_wakeup: None,
-            sync_rx: None,
             data_dir,
             relay_url,
             url_opener: crate::external_url::open,
@@ -134,21 +130,6 @@ impl App {
         }
         let commands = self.app_engine.drain_pending_commands();
         self.apply_presentation_commands(commands);
-    }
-
-    pub fn apply_sync_result(&mut self, result: SyncResult) {
-        if result.success {
-            self.set_status(format!(
-                "Sync complete: {} received, {} sent, {} acknowledged",
-                result.cards_updated, result.updates_sent, result.acknowledged
-            ));
-        } else {
-            self.set_status(format!(
-                "Sync failed: {}",
-                result.error.unwrap_or_else(|| "Unknown error".into())
-            ));
-        }
-        let _ = self.dispatch_presentation_event(Event::PresentationInvalidated);
     }
 
     pub fn set_url_opener(&mut self, opener: fn(&str) -> bool) {
@@ -268,38 +249,6 @@ mod tests {
         assert!(!app.status_is_flashing_at(now));
         app.tick_status_at(now + Duration::from_secs(10));
         assert_eq!(app.status_message, None);
-    }
-
-    // @internal
-    #[test]
-    fn a_sync_result_becomes_a_status_line() {
-        let mut app = app();
-        app.apply_sync_result(SyncResult {
-            cards_updated: 3,
-            updates_sent: 2,
-            acknowledged: 1,
-            success: true,
-            error: None,
-        });
-        assert_eq!(
-            app.status_message.as_deref(),
-            Some("Sync complete: 3 received, 2 sent, 1 acknowledged")
-        );
-
-        app.apply_sync_result(SyncResult::error("boom"));
-        assert_eq!(app.status_message.as_deref(), Some("Sync failed: boom"));
-
-        app.apply_sync_result(SyncResult {
-            cards_updated: 0,
-            updates_sent: 0,
-            acknowledged: 0,
-            success: false,
-            error: None,
-        });
-        assert_eq!(
-            app.status_message.as_deref(),
-            Some("Sync failed: Unknown error")
-        );
     }
 
     // @internal

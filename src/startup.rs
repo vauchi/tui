@@ -22,15 +22,10 @@ pub fn resolve_relay_url(configured: Option<String>, from_env: Option<String>) -
 }
 
 /// How long the loop may wait for input: a short poll while a status is
-/// flashing or a background operation runs, a second otherwise, and never
-/// past Core's next scheduled wakeup.
-pub fn poll_timeout(
-    status_flashing: bool,
-    background_operation: bool,
-    next_wakeup: Option<Instant>,
-    now: Instant,
-) -> Duration {
-    let base = if status_flashing || background_operation {
+/// flashing, a second otherwise, and never past Core's next scheduled
+/// wakeup.
+pub fn poll_timeout(status_flashing: bool, next_wakeup: Option<Instant>, now: Instant) -> Duration {
+    let base = if status_flashing {
         Duration::from_millis(100)
     } else {
         Duration::from_secs(1)

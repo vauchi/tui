@@ -31,31 +31,21 @@ fn the_relay_url_prefers_the_configured_file_then_the_environment() {
 
 // @internal
 #[test]
-fn the_loop_polls_fast_while_flashing_or_busy_and_never_past_the_wakeup() {
+fn the_loop_polls_fast_while_flashing_and_never_past_the_wakeup() {
     let now = Instant::now();
 
+    assert_eq!(poll_timeout(false, None, now), Duration::from_secs(1));
+    assert_eq!(poll_timeout(true, None, now), Duration::from_millis(100));
     assert_eq!(
-        poll_timeout(false, false, None, now),
-        Duration::from_secs(1)
-    );
-    assert_eq!(
-        poll_timeout(true, false, None, now),
-        Duration::from_millis(100)
-    );
-    assert_eq!(
-        poll_timeout(false, true, None, now),
-        Duration::from_millis(100)
-    );
-    assert_eq!(
-        poll_timeout(false, false, Some(now + Duration::from_millis(300)), now),
+        poll_timeout(false, Some(now + Duration::from_millis(300)), now),
         Duration::from_millis(300)
     );
     assert_eq!(
-        poll_timeout(true, false, Some(now + Duration::from_millis(300)), now),
+        poll_timeout(true, Some(now + Duration::from_millis(300)), now),
         Duration::from_millis(100)
     );
     assert_eq!(
-        poll_timeout(false, false, Some(now - Duration::from_secs(1)), now),
+        poll_timeout(false, Some(now - Duration::from_secs(1)), now),
         Duration::ZERO
     );
 }
