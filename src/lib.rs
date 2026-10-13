@@ -5,6 +5,7 @@
 pub mod app;
 pub mod data_dir;
 pub mod demo_seed;
+pub mod external_url;
 pub mod handlers;
 pub mod i18n;
 pub mod startup;

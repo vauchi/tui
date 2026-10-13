@@ -60,7 +60,7 @@ impl App {
             sync_rx: None,
             data_dir,
             relay_url,
-            url_opener: open_external_url,
+            url_opener: crate::external_url::open,
         };
         for effect in effects {
             app.apply_native_effect(effect);
@@ -195,23 +195,6 @@ impl App {
         self.status_message = Some(message.into());
         self.status_message_time = Some(now);
     }
-}
-
-fn open_external_url(url: &str) -> bool {
-    let opener = if cfg!(target_os = "macos") {
-        "open"
-    } else if cfg!(target_os = "windows") {
-        "start"
-    } else {
-        "xdg-open"
-    };
-    std::process::Command::new(opener)
-        .arg(url)
-        .stdin(std::process::Stdio::null())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn()
-        .is_ok()
 }
 
 // INLINE_TEST_REQUIRED: bootstrap tests inspect the App's private presentation
