@@ -114,16 +114,8 @@ fn main() -> Result<()> {
                 .unwrap_or_else(|| PathBuf::from("."))
                 .join("vauchi")
         });
-    let data_dir_is_new = !data_dir.exists();
-    std::fs::create_dir_all(&data_dir).context("Failed to create data directory")?;
-
-    // Restrict data directory to owner-only (0700) on creation.
-    // Prevents other users from reading database, keys, or WAL files.
-    #[cfg(unix)]
-    if data_dir_is_new {
-        use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(&data_dir, std::fs::Permissions::from_mode(0o700));
-    }
+    vauchi_tui::data_dir::prepare_data_dir(&data_dir)
+        .context("Failed to prepare the data directory")?;
 
     let storage_key = load_or_create_storage_key(&data_dir)?;
     let vauchi_config =
