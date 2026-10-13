@@ -75,3 +75,44 @@ fn the_heartbeat_runs_only_when_idle_and_due() {
     assert!(!wakeup_due(true, Some(now), now));
     assert!(!wakeup_due(false, None, now));
 }
+
+// @internal
+#[cfg(unix)]
+#[test]
+fn an_existing_data_directory_is_tightened_to_owner_only() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    let data_dir = root.path().join("vauchi");
+    std::fs::create_dir(&data_dir).unwrap();
+    std::fs::set_permissions(&data_dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+    vauchi_tui::startup::prepare_data_dir(&data_dir).unwrap();
+
+    let mode = std::fs::metadata(&data_dir).unwrap().permissions().mode() & 0o777;
+    assert_eq!(mode, 0o700);
+}
+
+// @internal
+#[cfg(unix)]
+#[test]
+fn a_new_data_directory_is_created_owner_only() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    let data_dir = root.path().join("nested").join("vauchi");
+
+    vauchi_tui::startup::prepare_data_dir(&data_dir).unwrap();
+
+    let mode = std::fs::metadata(&data_dir).unwrap().permissions().mode() & 0o777;
+    assert_eq!(mode, 0o700);
+}
+
+// @internal
+#[test]
+fn a_data_directory_path_that_is_a_file_is_refused() {
+    let root = tempfile::tempdir().unwrap();
+    let data_dir = root.path().join("vauchi");
+    std::fs::write(&data_dir, b"not a directory").unwrap();
+
+    assert!(vauchi_tui::startup::prepare_data_dir(&data_dir).is_err());
+    assert_eq!(std::fs::read(&data_dir).unwrap(), b"not a directory");
+}
