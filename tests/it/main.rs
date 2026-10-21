@@ -12,3 +12,4 @@ mod external_url_tests;
 mod ohttp_overrides_tests;
 mod screen_catalog_render_tests;
 mod startup_tests;
+mod system_locale_tests;
