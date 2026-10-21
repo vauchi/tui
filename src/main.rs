@@ -182,6 +182,7 @@ fn main() -> Result<()> {
         .unwrap_or_else(|| resolve_relay_url(&data_dir));
     let mut app_engine = AppEngine::new(vauchi);
     app_engine.set_device_capabilities(vauchi_tui::app::tui_device_capabilities());
+    vauchi_tui::app::report_system_locale(&mut app_engine, |name| std::env::var(name).ok());
 
     // Setup terminal (after init — no stray eprintln output in alternate screen)
     enable_raw_mode()?;
