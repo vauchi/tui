@@ -239,7 +239,7 @@ fn contract_contact_has_expected_accessors() {
 #[test]
 fn contract_phone_secondary_actions_include_sms() {
     let field = ContactField::new(FieldType::Phone, "Mobile", "+41791234567", 0);
-    let actions = field.to_secondary_actions();
+    let actions = field.to_secondary_actions(&vauchi_app::social::active_registry());
 
     assert!(
         actions.len() >= 3,
@@ -258,7 +258,7 @@ fn contract_phone_secondary_actions_include_sms() {
 #[test]
 fn contract_address_secondary_actions_include_directions() {
     let field = ContactField::new(FieldType::Address, "Home", "Bahnhofstrasse 1, Zurich", 0);
-    let actions = field.to_secondary_actions();
+    let actions = field.to_secondary_actions(&vauchi_app::social::active_registry());
 
     assert!(
         actions

@@ -63,5 +63,5 @@ fn following_the_system_renders_the_environment_language() {
         None,
         "still following the system"
     );
-    assert_eq!(engine.render_context().resolved_locale(), Locale::German);
+    assert_eq!(engine.render_context().resolved_locale(), Locale::GERMAN);
 }

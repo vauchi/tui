@@ -122,7 +122,7 @@ pub struct I18n {
 impl Default for I18n {
     fn default() -> Self {
         Self {
-            locale: Locale::English,
+            locale: Locale::ENGLISH,
         }
     }
 }
@@ -136,7 +136,7 @@ impl I18n {
     /// Create from a locale code string.
     pub fn from_code(code: &str) -> Self {
         Self {
-            locale: Locale::from_code(code).unwrap_or(Locale::English),
+            locale: vauchi_app::i18n::translated_locale(code).unwrap_or(Locale::ENGLISH),
         }
     }
 
@@ -172,13 +172,13 @@ mod tests {
     #[test]
     fn test_default_locale() {
         let i18n = I18n::default();
-        assert_eq!(i18n.locale(), Locale::English);
+        assert_eq!(i18n.locale(), Locale::ENGLISH);
     }
 
     #[test]
     fn test_from_code() {
         let i18n = I18n::from_code("de");
-        assert_eq!(i18n.locale(), Locale::German);
+        assert_eq!(i18n.locale(), Locale::GERMAN);
     }
 
     #[test]
@@ -197,7 +197,7 @@ mod tests {
     fn test_translation_german() {
         // German requires locale files to be loaded
         // Without them, falls back to English
-        let i18n = I18n::new(Locale::German);
+        let i18n = I18n::new(Locale::GERMAN);
         let welcome = i18n.t("welcome.title");
         // Accept either German or English fallback
         assert!(

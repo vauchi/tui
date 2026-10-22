@@ -43,8 +43,8 @@ fn rejected_event_shows_core_prepared_alert_instead_of_error_text() {
 
     handle_presentation_key(&mut app, KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
 
-    let title = get_string(Locale::English, "error.title");
-    let message = get_string(Locale::English, "error.generic");
+    let title = get_string(Locale::ENGLISH, "error.title");
+    let message = get_string(Locale::ENGLISH, "error.generic");
     assert_ne!(title, "error.title", "locale must resolve the title key");
     assert_ne!(
         message, "error.generic",
