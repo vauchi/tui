@@ -183,6 +183,9 @@ fn main() -> Result<()> {
     let mut app_engine = AppEngine::new(vauchi);
     app_engine.set_device_capabilities(vauchi_tui::app::tui_device_capabilities());
     vauchi_tui::app::report_system_locale(&mut app_engine, |name| std::env::var(name).ok());
+    // CDN languages, themes and social networks: Core runs the update cycle
+    // (vauchi/private#733 D10).
+    app_engine.start_content_updates(&data_dir, vauchi_app::ui::ContentRunOptions::default());
 
     // Setup terminal (after init — no stray eprintln output in alternate screen)
     enable_raw_mode()?;
