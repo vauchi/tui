@@ -15,6 +15,8 @@ use vauchi_core::{
 #[serde(deny_unknown_fields)]
 struct PresentationContractFixture {
     schema_version: u64,
+    #[serde(default)]
+    effect_commands: Vec<Command>,
     initial_commands: Vec<Command>,
     steps: Vec<PresentationContractStep>,
     expected_state: ExpectedPresentationState,
@@ -40,7 +42,7 @@ struct ExpectedPresentationState {
 
 // @internal — accept the explicit effect corpus while retaining strict fixture decoding.
 #[test]
-fn fixture_notification_effects_reach_the_native_executor_unchanged() {
+fn fixture_notification_effects_pass_through_the_reducer_unchanged() {
     let mut wire: serde_json::Value =
         serde_json::from_str(vauchi_app::ui::presentation_contract_fixture_json()).unwrap();
     wire["effect_commands"] = serde_json::json!([{"PostNotification": {"notification": {
@@ -248,6 +250,10 @@ fn tui_consumes_the_core_owned_presentation_contract_fixture() {
     assert!(
         effects.is_empty(),
         "initial fixture batch emitted effects: {effects:?}"
+    );
+    assert_eq!(
+        state.apply(&fixture.effect_commands),
+        fixture.effect_commands
     );
     for (index, step) in fixture.steps.into_iter().enumerate() {
         assert!(!step.commands.is_empty(), "fixture step {index} is empty");
