@@ -168,6 +168,11 @@ impl App {
                 }
             }
             Command::ResetApplication => self.should_quit = true,
+            Command::SaveRestorableState { state } => {
+                // Best effort: until a value comes back Core keeps the pick
+                // in the vault, so a failed write loses nothing.
+                let _ = restorable_state::keep_state(&self.data_dir, &state);
+            }
             other => self.presentation_effects.push_back(other),
         }
     }
