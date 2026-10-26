@@ -9,7 +9,6 @@ pub mod external_url;
 pub mod handlers;
 pub mod i18n;
 pub mod startup;
-pub mod theme;
 pub mod ui;
 
 use vauchi_core::VauchiConfig;

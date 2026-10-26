@@ -325,7 +325,8 @@ test:snapshots:record:
     - !reference [.validation-rust, rules]
 
 # Main: full coverage with llvm-cov (uses shared .coverage-job template)
-# TUI needs themes (compile-time include_bytes), cloned in before_script.
+# vauchi-app's build embeds the theme catalogue from a sibling themes/
+# checkout, cloned in before_script.
 # Locales are no longer cloned here: vauchi-app vendors the English
 # catalogue, so building it no longer requires the content repo. The TUI
 # reads no locale file of its own — every string arrives as Core-prepared
@@ -359,9 +360,10 @@ perf:binary-size:
 # Mutation Stage (uses shared template from vauchi/scripts)
 # ============================================================
 
-# --in-place because theme.rs include_bytes!("../../themes/...") resolves
-# against the source tree: cargo-mutants' default copy to a temp dir has
-# no ../themes sibling, so the unmutated baseline could not compile.
+# --in-place dates from tui's own include_bytes! of ../themes (theme.rs,
+# removed in private#814). vauchi-app's build still prefers the ../themes
+# sibling, which cargo-mutants' temp-dir copy lacks; whether --in-place is
+# still needed is untested.
 mutation:nightly:
   extends: [.mutation-nightly, .rust-runner]
   # 421 mutants took 32 min on a warm nell-shell but overran
