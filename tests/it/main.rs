@@ -10,6 +10,7 @@ mod demo_seed_tests;
 mod device_capabilities_tests;
 mod external_url_tests;
 mod ohttp_overrides_tests;
+mod restorable_state_tests;
 mod screen_catalog_render_tests;
 mod startup_tests;
 mod system_locale_tests;

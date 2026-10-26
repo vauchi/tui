@@ -4,6 +4,7 @@
 //! Humble terminal session around Core's application reducer.
 
 pub mod capabilities;
+pub mod restorable_state;
 pub mod system_locale;
 pub use capabilities::tui_device_capabilities;
 pub use system_locale::{report_system_locale, system_locale_from};
