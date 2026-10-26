@@ -96,6 +96,7 @@ fn replace_surface(
                 spacing_large: 3,
                 corner_radius: 1,
                 minimum_target_size: 1,
+                colors: crate::ui::test_colors::test_colors(),
             },
             nodes,
         },

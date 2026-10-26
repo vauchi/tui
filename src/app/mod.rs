@@ -100,6 +100,7 @@ impl App {
             } else {
                 MotionPreference::Full
             },
+            color_scheme: None,
         });
     }
 

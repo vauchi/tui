@@ -8,6 +8,10 @@ pub(crate) mod presentation_input;
 pub(crate) mod presentation_protocol;
 pub(crate) mod presentation_renderer;
 pub mod screen_catalog;
+// INLINE_TEST_REQUIRED: the extracted white-box test modules share one
+// theme-colours fixture for the surfaces they build.
+#[cfg(test)]
+pub(crate) mod test_colors;
 
 use ratatui::Frame;
 

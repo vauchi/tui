@@ -58,6 +58,7 @@ pub(super) fn state_with_input() -> PresentationState {
                     spacing_large: 3,
                     corner_radius: 1,
                     minimum_target_size: 1,
+                    colors: crate::ui::test_colors::test_colors(),
                 },
                 nodes: vec![PresentationNode::Input {
                     binding_id: BindingId::new("display-name").unwrap(),
@@ -194,6 +195,7 @@ pub(super) fn state_with_action_list() -> PresentationState {
                 spacing_large: 3,
                 corner_radius: 1,
                 minimum_target_size: 1,
+                colors: crate::ui::test_colors::test_colors(),
             },
             nodes: vec![PresentationNode::List {
                 style: vauchi_core::PresentationListStyle::Rows,
@@ -320,6 +322,7 @@ pub(super) fn state_with_input_and_action_list() -> PresentationState {
                 spacing_large: 3,
                 corner_radius: 1,
                 minimum_target_size: 1,
+                colors: crate::ui::test_colors::test_colors(),
             },
             nodes: vec![
                 PresentationNode::Input {
@@ -401,6 +404,7 @@ fn surface_replacement_clears_a_stale_row_selection() {
                 spacing_large: 3,
                 corner_radius: 1,
                 minimum_target_size: 1,
+                colors: crate::ui::test_colors::test_colors(),
             },
             nodes: vec![PresentationNode::List {
                 style: vauchi_core::PresentationListStyle::Rows,
@@ -602,6 +606,7 @@ fn submitting_after_a_re_render_uses_the_current_input_binding() {
                 spacing_large: 3,
                 corner_radius: 1,
                 minimum_target_size: 1,
+                colors: crate::ui::test_colors::test_colors(),
             },
             nodes: vec![PresentationNode::Input {
                 binding_id: BindingId::new("display-name-v2").unwrap(),
@@ -649,6 +654,7 @@ pub(super) fn state_with_status_chip() -> PresentationState {
                 spacing_large: 3,
                 corner_radius: 1,
                 minimum_target_size: 1,
+                colors: crate::ui::test_colors::test_colors(),
             },
             nodes: vec![
                 PresentationNode::Text {
@@ -811,6 +817,7 @@ pub(super) fn state_with_row_info() -> PresentationState {
                     spacing_large: 3,
                     corner_radius: 1,
                     minimum_target_size: 1,
+                    colors: crate::ui::test_colors::test_colors(),
                 },
                 nodes: vec![PresentationNode::List {
                     style: vauchi_core::PresentationListStyle::Rows,

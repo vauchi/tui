@@ -92,6 +92,7 @@ fn surface_for(id: &str, revision: u64) -> SurfaceSpec {
             spacing_large: 3,
             corner_radius: 1,
             minimum_target_size: 1,
+            colors: crate::ui::test_colors::test_colors(),
         },
         nodes: vec![vauchi_core::PresentationNode::Text {
             id: None,

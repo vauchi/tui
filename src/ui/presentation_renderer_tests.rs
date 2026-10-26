@@ -38,6 +38,7 @@ pub(super) fn titled_surface(id: &str, title: &str) -> SurfaceSpec {
             spacing_large: 3,
             corner_radius: 1,
             minimum_target_size: 1,
+            colors: crate::ui::test_colors::test_colors(),
         },
         nodes: vec![],
     }
@@ -63,6 +64,7 @@ fn renderer_keeps_content_humble_and_contextual_roles_in_one_bottom_strip() {
                     spacing_large: 3,
                     corner_radius: 1,
                     minimum_target_size: 1,
+                    colors: crate::ui::test_colors::test_colors(),
                 },
                 nodes: vec![PresentationNode::Text {
                     id: None,
