@@ -183,7 +183,6 @@ fn main() -> Result<()> {
     let mut app_engine = AppEngine::new(vauchi);
     app_engine.set_device_capabilities(vauchi_tui::app::tui_device_capabilities());
     vauchi_tui::app::report_system_locale(&mut app_engine, |name| std::env::var(name).ok());
-    vauchi_tui::app::restorable_state::hand_back_kept_state(&mut app_engine, &data_dir);
     // CDN languages, themes and social networks: Core runs the update cycle
     // (vauchi/private#733 D10).
     app_engine.start_content_updates(&data_dir, vauchi_app::ui::ContentRunOptions::default());

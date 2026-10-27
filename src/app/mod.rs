@@ -4,7 +4,6 @@
 //! Humble terminal session around Core's application reducer.
 
 pub mod capabilities;
-pub mod restorable_state;
 pub mod system_locale;
 pub use capabilities::tui_device_capabilities;
 pub use system_locale::{report_system_locale, system_locale_from};
@@ -40,6 +39,7 @@ impl App {
         // password state made this shell interpret domain state to pick
         // navigation, which ADR-066 reserves to Core — and required
         // importing `AppScreen`, retired from the shell boundary.
+        app_engine.keep_restorable_state_in(&data_dir);
         app_engine.bootstrap();
         let commands = app_engine
             .initial_commands()
@@ -168,11 +168,6 @@ impl App {
                 }
             }
             Command::ResetApplication => self.should_quit = true,
-            Command::SaveRestorableState { state } => {
-                // Best effort: until a value comes back Core keeps the pick
-                // in the vault, so a failed write loses nothing.
-                let _ = restorable_state::keep_state(&self.data_dir, &state);
-            }
             other => self.presentation_effects.push_back(other),
         }
     }
