@@ -20,6 +20,10 @@ struct PresentationContractFixture {
     initial_commands: Vec<Command>,
     steps: Vec<PresentationContractStep>,
     expected_state: ExpectedPresentationState,
+    /// Core's opt-in correlated file picker; this shell answers the plain
+    /// `FilePickFromUser` and does not opt in (vauchi/private#764).
+    #[serde(rename = "file_picker_contract")]
+    _file_picker_contract: serde::de::IgnoredAny,
 }
 
 #[derive(Deserialize)]

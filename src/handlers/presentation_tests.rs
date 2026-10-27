@@ -90,6 +90,7 @@ fn file_pick() -> Command {
     Command::FilePickFromUser {
         accepted_mime_types: Vec::new(),
         accepted_extensions: Vec::new(),
+        max_bytes: None,
         purpose: vauchi_core::FilePickPurpose::ImportContacts,
     }
 }
