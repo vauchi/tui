@@ -201,3 +201,24 @@ fn a_set_quit_flag_ends_the_loop_on_the_next_key() {
 
     assert!(matches!(action, Action::Quit));
 }
+
+// @internal
+#[test]
+fn a_command_the_terminal_cannot_run_does_not_hold_back_the_scan_request_after_it() {
+    let mut app = fresh_app();
+    app.apply_presentation_commands(vec![
+        Command::QrDisplay {
+            data: "peer-code".into(),
+        },
+        Command::BleStartScanning {
+            service_uuid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890".into(),
+        },
+        Command::QrRequestScan,
+    ]);
+    type_text(&mut app, "not-a-vauchi-code");
+
+    handle_presentation_key(&mut app, key(KeyCode::Enter));
+
+    assert!(app.presentation_effects.is_empty());
+    assert_eq!(app.input_buffer, "");
+}
