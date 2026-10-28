@@ -168,7 +168,13 @@ impl App {
                 }
             }
             Command::ResetApplication => self.should_quit = true,
-            other => self.presentation_effects.push_back(other),
+            request if awaits_terminal_input(&request) => {
+                self.presentation_effects.push_back(request);
+            }
+            // Core gets no answer, as before: which commands want one, and
+            // under which transport name, is decided with terminal hardware
+            // (vauchi/private#770). Queued, they blocked every request behind.
+            _ => {}
         }
     }
 
@@ -180,6 +186,18 @@ impl App {
         self.status_message = Some(message.into());
         self.status_message_time = Some(now);
     }
+}
+
+/// The requests a terminal answers from what the user types.
+pub(crate) fn awaits_terminal_input(command: &Command) -> bool {
+    matches!(
+        command,
+        Command::FilePickFromUser { .. }
+            | Command::QrRequestScan
+            | Command::ImagePickFromFile
+            | Command::ImagePickFromLibrary
+            | Command::ImageCaptureFromCamera
+    )
 }
 
 // INLINE_TEST_REQUIRED: bootstrap tests inspect the App's private presentation

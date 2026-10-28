@@ -46,14 +46,7 @@ pub fn handle_presentation_key(app: &mut App, key: KeyEvent) -> Action {
 
 fn handle_interactive_effect(app: &mut App, key: KeyEvent) -> Option<Action> {
     let effect = app.presentation_effects.front()?.clone();
-    if !matches!(
-        effect,
-        Command::FilePickFromUser { .. }
-            | Command::QrRequestScan
-            | Command::ImagePickFromFile
-            | Command::ImagePickFromLibrary
-            | Command::ImageCaptureFromCamera
-    ) {
+    if !crate::app::awaits_terminal_input(&effect) {
         return None;
     }
 
