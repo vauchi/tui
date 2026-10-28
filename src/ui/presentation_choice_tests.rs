@@ -184,6 +184,7 @@ fn an_unset_choice_renders_a_placeholder() {
 }
 
 // @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+// @scenario: accessibility :: TUI is fully keyboard navigable
 #[test]
 fn a_selected_choice_is_highlighted_with_its_key_hint() {
     let state = state_with(vec![choice("theme", "Theme", Some("dark"))]);

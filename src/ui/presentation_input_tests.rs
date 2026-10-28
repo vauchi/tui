@@ -146,6 +146,7 @@ fn keyboard_shortcuts_resolve_only_core_minted_context_actions() {
 }
 
 // @scenario: generic_presentation_protocol.feature :: Overlay kinds remain distinct with reduced motion
+// @scenario: accessibility :: Keyboard shortcuts for common actions
 #[test]
 fn escape_dismisses_each_overlay_by_kind_through_core() {
     for kind in [OverlayKind::Navigation, OverlayKind::ActionMenu] {

@@ -125,7 +125,7 @@ fn state_with_overlay(items: &[&str]) -> PresentationState {
     state
 }
 
-// @internal
+// @scenario: accessibility :: TUI is fully keyboard navigable
 #[test]
 fn overlay_navigation_wraps_in_both_directions() {
     let state = state_with_overlay(&["a", "b", "c"]);
@@ -170,7 +170,7 @@ fn overlay_without_items_consumes_navigation_without_panicking() {
     assert_eq!(interaction.selected_overlay(), 0);
 }
 
-// @internal
+// @scenario: accessibility :: TUI is fully keyboard navigable
 #[test]
 fn enter_activates_the_highlighted_overlay_item() {
     let state = state_with_overlay(&["a", "b", "c"]);
