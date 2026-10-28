@@ -359,7 +359,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
 
     let mut current = surface(1);
     let row = PresentationRow {
-        title: "Delivery Receipts".into(),
+        title: "Card Updates".into(),
         subtitle: None,
         detail: None,
         icon_token: None,
@@ -370,13 +370,13 @@ fn activating_a_control_row_reports_the_flipped_value() {
         activation: None,
         secondary_actions: Vec::new(),
         controls: vec![PresentationNode::Toggle {
-            binding_id: vauchi_core::BindingId::new("settings.delivery_receipts").unwrap(),
+            binding_id: vauchi_core::BindingId::new("settings.card_updates").unwrap(),
             label: String::new(),
             value: true,
             enabled: true,
-            accessibility: AccessibilitySpec::label("Delivery Receipts"),
+            accessibility: AccessibilitySpec::label("Card Updates"),
         }],
-        accessibility: AccessibilitySpec::label("Delivery Receipts"),
+        accessibility: AccessibilitySpec::label("Card Updates"),
         info: None,
     };
     current.nodes = vec![PresentationNode::List {
@@ -403,7 +403,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
         "activating a row whose control is the operable thing must report a \
          value change, not an action",
     );
-    assert_eq!(binding_id.as_str(), "settings.delivery_receipts");
+    assert_eq!(binding_id.as_str(), "settings.card_updates");
     assert_eq!(
         value,
         InputValue::Boolean(false),

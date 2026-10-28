@@ -355,7 +355,7 @@ fn a_locked_app_paints_no_navigation_affordance() {
 fn toggle_row(title: &str, on: bool) -> PresentationRow {
     let mut row = row(title, None);
     row.controls = vec![PresentationNode::Toggle {
-        binding_id: vauchi_core::BindingId::new("settings.delivery_receipts").unwrap(),
+        binding_id: vauchi_core::BindingId::new("settings.card_updates").unwrap(),
         label: String::new(),
         value: on,
         enabled: true,
@@ -372,7 +372,7 @@ fn a_row_control_renders_its_state() {
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
-        rows: vec![toggle_row("Delivery Receipts", true)],
+        rows: vec![toggle_row("Card Updates", true)],
         searchable: false,
         paging: None,
         accessibility: AccessibilitySpec::label("Privacy"),
@@ -394,7 +394,7 @@ fn a_row_control_renders_its_state() {
         .collect::<String>();
 
     assert!(
-        rendered.contains("[x] Delivery Receipts"),
+        rendered.contains("[x] Card Updates"),
         "a row's toggle state must be visible — the row title names the \
          setting and Core sends the control unlabelled: {rendered:?}"
     );
@@ -408,7 +408,7 @@ fn a_row_carrying_a_control_can_be_selected() {
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
-        rows: vec![toggle_row("Delivery Receipts", false)],
+        rows: vec![toggle_row("Card Updates", false)],
         searchable: false,
         paging: None,
         accessibility: AccessibilitySpec::label("Privacy"),
@@ -424,9 +424,7 @@ fn a_row_carrying_a_control_can_be_selected() {
 
     let highlighted = highlighted_lines(terminal.backend().buffer());
     assert!(
-        highlighted
-            .iter()
-            .any(|line| line.contains("Delivery Receipts")),
+        highlighted.iter().any(|line| line.contains("Card Updates")),
         "a row whose control is the operable thing must take a selection \
          index, or the keyboard can never reach it: {highlighted:?}"
     );
