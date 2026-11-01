@@ -206,15 +206,15 @@ test:screen-catalog:
   script:
     - mkdir -p build/screen-catalog
     - |
-      fetch_core_fixture() {
+      fetch_contract_fixture() {
         curl -fsSL -u "gitlab-ci-token:${CI_JOB_TOKEN}" \
-          "${CI_API_V4_URL}/projects/vauchi%2Fcore/repository/files/vauchi-app%2Ffixtures%2F$1/raw?ref=main" \
+          "${CI_API_V4_URL}/projects/vauchi%2Fcontract/repository/files/fixtures%2F$1/raw?ref=main" \
           -o "$2"
       }
-      if fetch_core_fixture screen_catalog_v1.json build/screen_catalog_v1.json; then
-        echo "[screen-catalog] source: core main vauchi-app/fixtures/screen_catalog_v1.json"
-      elif fetch_core_fixture presentation_contract_v1.json build/presentation_contract_v1.json; then
-        echo "[screen-catalog] source: core main vauchi-app/fixtures/presentation_contract_v1.json (converted: screen_catalog_v1.json is not on core main yet)"
+      if fetch_contract_fixture screen_catalog_v1.json build/screen_catalog_v1.json; then
+        echo "[screen-catalog] source: contract main fixtures/screen_catalog_v1.json (ADR-078)"
+      elif fetch_contract_fixture presentation_contract_v1.json build/presentation_contract_v1.json; then
+        echo "[screen-catalog] source: contract main fixtures/presentation_contract_v1.json (converted: screen_catalog_v1.json unreadable)"
         python3 - <<'PY'
       import json
       contract = json.load(open("build/presentation_contract_v1.json"))
@@ -229,7 +229,7 @@ test:screen-catalog:
       print(f"[screen-catalog] converted {len(screens)} contract batch(es)")
       PY
       else
-        echo "[screen-catalog] source: tests/it/fixtures/screen_catalog_two_entries.json (Core fixtures unreachable with the job token)"
+        echo "[screen-catalog] source: tests/it/fixtures/screen_catalog_two_entries.json (contract fixtures unreachable with the job token)"
         cp tests/it/fixtures/screen_catalog_two_entries.json build/screen_catalog_v1.json
       fi
     - cargo run --locked -- --render-catalog build/screen_catalog_v1.json build/screen-catalog/snap 100 40
