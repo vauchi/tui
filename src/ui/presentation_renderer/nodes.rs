@@ -217,7 +217,6 @@ pub(super) fn append_node_lines(
                 .unwrap_or_default()
         ))),
         PresentationNode::Divider => lines.push(Line::from(format!("{indent}────────"))),
-        _ => {}
     }
     remaining
 }

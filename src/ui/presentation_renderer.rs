@@ -242,7 +242,6 @@ fn draw_overlay(frame: &mut Frame, area: Rect, state: &PresentationState, select
         OverlayKind::Navigation => ("Navigate", BorderType::Double),
         OverlayKind::ActionMenu => ("Actions", BorderType::Rounded),
         OverlayKind::Information => ("Info", BorderType::Rounded),
-        _ => ("Commands", BorderType::Plain),
     };
     // Text to read (vauchi/private#479) wraps; items to pick are numbered.
     let mut lines = match overlay.body.as_deref().filter(|_| overlay.items.is_empty()) {
