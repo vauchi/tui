@@ -39,6 +39,7 @@ pub(super) fn titled_surface(id: &str, title: &str) -> SurfaceSpec {
             corner_radius: 1,
             minimum_target_size: 1,
             colors: crate::ui::test_colors::test_colors(),
+            fonts: None,
         },
         nodes: vec![],
     }
@@ -65,6 +66,7 @@ fn renderer_keeps_content_humble_and_contextual_roles_in_one_bottom_strip() {
                     corner_radius: 1,
                     minimum_target_size: 1,
                     colors: crate::ui::test_colors::test_colors(),
+                    fonts: None,
                 },
                 nodes: vec![PresentationNode::Text {
                     id: None,

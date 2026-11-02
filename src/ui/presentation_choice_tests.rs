@@ -83,6 +83,7 @@ fn state_with(nodes: Vec<PresentationNode>) -> PresentationState {
                 corner_radius: 1,
                 minimum_target_size: 1,
                 colors: crate::ui::test_colors::test_colors(),
+                fonts: None,
             },
             nodes,
         },
