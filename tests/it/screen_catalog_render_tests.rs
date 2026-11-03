@@ -138,6 +138,45 @@ fn run_cli_renders_at_the_default_or_requested_size() {
 
 // @internal
 #[test]
+fn run_cli_rejects_catalogs_with_undecodable_commands() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("catalog.json");
+    let output = temp.path().join("rendered");
+    let mut catalog: serde_json::Value = serde_json::from_str(TWO_ENTRY_CATALOG).unwrap();
+    catalog["screens"][0]["commands"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({"NotACommandYet": {}}));
+    fs::write(&input, serde_json::to_vec(&catalog).unwrap()).unwrap();
+
+    let error = run_cli(&[
+        input.to_str().unwrap().into(),
+        output.to_str().unwrap().into(),
+    ])
+    .unwrap_err()
+    .to_string();
+
+    assert!(error.contains("undecodable command"), "{error}");
+    assert!(error.contains("NotACommandYet"), "{error}");
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(output.join("manifest.json")).unwrap()).unwrap();
+    assert_eq!(
+        manifest["screens"][0]["skipped_commands"][0],
+        "NotACommandYet"
+    );
+
+    let process = std::process::Command::new(env!("CARGO_BIN_EXE_vauchi-tui"))
+        .arg("--render-catalog")
+        .arg(&input)
+        .arg(temp.path().join("cli-rendered"))
+        .output()
+        .unwrap();
+    assert_eq!(process.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&process.stderr).contains("NotACommandYet"));
+}
+
+// @internal
+#[test]
 fn run_cli_rejects_wrong_argument_counts_and_bad_sizes() {
     let fixture: String = concat!(
         env!("CARGO_MANIFEST_DIR"),

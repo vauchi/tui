@@ -190,8 +190,8 @@ pub fn run_cli(args: &[String]) -> Result<()> {
         .collect();
     if !skipped.is_empty() {
         let skipped: Vec<&str> = skipped.into_iter().collect();
-        eprintln!(
-            "[screen-catalog] skipped command variants the pinned vauchi-core cannot decode: {}",
+        bail!(
+            "screen catalog contains undecodable command variants: {}",
             skipped.join(", ")
         );
     }
