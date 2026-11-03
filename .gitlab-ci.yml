@@ -184,9 +184,8 @@ test:vrt:
 # Screen catalog: replay Core's screen catalog (every app screen as one
 # Command batch, no navigation script) through the real terminal renderer
 # and rasterize the frames to PNG, so a presentation change in Core shows
-# up on every TUI pipeline. The catalog is read from Core main; until it
-# lands there the contract fixture's batches stand in, and the committed
-# two-entry fixture is the last resort. Advisory like test:vrt. A command
+# up on every TUI pipeline. The full catalog comes from the contract
+# revision in Cargo.lock; its revision and hash accompany the artifacts. A command
 # variant the pinned vauchi-core cannot decode is skipped and named in the
 # job log and in build/screen-catalog/snap/manifest.json — that is a Core
 # pin skew to fix with a bump, not a render failure.
@@ -196,7 +195,7 @@ test:screen-catalog:
   needs:
     - job: lint:format
       optional: true
-  allow_failure: true
+  allow_failure: false
   before_script:
     - !reference [.self-hosted, before_script]
     - !reference [.git-credentials, before_script]
@@ -206,32 +205,12 @@ test:screen-catalog:
   script:
     - mkdir -p build/screen-catalog
     - |
-      fetch_contract_fixture() {
-        curl -fsSL -u "gitlab-ci-token:${CI_JOB_TOKEN}" \
-          "${CI_API_V4_URL}/projects/vauchi%2Fcontract/repository/files/fixtures%2F$1/raw?ref=main" \
-          -o "$2"
-      }
-      if fetch_contract_fixture screen_catalog_v1.json build/screen_catalog_v1.json; then
-        echo "[screen-catalog] source: contract main fixtures/screen_catalog_v1.json (ADR-078)"
-      elif fetch_contract_fixture presentation_contract_v1.json build/presentation_contract_v1.json; then
-        echo "[screen-catalog] source: contract main fixtures/presentation_contract_v1.json (converted: screen_catalog_v1.json unreadable)"
-        python3 - <<'PY'
-      import json
-      contract = json.load(open("build/presentation_contract_v1.json"))
-      batches = [("initial", contract["initial_commands"])]
-      batches += [(f"step-{i}", step["commands"]) for i, step in enumerate(contract["steps"], 1)]
-      screens = []
-      for code_id, commands in batches:
-          surfaces = [c["ReplaceSurface"]["surface"] for c in commands if "ReplaceSurface" in c]
-          title = surfaces[-1]["title"] if surfaces else code_id
-          screens.append({"code_id": code_id, "title": title, "locale": "en", "commands": commands})
-      json.dump({"schema_version": 1, "screens": screens}, open("build/screen_catalog_v1.json", "w"))
-      print(f"[screen-catalog] converted {len(screens)} contract batch(es)")
-      PY
-      else
-        echo "[screen-catalog] source: tests/it/fixtures/screen_catalog_two_entries.json (contract fixtures unreachable with the job token)"
-        cp tests/it/fixtures/screen_catalog_two_entries.json build/screen_catalog_v1.json
-      fi
+      mkdir -p build
+      curl --fail-with-body --silent --show-error \
+        --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        "${CI_API_V4_URL}/projects/vauchi%2Fcontract/repository/files/ci%2Ffetch-screen-catalog.py/raw?ref=5c8409f776e60bc6d0748d46a3a4c93c08516a9d" \
+        -o build/fetch-screen-catalog.py
+      python3 build/fetch-screen-catalog.py build/screen_catalog_v1.json
     - cargo run --locked -- --render-catalog build/screen_catalog_v1.json build/screen-catalog/snap 100 40
     - |
       # Same pinned Pillow + DejaVu Sans Mono as test:vrt, so both jobs'
@@ -251,6 +230,8 @@ test:screen-catalog:
   artifacts:
     when: always
     paths:
+      - build/screen_catalog_v1.json
+      - build/screen_catalog_v1.provenance.json
       - build/screen-catalog/
     expire_in: 1 week
   after_script:
