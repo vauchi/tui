@@ -422,7 +422,7 @@ check:design-drift:
   extends: .design-drift-job
   variables:
     DESIGN_DRIFT_MATCH_MODE: "grep"
-    DESIGN_DRIFT_GREP_FILE: "src/ui/presentation_renderer"
+    DESIGN_DRIFT_GREP_FILE: "tui-display/src/ui/presentation_renderer"
     DESIGN_DRIFT_PROTOCOL: "presentation"
     CORE_REF: "main"
   rules:
@@ -689,7 +689,7 @@ check:parser-parity:
   extends: .parser-parity-job
   variables:
     FRONTEND_NAME: "tui"
-    PARSER_FILE: "src/ui/presentation_renderer"
+    PARSER_FILE: "tui-display/src/ui/presentation_renderer"
     PARSER_PROTOCOL: "presentation"
     PARSER_SCRIPT_REF: "ci-templates-v2026.11.06"
     # The Core this repository pins, not Core main: since the contract
@@ -726,7 +726,7 @@ check:shell-command-conformance:
   needs: []
   variables:
     PICTOGRAM_FORMAT: "terminal"
-    PICTOGRAM_COPIES: "assets/pictograms/exchange-terminal.json"
+    PICTOGRAM_COPIES: "tui-display/assets/pictograms/exchange-terminal.json"
   before_script:
     - apk add --no-cache python3 git
     - git clone --quiet https://gitlab.com/vauchi/assets.git /tmp/assets
