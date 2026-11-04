@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 
 const EXCHANGE_TABLE: &str = include_str!("../../assets/pictograms/exchange-terminal.json");
 
-pub(crate) fn glyph(icon_token: Option<&str>) -> Option<&'static str> {
+pub fn glyph(icon_token: Option<&str>) -> Option<&'static str> {
     static TABLE: OnceLock<HashMap<String, String>> = OnceLock::new();
     let table = TABLE.get_or_init(|| serde_json::from_str(EXCHANGE_TABLE).unwrap_or_default());
     table.get(icon_token?).map(String::as_str)

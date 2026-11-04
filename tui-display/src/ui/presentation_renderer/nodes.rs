@@ -5,7 +5,7 @@ use crate::ui::presentation_protocol::{
     ChoiceTarget, choice_target, row_is_addressable, row_toggle,
 };
 use ratatui::prelude::*;
-use vauchi_core::{PresentationInputKind, PresentationNode};
+use vauchi_contract::{PresentationInputKind, PresentationNode};
 
 pub(super) fn append_node_lines(
     node: &PresentationNode,
@@ -197,7 +197,7 @@ pub(super) fn append_node_lines(
             // payloads are printed for transcription; e2e/src/device/tui.rs
             // parses this line. Exposure is tracked in
             // backlog/2026-08-05-tui-qr-payload-rendered-plaintext.
-            if *purpose == vauchi_core::PresentationQrPurpose::Display
+            if *purpose == vauchi_contract::PresentationQrPurpose::Display
                 && let Some(payload) = payloads.first()
             {
                 lines.push(Line::from(format!("{indent}  {payload}")));

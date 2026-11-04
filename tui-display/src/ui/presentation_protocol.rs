@@ -5,13 +5,13 @@
 
 use std::collections::HashMap;
 
-use vauchi_core::{
+use vauchi_contract::{
     ActionSpec, Command, ContextBar, Event, NavigationSpec, OverlaySpec, PaneLayout,
     PresentationProfile, SurfaceId, SurfaceSpec,
 };
 
 #[derive(Default)]
-pub(crate) struct PresentationState {
+pub struct PresentationState {
     surfaces: HashMap<SurfaceId, SurfaceSpec>,
     context_bars: HashMap<SurfaceId, (u64, ContextBar)>,
     navigations: HashMap<SurfaceId, (u64, NavigationSpec)>,
@@ -22,7 +22,7 @@ pub(crate) struct PresentationState {
 }
 
 impl PresentationState {
-    pub(crate) fn apply(&mut self, commands: &[Command]) -> Vec<Command> {
+    pub fn apply(&mut self, commands: &[Command]) -> Vec<Command> {
         let mut effects = Vec::new();
         for command in commands {
             match command {
@@ -78,12 +78,12 @@ impl PresentationState {
         effects
     }
 
-    pub(crate) fn surface(&self) -> Option<&SurfaceSpec> {
+    pub fn surface(&self) -> Option<&SurfaceSpec> {
         self.active_surface_id()
             .and_then(|surface_id| self.surfaces.get(surface_id))
     }
 
-    pub(crate) fn visible_surfaces(&self) -> Vec<&SurfaceSpec> {
+    pub fn visible_surfaces(&self) -> Vec<&SurfaceSpec> {
         let Some(profile) = &self.profile else {
             return self.surface().into_iter().collect();
         };
@@ -103,14 +103,11 @@ impl PresentationState {
         }
     }
 
-    // INLINE_TEST_REQUIRED: reducer invariants need visibility into retained
-    // surfaces and Core-derived profile state without widening production APIs.
-    #[cfg(test)]
-    pub(crate) fn retained_surface_count(&self) -> usize {
+    pub fn retained_surface_count(&self) -> usize {
         self.surfaces.len()
     }
 
-    pub(crate) fn context_bar(&self) -> Option<&ContextBar> {
+    pub fn context_bar(&self) -> Option<&ContextBar> {
         self.active_surface_id()
             .and_then(|surface_id| self.context_bars.get(surface_id))
             .map(|(_, bar)| bar)
@@ -120,29 +117,27 @@ impl PresentationState {
     /// Consumed so the contract fixture stays clean; the terminal still
     /// reaches destinations through the Alt+M overlay, as the command's
     /// contract allows, until a bar renders it.
-    #[cfg(test)]
-    pub(crate) fn navigation(&self) -> Option<&NavigationSpec> {
+    pub fn navigation(&self) -> Option<&NavigationSpec> {
         self.active_surface_id()
             .and_then(|surface_id| self.navigations.get(surface_id))
             .map(|(_, navigation)| navigation)
     }
 
-    pub(crate) fn overlay(&self) -> Option<&OverlaySpec> {
+    pub fn overlay(&self) -> Option<&OverlaySpec> {
         self.active_surface_id()
             .and_then(|surface_id| self.overlays.get(surface_id))
             .map(|(_, overlay)| overlay)
     }
 
-    #[cfg(test)]
-    pub(crate) fn profile(&self) -> Option<&PresentationProfile> {
+    pub fn profile(&self) -> Option<&PresentationProfile> {
         self.profile.as_ref()
     }
 
-    pub(crate) fn native_back_requested(&self) -> bool {
+    pub fn native_back_requested(&self) -> bool {
         self.native_back_requested
     }
 
-    pub(crate) fn context_actions(&self) -> Vec<&ActionSpec> {
+    pub fn context_actions(&self) -> Vec<&ActionSpec> {
         let Some(bar) = self.context_bar() else {
             return Vec::new();
         };
@@ -161,17 +156,16 @@ impl PresentationState {
     /// The first activatable `Status` node on the active surface — the
     /// sync chrome chip every other shell taps. Nothing else in the key map
     /// reaches a status node, so this is the terminal's only way to it.
-    pub(crate) fn status_activation(&self) -> Option<&ActionSpec> {
+    pub fn status_activation(&self) -> Option<&ActionSpec> {
         let surface = self.surface()?;
         first_status_activation(&surface.nodes)
     }
 
-    #[cfg(test)]
-    pub(crate) fn activate_context(&self, index: usize) -> Vec<Event> {
+    pub fn activate_context(&self, index: usize) -> Vec<Event> {
         self.activation_events(self.context_actions().get(index).copied())
     }
 
-    pub(crate) fn activate_overlay(&self, index: usize) -> Vec<Event> {
+    pub fn activate_overlay(&self, index: usize) -> Vec<Event> {
         let action = self.overlay().and_then(|overlay| overlay.items.get(index));
         self.activation_events(action)
     }
@@ -179,7 +173,7 @@ impl PresentationState {
     /// Everything on the active surface the row keys can land on — list
     /// rows and choices — in the order the renderer paints them, so the
     /// highlight and the keys agree on which thing is next.
-    pub(crate) fn surface_targets(&self) -> Vec<SurfaceTarget<'_>> {
+    pub fn surface_targets(&self) -> Vec<SurfaceTarget<'_>> {
         let Some(surface) = self.surface() else {
             return Vec::new();
         };
@@ -195,7 +189,7 @@ impl PresentationState {
     /// toggle with no activation of its own, so there is no interaction id
     /// to send and nothing would happen if we sent one. A choice has no
     /// activation either; Enter steps it to its next option.
-    pub(crate) fn activate_surface_target(&self, index: usize) -> Vec<Event> {
+    pub fn activate_surface_target(&self, index: usize) -> Vec<Event> {
         let targets = self.surface_targets();
         match targets.get(index) {
             Some(SurfaceTarget::Choice(choice)) => {
@@ -203,7 +197,7 @@ impl PresentationState {
             }
             Some(SurfaceTarget::Row(row)) => match row_toggle(row) {
                 Some((binding_id, value)) => {
-                    self.value_events(binding_id, vauchi_core::InputValue::Boolean(!value))
+                    self.value_events(binding_id, vauchi_contract::InputValue::Boolean(!value))
                 }
                 None => self.activation_events(row.activation.as_ref()),
             },
@@ -214,7 +208,7 @@ impl PresentationState {
     /// Move the choice at `index` one option along; empty when the target
     /// is not a choice, so the arrows can fall through to whatever else
     /// wants them.
-    pub(crate) fn step_surface_choice(&self, index: usize, step: ChoiceStep) -> Vec<Event> {
+    pub fn step_surface_choice(&self, index: usize, step: ChoiceStep) -> Vec<Event> {
         let targets = self.surface_targets();
         let Some(SurfaceTarget::Choice(choice)) = targets.get(index) else {
             return Vec::new();
@@ -224,8 +218,8 @@ impl PresentationState {
 
     fn value_events(
         &self,
-        binding_id: vauchi_core::BindingId,
-        value: vauchi_core::InputValue,
+        binding_id: vauchi_contract::BindingId,
+        value: vauchi_contract::InputValue,
     ) -> Vec<Event> {
         let Some(surface_id) = self.active_surface_id() else {
             return Vec::new();
@@ -242,7 +236,7 @@ impl PresentationState {
         ]
     }
 
-    pub(crate) fn activation_events(&self, action: Option<&ActionSpec>) -> Vec<Event> {
+    pub fn activation_events(&self, action: Option<&ActionSpec>) -> Vec<Event> {
         let (Some(action), Some(surface_id)) = (action, self.active_surface_id()) else {
             return Vec::new();
         };
@@ -290,8 +284,8 @@ impl PresentationState {
     }
 }
 
-fn first_status_activation(nodes: &[vauchi_core::PresentationNode]) -> Option<&ActionSpec> {
-    use vauchi_core::PresentationNode;
+fn first_status_activation(nodes: &[vauchi_contract::PresentationNode]) -> Option<&ActionSpec> {
+    use vauchi_contract::PresentationNode;
     nodes.iter().find_map(|node| match node {
         PresentationNode::Status {
             activation: Some(action),
@@ -302,20 +296,20 @@ fn first_status_activation(nodes: &[vauchi_core::PresentationNode]) -> Option<&A
     })
 }
 
-pub(crate) enum SurfaceTarget<'a> {
-    Row(&'a vauchi_core::PresentationRow),
+pub enum SurfaceTarget<'a> {
+    Row(&'a vauchi_contract::PresentationRow),
     Choice(ChoiceTarget<'a>),
 }
 
 /// An enabled choice with something to pick from.
-pub(crate) struct ChoiceTarget<'a> {
-    pub(crate) binding_id: &'a vauchi_core::BindingId,
-    pub(crate) selected: Option<&'a str>,
-    pub(crate) options: &'a [vauchi_core::ChoiceOption],
+pub struct ChoiceTarget<'a> {
+    pub binding_id: &'a vauchi_contract::BindingId,
+    pub selected: Option<&'a str>,
+    pub options: &'a [vauchi_contract::ChoiceOption],
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ChoiceStep {
+pub enum ChoiceStep {
     Previous,
     Next,
 }
@@ -324,7 +318,7 @@ impl ChoiceTarget<'_> {
     /// The option one step from the current selection, wrapping at both
     /// ends. With nothing selected, Next lands on the first option and
     /// Previous on the last — the ends nearest each key.
-    fn stepped(&self, step: ChoiceStep) -> vauchi_core::InputValue {
+    fn stepped(&self, step: ChoiceStep) -> vauchi_contract::InputValue {
         let count = self.options.len();
         let current = self
             .selected
@@ -335,7 +329,7 @@ impl ChoiceTarget<'_> {
             (ChoiceStep::Previous, Some(current)) => current.checked_sub(1).unwrap_or(count - 1),
             (ChoiceStep::Previous, None) => count - 1,
         };
-        vauchi_core::InputValue::Choice(Some(self.options[index].id.clone()))
+        vauchi_contract::InputValue::Choice(Some(self.options[index].id.clone()))
     }
 }
 
@@ -343,9 +337,9 @@ impl ChoiceTarget<'_> {
 ///
 /// Shared by the renderer and the input path so the line the highlight
 /// lands on is exactly the choice the arrows step.
-pub(crate) fn choice_target(node: &vauchi_core::PresentationNode) -> Option<ChoiceTarget<'_>> {
+pub fn choice_target(node: &vauchi_contract::PresentationNode) -> Option<ChoiceTarget<'_>> {
     match node {
-        vauchi_core::PresentationNode::Choice {
+        vauchi_contract::PresentationNode::Choice {
             binding_id,
             selected,
             options,
@@ -361,10 +355,10 @@ pub(crate) fn choice_target(node: &vauchi_core::PresentationNode) -> Option<Choi
 }
 
 fn collect_targets<'a>(
-    nodes: &'a [vauchi_core::PresentationNode],
+    nodes: &'a [vauchi_contract::PresentationNode],
     targets: &mut Vec<SurfaceTarget<'a>>,
 ) {
-    use vauchi_core::PresentationNode;
+    use vauchi_contract::PresentationNode;
     for node in nodes {
         match node {
             PresentationNode::List { rows, .. } => {
@@ -384,11 +378,11 @@ fn collect_targets<'a>(
 ///
 /// Shared by the renderer and the input path so the row the highlight lands
 /// on is exactly the row Enter operates.
-pub(crate) fn row_toggle(
-    row: &vauchi_core::PresentationRow,
-) -> Option<(vauchi_core::BindingId, bool)> {
+pub fn row_toggle(
+    row: &vauchi_contract::PresentationRow,
+) -> Option<(vauchi_contract::BindingId, bool)> {
     row.controls.iter().find_map(|control| match control {
-        vauchi_core::PresentationNode::Toggle {
+        vauchi_contract::PresentationNode::Toggle {
             binding_id,
             value,
             enabled,
@@ -399,6 +393,6 @@ pub(crate) fn row_toggle(
 }
 
 /// Whether the keyboard can reach this row at all.
-pub(crate) fn row_is_addressable(row: &vauchi_core::PresentationRow) -> bool {
+pub fn row_is_addressable(row: &vauchi_contract::PresentationRow) -> bool {
     row.activation.is_some() || row_toggle(row).is_some()
 }

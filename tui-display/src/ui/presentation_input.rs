@@ -4,14 +4,14 @@
 //! Keyboard-to-event adapter for Core's generic presentation protocol.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use vauchi_core::{
+use vauchi_contract::{
     ActionSpec, BindingId, Event, InputValue, PresentationNode, StandardShortcut, SurfaceId,
 };
 
 use super::presentation_protocol::{ChoiceStep, PresentationState, SurfaceTarget};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct InteractionState {
+pub struct InteractionState {
     context_index: usize,
     overlay_index: usize,
     /// Selected row and the surface it belongs to, so navigating away cannot
@@ -21,7 +21,7 @@ pub(crate) struct InteractionState {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum KeyOutcome {
+pub enum KeyOutcome {
     Events(Vec<Event>),
     Consumed,
     Quit,
@@ -35,7 +35,7 @@ pub(crate) enum KeyOutcome {
 const PAGE_ROWS: usize = 10;
 
 impl InteractionState {
-    pub(crate) fn key_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> KeyOutcome {
+    pub fn key_outcome(&mut self, state: &PresentationState, key: KeyEvent) -> KeyOutcome {
         if let Some(outcome) = self.overlay_outcome(state, key) {
             return outcome;
         }
@@ -96,15 +96,15 @@ impl InteractionState {
             .unwrap_or(KeyOutcome::Consumed)
     }
 
-    pub(crate) fn selected_context(&self) -> usize {
+    pub fn selected_context(&self) -> usize {
         self.context_index
     }
 
-    pub(crate) fn selected_overlay(&self) -> usize {
+    pub fn selected_overlay(&self) -> usize {
         self.overlay_index
     }
 
-    pub(crate) fn selected_surface_target(&self, state: &PresentationState) -> Option<usize> {
+    pub fn selected_surface_target(&self, state: &PresentationState) -> Option<usize> {
         let (owner, index) = self.surface_row.as_ref()?;
         let surface = state.surface()?;
         (surface.surface_id == *owner && *index < state.surface_targets().len()).then_some(*index)

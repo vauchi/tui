@@ -2900,6 +2900,17 @@ dependencies = [
  "tempfile",
  "vauchi-app",
  "vauchi-core",
+ "vauchi-tui-display",
+]
+
+[[package]]
+name = "vauchi-tui-display"
+version = "0.1.0"
+dependencies = [
+ "crossterm",
+ "ratatui",
+ "serde_json",
+ "vauchi-contract",
 ]
 
 [[package]]

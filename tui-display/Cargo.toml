@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+[package]
+name = "vauchi-tui-display"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Terminal display shell for the Vauchi presentation contract"
+
+[dependencies]
+vauchi-contract = { git = "https://gitlab.com/vauchi/contract.git", tag = "v0.97.0", version = "=0.97.0" }
+ratatui = "0.28"
+crossterm = "0.28"
+serde_json = "1.0"

@@ -3,9 +3,8 @@
 
 //! Generic terminal projection of Core presentation commands.
 
-pub(crate) mod pictogram_glyphs;
-pub(crate) mod presentation_input;
-pub(crate) mod presentation_protocol;
+pub(crate) use vauchi_tui_display::ui::presentation_input;
+pub(crate) use vauchi_tui_display::ui::presentation_protocol;
 pub(crate) mod presentation_renderer;
 pub mod screen_catalog;
 // INLINE_TEST_REQUIRED: the extracted white-box test modules share one
