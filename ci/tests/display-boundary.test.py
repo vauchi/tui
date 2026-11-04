@@ -42,6 +42,17 @@ class DisplayBoundaryTest(unittest.TestCase):
             CHECK(data)
 
     # @internal — Cargo resolves renamed dependencies to package IDs.
+    def test_build_and_dev_runtime_packages_are_rejected_too(self):
+        for kind in ["build", "dev"]:
+            with self.subTest(kind=kind):
+                data = graph(("vauchi-core",))
+                root = data["resolve"]["nodes"][0]
+                root["dependencies"].append("vauchi-core")
+                root["deps"] = [{"name": "core", "pkg": "vauchi-core", "dep_kinds": [{"kind": kind, "target": None}]}]
+                with self.assertRaisesRegex(ValueError, "vauchi-core"):
+                    CHECK(data)
+
+    # @internal — Cargo resolves renamed dependencies to package IDs.
     def test_renamed_dependency_is_checked_by_its_package_name(self):
         data = graph(("registry+example#runtime-alias@1.0.0",))
         data["packages"][-1]["name"] = "vauchi-core"
