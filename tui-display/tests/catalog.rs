@@ -30,10 +30,23 @@ fn snap_body(snap: &str) -> &str {
 
 // @internal
 #[test]
+fn catalog_without_a_surface_renders_the_supplied_loading_label() {
+    let mut catalog = two_entry_catalog();
+    catalog.screens[0].commands.clear();
+    let rendered = render_screen(&catalog.screens[0], FULL_FRAME, "Caricamento").unwrap();
+    assert!(
+        rendered.frame.starts_with("Caricamento"),
+        "{:?}",
+        rendered.frame
+    );
+}
+
+// @internal
+#[test]
 fn catalog_entries_render_to_distinct_frames_titled_by_their_surface() {
     let out = tempfile::tempdir().unwrap();
 
-    let manifest = render_catalog(&two_entry_catalog(), out.path(), FULL_FRAME).unwrap();
+    let manifest = render_catalog(&two_entry_catalog(), out.path(), FULL_FRAME, "Loading").unwrap();
 
     let welcome = fs::read_to_string(out.path().join("welcome.snap")).unwrap();
     let name = fs::read_to_string(out.path().join("display-name.snap")).unwrap();
@@ -81,7 +94,7 @@ fn command_variants_the_pinned_core_lacks_are_skipped_and_reported() {
         .commands
         .push(serde_json::json!({"NotACommandYet": {"surface_id": "onboarding"}}));
 
-    let rendered = render_screen(screen, FULL_FRAME).unwrap();
+    let rendered = render_screen(screen, FULL_FRAME, "Loading").unwrap();
 
     assert!(rendered.frame.contains("Welcome to Vauchi"));
     // Real skew (a variant Core main emits that the pinned tag lacks) may
@@ -101,7 +114,7 @@ fn code_ids_that_are_not_plain_file_names_are_rejected() {
     let out = owned_root.path().join("out");
     std::fs::create_dir(&out).unwrap();
 
-    let result = render_catalog(&catalog, &out, FULL_FRAME);
+    let result = render_catalog(&catalog, &out, FULL_FRAME, "Loading");
 
     assert!(result.is_err());
     assert!(!owned_root.path().join("escaped.snap").exists());
@@ -116,7 +129,7 @@ fn a_skipped_command_with_several_keys_is_reported_verbatim() {
         .commands
         .push(serde_json::json!({"Alpha": 1, "Beta": 2}));
 
-    let rendered = render_screen(screen, FULL_FRAME).unwrap();
+    let rendered = render_screen(screen, FULL_FRAME, "Loading").unwrap();
 
     assert_eq!(
         rendered.skipped_commands.last().unwrap(),

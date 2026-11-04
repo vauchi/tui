@@ -77,7 +77,11 @@ pub struct ManifestScreen {
     pub skipped_commands: Vec<String>,
 }
 
-pub fn render_screen(screen: &CatalogScreen, size: FrameSize) -> Result<ScreenRender> {
+pub fn render_screen(
+    screen: &CatalogScreen,
+    size: FrameSize,
+    loading_label: &str,
+) -> Result<ScreenRender> {
     let mut session = TerminalSession::default();
     let mut skipped_commands = Vec::new();
     for value in &screen.commands {
@@ -89,7 +93,7 @@ pub fn render_screen(screen: &CatalogScreen, size: FrameSize) -> Result<ScreenRe
         }
     }
     Ok(ScreenRender {
-        frame: draw_frame(&session, size)?,
+        frame: draw_frame(&session, size, loading_label)?,
         skipped_commands,
     })
 }
@@ -98,6 +102,7 @@ pub fn render_catalog(
     catalog: &ScreenCatalog,
     out_dir: &Path,
     size: FrameSize,
+    loading_label: &str,
 ) -> Result<CatalogManifest> {
     ensure!(
         catalog.schema_version == 1,
@@ -118,8 +123,8 @@ pub fn render_catalog(
 
     let mut screens = Vec::with_capacity(catalog.screens.len());
     for screen in &catalog.screens {
-        let full = render_screen(screen, size)?;
-        let compact = render_screen(screen, COMPACT_FRAME)?;
+        let full = render_screen(screen, size, loading_label)?;
+        let compact = render_screen(screen, COMPACT_FRAME, loading_label)?;
         let snap = format!("{}.snap", screen.code_id);
         let compact_snap = format!("{COMPACT_DIR}/{}.snap", screen.code_id);
         fs::write(out_dir.join(&snap), snap_text(screen, size, &full.frame))?;
@@ -149,9 +154,18 @@ pub fn render_catalog(
     Ok(manifest)
 }
 
-fn draw_frame(session: &TerminalSession, size: FrameSize) -> Result<String> {
+fn draw_frame(session: &TerminalSession, size: FrameSize, loading_label: &str) -> Result<String> {
     let mut terminal = Terminal::new(TestBackend::new(size.cols, size.rows))?;
-    terminal.draw(|frame| session.draw(frame, frame.area(), SessionView::default()))?;
+    terminal.draw(|frame| {
+        session.draw(
+            frame,
+            frame.area(),
+            SessionView {
+                loading_label,
+                ..SessionView::default()
+            },
+        )
+    })?;
     let buffer = terminal.backend().buffer();
     let rows = buffer
         .content

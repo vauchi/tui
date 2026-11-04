@@ -25,6 +25,23 @@ fn snap_body(snap: &str) -> &str {
 
 // @internal
 #[test]
+fn catalog_placeholder_uses_the_app_locale() {
+    use vauchi_tui::ui::screen_catalog::{ScreenCatalog, render_screen};
+
+    let mut catalog: ScreenCatalog = serde_json::from_str(TWO_ENTRY_CATALOG).unwrap();
+    catalog.screens[0].commands.clear();
+    let expected = vauchi_tui::i18n::I18n::default().t("app.loading");
+    let rendered = render_screen(&catalog.screens[0], FULL_FRAME).unwrap();
+    assert_ne!(expected, "app.loading");
+    assert!(
+        rendered.frame.starts_with(&expected),
+        "{:?}",
+        rendered.frame
+    );
+}
+
+// @internal
+#[test]
 fn run_cli_renders_at_the_default_or_requested_size() {
     let fixture = concat!(
         env!("CARGO_MANIFEST_DIR"),

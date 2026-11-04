@@ -6,6 +6,27 @@ use std::{collections::BTreeSet, fs, path::Path};
 
 pub use vauchi_tui_display::screen_catalog::*;
 
+pub fn render_screen(screen: &CatalogScreen, size: FrameSize) -> Result<ScreenRender> {
+    vauchi_tui_display::screen_catalog::render_screen(
+        screen,
+        size,
+        &crate::i18n::I18n::default().t("app.loading"),
+    )
+}
+
+pub fn render_catalog(
+    catalog: &ScreenCatalog,
+    out_dir: &Path,
+    size: FrameSize,
+) -> Result<CatalogManifest> {
+    vauchi_tui_display::screen_catalog::render_catalog(
+        catalog,
+        out_dir,
+        size,
+        &crate::i18n::I18n::default().t("app.loading"),
+    )
+}
+
 const USAGE: &str = "usage: --render-catalog <catalog.json> <out-dir> [cols rows]";
 
 /// `--render-catalog <catalog.json> <out-dir> [cols rows]`.
