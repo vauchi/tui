@@ -4,6 +4,7 @@
 
 [workspace]
 members = ["tui-display"]
+default-members = [".", "tui-display"]
 resolver = "2"
 
 [package]
