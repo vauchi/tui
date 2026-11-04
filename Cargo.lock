@@ -2798,8 +2798,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-app"
-version = "0.99.0"
-source = "git+https://gitlab.com/vauchi/core.git?tag=v0.99.0#870ea056fcd024e4714baaaffceb4d89cb6396a2"
+version = "0.99.1"
+source = "git+https://gitlab.com/vauchi/core.git?tag=v0.99.1#7191dfbbf5cea63e61817d6ac5172e5bd989774c"
 dependencies = [
  "base64",
  "flate2",
@@ -2812,7 +2812,7 @@ dependencies = [
  "tokio",
  "tracing",
  "ureq",
- "vauchi-contract",
+ "vauchi-contract 0.97.2",
  "vauchi-core",
  "zeroize",
 ]
@@ -2829,9 +2829,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "vauchi-contract"
+version = "0.97.2"
+source = "git+https://gitlab.com/vauchi/contract.git?tag=v0.97.2#cf84bd10115270d2853321d854cfecf7a15f37a2"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.19",
+ "zeroize",
+]
+
+[[package]]
 name = "vauchi-core"
-version = "0.99.0"
-source = "git+https://gitlab.com/vauchi/core.git?tag=v0.99.0#870ea056fcd024e4714baaaffceb4d89cb6396a2"
+version = "0.99.1"
+source = "git+https://gitlab.com/vauchi/core.git?tag=v0.99.1#7191dfbbf5cea63e61817d6ac5172e5bd989774c"
 dependencies = [
  "argon2",
  "base64",
@@ -2865,7 +2876,7 @@ dependencies = [
  "ureq",
  "url",
  "uuid",
- "vauchi-contract",
+ "vauchi-contract 0.97.2",
  "vauchi-protocol",
  "webpki-roots",
  "x25519-dalek",
@@ -2874,8 +2885,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-protocol"
-version = "0.99.0"
-source = "git+https://gitlab.com/vauchi/core.git?tag=v0.99.0#870ea056fcd024e4714baaaffceb4d89cb6396a2"
+version = "0.99.1"
+source = "git+https://gitlab.com/vauchi/core.git?tag=v0.99.1#7191dfbbf5cea63e61817d6ac5172e5bd989774c"
 dependencies = [
  "serde",
  "serde_json",
@@ -2910,7 +2921,7 @@ dependencies = [
  "crossterm",
  "ratatui",
  "serde_json",
- "vauchi-contract",
+ "vauchi-contract 0.97.0",
 ]
 
 [[package]]
