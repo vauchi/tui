@@ -66,6 +66,7 @@ fn input(id: &str, value: &str, max_length: Option<usize>) -> PresentationNode {
 
 fn list(rows: Vec<PresentationRow>) -> PresentationNode {
     PresentationNode::List {
+        search_placeholder: None,
         style: PresentationListStyle::Rows,
         id: binding("list"),
         label: None,

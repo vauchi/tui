@@ -129,6 +129,7 @@ fn expanded_profile_renders_primary_and_detail_as_two_native_panes() {
         },
         Command::SetPresentationProfile {
             profile: PresentationProfile {
+                window_title: None,
                 window_class: WindowClass::Expanded,
                 pane_layout: PaneLayout::Split,
                 primary_surface: primary.surface_id,
@@ -205,6 +206,7 @@ fn non_blank(text: String) -> Option<String> {
 fn split_panes_highlight_only_the_active_surface() {
     let mut primary = titled_surface("surface-primary", "Contacts");
     primary.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("entries").unwrap(),
         label: None,
@@ -215,6 +217,7 @@ fn split_panes_highlight_only_the_active_surface() {
     }];
     let mut detail = titled_surface("surface-detail", "Ada");
     detail.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("fields").unwrap(),
         label: None,
@@ -233,6 +236,7 @@ fn split_panes_highlight_only_the_active_surface() {
         },
         Command::SetPresentationProfile {
             profile: PresentationProfile {
+                window_title: None,
                 window_class: WindowClass::Expanded,
                 pane_layout: PaneLayout::Split,
                 primary_surface: primary.surface_id,
@@ -264,6 +268,7 @@ fn split_panes_highlight_only_the_active_surface() {
 fn highlight_marks_the_row_that_activation_would_reach() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("results").unwrap(),
         label: None,
@@ -371,6 +376,7 @@ fn toggle_row(title: &str, on: bool) -> PresentationRow {
 fn a_row_control_renders_its_state() {
     let mut surface = titled_surface("surface-primary", "Settings");
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
@@ -407,6 +413,7 @@ fn a_row_control_renders_its_state() {
 fn a_row_carrying_a_control_can_be_selected() {
     let mut surface = titled_surface("surface-primary", "Settings");
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
@@ -439,6 +446,7 @@ fn a_rows_detail_is_shown() {
     let mut named = row("Display Name", Some(action("edit", "Edit")));
     named.detail = Some("Bob".into());
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("profile").unwrap(),
         label: None,
@@ -488,6 +496,7 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
         })
         .collect();
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("rows").unwrap(),
         label: None,
@@ -526,6 +535,7 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
 fn a_paged_surface_shows_its_count() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("rows").unwrap(),
         label: None,
@@ -638,6 +648,7 @@ fn a_row_with_info_shows_its_i_marker() {
     let mut ada = row("Ada", Some(action("open:ada", "Ada")));
     ada.info = Some(action("info:ada", "Info"));
     surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("entries").unwrap(),
         label: None,

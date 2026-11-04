@@ -201,6 +201,7 @@ pub(super) fn state_with_action_list() -> PresentationState {
                 fonts: None,
             },
             nodes: vec![PresentationNode::List {
+                search_placeholder: None,
                 style: vauchi_core::PresentationListStyle::Rows,
                 id: BindingId::new("modes").unwrap(),
                 label: None,
@@ -341,6 +342,7 @@ pub(super) fn state_with_input_and_action_list() -> PresentationState {
                     accessibility: AccessibilitySpec::label("Phone"),
                 },
                 PresentationNode::List {
+                    search_placeholder: None,
                     style: vauchi_core::PresentationListStyle::Rows,
                     id: BindingId::new("results").unwrap(),
                     label: None,
@@ -412,6 +414,7 @@ fn surface_replacement_clears_a_stale_row_selection() {
                 fonts: None,
             },
             nodes: vec![PresentationNode::List {
+                search_placeholder: None,
                 style: vauchi_core::PresentationListStyle::Rows,
                 id: BindingId::new("steps").unwrap(),
                 label: None,
@@ -828,6 +831,7 @@ pub(super) fn state_with_row_info() -> PresentationState {
                     fonts: None,
                 },
                 nodes: vec![PresentationNode::List {
+                    search_placeholder: None,
                     style: vauchi_core::PresentationListStyle::Rows,
                     id: BindingId::new("entries").unwrap(),
                     label: None,

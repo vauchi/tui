@@ -65,6 +65,7 @@ fn row(title: &str, icon_token: &str) -> PresentationRow {
 
 fn list(rows: Vec<PresentationRow>) -> PresentationNode {
     PresentationNode::List {
+        search_placeholder: None,
         style: PresentationListStyle::Rows,
         id: BindingId::new("modes").unwrap(),
         label: None,

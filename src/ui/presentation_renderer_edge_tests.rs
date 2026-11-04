@@ -116,6 +116,7 @@ fn feedback_shows_an_alert_over_a_status_and_a_status_alone() {
 #[test]
 fn scrolling_keeps_the_selected_row_on_screen() {
     let state = state_showing(vec![PresentationNode::List {
+        search_placeholder: None,
         style: PresentationListStyle::Rows,
         id: binding("rows"),
         label: None,
@@ -232,6 +233,8 @@ fn every_node_kind_paints_its_text() {
             accessibility: AccessibilitySpec::label("Avatar"),
         },
         PresentationNode::Qr {
+            capture_placeholder: None,
+            capture_submit_label: None,
             id: binding("qr-display"),
             payloads: vec!["PAYLOAD-1".into()],
             purpose: PresentationQrPurpose::Display,
@@ -242,6 +245,8 @@ fn every_node_kind_paints_its_text() {
             accessibility: AccessibilitySpec::label("QR"),
         },
         PresentationNode::Qr {
+            capture_placeholder: None,
+            capture_submit_label: None,
             id: binding("qr-capture"),
             payloads: vec!["HIDDEN".into()],
             purpose: PresentationQrPurpose::Capture,

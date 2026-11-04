@@ -123,6 +123,7 @@ fn responsive_profiles_preserve_both_surfaces_and_the_active_detail() {
         },
         Command::SetPresentationProfile {
             profile: PresentationProfile {
+                window_title: None,
                 window_class: WindowClass::Expanded,
                 pane_layout: PaneLayout::Split,
                 primary_surface: primary.surface_id.clone(),
@@ -137,6 +138,7 @@ fn responsive_profiles_preserve_both_surfaces_and_the_active_detail() {
 
     state.apply(&[Command::SetPresentationProfile {
         profile: PresentationProfile {
+            window_title: None,
             window_class: WindowClass::Compact,
             pane_layout: PaneLayout::Single,
             primary_surface: primary.surface_id.clone(),
@@ -381,6 +383,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
         info: None,
     };
     current.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("privacy").unwrap(),
         label: None,
@@ -651,6 +654,7 @@ fn a_choice_without_options_is_not_a_target() {
 #[test]
 fn a_row_whose_only_control_is_disabled_cannot_be_reached() {
     let list = |row| vauchi_core::PresentationNode::List {
+        search_placeholder: None,
         style: vauchi_core::PresentationListStyle::Rows,
         id: vauchi_core::BindingId::new("settings").unwrap(),
         label: None,
