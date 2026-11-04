@@ -136,6 +136,26 @@ test:unit:
       junit: target/nextest/ci/junit.xml
     expire_in: 1 week
 
+test:display:
+  extends: [.rust-runner, .timeout-cold-rebuild]
+  stage: test
+  needs: []
+  script:
+    - python3 ci/tests/display-boundary.test.py
+    - cargo metadata --locked --all-features --format-version 1 > display-metadata.json
+    - python3 ci/check-display-boundary.py display-metadata.json
+    - cargo nextest run --profile ci --locked --package vauchi-tui-display --all-targets
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  artifacts:
+    when: always
+    paths:
+      - display-metadata.json
+    reports:
+      junit: target/nextest/ci/junit.xml
+    expire_in: 1 week
+
 # VRT: render the committed insta .snap snapshots to PNG and upload to Visual
 # Regression Tracker. VRT is image-only; a TUI snapshot is a monospace
 # character grid, so the render is byte-deterministic for a pinned (Pillow
