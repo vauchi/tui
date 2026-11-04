@@ -9,7 +9,7 @@ license = "GPL-3.0-or-later"
 description = "Terminal display shell for the Vauchi presentation contract"
 
 [dependencies]
-vauchi-contract = { git = "https://gitlab.com/vauchi/contract.git", tag = "v0.97.0", version = "=0.97.0" }
+vauchi-contract = { git = "https://gitlab.com/vauchi/contract.git", tag = "v0.97.2", version = "=0.97.2" }
 ratatui = "0.28"
 crossterm = "0.28"
 serde_json = "1.0"
