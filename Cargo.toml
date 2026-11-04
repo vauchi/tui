@@ -21,8 +21,8 @@ secure-storage = ["vauchi-core/secure-storage"]
 [dependencies]
 vauchi-tui-display = { path = "tui-display", version = "0.1.0" }
 # Core library - use git dependency for CI, patched to local path via .cargo/config.toml
-vauchi-core = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.99.0", version = "=0.99.0", features = ["network"] }
-vauchi-app = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.99.0", version = "=0.99.0", default-features = false, features = ["network", "content-updates"] }
+vauchi-core = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.99.1", version = "=0.99.1", features = ["network"] }
+vauchi-app = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.99.1", version = "=0.99.1", default-features = false, features = ["network", "content-updates"] }
 
 # Terminal UI
 ratatui = "0.28"
