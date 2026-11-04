@@ -9,7 +9,7 @@ pub use vauchi_tui_display::screen_catalog::*;
 const USAGE: &str = "usage: --render-catalog <catalog.json> <out-dir> [cols rows]";
 
 /// `--render-catalog <catalog.json> <out-dir> [cols rows]`.
-pub fn run_cli(args: &[String]) -> Result<()> {
+pub fn run_cli(args: &[String]) -> Result<CatalogManifest> {
     let [catalog_path, out_dir, size @ ..] = args else {
         bail!("{USAGE}");
     };
@@ -32,14 +32,6 @@ pub fn run_cli(args: &[String]) -> Result<()> {
         serde_json::from_str(&text).with_context(|| format!("parsing {catalog_path}"))?;
     let manifest = render_catalog(&catalog, Path::new(out_dir), size)?;
 
-    println!(
-        "[screen-catalog] rendered {} screen(s) at {}x{} (+ compact {}x{}) to {out_dir}",
-        manifest.screens.len(),
-        size.cols,
-        size.rows,
-        COMPACT_FRAME.cols,
-        COMPACT_FRAME.rows
-    );
     let skipped: BTreeSet<&str> = manifest
         .screens
         .iter()
@@ -52,5 +44,5 @@ pub fn run_cli(args: &[String]) -> Result<()> {
             skipped.join(", ")
         );
     }
-    Ok(())
+    Ok(manifest)
 }

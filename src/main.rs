@@ -72,7 +72,17 @@ fn main() -> Result<()> {
     // Catalog strings arrive already localized by Core, so this needs no
     // locale files, data directory, or terminal.
     if let Some(args) = &cli.render_catalog {
-        return vauchi_tui::ui::screen_catalog::run_cli(args);
+        let manifest = vauchi_tui::ui::screen_catalog::run_cli(args)?;
+        println!(
+            "[screen-catalog] rendered {} screen(s) at {}x{} (+ compact {}x{}) to {}",
+            manifest.screens.len(),
+            manifest.frame.cols,
+            manifest.frame.rows,
+            manifest.compact_frame.cols,
+            manifest.compact_frame.rows,
+            args[1],
+        );
+        return Ok(());
     }
 
     // Load runtime locale files before any UI string is rendered; without

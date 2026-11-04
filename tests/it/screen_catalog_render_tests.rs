@@ -31,7 +31,9 @@ fn run_cli_renders_at_the_default_or_requested_size() {
         "/tui-display/tests/fixtures/screen_catalog_two_entries.json"
     );
     let out = tempfile::tempdir().unwrap();
-    run_cli(&[fixture.into(), out.path().to_str().unwrap().into()]).unwrap();
+    let manifest = run_cli(&[fixture.into(), out.path().to_str().unwrap().into()]).unwrap();
+    assert_eq!(manifest.frame, FULL_FRAME);
+    assert_eq!(manifest.screens.len(), 2);
     let welcome = fs::read_to_string(out.path().join("welcome.snap")).unwrap();
     assert_eq!(
         snap_body(&welcome).lines().count(),
@@ -50,6 +52,24 @@ fn run_cli_renders_at_the_default_or_requested_size() {
     let rows: Vec<&str> = snap_body(&welcome).lines().collect();
     assert_eq!(rows.len(), 30);
     assert!(rows.iter().all(|row| row.chars().count() == 100));
+
+    let binary_out = tempfile::tempdir().unwrap();
+    let process = std::process::Command::new(env!("CARGO_BIN_EXE_vauchi-tui"))
+        .args([
+            "--render-catalog",
+            fixture,
+            binary_out.path().to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(process.status.code(), Some(0), "{:?}", process.stderr);
+    assert_eq!(
+        String::from_utf8(process.stdout).unwrap(),
+        format!(
+            "[screen-catalog] rendered 2 screen(s) at 100x40 (+ compact 60x24) to {}\n",
+            binary_out.path().display(),
+        ),
+    );
 }
 
 // @internal
