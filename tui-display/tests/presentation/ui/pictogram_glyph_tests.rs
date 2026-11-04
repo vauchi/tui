@@ -10,7 +10,7 @@ use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, BindingId, Command, InteractionId,
     PresentationListStyle, PresentationNode, PresentationRow, PresentationTokens, PresentationTone,
     SurfaceId, SurfaceLayout, SurfaceSpec,

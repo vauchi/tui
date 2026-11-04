@@ -18,13 +18,15 @@ fn app_showing_a_surface_core_never_prepared() -> App {
     );
     app.report_presentation_environment(80, 24);
     let mut ghost = app
-        .presentation
+        .display
+        .presentation()
         .surface()
         .expect("bootstrapped surface")
         .clone();
     ghost.surface_id = SurfaceId::new("ghost_surface").expect("valid surface id");
     let mut profile = app
-        .presentation
+        .display
+        .presentation()
         .profile()
         .expect("reported profile")
         .clone();

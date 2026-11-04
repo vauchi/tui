@@ -12,7 +12,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::style::Modifier;
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, BindingId, ChoiceOption, Command, Event, InputValue,
     InteractionId, PresentationNode, PresentationRow, PresentationTokens, SurfaceId, SurfaceLayout,
     SurfaceSpec,
@@ -265,7 +265,7 @@ fn enter_cycles_a_selected_choice_forward() {
 fn arrows_leave_a_selected_list_row_alone() {
     let state = state_with(vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
+        style: vauchi_contract::PresentationListStyle::Rows,
         id: BindingId::new("rows").unwrap(),
         label: None,
         rows: vec![action_row("Display Name", "edit")],
@@ -288,7 +288,7 @@ fn a_choice_takes_its_place_in_the_surface_order() {
     let state = state_with(vec![
         PresentationNode::List {
             search_placeholder: None,
-            style: vauchi_core::PresentationListStyle::Rows,
+            style: vauchi_contract::PresentationListStyle::Rows,
             id: BindingId::new("rows").unwrap(),
             label: None,
             rows: vec![action_row("Display Name", "edit")],
@@ -299,7 +299,7 @@ fn a_choice_takes_its_place_in_the_surface_order() {
         PresentationNode::Group {
             id: None,
             label: Some("Appearance".into()),
-            axis: vauchi_core::PresentationAxis::Vertical,
+            axis: vauchi_contract::PresentationAxis::Vertical,
             children: vec![choice("theme", "Theme", Some("dark"))],
             accessibility: AccessibilitySpec::label("Appearance"),
         },

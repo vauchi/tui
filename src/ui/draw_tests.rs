@@ -19,7 +19,8 @@ fn drawing_paints_the_active_surface_title() {
     );
     app.report_presentation_environment(80, 24);
     let title = app
-        .presentation
+        .display
+        .presentation()
         .surface()
         .expect("bootstrapped surface")
         .title

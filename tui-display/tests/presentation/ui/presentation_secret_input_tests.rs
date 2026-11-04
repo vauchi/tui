@@ -11,7 +11,9 @@ use super::presentation_renderer;
 use super::presentation_renderer_tests::titled_surface;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
-use vauchi_core::{AccessibilitySpec, BindingId, Command, PresentationInputKind, PresentationNode};
+use vauchi_contract::{
+    AccessibilitySpec, BindingId, Command, PresentationInputKind, PresentationNode,
+};
 
 fn painted_input(input_kind: PresentationInputKind, value: &str) -> String {
     let mut surface = titled_surface("lock", "Vauchi is Locked");

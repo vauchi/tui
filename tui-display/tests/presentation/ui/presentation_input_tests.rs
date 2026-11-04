@@ -4,7 +4,7 @@
 use super::presentation_input::{InteractionState, KeyOutcome};
 use super::presentation_protocol::PresentationState;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, BindingId, Command, ContextBar, Event, InputValue,
     InteractionId, OverlayKind, OverlaySpec, PresentationInputKind, PresentationNode,
     PresentationRow, PresentationTokens, StandardShortcut, SurfaceId, SurfaceLayout, SurfaceSpec,
@@ -202,7 +202,7 @@ pub(super) fn state_with_action_list() -> PresentationState {
             },
             nodes: vec![PresentationNode::List {
                 search_placeholder: None,
-                style: vauchi_core::PresentationListStyle::Rows,
+                style: vauchi_contract::PresentationListStyle::Rows,
                 id: BindingId::new("modes").unwrap(),
                 label: None,
                 rows: vec![
@@ -343,7 +343,7 @@ pub(super) fn state_with_input_and_action_list() -> PresentationState {
                 },
                 PresentationNode::List {
                     search_placeholder: None,
-                    style: vauchi_core::PresentationListStyle::Rows,
+                    style: vauchi_contract::PresentationListStyle::Rows,
                     id: BindingId::new("results").unwrap(),
                     label: None,
                     rows: vec![row("Ada", Some(action("open:ada", None)))],
@@ -415,7 +415,7 @@ fn surface_replacement_clears_a_stale_row_selection() {
             },
             nodes: vec![PresentationNode::List {
                 search_placeholder: None,
-                style: vauchi_core::PresentationListStyle::Rows,
+                style: vauchi_contract::PresentationListStyle::Rows,
                 id: BindingId::new("steps").unwrap(),
                 label: None,
                 rows: vec![row("Retry", Some(action("exchange:retry", None)))],
@@ -670,7 +670,7 @@ pub(super) fn state_with_status_chip() -> PresentationState {
                 PresentationNode::Text {
                     id: None,
                     content: "No contacts yet".into(),
-                    style: vauchi_core::PresentationTextStyle::Body,
+                    style: vauchi_contract::PresentationTextStyle::Body,
                     accessibility: AccessibilitySpec::label("No contacts yet"),
                 },
                 PresentationNode::Status {
@@ -679,7 +679,7 @@ pub(super) fn state_with_status_chip() -> PresentationState {
                     detail: None,
                     icon_token: None,
                     badge: None,
-                    tone: vauchi_core::PresentationTone::Neutral,
+                    tone: vauchi_contract::PresentationTone::Neutral,
                     activation: Some(action("sync_now", None)),
                     accessibility: AccessibilitySpec::label("Sync"),
                 },
@@ -832,7 +832,7 @@ pub(super) fn state_with_row_info() -> PresentationState {
                 },
                 nodes: vec![PresentationNode::List {
                     search_placeholder: None,
-                    style: vauchi_core::PresentationListStyle::Rows,
+                    style: vauchi_contract::PresentationListStyle::Rows,
                     id: BindingId::new("entries").unwrap(),
                     label: None,
                     rows: vec![{

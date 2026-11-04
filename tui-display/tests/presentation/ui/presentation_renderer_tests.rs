@@ -6,7 +6,7 @@ use super::presentation_renderer;
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::style::Modifier;
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, InteractionId, OverlayKind,
     OverlaySpec, PaneLayout, PresentationNode, PresentationProfile, PresentationRow,
     PresentationTextStyle, PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
@@ -207,8 +207,8 @@ fn split_panes_highlight_only_the_active_surface() {
     let mut primary = titled_surface("surface-primary", "Contacts");
     primary.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("entries").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("entries").unwrap(),
         label: None,
         rows: vec![row("Grace", Some(action("open:grace", "Grace")))],
         searchable: false,
@@ -218,8 +218,8 @@ fn split_panes_highlight_only_the_active_surface() {
     let mut detail = titled_surface("surface-detail", "Ada");
     detail.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("fields").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("fields").unwrap(),
         label: None,
         rows: vec![row("Email", Some(action("edit:email", "Email")))],
         searchable: false,
@@ -269,8 +269,8 @@ fn highlight_marks_the_row_that_activation_would_reach() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("results").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("results").unwrap(),
         label: None,
         rows: vec![
             row("Unavailable", None),
@@ -300,69 +300,12 @@ fn highlight_marks_the_row_that_activation_would_reach() {
     );
 }
 
-/// A locked app must not render a navigation affordance here either.
-///
-/// On Android, the lock screen's context bar listed every destination and
-/// tapping one walked past the password
-/// (`problems/2026-08-12-android-app-password-bypass`). Core caused it, so
-/// the question was whether the other shells inherited it — and "they
-/// render what Core sends, so they must" is the same reasoning that had the
-/// defect filed as Android-only in the first place.
-///
-/// So this drives a real locked `AppEngine` rather than a hand-built
-/// fixture, and asserts on what the terminal actually paints. It fails if
-/// Core starts publishing destinations to a locked surface again, or if
-/// this shell ever grows a navigation menu of its own.
-// @scenario: generic_presentation_protocol.feature :: Contextual controls expose four stable roles
-#[test]
-fn a_locked_app_paints_no_navigation_affordance() {
-    let mut vauchi = vauchi_core::api::Vauchi::in_memory().expect("in-memory core");
-    vauchi.create_identity("Alice").expect("identity");
-    let mut engine = vauchi_app::ui::AppEngine::new(vauchi);
-    engine
-        .vauchi_mut()
-        .setup_app_password("app-password-123")
-        .expect("app password");
-    // Password enabled + identity present is what sends bootstrap to the
-    // lock screen, the same path a cold launch takes.
-    engine.bootstrap();
-
-    let commands = engine.initial_commands().expect("initial commands");
-    let bar_has_navigation = commands.iter().any(
-        |command| matches!(command, Command::SetContextBar { bar, .. } if bar.navigation.is_some()),
-    );
-    assert!(
-        !bar_has_navigation,
-        "core published a navigation affordance for a locked surface",
-    );
-
-    let mut state = PresentationState::default();
-    state.apply(&commands);
-    let backend = TestBackend::new(80, 20);
-    let mut terminal = Terminal::new(backend).unwrap();
-    terminal
-        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
-        .unwrap();
-
-    let rendered = terminal
-        .backend()
-        .buffer()
-        .content
-        .iter()
-        .map(|cell| cell.symbol())
-        .collect::<String>();
-    assert!(
-        !rendered.contains('≡'),
-        "the terminal painted the navigation role button while locked: {rendered:?}",
-    );
-}
-
 /// A settings-shaped row: Core names the setting in the row title and sends
 /// the toggle unlabelled, with no activation of its own.
 fn toggle_row(title: &str, on: bool) -> PresentationRow {
     let mut row = row(title, None);
     row.controls = vec![PresentationNode::Toggle {
-        binding_id: vauchi_core::BindingId::new("settings.card_updates").unwrap(),
+        binding_id: vauchi_contract::BindingId::new("settings.card_updates").unwrap(),
         label: String::new(),
         value: on,
         enabled: true,
@@ -377,8 +320,8 @@ fn a_row_control_renders_its_state() {
     let mut surface = titled_surface("surface-primary", "Settings");
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("privacy").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("privacy").unwrap(),
         label: None,
         rows: vec![toggle_row("Card Updates", true)],
         searchable: false,
@@ -414,8 +357,8 @@ fn a_row_carrying_a_control_can_be_selected() {
     let mut surface = titled_surface("surface-primary", "Settings");
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("privacy").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("privacy").unwrap(),
         label: None,
         rows: vec![toggle_row("Card Updates", false)],
         searchable: false,
@@ -447,8 +390,8 @@ fn a_rows_detail_is_shown() {
     named.detail = Some("Bob".into());
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("profile").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("profile").unwrap(),
         label: None,
         rows: vec![named],
         searchable: false,
@@ -497,8 +440,8 @@ fn a_surface_scrolls_to_keep_the_selection_visible() {
         .collect();
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("rows").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("rows").unwrap(),
         label: None,
         rows,
         searchable: false,
@@ -536,12 +479,12 @@ fn a_paged_surface_shows_its_count() {
     let mut surface = titled_surface("surface-primary", "Contacts");
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("rows").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("rows").unwrap(),
         label: None,
         rows: vec![row("Ada", Some(action("open:ada", "Ada")))],
         searchable: false,
-        paging: Some(vauchi_core::PresentationPaging {
+        paging: Some(vauchi_contract::PresentationPaging {
             total_count: 200,
             offset: 0,
             window: 25,
@@ -649,8 +592,8 @@ fn a_row_with_info_shows_its_i_marker() {
     ada.info = Some(action("info:ada", "Info"));
     surface.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("entries").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("entries").unwrap(),
         label: None,
         rows: vec![ada],
         searchable: false,

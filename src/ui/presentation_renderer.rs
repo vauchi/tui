@@ -5,8 +5,6 @@ use super::presentation_protocol::PresentationState;
 use crate::i18n::I18n;
 use ratatui::{Frame, layout::Rect};
 
-pub(crate) use vauchi_tui_display::ui::presentation_renderer::{draw_effect_prompt, draw_feedback};
-
 pub(crate) fn draw(
     frame: &mut Frame,
     area: Rect,

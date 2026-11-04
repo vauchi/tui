@@ -8,7 +8,7 @@ use crossterm::event::KeyEvent;
 use vauchi_core::{Command, Event};
 
 use crate::app::App;
-use crate::ui::presentation_input::KeyOutcome;
+use vauchi_tui_display::ui::presentation_input::KeyOutcome;
 
 use super::Action;
 
@@ -22,9 +22,7 @@ pub fn handle_presentation_key(app: &mut App, key: KeyEvent) -> Action {
     if let Some(action) = handle_interactive_effect(app, key) {
         return action;
     }
-    let outcome = app
-        .presentation_interaction
-        .key_outcome(&app.presentation, key);
+    let outcome = app.display.handle_key(key);
     match outcome {
         KeyOutcome::Events(events) => {
             for event in events {
@@ -37,7 +35,7 @@ pub fn handle_presentation_key(app: &mut App, key: KeyEvent) -> Action {
         KeyOutcome::Quit => return Action::Quit,
         KeyOutcome::Consumed => {}
     }
-    if app.presentation.native_back_requested() || app.should_quit {
+    if app.display.presentation().native_back_requested() || app.should_quit {
         Action::Quit
     } else {
         Action::Continue
@@ -120,7 +118,7 @@ fn handle_interactive_effect(app: &mut App, key: KeyEvent) -> Option<Action> {
         }
         _ => {}
     }
-    Some(if app.presentation.native_back_requested() {
+    Some(if app.display.presentation().native_back_requested() {
         Action::Quit
     } else {
         Action::Continue

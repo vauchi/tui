@@ -3,7 +3,7 @@
 
 use super::presentation_protocol::{ChoiceStep, PresentationState};
 use serde::Deserialize;
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, Event, InteractionId,
     NavigationItem, NavigationSpec, OverlayKind, OverlaySpec, PaneLayout, PresentationProfile,
     PresentationTokens, SurfaceId, SurfaceLayout, SurfaceSpec, WindowClass,
@@ -48,7 +48,7 @@ struct ExpectedPresentationState {
 #[test]
 fn fixture_notification_effects_pass_through_the_reducer_unchanged() {
     let mut wire: serde_json::Value =
-        serde_json::from_str(vauchi_app::ui::presentation_contract_fixture_json()).unwrap();
+        serde_json::from_str(vauchi_contract::fixtures::presentation_contract_v1_json()).unwrap();
     wire["effect_commands"] = serde_json::json!([{"PostNotification": {"notification": {
         "title": "Prepared title", "body": "Prepared body", "deep_link_uri": null,
         "category_id": "category", "channel_id": "channel",
@@ -99,10 +99,10 @@ fn surface_for(id: &str, revision: u64) -> SurfaceSpec {
             colors: crate::ui::test_colors::test_colors(),
             fonts: None,
         },
-        nodes: vec![vauchi_core::PresentationNode::Text {
+        nodes: vec![vauchi_contract::PresentationNode::Text {
             id: None,
             content: "Alice".into(),
-            style: vauchi_core::PresentationTextStyle::Body,
+            style: vauchi_contract::PresentationTextStyle::Body,
             accessibility: AccessibilitySpec::label("Alice"),
         }],
     }
@@ -239,7 +239,7 @@ fn dismiss_overlay_closes_the_open_overlay() {
 #[test]
 fn tui_consumes_the_core_owned_presentation_contract_fixture() {
     let fixture: PresentationContractFixture =
-        serde_json::from_str(vauchi_app::ui::presentation_contract_fixture_json())
+        serde_json::from_str(vauchi_contract::fixtures::presentation_contract_v1_json())
             .expect("failed to deserialize Core-owned presentation contract fixture");
     let mut state = PresentationState::default();
 
@@ -344,10 +344,10 @@ fn activation_targets_the_surface_before_sending_the_opaque_interaction() {
     assert_eq!(
         state.activate_context(0),
         vec![
-            vauchi_core::Event::SurfaceActivated {
+            vauchi_contract::Event::SurfaceActivated {
                 surface_id: surface_id.clone(),
             },
-            vauchi_core::Event::ActionActivated {
+            vauchi_contract::Event::ActionActivated {
                 surface_id,
                 interaction_id: InteractionId::new("opaque.primary").unwrap(),
             },
@@ -358,7 +358,7 @@ fn activation_targets_the_surface_before_sending_the_opaque_interaction() {
 // @scenario: generic_presentation_protocol.feature :: Every shell reports the same generic events
 #[test]
 fn activating_a_control_row_reports_the_flipped_value() {
-    use vauchi_core::{InputValue, PresentationNode, PresentationRow};
+    use vauchi_contract::{InputValue, PresentationNode, PresentationRow};
 
     let mut current = surface(1);
     let row = PresentationRow {
@@ -373,7 +373,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
         activation: None,
         secondary_actions: Vec::new(),
         controls: vec![PresentationNode::Toggle {
-            binding_id: vauchi_core::BindingId::new("settings.card_updates").unwrap(),
+            binding_id: vauchi_contract::BindingId::new("settings.card_updates").unwrap(),
             label: String::new(),
             value: true,
             enabled: true,
@@ -384,8 +384,8 @@ fn activating_a_control_row_reports_the_flipped_value() {
     };
     current.nodes = vec![PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("privacy").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("privacy").unwrap(),
         label: None,
         rows: vec![row],
         searchable: false,
@@ -397,7 +397,7 @@ fn activating_a_control_row_reports_the_flipped_value() {
 
     let events = state.activate_surface_target(0);
     let changed = events.iter().find_map(|event| match event {
-        vauchi_core::Event::ValueChanged {
+        vauchi_contract::Event::ValueChanged {
             binding_id, value, ..
         } => Some((binding_id.clone(), value.clone())),
         _ => None,
@@ -472,7 +472,7 @@ fn navigation_is_consumed_for_the_current_revision_and_stale_navigation_is_dropp
     );
 }
 
-fn state_showing(nodes: Vec<vauchi_core::PresentationNode>) -> PresentationState {
+fn state_showing(nodes: Vec<vauchi_contract::PresentationNode>) -> PresentationState {
     let mut spec = surface(1);
     spec.nodes = nodes;
     let mut state = PresentationState::default();
@@ -480,29 +480,29 @@ fn state_showing(nodes: Vec<vauchi_core::PresentationNode>) -> PresentationState
     state
 }
 
-fn status_chip(enabled: bool) -> vauchi_core::PresentationNode {
+fn status_chip(enabled: bool) -> vauchi_contract::PresentationNode {
     let mut activation = action("status");
     activation.enabled = enabled;
-    vauchi_core::PresentationNode::Status {
+    vauchi_contract::PresentationNode::Status {
         id: None,
         title: "Synced".into(),
         detail: None,
         icon_token: None,
         badge: None,
-        tone: vauchi_core::PresentationTone::Neutral,
+        tone: vauchi_contract::PresentationTone::Neutral,
         activation: Some(activation),
         accessibility: AccessibilitySpec::label("Synced"),
     }
 }
 
-fn choice(selected: Option<&str>, options: &[&str]) -> vauchi_core::PresentationNode {
-    vauchi_core::PresentationNode::Choice {
-        binding_id: vauchi_core::BindingId::new("pick").unwrap(),
+fn choice(selected: Option<&str>, options: &[&str]) -> vauchi_contract::PresentationNode {
+    vauchi_contract::PresentationNode::Choice {
+        binding_id: vauchi_contract::BindingId::new("pick").unwrap(),
         label: "Pick".into(),
         selected: selected.map(Into::into),
         options: options
             .iter()
-            .map(|id| vauchi_core::ChoiceOption {
+            .map(|id| vauchi_contract::ChoiceOption {
                 id: (*id).into(),
                 label: (*id).into(),
             })
@@ -512,8 +512,8 @@ fn choice(selected: Option<&str>, options: &[&str]) -> vauchi_core::Presentation
     }
 }
 
-fn toggle_row(enabled: bool) -> vauchi_core::PresentationRow {
-    vauchi_core::PresentationRow {
+fn toggle_row(enabled: bool) -> vauchi_contract::PresentationRow {
+    vauchi_contract::PresentationRow {
         title: "Setting".into(),
         subtitle: None,
         detail: None,
@@ -524,8 +524,8 @@ fn toggle_row(enabled: bool) -> vauchi_core::PresentationRow {
         enabled: true,
         activation: None,
         secondary_actions: Vec::new(),
-        controls: vec![vauchi_core::PresentationNode::Toggle {
-            binding_id: vauchi_core::BindingId::new("flag").unwrap(),
+        controls: vec![vauchi_contract::PresentationNode::Toggle {
+            binding_id: vauchi_contract::BindingId::new("flag").unwrap(),
             label: "Flag".into(),
             value: false,
             enabled,
@@ -539,7 +539,7 @@ fn toggle_row(enabled: bool) -> vauchi_core::PresentationRow {
 fn chosen(events: &[Event]) -> Option<&str> {
     events.iter().find_map(|event| match event {
         Event::ValueChanged {
-            value: vauchi_core::InputValue::Choice(Some(id)),
+            value: vauchi_contract::InputValue::Choice(Some(id)),
             ..
         } => Some(id.as_str()),
         _ => None,
@@ -591,10 +591,10 @@ fn native_back_is_requested_only_after_core_asks_for_it() {
 // @internal
 #[test]
 fn the_status_chip_is_found_inside_a_group_and_skipped_when_disabled() {
-    let grouped = state_showing(vec![vauchi_core::PresentationNode::Group {
+    let grouped = state_showing(vec![vauchi_contract::PresentationNode::Group {
         id: None,
         label: None,
-        axis: vauchi_core::PresentationAxis::Vertical,
+        axis: vauchi_contract::PresentationAxis::Vertical,
         children: vec![status_chip(true)],
         accessibility: AccessibilitySpec::label("group"),
     }]);
@@ -653,10 +653,10 @@ fn a_choice_without_options_is_not_a_target() {
 // @internal
 #[test]
 fn a_row_whose_only_control_is_disabled_cannot_be_reached() {
-    let list = |row| vauchi_core::PresentationNode::List {
+    let list = |row| vauchi_contract::PresentationNode::List {
         search_placeholder: None,
-        style: vauchi_core::PresentationListStyle::Rows,
-        id: vauchi_core::BindingId::new("settings").unwrap(),
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("settings").unwrap(),
         label: None,
         rows: vec![row],
         searchable: false,

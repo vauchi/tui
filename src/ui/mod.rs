@@ -3,78 +3,34 @@
 
 //! Generic terminal projection of Core presentation commands.
 
-pub(crate) use vauchi_tui_display::ui::presentation_input;
+// INLINE_TEST_REQUIRED: engine-backed drawing tests inspect the app's private
+// display and its locale adapter.
+#[cfg(test)]
 pub(crate) use vauchi_tui_display::ui::presentation_protocol;
+#[cfg(test)]
 pub(crate) mod presentation_renderer;
 pub mod screen_catalog;
-// INLINE_TEST_REQUIRED: the extracted white-box test modules share one
-// theme-colours fixture for the surfaces they build.
-#[cfg(test)]
-pub(crate) mod test_colors;
-
 use ratatui::Frame;
 
 use crate::app::App;
 
 pub fn draw_presentation(frame: &mut Frame, app: &App) {
-    let selected = if app.presentation.overlay().is_some() {
-        app.presentation_interaction.selected_overlay()
-    } else {
-        app.presentation_interaction.selected_context()
-    };
-    presentation_renderer::draw(
+    app.display.draw(
         frame,
         frame.area(),
-        &app.presentation,
-        selected,
-        app.presentation_interaction
-            .selected_surface_target(&app.presentation),
-    );
-    if let Some(effect) = app.presentation_effects.front() {
-        presentation_renderer::draw_effect_prompt(frame, frame.area(), effect, &app.input_buffer);
-    }
-    presentation_renderer::draw_feedback(
-        frame,
-        frame.area(),
-        app.status_message.as_deref(),
-        app.alert_message.as_ref(),
+        vauchi_tui_display::SessionView {
+            loading_label: &crate::i18n::I18n::default().t("app.loading"),
+            effect_prompt: app
+                .presentation_effects
+                .front()
+                .map(|effect| (effect, app.input_buffer.as_str())),
+            status: app.status_message.as_deref(),
+            alert: app.alert_message.as_ref(),
+        },
     );
 }
 
-// INLINE_TEST_REQUIRED: extracted white-box tests exercise crate-private input,
-// reducer, and renderer state without exposing it to consumers.
 #[cfg(test)]
-#[path = "presentation_input_tests.rs"]
-mod presentation_input_tests;
-
-#[cfg(test)]
-#[path = "presentation_renderer_edge_tests.rs"]
-mod presentation_renderer_edge_tests;
-
-#[cfg(test)]
-#[path = "presentation_secret_input_tests.rs"]
-mod presentation_secret_input_tests;
-
-#[cfg(test)]
-#[path = "draw_tests.rs"]
 mod draw_tests;
-
 #[cfg(test)]
-#[path = "presentation_input_keys_tests.rs"]
-mod presentation_input_keys_tests;
-
-#[cfg(test)]
-#[path = "presentation_protocol_tests.rs"]
-mod presentation_protocol_tests;
-
-#[cfg(test)]
-#[path = "presentation_renderer_tests.rs"]
-mod presentation_renderer_tests;
-
-#[cfg(test)]
-#[path = "presentation_choice_tests.rs"]
-mod presentation_choice_tests;
-
-#[cfg(test)]
-#[path = "pictogram_glyph_tests.rs"]
-mod pictogram_glyph_tests;
+mod locked_app_render_tests;

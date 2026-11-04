@@ -14,13 +14,11 @@ use std::time::{Duration, Instant};
 use vauchi_app::ui::{AppEngine, AppPresentationError};
 use vauchi_core::{Command, Event, InputMode, MotionPreference};
 
-use crate::ui::presentation_input::InteractionState;
-use crate::ui::presentation_protocol::PresentationState;
+use vauchi_tui_display::TerminalSession;
 
 pub struct App {
     pub app_engine: AppEngine,
-    pub(crate) presentation: PresentationState,
-    pub(crate) presentation_interaction: InteractionState,
+    pub(crate) display: TerminalSession,
     pub(crate) presentation_effects: VecDeque<Command>,
     pub(crate) input_buffer: String,
     pub(crate) alert_message: Option<(String, String)>,
@@ -44,12 +42,11 @@ impl App {
         let commands = app_engine
             .initial_commands()
             .expect("fresh AppEngine must prepare its initial presentation");
-        let mut presentation = PresentationState::default();
-        let effects = presentation.apply(&commands);
+        let mut display = TerminalSession::default();
+        let effects = display.apply_commands(&commands);
         let mut app = Self {
             app_engine,
-            presentation,
-            presentation_interaction: InteractionState::default(),
+            display,
             presentation_effects: VecDeque::new(),
             input_buffer: String::new(),
             alert_message: None,
@@ -84,7 +81,7 @@ impl App {
     }
 
     pub(crate) fn apply_presentation_commands(&mut self, commands: Vec<Command>) {
-        for effect in self.presentation.apply(&commands) {
+        for effect in self.display.apply_commands(&commands) {
             self.apply_native_effect(effect);
         }
     }
@@ -217,7 +214,7 @@ mod tests {
 
     #[test]
     fn bootstrap_uses_core_generic_presentation() {
-        assert!(app().presentation.surface().is_some());
+        assert!(app().display.presentation().surface().is_some());
     }
 
     #[test]
@@ -225,7 +222,7 @@ mod tests {
         let mut app = app();
         app.report_presentation_environment(840, 600);
         assert_eq!(
-            app.presentation.profile().unwrap().window_class,
+            app.display.presentation().profile().unwrap().window_class,
             vauchi_core::WindowClass::Expanded
         );
     }

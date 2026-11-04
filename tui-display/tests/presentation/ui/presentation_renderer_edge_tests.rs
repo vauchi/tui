@@ -11,7 +11,7 @@ use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use ratatui::buffer::Buffer;
 use ratatui::prelude::Frame;
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, BindingId, Command, ContextBar, FilePickPurpose, OverlayKind, OverlaySpec,
     PresentationAxis, PresentationImageShape, PresentationInputKind, PresentationListStyle,
     PresentationNode, PresentationQrPurpose, PresentationTextStyle, SurfaceId,

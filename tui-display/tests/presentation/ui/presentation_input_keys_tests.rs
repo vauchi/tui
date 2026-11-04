@@ -8,7 +8,7 @@ use super::presentation_input::{InteractionState, KeyOutcome};
 use super::presentation_input_tests::{action, row, state_with_action_list, state_with_input};
 use super::presentation_protocol::PresentationState;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use vauchi_core::{
+use vauchi_contract::{
     AccessibilitySpec, BindingId, Command, ContextBar, Event, InputValue, OverlayKind, OverlaySpec,
     PresentationAxis, PresentationInputKind, PresentationListStyle, PresentationNode,
     PresentationRow, PresentationTokens, StandardShortcut, SurfaceId, SurfaceLayout, SurfaceSpec,
