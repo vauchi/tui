@@ -390,7 +390,10 @@ fn restore_terminal() {
     let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
 }
 
-fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
+fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()>
+where
+    B::Error: std::error::Error + Send + Sync + 'static,
+{
     // Bootstrap the core-driven wakeup loop (ADR-044 Am2a). The first call
     // runs any due work and emits the initial `Command::ScheduleWakeup`.
     app.tick_notifications();

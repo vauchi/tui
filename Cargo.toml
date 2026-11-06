@@ -9,7 +9,7 @@ resolver = "2"
 
 [package]
 name = "vauchi-tui"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2024"
 description = "Terminal UI for Vauchi - privacy-focused contact card exchange"
 license = "GPL-3.0-or-later"
@@ -19,13 +19,13 @@ default = []
 secure-storage = ["vauchi-core/secure-storage"]
 
 [dependencies]
-vauchi-tui-display = { path = "tui-display", version = "0.1.0" }
+vauchi-tui-display = { path = "tui-display", version = "0.2.0" }
 # Core library - use git dependency for CI, patched to local path via .cargo/config.toml
 vauchi-core = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.99.1", version = "=0.99.1", features = ["network"] }
 vauchi-app = { git = "https://gitlab.com/vauchi/core.git", tag = "v0.99.1", version = "=0.99.1", default-features = false, features = ["network", "content-updates"] }
 
 # Terminal UI
-ratatui = "0.28"
+ratatui = { version = "0.30.2", default-features = false, features = ["crossterm_0_28", "layout-cache", "underline-color"] }
 crossterm = "0.28"
 
 # CLI argument parsing
