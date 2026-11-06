@@ -10,7 +10,8 @@ description = "Terminal display shell for the Vauchi presentation contract"
 
 [dependencies]
 vauchi-contract = { git = "https://gitlab.com/vauchi/contract.git", tag = "v0.97.2", version = "=0.97.2" }
-ratatui = { version = "0.30.2", default-features = false, features = ["crossterm_0_28", "layout-cache", "underline-color"] }
+ratatui-core = { version = "0.1.2", default-features = false, features = ["std", "layout-cache", "underline-color"] }
+ratatui-widgets = { version = "0.3.2", default-features = false, features = ["std"] }
 crossterm = "0.28"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use ratatui::{Terminal, backend::TestBackend};
+use ratatui_core::{backend::TestBackend, terminal::Terminal};
 use vauchi_contract::{Command, Event};
 use vauchi_tui_display::ui::presentation_input::KeyOutcome;
 use vauchi_tui_display::{SessionView, TerminalSession};

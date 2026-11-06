@@ -9,8 +9,8 @@
 use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
 use super::presentation_renderer_tests::titled_surface;
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
+use ratatui_core::backend::TestBackend;
+use ratatui_core::terminal::Terminal;
 use vauchi_contract::{
     AccessibilitySpec, BindingId, Command, PresentationInputKind, PresentationNode,
 };

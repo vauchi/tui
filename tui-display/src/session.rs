@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use crossterm::event::KeyEvent;
-use ratatui::{Frame, layout::Rect};
+use ratatui_core::{layout::Rect, terminal::Frame};
 use vauchi_contract::Command;
 
 use crate::ui::presentation_input::{InteractionState, KeyOutcome};

@@ -3,9 +3,14 @@
 
 //! Native terminal widgets for Core's generic presentation values.
 
-use ratatui::layout::Flex;
-use ratatui::prelude::*;
-use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap};
+use ratatui_core::layout::{Constraint, Flex, Layout, Rect};
+use ratatui_core::style::{Modifier, Style};
+use ratatui_core::terminal::Frame;
+use ratatui_core::text::{Line, Span};
+use ratatui_widgets::block::Block;
+use ratatui_widgets::borders::{BorderType, Borders};
+use ratatui_widgets::clear::Clear;
+use ratatui_widgets::paragraph::{Paragraph, Wrap};
 use vauchi_contract::Command;
 use vauchi_contract::{ActionSpec, OverlayKind};
 

@@ -4,7 +4,8 @@
 use crate::ui::presentation_protocol::{
     ChoiceTarget, choice_target, row_is_addressable, row_toggle,
 };
-use ratatui::prelude::*;
+use ratatui_core::style::{Modifier, Style};
+use ratatui_core::text::{Line, Span};
 use vauchi_contract::{PresentationInputKind, PresentationNode};
 
 pub(super) fn append_node_lines(

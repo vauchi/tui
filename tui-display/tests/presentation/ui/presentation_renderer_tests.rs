@@ -3,9 +3,9 @@
 
 use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
-use ratatui::style::Modifier;
+use ratatui_core::backend::TestBackend;
+use ratatui_core::style::Modifier;
+use ratatui_core::terminal::Terminal;
 use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, Command, ContextBar, InteractionId, OverlayKind,
     OverlaySpec, PaneLayout, PresentationNode, PresentationProfile, PresentationRow,
@@ -176,7 +176,7 @@ pub(super) fn row(title: &str, activation: Option<ActionSpec>) -> PresentationRo
 
 /// Reverse-video runs only — side-by-side panes share terminal rows, so a
 /// whole-row view cannot tell which pane carries the highlight.
-pub(super) fn highlighted_lines(buffer: &ratatui::buffer::Buffer) -> Vec<String> {
+pub(super) fn highlighted_lines(buffer: &ratatui_core::buffer::Buffer) -> Vec<String> {
     buffer
         .content
         .chunks(buffer.area.width as usize)

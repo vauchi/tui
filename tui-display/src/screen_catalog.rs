@@ -14,8 +14,8 @@ use std::fs;
 use std::path::Path;
 
 use anyhow::{Context, Result, ensure};
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
+use ratatui_core::backend::TestBackend;
+use ratatui_core::terminal::Terminal;
 use serde::{Deserialize, Serialize};
 use vauchi_contract::Command;
 

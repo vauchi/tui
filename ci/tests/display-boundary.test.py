@@ -79,6 +79,33 @@ class DisplayBoundaryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "workspace"):
             CHECK(data)
 
+    # @internal — input and rendering must not silently select different terminal APIs.
+    def test_mixed_crossterm_versions_are_rejected(self):
+        data = graph(("crossterm@0.28", "crossterm@0.29"))
+        for package in data["packages"][-2:]:
+            package["name"] = "crossterm"
+        data["resolve"]["nodes"][0]["dependencies"].append("crossterm@0.28")
+        data["resolve"]["nodes"][2]["dependencies"].append("crossterm@0.29")
+        with self.assertRaisesRegex(ValueError, "multiple crossterm"):
+            CHECK(data)
+
+    # @internal — sharing one terminal API through multiple edges is valid.
+    def test_shared_crossterm_version_passes(self):
+        data = graph(("crossterm@0.28",))
+        data["packages"][-1]["name"] = "crossterm"
+        for node in data["resolve"]["nodes"][:3:2]:
+            node["dependencies"].append("crossterm@0.28")
+        self.assertIsNone(CHECK(data))
+
+    # @internal — an unrelated app graph does not change the display's API selection.
+    def test_unreachable_crossterm_version_does_not_fail_the_display_gate(self):
+        data = graph(("crossterm@0.28", "crossterm@0.29"))
+        for package in data["packages"][-2:]:
+            package["name"] = "crossterm"
+        data["resolve"]["nodes"][0]["dependencies"].append("crossterm@0.28")
+        data["resolve"]["nodes"][3]["dependencies"].append("crossterm@0.29")
+        self.assertIsNone(CHECK(data))
+
 
 if __name__ == "__main__":
     unittest.main()

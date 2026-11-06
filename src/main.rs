@@ -17,6 +17,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::prelude::*;
+use ratatui_crossterm::CrosstermBackend;
 
 use vauchi_app::ui::AppEngine;
 use vauchi_core::crypto::SymmetricKey;

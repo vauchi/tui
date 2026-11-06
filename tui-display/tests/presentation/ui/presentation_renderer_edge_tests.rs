@@ -7,10 +7,9 @@
 use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
 use super::presentation_renderer_tests::{action, highlighted_lines, row, titled_surface};
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
-use ratatui::buffer::Buffer;
-use ratatui::prelude::Frame;
+use ratatui_core::backend::TestBackend;
+use ratatui_core::buffer::Buffer;
+use ratatui_core::terminal::{Frame, Terminal};
 use vauchi_contract::{
     AccessibilitySpec, BindingId, Command, ContextBar, FilePickPurpose, OverlayKind, OverlaySpec,
     PresentationAxis, PresentationImageShape, PresentationInputKind, PresentationListStyle,

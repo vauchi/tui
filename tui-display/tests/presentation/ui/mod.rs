@@ -15,7 +15,7 @@ pub(crate) mod test_colors;
 
 mod presentation_renderer {
     use super::presentation_protocol::PresentationState;
-    use ratatui::{Frame, layout::Rect};
+    use ratatui_core::{layout::Rect, terminal::Frame};
     pub(crate) use vauchi_tui_display::ui::presentation_renderer::{
         draw_effect_prompt, draw_feedback,
     };

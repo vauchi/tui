@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Mattia Egloff <mattia.egloff@pm.me>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""Reject runtime dependencies reachable from the ADR-078 display crate."""
+"""Check runtime isolation and terminal API identity for the ADR-078 display crate."""
 
 import json
 import sys
@@ -35,6 +35,9 @@ def check_boundary(metadata):
         if name in RUNTIMES or name.startswith("vauchi-") and name not in ALLOWED_VAUCHI:
             raise ValueError("display depends on runtime: " + " -> ".join(path))
         pending.extend((dependency, path) for dependency in nodes[package_id])
+    terminal_apis = sorted(package_id for package_id in visited if packages[package_id] == "crossterm")
+    if len(terminal_apis) > 1:
+        raise ValueError("multiple crossterm versions in display graph: " + ", ".join(terminal_apis))
 
 
 def main():

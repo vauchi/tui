@@ -8,8 +8,8 @@
 
 use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
+use ratatui_core::backend::TestBackend;
+use ratatui_core::terminal::Terminal;
 use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, BindingId, Command, InteractionId,
     PresentationListStyle, PresentationNode, PresentationRow, PresentationTokens, PresentationTone,

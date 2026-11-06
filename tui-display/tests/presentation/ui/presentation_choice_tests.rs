@@ -9,9 +9,9 @@ use super::presentation_input::{InteractionState, KeyOutcome};
 use super::presentation_protocol::PresentationState;
 use super::presentation_renderer;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
-use ratatui::style::Modifier;
+use ratatui_core::backend::TestBackend;
+use ratatui_core::style::Modifier;
+use ratatui_core::terminal::Terminal;
 use vauchi_contract::{
     AccessibilitySpec, ActionSpec, ActionTone, BindingId, ChoiceOption, Command, Event, InputValue,
     InteractionId, PresentationNode, PresentationRow, PresentationTokens, SurfaceId, SurfaceLayout,
