@@ -384,6 +384,60 @@ fn a_row_carrying_a_control_can_be_selected() {
 
 // @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
 #[test]
+fn a_rows_status_control_is_shown_as_a_tag_under_its_text() {
+    let mut surface = titled_surface("surface-primary", "My Card");
+    let mut entry = row("mobile", Some(action("open", "mobile")));
+    entry.subtitle = Some("+44 20 7946 0958".into());
+    entry.controls = vec![vauchi_contract::PresentationNode::Status {
+        id: None,
+        title: "Family".into(),
+        detail: None,
+        icon_token: None,
+        badge: None,
+        tone: vauchi_contract::PresentationTone::Neutral,
+        activation: None,
+        accessibility: AccessibilitySpec::label("Family"),
+    }];
+    surface.nodes = vec![PresentationNode::List {
+        search_placeholder: None,
+        style: vauchi_contract::PresentationListStyle::Rows,
+        id: vauchi_contract::BindingId::new("own_entries").unwrap(),
+        label: None,
+        rows: vec![entry],
+        searchable: false,
+        paging: None,
+        accessibility: AccessibilitySpec::label("Entries"),
+    }];
+    let mut state = PresentationState::default();
+    state.apply(&[Command::ReplaceSurface { surface }]);
+
+    let backend = TestBackend::new(80, 10);
+    let mut terminal = Terminal::new(backend).unwrap();
+    terminal
+        .draw(|frame| presentation_renderer::draw(frame, frame.area(), &state, 0, None))
+        .unwrap();
+    let buffer = terminal.backend().buffer();
+    let lines: Vec<String> = buffer
+        .content
+        .chunks(buffer.area.width as usize)
+        .map(|cells| cells.iter().map(|cell| cell.symbol()).collect::<String>())
+        .collect();
+    let value_line = lines
+        .iter()
+        .position(|line| line.contains("+44 20 7946 0958"))
+        .unwrap_or_else(|| panic!("the value line is drawn: {lines:?}"));
+    let tag_line = &lines[value_line + 1];
+    assert_eq!(
+        tag_line.find("[Family]"),
+        lines[value_line].find("+44 20 7946 0958"),
+        "a Status control is the row's state (who sees this entry), drawn as a \
+         tag on the line under the row's text, in the text's column, not \
+         dropped: {lines:?}"
+    );
+}
+
+// @scenario: generic_presentation_protocol.feature :: Every shell renders the same prepared presentation
+#[test]
 fn a_rows_detail_is_shown() {
     let mut surface = titled_surface("surface-primary", "Settings");
     let mut named = row("Display Name", Some(action("edit", "Edit")));
