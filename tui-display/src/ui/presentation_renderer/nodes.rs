@@ -164,6 +164,18 @@ pub(super) fn append_node_lines(
                 if let Some(detail) = &row.detail {
                     lines.push(Line::styled(format!("{indent}  {detail}"), secondary_style));
                 }
+                // A Status control is the row's state (who sees a card
+                // entry); a bracketed tag is the terminal's chip
+                // (vauchi/private#1206). Toggles are drawn in the marker.
+                for control in &row.controls {
+                    if let PresentationNode::Status { title, badge, .. } = control {
+                        let tag = match badge {
+                            Some(badge) => format!("[{title} {badge}]"),
+                            None => format!("[{title}]"),
+                        };
+                        lines.push(Line::styled(format!("{indent}  {tag}"), secondary_style));
+                    }
+                }
             }
         }
         PresentationNode::Image { fallback_text, .. } => lines.push(Line::from(format!(
