@@ -3440,8 +3440,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-app"
-version = "0.102.2"
-source = "git+https://gitlab.com/vauchi/core.git?tag=v0.102.2#5511f861f2f850cc34291eb4c126fb761e4f4cc7"
+version = "0.103.0"
+source = "git+https://gitlab.com/vauchi/core.git?tag=v0.103.0#adf0115cb7230aaca90d56ee6996d674abb2f01c"
 dependencies = [
  "base64",
  "flate2",
@@ -3471,8 +3471,8 @@ dependencies = [
 
 [[package]]
 name = "vauchi-core"
-version = "0.102.2"
-source = "git+https://gitlab.com/vauchi/core.git?tag=v0.102.2#5511f861f2f850cc34291eb4c126fb761e4f4cc7"
+version = "0.103.0"
+source = "git+https://gitlab.com/vauchi/core.git?tag=v0.103.0#adf0115cb7230aaca90d56ee6996d674abb2f01c"
 dependencies = [
  "argon2",
  "base64",
@@ -3510,14 +3510,15 @@ dependencies = [
  "vauchi-contract",
  "vauchi-protocol",
  "webpki-roots",
+ "winapi-util",
  "x25519-dalek",
  "zeroize",
 ]
 
 [[package]]
 name = "vauchi-protocol"
-version = "0.102.2"
-source = "git+https://gitlab.com/vauchi/core.git?tag=v0.102.2#5511f861f2f850cc34291eb4c126fb761e4f4cc7"
+version = "0.103.0"
+source = "git+https://gitlab.com/vauchi/core.git?tag=v0.103.0#adf0115cb7230aaca90d56ee6996d674abb2f01c"
 dependencies = [
  "serde",
  "serde_json",
@@ -3736,6 +3737,15 @@ name = "winapi-i686-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
+
+[[package]]
+name = "winapi-util"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
+dependencies = [
+ "windows-sys 0.48.0",
+]
 
 [[package]]
 name = "winapi-x86_64-pc-windows-gnu"
