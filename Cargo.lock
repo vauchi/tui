@@ -3470,17 +3470,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "vauchi-contract"
-version = "0.98.0"
-source = "git+https://gitlab.com/vauchi/contract.git?tag=v0.98.0#1fbfc734dcadfb92bc667343f43249faaaf369ac"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 2.0.19",
- "zeroize",
-]
-
-[[package]]
 name = "vauchi-core"
 version = "0.106.0"
 source = "git+https://gitlab.com/vauchi/core.git?tag=v0.106.0#994c62d62e30f48160579c3c811d9d44387332e7"
@@ -3518,7 +3507,7 @@ dependencies = [
  "ureq",
  "url",
  "uuid",
- "vauchi-contract 0.97.2",
+ "vauchi-contract",
  "vauchi-protocol",
  "webpki-roots",
  "winapi-util",
@@ -3568,7 +3557,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "vauchi-contract 0.98.0",
+ "vauchi-contract",
 ]
 
 [[package]]
