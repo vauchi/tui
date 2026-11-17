@@ -25,6 +25,13 @@ ignore = [
     "RUSTSEC-2025-0141",
     # paste is unmaintained — transitive via uniffi. No action available.
     "RUSTSEC-2024-0436",
+    # chrono and chrono-tz are unmaintained (advisories, not vulnerabilities)
+    # — reached only through rxing, vauchi-core's QR decoder, which needs
+    # them for calendar-result parsing and Aztec; our QR-only decode calls
+    # neither.
+    # Remove together with core's entries (private#1274).
+    "RUSTSEC-2026-0543",
+    "RUSTSEC-2026-0555",
 ]
 
 [licenses]
