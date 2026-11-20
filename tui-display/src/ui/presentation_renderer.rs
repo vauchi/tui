@@ -75,6 +75,32 @@ pub fn draw_effect_prompt(frame: &mut Frame, area: Rect, effect: &Command, input
     );
 }
 
+/// A file pick's path line. The title is Core's; the line is what the
+/// person typed so far.
+pub(crate) fn draw_path_line(frame: &mut Frame, area: Rect, title: &str, typed: &str) {
+    let area = centered_rect(72, 24, area);
+    frame.render_widget(Clear, area);
+    frame.render_widget(
+        Paragraph::new(vec![
+            Line::styled(
+                format!("> {typed}"),
+                Style::default().add_modifier(Modifier::REVERSED),
+            ),
+            Line::styled(
+                "Enter confirms · Esc cancels",
+                Style::default().add_modifier(Modifier::DIM),
+            ),
+        ])
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title(title.to_string()),
+        ),
+        area,
+    );
+}
+
 pub fn draw_feedback(
     frame: &mut Frame,
     area: Rect,

@@ -3,6 +3,7 @@
 
 //! Terminal rendering and keyboard input for the Vauchi presentation contract.
 
+mod file_pick;
 pub mod screen_catalog;
 mod session;
 pub mod ui;

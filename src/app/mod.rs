@@ -84,6 +84,12 @@ impl App {
         for effect in self.display.apply_commands(&commands) {
             self.apply_native_effect(effect);
         }
+        // The display answers file picks itself and says so (private#1233).
+        for report in self.display.take_reports() {
+            if let Err(error) = self.dispatch_presentation_event(report) {
+                self.present_rejection(&error);
+            }
+        }
     }
 
     pub fn report_presentation_environment(&mut self, available_width: u32, available_height: u32) {

@@ -3527,7 +3527,7 @@ dependencies = [
 
 [[package]]
 name = "vauchi-tui"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -3548,7 +3548,7 @@ dependencies = [
 
 [[package]]
 name = "vauchi-tui-display"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "crossterm 0.28.1",
