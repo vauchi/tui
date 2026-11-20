@@ -3,7 +3,7 @@
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui_core::{backend::TestBackend, terminal::Terminal};
-use vauchi_contract::{Command, Event};
+use vauchi_contract::{Command, Event, InputMode, MotionPreference};
 use vauchi_tui_display::ui::presentation_input::KeyOutcome;
 use vauchi_tui_display::{SessionView, TerminalSession};
 
@@ -54,6 +54,26 @@ fn session_renders_commands_and_returns_keyboard_events_without_an_engine() {
         session.handle_key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE)),
         KeyOutcome::Events(expected)
     );
+}
+
+fn window_of(width: u32, height: u32) -> Event {
+    Event::PresentationEnvironmentChanged {
+        available_width: width,
+        available_height: height,
+        input_modes: vec![InputMode::Keyboard],
+        motion: MotionPreference::Full,
+        color_scheme: None,
+    }
+}
+
+// @internal — Core answers a pane switch only for a window it was told about (vauchi/private#1310).
+#[test]
+fn session_reports_the_window_once_for_each_size() {
+    let mut session = TerminalSession::default();
+    assert_eq!(session.window_report(100, 30), Some(window_of(100, 30)));
+    assert_eq!(session.window_report(100, 30), None);
+    assert_eq!(session.window_report(80, 24), Some(window_of(80, 24)));
+    assert_eq!(session.window_report(100, 30), Some(window_of(100, 30)));
 }
 
 // @internal
