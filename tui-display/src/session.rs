@@ -3,7 +3,7 @@
 
 use crossterm::event::KeyEvent;
 use ratatui_core::{layout::Rect, terminal::Frame};
-use vauchi_contract::Command;
+use vauchi_contract::{Command, Event, InputMode, MotionPreference};
 
 use crate::ui::presentation_input::{InteractionState, KeyOutcome};
 use crate::ui::presentation_protocol::PresentationState;
@@ -13,6 +13,7 @@ use crate::ui::presentation_renderer;
 pub struct TerminalSession {
     presentation: PresentationState,
     interaction: InteractionState,
+    reported_window: Option<(u16, u16)>,
 }
 
 #[derive(Default)]
@@ -27,6 +28,29 @@ impl TerminalSession {
     /// Returns commands that require the host's native adapters.
     pub fn apply_commands(&mut self, commands: &[Command]) -> Vec<Command> {
         self.presentation.apply(commands)
+    }
+
+    /// The window to report to Core, or `None` while it is the one last
+    /// reported. Core rejects a pane switch until it has one, so the host
+    /// asks before each input wait (vauchi/private#1310).
+    pub fn window_report(&mut self, columns: u16, rows: u16) -> Option<Event> {
+        if self.reported_window == Some((columns, rows)) {
+            return None;
+        }
+        self.reported_window = Some((columns, rows));
+        let reduced_motion = std::env::var("VAUCHI_REDUCED_MOTION")
+            .is_ok_and(|value| matches!(value.as_str(), "1" | "true" | "yes"));
+        Some(Event::PresentationEnvironmentChanged {
+            available_width: u32::from(columns),
+            available_height: u32::from(rows),
+            input_modes: vec![InputMode::Keyboard],
+            motion: if reduced_motion {
+                MotionPreference::Reduced
+            } else {
+                MotionPreference::Full
+            },
+            color_scheme: None,
+        })
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) -> KeyOutcome {
